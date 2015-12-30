@@ -5,3 +5,5 @@ This should:
 - load an hfstol bin
 - generate forms from CG-specified analyses
 - possibly load some additional specification for how to extract forms from CG-format?
+
+See voikko/src/morphology/HfstAnalyzer.cpp – uses ospell.h, can we use that?

@@ -1,0 +1,12 @@
+AC_INIT([Divvun feedback], [0.1.0], [unhammer+apertium@mm.st])
+AC_CONFIG_SRCDIR([src/main.cpp])
+AM_INIT_AUTOMAKE
+
+HFST_REQUIRED_VERSION=3.9.0
+PKG_CHECK_MODULES(HFST, hfst >= $HFST_REQUIRED_VERSION)
+AC_SUBST(HFST_CFLAGS)
+AC_SUBST(HFST_LIBS)
+
+AC_PROG_CXX
+
+AC_OUTPUT(Makefile src/Makefile)
