@@ -40,6 +40,7 @@ using std::pair;
 #include <getopt.h>
 #include <math.h>
 #include <errno.h>
+#include <queue>
 
 
 
@@ -48,5 +49,11 @@ int main(int argc, char ** argv)
 	FILE *fd = fopen("foo.zhfst", "rb");
 	hfst_ol::Transducer *t;
 	t = new hfst_ol::Transducer(fd);
+	char line[] = {
+		'j','a','\0'
+	};
+	hfst_ol::AnalysisQueue aq = t->lookup(line);
+	hfst_ol::StringWeightPair ana = aq.top();
+	std::cerr << ana.first << std::endl;
 	std::cerr << "unimplemented" << std::endl;
 }
