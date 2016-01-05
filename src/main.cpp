@@ -46,14 +46,22 @@ using std::pair;
 
 int main(int argc, char ** argv)
 {
-	FILE *fd = fopen("foo.zhfst", "rb");
+	FILE *fd = fopen(argv[1], "rb");
 	hfst_ol::Transducer *t;
 	t = new hfst_ol::Transducer(fd);
-	char line[] = {
-		'j','a','\0'
-	};
-	hfst_ol::AnalysisQueue aq = t->lookup(line);
-	hfst_ol::StringWeightPair ana = aq.top();
-	std::cerr << ana.first << std::endl;
+	for (std::string line; std::getline(std::cin, line);) {
+		char* cline = &line[0];
+		// TODO: lookup wants non-const, why?
+		hfst_ol::AnalysisQueue aq = t->lookup(cline);
+		std::cout << line << "\t";
+		if(aq.size()>0) {
+			hfst_ol::StringWeightPair ana = aq.top();
+			std::cout << ana.first;
+		}
+		else {
+			std::cout << "?";
+		}
+		std::cout << std::endl;
+	}
 	std::cerr << "unimplemented" << std::endl;
 }
