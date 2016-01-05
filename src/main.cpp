@@ -20,6 +20,8 @@
 #  include <config.h>
 #endif
 
+#include <hfst/HfstInputStream.h>
+#include <hfst/HfstTransducer.h>
 #include <ospell.h>
 
 #include <iostream>
