@@ -22,7 +22,7 @@
 
 #include <hfst/HfstInputStream.h>
 #include <hfst/HfstTransducer.h>
-#include <ospell.h>
+// #include <ospell.h>
 
 #include <iostream>
 #include <fstream>
@@ -44,26 +44,73 @@ using std::pair;
 #include <errno.h>
 #include <queue>
 
+const hfst::HfstTransducer* readTransducer(const std::string &file) {
+	hfst::HfstInputStream *in = NULL;
+	try
+	{
+		in = new hfst::HfstInputStream(file);
+	}
+	catch (StreamNotReadableException e)
+	{
+		std::cerr << "ERROR: File does not exist." << std::endl;
+		exit(1);
+	}
+
+	hfst::HfstTransducer* t = NULL;
+	while (not in->is_eof())
+	{
+		if (in->is_bad())
+		{
+			std::cerr << "ERROR: Stream cannot be read." << std::endl;
+			exit(1);
+		}
+		t = new hfst::HfstTransducer(*in);
+		if(not in->is_eof()) {
+			std::cerr << "WARNING: >1 transducers in stream! Only using the first." << std::endl;
+		}
+		break;
+	}
+	in->close();
+	delete in;
+	if(t == NULL) {
+		std::cerr << "WARNING: Could not read any transducers!" << std::endl;
+	}
+	return t;
+}
 
 
 int main(int argc, char ** argv)
 {
-	FILE *fd = fopen(argv[1], "rb");
-	hfst_ol::Transducer *t;
-	t = new hfst_ol::Transducer(fd);
+
+	const hfst::HfstTransducer *t = readTransducer(argv[1]);
+	// FILE *fd = fopen(argv[1], "rb");
+	// hfst_ol::Transducer *t;
+	// t = new hfst_ol::Transducer(fd);
 	for (std::string line; std::getline(std::cin, line);) {
-		char* cline = &line[0];
-		// TODO: lookup wants non-const, why?
-		hfst_ol::AnalysisQueue aq = t->lookup(cline);
 		std::cout << line << "\t";
-		if(aq.size()>0) {
-			hfst_ol::StringWeightPair ana = aq.top();
-			std::cout << ana.first;
+		auto paths = t->lookup_fd(line, 1);
+		if(paths->size() > 0) {
+			auto it = paths->begin();
+			auto hit = it->first;
+			std::cout << hit;
 		}
 		else {
 			std::cout << "?";
 		}
+		// char* cline = &line[0];
+		// TODO: lookup wants non-const, why?
+		// hfst_ol::AnalysisQueue aq = t->lookup(cline);
+		// if(aq.size()>0) {
+		// 	hfst_ol::StringWeightPair ana = aq.top();
+		// 	std::cout << ana.first;
+		// }
+		// else {
+		// 	std::cout << "?";
+		// }
 		std::cout << std::endl;
 	}
 	std::cerr << "unimplemented" << std::endl;
+
+	auto testauto = 1+2;
+	std::cout << testauto;
 }
