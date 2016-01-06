@@ -44,7 +44,7 @@ using std::pair;
 #include <errno.h>
 #include <queue>
 
-const hfst::HfstTransducer* readTransducer(const std::string &file) {
+const hfst::HfstTransducer* readTransducer(const std::string & file) {
 	hfst::HfstInputStream *in = NULL;
 	try
 	{
@@ -81,18 +81,35 @@ const hfst::HfstTransducer* readTransducer(const std::string &file) {
 
 int main(int argc, char ** argv)
 {
-
+	if (argc != 2) {
+		std::cerr <<"Expected hfstol as single arg, got:";
+		for(int i=1; i<argc; ++i) {
+			std::cerr<<" " <<argv[i];
+		}
+		std::cerr<<std::endl;
+		return(EXIT_FAILURE);
+	}
+	std::cerr <<"Reading transducer "<<argv[1]<<std::endl;
 	const hfst::HfstTransducer *t = readTransducer(argv[1]);
-	// FILE *fd = fopen(argv[1], "rb");
-	// hfst_ol::Transducer *t;
-	// t = new hfst_ol::Transducer(fd);
+
+	std::string wf;
 	for (std::string line; std::getline(std::cin, line);) {
+		if(line.size()>2 && line[0]=='"' && line[1]=='<') {
+			wf = line;
+		}
+		if(line.size()>2 && line[0]=='\t' && line[1]=='"') {
+			// reading, level 1
+		}
 		std::cout << line << "\t";
-		auto paths = t->lookup_fd(line, 1);
+		hfst::StringVector s = { line };
+		auto paths = t->lookup_fd(s, -1, 10.0);
 		if(paths->size() > 0) {
-			auto it = paths->begin();
-			auto hit = it->first;
-			std::cout << hit;
+			for(auto& p : *paths) {
+				for(auto& symbol : p.second) {
+					std::cout << symbol;
+				}
+				std::cout << "\t";
+			}
 		}
 		else {
 			std::cout << "?";
@@ -109,8 +126,6 @@ int main(int argc, char ** argv)
 		// }
 		std::cout << std::endl;
 	}
-	std::cerr << "unimplemented" << std::endl;
+	std::cerr << "(unimplemented)" << std::endl;
 
-	auto testauto = 1+2;
-	std::cout << testauto;
 }
