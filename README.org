@@ -1,9 +1,12 @@
 This should:
 
-- [ ] read cg format
+- [X] read cg format
 - [ ] load errors.xml
 - [X] load an hfstol bin
-- [ ] generate forms from CG-specified analyses
+- [X] generate forms from CG-specified analyses
+- [ ] only generate forms if analyses have a certain tag (and don't send that tag to generator)
 - [ ] possibly load some additional specification for how to extract forms from CG-format?
 
-See voikko/src/morphology/HfstAnalyzer.cpp – uses ospell.h, can we use that?
+Also TODO:
+- [ ] better way to skip @FLAGDIACRITICS@ in output
+- [ ] deal with subreadings

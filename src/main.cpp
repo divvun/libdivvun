@@ -26,6 +26,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <iterator>
 
 #include <vector>
 #include <map>
@@ -43,6 +44,8 @@ using std::pair;
 #include <math.h>
 #include <errno.h>
 #include <queue>
+
+typedef std::vector<std::string> StringVec;
 
 const hfst::HfstTransducer* readTransducer(const std::string & file) {
 	hfst::HfstInputStream *in = NULL;
@@ -78,6 +81,25 @@ const hfst::HfstTransducer* readTransducer(const std::string & file) {
 	return t;
 }
 
+const std::string join(const StringVec vec, const std::string delim=" ") {
+	std::ostringstream os;
+	std::copy(vec.begin(), vec.end(), std::ostream_iterator<std::string>(os, delim.c_str()));
+	std::string str = os.str();
+	return str.substr(0,
+			  str.size() - delim.size());
+}
+const StringVec split(const std::string str, const char delim=' ')
+{
+	std::string buf;
+	std::stringstream ss(str);
+	StringVec tokens;
+	while (std::getline(ss, buf, delim)) {
+		if(!buf.empty()) {
+			tokens.push_back(buf);
+		}
+	}
+	return tokens;
+}
 
 int main(int argc, char ** argv)
 {
@@ -96,36 +118,37 @@ int main(int argc, char ** argv)
 	for (std::string line; std::getline(std::cin, line);) {
 		if(line.size()>2 && line[0]=='"' && line[1]=='<') {
 			wf = line;
+			std::cout <<wf << std::endl;
 		}
-		if(line.size()>2 && line[0]=='\t' && line[1]=='"') {
-			// reading, level 1
-		}
-		std::cout << line << "\t";
-		hfst::StringVector s = { line };
-		auto paths = t->lookup_fd(s, -1, 10.0);
-		if(paths->size() > 0) {
-			for(auto& p : *paths) {
-				for(auto& symbol : p.second) {
-					std::cout << symbol;
+		else if(line.size()>2 && line[0]=='\t' && line[1]=='"') {
+			// TODO: doesn't do anything with subreadings yet; needs to keep track of previous line(s) for that
+			int lemma_end = line.find("\" ");
+			std::string lemma = line.substr(2, lemma_end-2);
+			std::string tags = line.substr(lemma_end+2);
+			// split removes empties; TODO: only keep certain tags:
+			auto tagsplus = join(split(tags), "+");
+			std::cout << line << std::endl;
+			auto ana = lemma+"+"+tagsplus;
+			auto paths = t->lookup_fd({ ana }, -1, 10.0);
+			if(paths->size() > 0) {
+				for(auto& p : *paths) {
+					for(auto& symbol : p.second) {
+						// TODO: this is a hack to avoid flag diacritics, is there a way to make lookup skip them?
+						if(symbol.size()>0 && symbol[0]!='@') {
+							std::cout << symbol;
+						}
+					}
+					std::cout << "\t";
 				}
-				std::cout << "\t";
+				std::cout << std::endl;
+			}
+			else {
+				std::cout << "?" << std::endl;
 			}
 		}
 		else {
-			std::cout << "?";
+			std::cout << line << std::endl;
 		}
-		// char* cline = &line[0];
-		// TODO: lookup wants non-const, why?
-		// hfst_ol::AnalysisQueue aq = t->lookup(cline);
-		// if(aq.size()>0) {
-		// 	hfst_ol::StringWeightPair ana = aq.top();
-		// 	std::cout << ana.first;
-		// }
-		// else {
-		// 	std::cout << "?";
-		// }
-		std::cout << std::endl;
 	}
-	std::cerr << "(unimplemented)" << std::endl;
-
+	std::cout << "EOF" << std::endl;
 }

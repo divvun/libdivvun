@@ -5,3 +5,10 @@ configure
 depcomp
 install-sh
 missing
+**/Makefile
+**/Makefile.in
+config.log
+config.status
+src/.deps/
+src/*.o
+src/divvun-suggest
