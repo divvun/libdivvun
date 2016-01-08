@@ -19,42 +19,49 @@
 
 namespace gtd {
 
-std::vector<std::string> cg_keywords = {
-	std::string("ADD:"),
-	std::string("MAP:"),
-	std::string("REPLACE:"),
-	std::string("SELECT:"),
-	std::string("REMOVE:"),
-	std::string("IFF:"),
-	std::string("APPEND:"),
-	std::string("SUBSTITUTE:"),
-	std::string("REMVARIABLE:"),
-	std::string("SETVARIABLE:"),
-	std::string("DELIMIT:"),
-	std::string("MATCH:"),
-	std::string("SETPARENT:"),
-	std::string("SETCHILD:"),
-	std::string("ADDRELATION:"),
-	std::string("SETRELATION:"),
-	std::string("REMRELATION:"),
-	std::string("ADDRELATIONS:"),
-	std::string("SETRELATIONS:"),
-	std::string("REMRELATIONS:"),
-	std::string("MOVE:"),
-	std::string("MOVE-AFTER:"),
-	std::string("MOVE-BEFORE:"),
-	std::string("SWITCH:"),
-	std::string("REMCOHORT:"),
-	std::string("UNMAP:"),
-	std::string("COPY:"),
-	std::string("ADDCOHORT:"),
-	std::string("ADDCOHORT-AFTER:"),
-	std::string("ADDCOHORT-BEFORE:"),
-	std::string("EXTERNAL:"),
-	std::string("EXTERNAL-ONCE:"),
-	std::string("EXTERNAL-ALWAYS:"),
-	std::string("REOPEN-MAPPINGS:"),
-};
+// or we could make an (h)fst out of these to match on lines :)
+std::basic_regex<char> CG_SKIP_TAG (
+	"^"
+	"(#"
+	"|&"
+	"|@"
+	"|<"
+	"|ADD:"
+	"|MAP:"
+	"|REPLACE:"
+	"|SELECT:"
+	"|REMOVE:"
+	"|IFF:"
+	"|APPEND:"
+	"|SUBSTITUTE:"
+	"|REMVARIABLE:"
+	"|SETVARIABLE:"
+	"|DELIMIT:"
+	"|MATCH:"
+	"|SETPARENT:"
+	"|SETCHILD:"
+	"|ADDRELATION:"
+	"|SETRELATION:"
+	"|REMRELATION:"
+	"|ADDRELATIONS:"
+	"|SETRELATIONS:"
+	"|REMRELATIONS:"
+	"|MOVE:"
+	"|MOVE-AFTER:"
+	"|MOVE-BEFORE:"
+	"|SWITCH:"
+	"|REMCOHORT:"
+	"|UNMAP:"
+	"|COPY:"
+	"|ADDCOHORT:"
+	"|ADDCOHORT-AFTER:"
+	"|ADDCOHORT-BEFORE:"
+	"|EXTERNAL:"
+	"|EXTERNAL-ONCE:"
+	"|EXTERNAL-ALWAYS:"
+	"|REOPEN-MAPPINGS:"
+	").*"
+	);
 
 
 const hfst::HfstTransducer *readTransducer(const std::string& file) {
@@ -91,10 +98,24 @@ const hfst::HfstTransducer *readTransducer(const std::string& file) {
 	return t;
 }
 
+const std::pair<bool, StringVec> get_gentags(const std::string& tags) {
+	StringVec gentags;
+	bool suggest = false;
+	for(auto& tag : split(tags)) {
+		if(tag == "&SUGGEST") {
+			suggest = true;
+		}
+		std::match_results<const char*> result;
+		std::regex_match(tag.c_str(), result, CG_SKIP_TAG);
+		if (result.empty()) {
+			gentags.push_back(tag);
+		}
+	}
+	return std::pair<bool, StringVec>(suggest, gentags);
+}
 
 void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t, bool json)
 {
-
 	std::string wf;
 	for (std::string line; std::getline(is, line);) {
 		os << line << std::endl;
@@ -106,24 +127,9 @@ void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t, bool
 			int lemma_end = line.find("\" ");
 			std::string lemma = line.substr(2, lemma_end-2);
 			std::string tags = line.substr(lemma_end+2);
-			StringVec gentags;
-			bool suggest = false;
-			for(auto& tag : split(tags)) {
-				if(tag == "&SUGGEST") {
-					suggest=true;
-				}
-				if(tag.size()>0 && !(tag[0]=='#' ||
-						     tag[0]=='&' ||
-						     tag[0]=='@' ||
-						     tag[0]=='<' ||
-						     startswith(tag, "SUBSTITUTE:") ||
-						     startswith(tag, "COPY:") ||
-						     startswith(tag, "ADD:") ||
-						     startswith(tag, "MAP:")
-					   )) {
-					gentags.push_back(tag);
-				}
-			}
+			auto suggen = get_gentags(tags);
+			bool suggest = suggen.first;
+			StringVec gentags = suggen.second;
 			if(!suggest) {
 				continue;
 			}
