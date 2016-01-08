@@ -118,7 +118,9 @@ void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t, bool
 {
 	std::string wf;
 	for (std::string line; std::getline(is, line);) {
-		os << line << std::endl;
+		if(!json) {
+			os << line << std::endl;
+		}
 		if(line.size()>2 && line[0]=='"' && line[1]=='<') {
 			wf = line;
 		}
@@ -136,21 +138,26 @@ void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t, bool
 			auto tagsplus = join(gentags, "+");
 			auto ana = lemma+"+"+tagsplus;
 			auto paths = t->lookup_fd({ ana }, -1, 10.0);
-			os << ana<<"\t";
+			std::ostringstream forms;
 			if(paths->size() > 0) {
 				for(auto& p : *paths) {
 					for(auto& symbol : p.second) {
 						// TODO: this is a hack to avoid flag diacritics; is there a way to make lookup skip them?
 						if(symbol.size()>0 && symbol[0]!='@') {
-							os << symbol;
+							forms << symbol;
 						}
 					}
-					os << "\t";
+					forms << "\t";
 				}
-				os << std::endl;
+				if(json) {
+					os << forms.str() << std::endl;
+				}
+				else {
+					os << ana<<"\t" << forms.str() << std::endl;
+				}
 			}
 			else {
-				os << "?" << std::endl;
+				if(!json) os << ana << "\t" << "?" << std::endl;
 			}
 		}
 		else {
