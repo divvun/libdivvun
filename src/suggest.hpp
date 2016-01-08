@@ -15,6 +15,11 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#pragma once
+#ifndef fe64e9a18486d375_SUGGEST_H
+#define fe64e9a18486d375_SUGGEST_H
+
+
 #include "util.hpp"
 
 #include <hfst/HfstInputStream.h>
@@ -28,3 +33,5 @@ namespace gtd {
 void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t);
 
 }
+
+#endif
