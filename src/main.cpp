@@ -23,64 +23,75 @@ bool VERBOSE=false;
 
 #include "suggest.hpp"
 
-#include <hfst/HfstInputStream.h>
-#include <hfst/HfstTransducer.h>
+#ifndef _WIN32
+#include <libgen.h>
+#endif
 
-#include <vector>
-#include <string>
 
-namespace gtd {
-
-const hfst::HfstTransducer *readTransducer(const std::string& file) {
-	hfst::HfstInputStream *in = NULL;
-	try
-	{
-		in = new hfst::HfstInputStream(file);
-	}
-	catch (StreamNotReadableException e)
-	{
-		std::cerr << "ERROR: File does not exist." << std::endl;
-		exit(1);
-	}
-
-	hfst::HfstTransducer* t = NULL;
-	while (not in->is_eof())
-	{
-		if (in->is_bad())
-		{
-			std::cerr << "ERROR: Stream cannot be read." << std::endl;
-			exit(1);
-		}
-		t = new hfst::HfstTransducer(*in);
-		if(not in->is_eof()) {
-			std::cerr << "WARNING: >1 transducers in stream! Only using the first." << std::endl;
-		}
-		break;
-	}
-	in->close();
-	delete in;
-	if(t == NULL) {
-		std::cerr << "WARNING: Could not read any transducers!" << std::endl;
-	}
-	return t;
+void showHelp(char *name) {
+	using namespace std;
+	fprintf(stdout, "GTD Suggest\n");
+	cout << basename(name) <<": generate grammar checker suggestions from a CG stream" << endl;
+	cout << "USAGE: " << basename(name) << " [-j] generator.hfstol" << endl;
+	cout << "Options:" << endl;
+#if HAVE_GETOPT_LONG
+	cout << "	-j, --json:	 output JSON format" << endl;
+#else
+	cout << "	-j:	 output JSON format" << endl;
+#endif
 }
-
-}
-
 
 int main(int argc, char ** argv)
 {
-	if (argc != 2) {
+	bool json = false;
+
+#if HAVE_GETOPT_LONG
+	static struct option long_options[] = {
+		{"json",	0, 0, 'f'},
+	};
+#endif
+
+	int c = 0;
+	while (c != -1) {
+#if HAVE_GETOPT_LONG
+		int option_index;
+		c = getopt_long(argc, argv, "j", long_options, &option_index);
+#else
+		c = getopt(argc, argv, "j");
+#endif
+		if (c == -1) {
+			break;
+		}
+
+		switch(c) {
+			case 'j':
+				json = true;
+				break;
+			default:
+				showHelp(argv[0]);
+				return(EXIT_FAILURE);
+				break;
+		}
+	}
+	int real_argc = argc - optind;
+	if (real_argc == 1) {
+		if(VERBOSE) {
+			std::cerr <<"Reading transducer "<<argv[optind]<<std::endl;
+		}
+		const hfst::HfstTransducer *t = gtd::readTransducer(argv[optind]);
+		if (t == NULL) {
+			showHelp(argv[0]);
+			return(EXIT_FAILURE);
+		}
+		gtd::run(std::cin, std::cout, t, json);
+	}
+	else {
+		showHelp(argv[0]);
 		std::cerr <<"Expected hfstol as single arg, got:";
-		for(int i=1; i<argc; ++i) {
+		for(int i=optind; i<argc; ++i) {
 			std::cerr<<" " <<argv[i];
 		}
 		std::cerr<<std::endl;
 		return(EXIT_FAILURE);
 	}
-	if(VERBOSE) {
-		std::cerr <<"Reading transducer "<<argv[1]<<std::endl;
-	}
-	const hfst::HfstTransducer *t = gtd::readTransducer(argv[1]);
-	gtd::run(std::cin, std::cout, t);
 }

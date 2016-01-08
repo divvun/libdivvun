@@ -57,7 +57,42 @@ std::vector<std::string> cg_keywords = {
 };
 
 
-void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
+const hfst::HfstTransducer *readTransducer(const std::string& file) {
+	hfst::HfstInputStream *in = NULL;
+	try
+	{
+		in = new hfst::HfstInputStream(file);
+	}
+	catch (StreamNotReadableException e)
+	{
+		std::cerr << "ERROR: File does not exist." << std::endl;
+		return NULL;
+	}
+
+	hfst::HfstTransducer* t = NULL;
+	while (not in->is_eof())
+	{
+		if (in->is_bad())
+		{
+			std::cerr << "ERROR: Stream cannot be read." << std::endl;
+			return NULL;
+		}
+		t = new hfst::HfstTransducer(*in);
+		if(not in->is_eof()) {
+			std::cerr << "WARNING: >1 transducers in stream! Only using the first." << std::endl;
+		}
+		break;
+	}
+	in->close();
+	delete in;
+	if(t == NULL) {
+		std::cerr << "WARNING: Could not read any transducers!" << std::endl;
+	}
+	return t;
+}
+
+
+void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t, bool json)
 {
 
 	std::string wf;

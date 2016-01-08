@@ -30,7 +30,9 @@
 
 namespace gtd {
 
-void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t);
+void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t, bool json);
+
+const hfst::HfstTransducer *readTransducer(const std::string& file);
 
 }
 
