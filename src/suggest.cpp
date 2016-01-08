@@ -65,6 +65,10 @@ const std::basic_regex<char> CG_SKIP_TAG (
 	").*"
 	);
 
+const std::basic_regex<char> CG_WF ("^\"<(.*)>\".*");
+
+const std::basic_regex<char> CG_READING ("^(\t)+\"(.*)\"( +([^ ]+))*");
+
 
 const hfst::HfstTransducer *readTransducer(const std::string& file) {
 	hfst::HfstInputStream *in = NULL;
