@@ -116,55 +116,106 @@ const std::pair<bool, StringVec> get_gentags(const std::string& tags) {
 	return std::pair<bool, StringVec>(suggest, gentags);
 }
 
-void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t, bool json)
+const std::tuple<bool, std::string, StringVec> get_sugg(const hfst::HfstTransducer *t, const std::string& line) {
+	const auto& lemma_end = line.find("\" ");
+	const auto& lemma = line.substr(2, lemma_end-2);
+	const auto& tags = line.substr(lemma_end+2);
+	const auto& suggen = get_gentags(tags);
+	const auto& suggest = suggen.first;
+	const auto& gentags = suggen.second;
+	StringVec forms;
+	if(!suggest) {
+		return std::make_tuple(suggest, lemma+"+"+tags, forms);
+	}
+	const auto& tagsplus = join(gentags, "+");
+	const auto& ana = lemma+"+"+tagsplus;
+	const auto& paths = t->lookup_fd({ ana }, -1, 10.0);
+	std::stringstream form;
+	if(paths->size() > 0) {
+		for(auto& p : *paths) {
+			for(auto& symbol : p.second) {
+				// TODO: this is a hack to avoid flag diacritics; is there a way to make lookup skip them?
+				if(symbol.size()>0 && symbol[0]!='@') {
+					form << symbol;
+				}
+			}
+			forms.push_back(form.str());
+		}
+	}
+	return std::make_tuple(suggest, ana, forms);
+}
+
+void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
+{
+	int pos = 0;
+	int etype = 0;		// TODO: error type int or strings
+	int first = true;
+	std::string wf;
+	std::ostringstream ss;
+	os << "[";
+	for (std::string line; std::getline(is, line);) {
+		if(line.size()>2 && line[0]=='"' && line[1]=='<') {
+			wf = line.substr(2, -2);
+			// TODO: need to decode here to get the correct string length:
+			pos += wf.size();
+		}
+		else if(line.size()>2 && line[0]=='\t' && line[1]=='"') {
+			// TODO: doesn't do anything with subreadings yet; needs to keep track of previous line(s) for that
+			const auto& sugg = get_sugg(t, line);
+			if(std::get<0>(sugg)) {
+				StringVec formv = std::get<2>(sugg);
+				if(!first) {
+					os << ",";
+					first = true;
+				}
+				os << "[" << pos-wf.size()
+				   << "," << pos
+				   << "," << etype
+				   << ",[" << join_quoted(formv, ",")
+				   << "]]";
+			}
+		}
+		else {
+			pos += line.size(); // something untokenised?
+		}
+		pos += 1;	// EOF
+	}
+	os << "]";
+}
+
+void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 {
 	std::string wf;
+	std::ostringstream ss;
 	for (std::string line; std::getline(is, line);) {
-		if(!json) {
-			os << line << std::endl;
-		}
+		os << line << std::endl;
 		if(line.size()>2 && line[0]=='"' && line[1]=='<') {
 			wf = line;
 		}
 		else if(line.size()>2 && line[0]=='\t' && line[1]=='"') {
 			// TODO: doesn't do anything with subreadings yet; needs to keep track of previous line(s) for that
-			int lemma_end = line.find("\" ");
-			std::string lemma = line.substr(2, lemma_end-2);
-			std::string tags = line.substr(lemma_end+2);
-			auto suggen = get_gentags(tags);
-			bool suggest = suggen.first;
-			StringVec gentags = suggen.second;
-			if(!suggest) {
-				continue;
-			}
-			auto tagsplus = join(gentags, "+");
-			auto ana = lemma+"+"+tagsplus;
-			auto paths = t->lookup_fd({ ana }, -1, 10.0);
-			std::ostringstream forms;
-			if(paths->size() > 0) {
-				for(auto& p : *paths) {
-					for(auto& symbol : p.second) {
-						// TODO: this is a hack to avoid flag diacritics; is there a way to make lookup skip them?
-						if(symbol.size()>0 && symbol[0]!='@') {
-							forms << symbol;
-						}
-					}
-					forms << "\t";
-				}
-				if(json) {
-					os << forms.str() << std::endl;
+			const auto& sugg = get_sugg(t, line);
+			if(std::get<0>(sugg)) {
+				const auto& ana = std::get<1>(sugg);;
+				const auto& formv = std::get<2>(sugg);
+				if(formv.empty()) {
+					os << ana << "\t" << "?" << std::endl;
 				}
 				else {
-					os << ana<<"\t" << forms.str() << std::endl;
+					os << ana << "\t" << join(formv) << std::endl;
 				}
 			}
-			else {
-				if(!json) os << ana << "\t" << "?" << std::endl;
-			}
 		}
-		else {
-			//pass
-		}
+	}
+}
+
+void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t, bool json)
+{
+	if(json) {
+		run_json(is, os, t);
+	}
+	else {
+		run_cg(is, os, t);
 	}
 }
 

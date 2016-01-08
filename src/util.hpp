@@ -29,18 +29,28 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
 
 namespace gtd {
 
 typedef std::vector<std::string> StringVec;
 
-inline const std::string join(const StringVec vec, const std::string delim=" ") {
+inline const std::string join_quoted(const StringVec vec, const std::string delim=" ") {
 	std::ostringstream os;
-	std::copy(vec.begin(), vec.end(), std::ostream_iterator<std::string>(os, delim.c_str()));
-	std::string str = os.str();
+	std::for_each(vec.begin(), vec.end(), [&](const std::string& s){ os << "\"" << s << "\","; });
+	const auto& str = os.str();
 	return str.substr(0,
 			  str.size() - delim.size());
 }
+
+inline const std::string join(const StringVec vec, const std::string delim=" ") {
+	std::ostringstream os;
+	std::copy(vec.begin(), vec.end(), std::ostream_iterator<std::string>(os, delim.c_str()));
+	const auto& str = os.str();
+	return str.substr(0,
+			  str.size() - delim.size());
+}
+
 inline const StringVec split(const std::string str, const char delim=' ')
 {
 	std::string buf;
