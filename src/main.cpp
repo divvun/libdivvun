@@ -22,76 +22,67 @@ bool VERBOSE=false;
 #endif
 
 #include "suggest.hpp"
-
-#ifndef _WIN32
-#include <libgen.h>
-#endif
-
-
-void showHelp(char *name) {
-	using namespace std;
-	fprintf(stdout, "GTD Suggest\n");
-	cout << basename(name) <<": generate grammar checker suggestions from a CG stream" << endl;
-	cout << "USAGE: " << basename(name) << " [-j] generator.hfstol" << endl;
-	cout << "Options:" << endl;
-#if HAVE_GETOPT_LONG
-	cout << "	-j, --json:	 output JSON format" << endl;
-#else
-	cout << "	-j:	 output JSON format" << endl;
-#endif
-}
+#include "cxxopts.hpp"
 
 int main(int argc, char ** argv)
 {
-	bool json = false;
+	try
+	{
+		cxxopts::Options options(argv[0], " - generate grammar checker suggestions from a CG stream");
 
-#if HAVE_GETOPT_LONG
-	static struct option long_options[] = {
-		{"json",	0, 0, 'f'},
-	};
-#endif
+		options.add_options()
+			("j,json", "Use JSON output format (default: CG)")
+			("g,generator", "Generator (HFSTOL format)", cxxopts::value<std::string>(), "BIN")
+			("m,messages", "Error messages (XML format, UNIMPLEMENTED)", cxxopts::value<std::string>(), "FILE")
+			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
+			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
+			("h,help", "Print help")
+			;
 
-	int c = 0;
-	while (c != -1) {
-#if HAVE_GETOPT_LONG
-		int option_index;
-		c = getopt_long(argc, argv, "j", long_options, &option_index);
-#else
-		c = getopt(argc, argv, "j");
-#endif
-		if (c == -1) {
-			break;
+		std::vector<std::string> pos = {
+			"generator",
+			//"messages"
+			//"input"
+			//"output"
+		};
+		options.parse_positional(pos);
+		options.parse(argc, argv);
+
+		if(argc > 1) {
+			std::cout << options.help({""}) << std::endl;
+			std::cerr << "Error: got " << argc-1+pos.size() <<" arguments; expected only " << pos.size() << std::endl;
+			return(EXIT_SUCCESS);
 		}
 
-		switch(c) {
-			case 'j':
-				json = true;
-				break;
-			default:
-				showHelp(argv[0]);
-				return(EXIT_FAILURE);
-				break;
+		if (options.count("help"))
+		{
+			std::cout << options.help({""}) << std::endl;
+			return(EXIT_SUCCESS);
 		}
-	}
-	int real_argc = argc - optind;
-	if (real_argc == 1) {
+		if (!options.count("generator"))
+		{
+			std::cout << options.help({""}) << std::endl;
+			std::cerr <<"Error: expected generator.hfstol as argument." << std::endl;
+			return(EXIT_FAILURE);
+		}
+
+		const auto& genfile = options["generator"].as<std::string>();
+		bool json = options.count("j");
+
 		if(VERBOSE) {
 			std::cerr <<"Reading transducer "<<argv[optind]<<std::endl;
 		}
-		const hfst::HfstTransducer *t = gtd::readTransducer(argv[optind]);
+		const hfst::HfstTransducer *t = gtd::readTransducer(genfile);
 		if (t == NULL) {
-			showHelp(argv[0]);
+			std::cout << options.help({""}) << std::endl;
+			std::cerr <<"Error: Couldn't read transducer "<< genfile <<std::endl;
 			return(EXIT_FAILURE);
 		}
 		gtd::run(std::cin, std::cout, t, json);
 	}
-	else {
-		showHelp(argv[0]);
-		std::cerr <<"Expected hfstol as single arg, got:";
-		for(int i=optind; i<argc; ++i) {
-			std::cerr<<" " <<argv[i];
-		}
-		std::cerr<<std::endl;
+	catch (const cxxopts::OptionException& e)
+	{
+		std::cout << "Error: couldn't parse options: " << e.what() << std::endl;
 		return(EXIT_FAILURE);
 	}
 }
