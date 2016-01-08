@@ -19,8 +19,10 @@
 
 namespace gtd {
 
+const std::string CG_SUGGEST_TAG = "&SUGGEST";
+
 // or we could make an (h)fst out of these to match on lines :)
-std::basic_regex<char> CG_SKIP_TAG (
+const std::basic_regex<char> CG_SKIP_TAG (
 	"^"
 	"(#"
 	"|&"
@@ -102,7 +104,7 @@ const std::pair<bool, StringVec> get_gentags(const std::string& tags) {
 	StringVec gentags;
 	bool suggest = false;
 	for(auto& tag : split(tags)) {
-		if(tag == "&SUGGEST") {
+		if(tag == CG_SUGGEST_TAG) {
 			suggest = true;
 		}
 		std::match_results<const char*> result;
