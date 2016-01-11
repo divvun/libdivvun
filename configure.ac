@@ -2,20 +2,10 @@ AC_INIT([Divvun suggest], [0.1.0], [unhammer+apertium@mm.st])
 AC_CONFIG_SRCDIR([src/main.cpp])
 AM_INIT_AUTOMAKE
 
-dnl HFST_REQUIRED_VERSION=3.9.0
-dnl PKG_CHECK_MODULES(HFST, hfst >= $HFST_REQUIRED_VERSION)
-dnl AC_SUBST(HFST_CFLAGS)
-dnl AC_SUBST(HFST_LIBS)
-
 CXXFLAGS="$CXXFLAGS -std=c++11 -Wall"
 
 PKG_CHECK_MODULES([HFST], [hfst >= 3.9.0])
-dnl what's this vs divvun_suggest_CXXFLAGS?
 CXXFLAGS="$CXXFLAGS $HFST_CFLAGS"
-
-PKG_CHECK_MODULES([HFSTOSPELL], [hfstospell >= 0.2])
-dnl what's this vs divvun_suggest_CXXFLAGS?
-CXXFLAGS="$CXXFLAGS $HFSTOSPELL_CFLAGS"
 
 
 AC_PROG_CXX
