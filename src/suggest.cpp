@@ -153,7 +153,7 @@ const std::tuple<bool, std::string, StringVec> get_sugg(const hfst::HfstTransduc
 void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 {
 	int pos = 0;
-	int etype = 0;		// TODO: error type int or strings
+	std::string etype = "boasttu kásushápmi"; // TODO from &-tag
 	int first = true;
 	std::string wf;
 	std::ostringstream ss;
@@ -175,9 +175,10 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 					os << ",";
 					first = true;
 				}
-				os << "[" << pos-wf.size()
+				os << "[\"" << wf << "\""
+				   << "," << pos-wf.size()
 				   << "," << pos
-				   << "," << etype
+				   << ",\"" << etype << "\""
 				   << ",[" << join_quoted(formv, ",")
 				   << "]]";
 			}
