@@ -65,9 +65,10 @@ const std::basic_regex<char> CG_SKIP_TAG (
 	").*"
 	);
 
-const std::basic_regex<char> CG_WF ("^\"<(.*)>\".*");
-
-const std::basic_regex<char> CG_READING ("^(\t)+\"(.*)\"( +([^ ]+))*");
+const std::basic_regex<char> CG_LINE ("^"
+				      "(\"<(.*)>\".*" // wordform, group 2
+				      "|(\t)+(\"[^\"]*\"\\S*)(\\s+\\S+)*" // reading, group 3, 4, 5
+				      ")");
 
 
 const hfst::HfstTransducer *readTransducer(const std::string& file) {
@@ -158,12 +159,14 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 	std::ostringstream ss;
 	os << "[";
 	for (std::string line; std::getline(is, line);) {
-		if(line.size()>2 && line[0]=='"' && line[1]=='<') {
-			wf = line.substr(2, -2);
+		std::match_results<const char*> result;
+		std::regex_match(line.c_str(), result, CG_LINE);
+		if (!result.empty() && result[2].length() != 0) {
+			wf = result[2];
 			// TODO: need to decode here to get the correct string length:
 			pos += wf.size();
 		}
-		else if(line.size()>2 && line[0]=='\t' && line[1]=='"') {
+		else if(!result.empty() && result[3].length() != 0) {
 			// TODO: doesn't do anything with subreadings yet; needs to keep track of previous line(s) for that
 			const auto& sugg = get_sugg(t, line);
 			if(std::get<0>(sugg)) {
