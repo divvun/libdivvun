@@ -15,8 +15,6 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-bool VERBOSE=false;
-
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -36,6 +34,7 @@ int main(int argc, char ** argv)
 			("m,messages", "Error messages (XML format, UNIMPLEMENTED)", cxxopts::value<std::string>(), "FILE")
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
+			("v,verbose", "Be verbose", cxxopts::value<std::string>(), "FILE")
 			("h,help", "Print help")
 			;
 
@@ -62,20 +61,20 @@ int main(int argc, char ** argv)
 		if (!options.count("generator"))
 		{
 			std::cout << options.help({""}) << std::endl;
-			std::cerr <<"Error: expected generator.hfstol as argument." << std::endl;
+			std::cerr << "Error: expected generator.hfstol as argument." << std::endl;
 			return(EXIT_FAILURE);
 		}
 
 		const auto& genfile = options["generator"].as<std::string>();
 		bool json = options.count("j");
+		bool verbose = options.count("v");
 
-		if(VERBOSE) {
-			std::cerr <<"Reading transducer "<<argv[optind]<<std::endl;
+		if(verbose) {
+			std::cerr << "Reading transducer " << genfile << std::endl;
 		}
 		const hfst::HfstTransducer *t = gtd::readTransducer(genfile);
 		if (t == NULL) {
-			std::cout << options.help({""}) << std::endl;
-			std::cerr <<"Error: Couldn't read transducer "<< genfile <<std::endl;
+			std::cerr << "Error: Couldn't read transducer "<< genfile << std::endl;
 			return(EXIT_FAILURE);
 		}
 		gtd::run(std::cin, std::cout, t, json);
