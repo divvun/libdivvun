@@ -34,7 +34,7 @@ int main(int argc, char ** argv)
 			("m,messages", "Error messages (XML format, UNIMPLEMENTED)", cxxopts::value<std::string>(), "FILE")
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
-			("v,verbose", "Be verbose", cxxopts::value<std::string>(), "FILE")
+			("v,verbose", "Be verbose")
 			("h,help", "Print help")
 			;
 
