@@ -156,8 +156,8 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 	std::string etype = "boasttu kásushápmi"; // TODO from &-tag
 	int first = true;
 	std::string wf;
-	std::ostringstream ss;
-	os << "[";
+	std::ostringstream text;
+	os << "{errs:[";
 	for (std::string line; std::getline(is, line);) {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
@@ -165,6 +165,8 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 			wf = result[2];
 			// TODO: need to decode here to get the correct string length:
 			pos += wf.size();
+			text << wf;
+			// TODO: wrapper for pos-increasing and text-adding, since they should always happen together
 		}
 		else if(!result.empty() && result[3].length() != 0) {
 			// TODO: doesn't do anything with subreadings yet; needs to keep track of previous line(s) for that
@@ -185,10 +187,12 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 		}
 		else {
 			pos += line.size(); // something untokenised?
+			text << line;
 		}
 		pos += 1;	// EOF
 	}
-	os << "]";
+	std::string text_json = text.str();
+	os << "],text:\"" << text.str() << "\"}";
 }
 
 void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
