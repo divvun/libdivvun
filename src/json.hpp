@@ -57,14 +57,11 @@ inline const std::string str_arr(const std::vector<std::string>& ss)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::ostringstream os;
-	os << "[";
 	for(const auto& s : ss) {
 		os << str(utf16conv.from_bytes(s)) << ",";
 	}
 	const auto& str = os.str();
-	size_t end = std::min((size_t)0, // if ss is empty, otherwise skip last ',''
-			      str.size() - 1);
-	return str.substr(0, end) + "]";
+	return "[" + str.substr(0, str.size() - 1) + "]";
 }
 
 inline void sanity_test() {
