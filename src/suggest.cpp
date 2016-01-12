@@ -150,22 +150,38 @@ const std::tuple<bool, std::string, StringVec> get_sugg(const hfst::HfstTransduc
 	return std::make_tuple(suggest, ana, forms);
 }
 
+
 void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 {
+	json::sanity_test();
 	int pos = 0;
-	std::string etype = "boasttu kásushápmi"; // TODO from &-tag
-	int first = true;
-	std::string wf;
+	std::u16string etype = u"boasttu kásushápmi"; // TODO from &-tag
+	bool first_err = true;
+	bool first_word = true;
+	std::u16string wf;
 	std::ostringstream text;
-	os << "{errs:[";
+	bool blank = false;
+
+	// TODO: could use http://utfcpp.sourceforge.net, but it's not in macports;
+	// and ICU seems overkill just for iterating codepoints
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+
+	os << "{"
+	   << json::key(u"errs")
+	   << "[";
 	for (std::string line; std::getline(is, line);) {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 		if (!result.empty() && result[2].length() != 0) {
-			wf = result[2];
-			// TODO: need to decode here to get the correct string length:
+			if(!blank && !first_word) {
+				// Assume we had a single space if there wasn't a superblank
+				text << " ";
+				pos += 1;
+			}
+			first_word = false;
+			wf = utf16conv.from_bytes(result[2]);
 			pos += wf.size();
-			text << wf;
+			text << utf16conv.to_bytes(wf);
 			// TODO: wrapper for pos-increasing and text-adding, since they should always happen together
 		}
 		else if(!result.empty() && result[3].length() != 0) {
@@ -173,26 +189,28 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 			const auto& sugg = get_sugg(t, line);
 			if(std::get<0>(sugg)) {
 				StringVec formv = std::get<2>(sugg);
-				if(!first) {
+				if(!first_err) {
 					os << ",";
-					first = true;
 				}
-				os << "[\"" << wf << "\""
+				first_err = false;
+				os << "[" << json::str(wf)
 				   << "," << pos-wf.size()
 				   << "," << pos
-				   << ",\"" << etype << "\""
-				   << ",[" << join_quoted(formv, ",")
-				   << "]]";
+				   << "," << json::str(etype)
+				   << "," << json::str_arr(formv)
+				   << "]";
 			}
 		}
 		else {
-			pos += line.size(); // something untokenised?
+			// TODO: remove []superblank and \\'s from superblank?
+			pos += utf16conv.from_bytes(line).size(); // something untokenised?
 			text << line;
+			blank = true;
 		}
-		pos += 1;	// EOF
 	}
-	std::string text_json = text.str();
-	os << "],text:\"" << text.str() << "\"}";
+	os << "]"
+	   << "," << json::key(u"text") << json::str(utf16conv.from_bytes(text.str()))
+	   << "}";
 }
 
 void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)

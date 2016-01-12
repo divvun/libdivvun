@@ -21,9 +21,13 @@
 
 
 #include "util.hpp"
+#include "json.hpp"
 
 #include <hfst/HfstInputStream.h>
 #include <hfst/HfstTransducer.h>
+
+#include <locale>
+#include <codecvt>
 
 #include <vector>
 #include <string>
