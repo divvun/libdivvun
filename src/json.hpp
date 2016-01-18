@@ -53,7 +53,8 @@ inline const std::string key(const std::u16string& s)
 	return str(s)+":";
 }
 
-inline const std::string str_arr(const std::vector<std::string>& ss)
+template<typename Container>
+inline const std::string str_arr(const Container& ss)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::ostringstream os;

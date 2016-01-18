@@ -25,7 +25,7 @@ const std::string CG_SUGGEST_TAG = "&SUGGEST";
 const std::basic_regex<char> CG_SKIP_TAG (
 	"^"
 	"(#"
-	"|&"
+	"|&(.+)"		// errtype
 	"|@"
 	"|<"
 	"|ADD:"
@@ -105,35 +105,45 @@ const hfst::HfstTransducer *readTransducer(const std::string& file) {
 	return t;
 }
 
-const std::pair<bool, StringVec> get_gentags(const std::string& tags) {
-	StringVec gentags;
+const std::tuple<bool, std::string, StringVec> get_gentags(const std::string& tags) {
 	bool suggest = false;
+	std::string errtype;
+	StringVec gentags;
 	for(auto& tag : split(tags)) {
-		if(tag == CG_SUGGEST_TAG) {
-			suggest = true;
-		}
 		std::match_results<const char*> result;
 		std::regex_match(tag.c_str(), result, CG_SKIP_TAG);
 		if (result.empty()) {
 			gentags.push_back(tag);
 		}
+		else if(result[2].length() != 0) {
+			if(tag == CG_SUGGEST_TAG) {
+				suggest = true;
+			}
+			else {
+				errtype = result[2];
+			}
+		}
 	}
-	return std::pair<bool, StringVec>(suggest, gentags);
+	return std::make_tuple(suggest, errtype, gentags);
 }
 
-const std::tuple<bool, std::string, StringVec> get_sugg(const hfst::HfstTransducer *t, const std::string& line) {
+const std::tuple<bool, std::string, std::string, StringSet>
+get_sugg(const hfst::HfstTransducer *t, const std::string& line) {
 	const auto& lemma_end = line.find("\" ");
 	const auto& lemma = line.substr(2, lemma_end-2);
 	const auto& tags = line.substr(lemma_end+2);
 	const auto& suggen = get_gentags(tags);
-	const auto& suggest = suggen.first;
-	const auto& gentags = suggen.second;
-	StringVec forms;
-	if(!suggest) {
-		return std::make_tuple(suggest, lemma+"+"+tags, forms);
-	}
+	const auto& suggest = std::get<0>(suggen);
+	const auto& errtype = std::get<1>(suggen);
+	const auto& gentags = std::get<2>(suggen);
+	StringSet forms;
 	const auto& tagsplus = join(gentags, "+");
 	const auto& ana = lemma+"+"+tagsplus;
+
+	if(!suggest) {
+		return std::make_tuple(suggest, ana, errtype, forms);
+	}
+
 	const auto& paths = t->lookup_fd({ ana }, -1, 10.0);
 	std::stringstream form;
 	if(paths->size() > 0) {
@@ -144,10 +154,10 @@ const std::tuple<bool, std::string, StringVec> get_sugg(const hfst::HfstTransduc
 					form << symbol;
 				}
 			}
-			forms.push_back(form.str());
+			forms.insert(form.str());
 		}
 	}
-	return std::make_tuple(suggest, ana, forms);
+	return std::make_tuple(suggest, ana, errtype, forms);
 }
 
 
@@ -155,12 +165,13 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 {
 	json::sanity_test();
 	int pos = 0;
-	std::u16string etype = u"boasttu kásushápmi"; // TODO from &-tag
+	std::u16string errtype = u"&default";
 	bool first_err = true;
 	bool first_word = true;
 	std::u16string wf;
 	std::ostringstream text;
 	bool blank = false;
+	std::map<std::u16string, StringSet> cohort_err;
 
 	// TODO: could use http://utfcpp.sourceforge.net, but it's not in macports;
 	// and ICU seems overkill just for iterating codepoints
@@ -173,6 +184,21 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 		if (!result.empty() && result[2].length() != 0) {
+			if(!cohort_err.empty()) { // TODO: in a function, since we need to do this at EOF as well
+				if(!first_err) {
+					os << ",";
+				}
+				first_err = false;
+				// TODO: currently we just pick one if there are several error types:
+				auto const& err = cohort_err.begin();
+				os << "[" << json::str(wf)
+				   << "," << pos-wf.size()
+				   << "," << pos
+				   << "," << json::str(err->first)
+				   << "," << json::str_arr(err->second)
+				   << "]";
+				cohort_err.clear();
+			}
 			if(!blank && !first_word) {
 				// Assume we had a single space if there wasn't a superblank
 				text << " ";
@@ -187,18 +213,13 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 		else if(!result.empty() && result[3].length() != 0) {
 			// TODO: doesn't do anything with subreadings yet; needs to keep track of previous line(s) for that
 			const auto& sugg = get_sugg(t, line);
+			if(!std::get<2>(sugg).empty()) {
+				errtype = utf16conv.from_bytes(std::get<2>(sugg));
+			}
 			if(std::get<0>(sugg)) {
-				StringVec formv = std::get<2>(sugg);
-				if(!first_err) {
-					os << ",";
-				}
-				first_err = false;
-				os << "[" << json::str(wf)
-				   << "," << pos-wf.size()
-				   << "," << pos
-				   << "," << json::str(etype)
-				   << "," << json::str_arr(formv)
-				   << "]";
+				cohort_err[errtype].insert(std::get<3>(sugg).begin(),
+							   std::get<3>(sugg).end());
+
 			}
 		}
 		else {
@@ -215,24 +236,28 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 
 void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 {
-	std::string wf;
+	// Simple debug function
 	std::ostringstream ss;
 	for (std::string line; std::getline(is, line);) {
 		os << line << std::endl;
-		if(line.size()>2 && line[0]=='"' && line[1]=='<') {
-			wf = line;
-		}
-		else if(line.size()>2 && line[0]=='\t' && line[1]=='"') {
-			// TODO: doesn't do anything with subreadings yet; needs to keep track of previous line(s) for that
+		std::match_results<const char*> result;
+		std::regex_match(line.c_str(), result, CG_LINE);
+		if(!result.empty() && result[3].length() != 0) {
 			const auto& sugg = get_sugg(t, line);
 			if(std::get<0>(sugg)) {
 				const auto& ana = std::get<1>(sugg);;
-				const auto& formv = std::get<2>(sugg);
+				const auto& formv = std::get<3>(sugg);
 				if(formv.empty()) {
 					os << ana << "\t" << "?" << std::endl;
 				}
 				else {
 					os << ana << "\t" << join(formv) << std::endl;
+				}
+			}
+			else {
+				const auto& errtype = std::get<2>(sugg);;
+				if(!errtype.empty()) {
+					os << errtype << std::endl;
 				}
 			}
 		}

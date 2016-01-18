@@ -28,24 +28,28 @@
 #include <iterator>
 
 #include <vector>
+#include <set>
 #include <string>
 #include <algorithm>
 
 namespace gtd {
 
 typedef std::vector<std::string> StringVec;
+typedef std::set<std::string> StringSet;
 
-inline const std::string join_quoted(const StringVec vec, const std::string delim=" ") {
+template<typename Container>
+inline const std::string join_quoted(const Container& ss, const std::string delim=" ") {
 	std::ostringstream os;
-	std::for_each(vec.begin(), vec.end(), [&](const std::string& s){ os << "\"" << s << "\","; });
+	std::for_each(ss.begin(), ss.end(), [&](const std::string& s){ os << "\"" << s << "\","; });
 	const auto& str = os.str();
 	return str.substr(0,
 			  str.size() - delim.size());
 }
 
-inline const std::string join(const StringVec vec, const std::string delim=" ") {
+template<typename Container>
+inline const std::string join(const Container& ss, const std::string delim=" ") {
 	std::ostringstream os;
-	std::copy(vec.begin(), vec.end(), std::ostream_iterator<std::string>(os, delim.c_str()));
+	std::copy(ss.begin(), ss.end(), std::ostream_iterator<std::string>(os, delim.c_str()));
 	const auto& str = os.str();
 	return str.substr(0,
 			  str.size() - delim.size());
