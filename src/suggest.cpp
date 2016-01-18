@@ -205,6 +205,7 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 				pos += 1;
 			}
 			first_word = false;
+			blank = false;
 			wf = utf16conv.from_bytes(result[2]);
 			pos += wf.size();
 			text << utf16conv.to_bytes(wf);
@@ -221,6 +222,7 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 							   std::get<3>(sugg).end());
 
 			}
+			blank = false;
 		}
 		else {
 			// TODO: remove []superblank and \\'s from superblank?
