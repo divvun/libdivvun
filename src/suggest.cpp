@@ -70,6 +70,7 @@ const std::basic_regex<char> CG_LINE ("^"
 				      "|(\t)+(\"[^\"]*\"\\S*)(\\s+\\S+)*" // reading, group 3, 4, 5
 				      ")");
 
+const std::basic_regex<char> PUNCT_NOPRESPC_HACK ("^[.,)]+$");
 
 const hfst::HfstTransducer *readTransducer(const std::string& file) {
 	hfst::HfstInputStream *in = NULL;
@@ -160,6 +161,14 @@ get_sugg(const hfst::HfstTransducer *t, const std::string& line) {
 	return std::make_tuple(suggest, ana, errtype, forms);
 }
 
+bool wants_prespc(std::string wf, bool blank, bool first_word) {
+	std::match_results<const char*> result;
+	std::regex_match(wf.c_str(), result, PUNCT_NOPRESPC_HACK);
+	// TODO: should actually check whether we've seen a real
+	// blank, but current input format throws away that info, so
+	// instead we just have this stupid wordform-check:
+	return !first_word && !result.empty(); // && !blank
+}
 
 void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 {
@@ -199,8 +208,7 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 				   << "]";
 				cohort_err.clear();
 			}
-			if(!blank && !first_word) {
-				// Assume we had a single space if there wasn't a superblank
+			if(wants_prespc(result[2], blank, first_word)) {
 				text << " ";
 				pos += 1;
 			}
@@ -226,8 +234,9 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 		}
 		else {
 			// TODO: remove []superblank and \\'s from superblank?
-			pos += utf16conv.from_bytes(line).size(); // something untokenised?
-			text << line;
+			// TODO: Uncommented for now since current input format throws away blanks
+			// pos += utf16conv.from_bytes(line).size();
+			// text << line;
 			blank = true;
 		}
 	}
