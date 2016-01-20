@@ -162,12 +162,12 @@ get_sugg(const hfst::HfstTransducer *t, const std::string& line) {
 }
 
 bool wants_prespc(std::string wf, bool blank, bool first_word) {
-	std::match_results<const char*> result;
-	std::regex_match(wf.c_str(), result, PUNCT_NOPRESPC_HACK);
+	std::match_results<const char*> punct_prespc;
+	std::regex_match(wf.c_str(), punct_prespc, PUNCT_NOPRESPC_HACK);
 	// TODO: should actually check whether we've seen a real
 	// blank, but current input format throws away that info, so
 	// instead we just have this stupid wordform-check:
-	return !first_word && !result.empty(); // && !blank
+	return !first_word && punct_prespc.empty(); // && !blank
 }
 
 void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
