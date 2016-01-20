@@ -70,7 +70,7 @@ const std::basic_regex<char> CG_LINE ("^"
 				      "|(\t)+(\"[^\"]*\"\\S*)(\\s+\\S+)*" // reading, group 3, 4, 5
 				      ")");
 
-const std::basic_regex<char> PUNCT_NOPRESPC_HACK ("^[.,)]+$");
+const std::basic_regex<char> PUNCT_NOPRESPC_HACK ("^[.,)?!]+$");
 
 const hfst::HfstTransducer *readTransducer(const std::string& file) {
 	hfst::HfstInputStream *in = NULL;
