@@ -56,10 +56,9 @@ inline const std::string key(const std::u16string& s)
 template<typename Container>
 inline const std::string str_arr(const Container& ss)
 {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::ostringstream os;
 	for(const auto& s : ss) {
-		os << str(utf16conv.from_bytes(s)) << ",";
+		os << str(s) << ",";
 	}
 	const auto& str = os.str();
 	return "[" + str.substr(0, str.size() - 1) + "]";

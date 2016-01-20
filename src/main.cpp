@@ -31,7 +31,7 @@ int main(int argc, char ** argv)
 		options.add_options()
 			("j,json", "Use JSON output format (default: CG)")
 			("g,generator", "Generator (HFSTOL format)", cxxopts::value<std::string>(), "BIN")
-			("m,messages", "Error messages (XML format, UNIMPLEMENTED)", cxxopts::value<std::string>(), "FILE")
+			("m,messages", "ERROR messages (XML format, UNIMPLEMENTED)", cxxopts::value<std::string>(), "FILE")
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
 			("v,verbose", "Be verbose")
@@ -40,7 +40,7 @@ int main(int argc, char ** argv)
 
 		std::vector<std::string> pos = {
 			"generator",
-			//"messages"
+			"messages"
 			//"input"
 			//"output"
 		};
@@ -49,7 +49,7 @@ int main(int argc, char ** argv)
 
 		if(argc > 1) {
 			std::cout << options.help({""}) << std::endl;
-			std::cerr << "Error: got " << argc-1+pos.size() <<" arguments; expected only " << pos.size() << std::endl;
+			std::cerr << "ERROR: got " << argc-1+pos.size() <<" arguments; expected only " << pos.size() << std::endl;
 			return(EXIT_SUCCESS);
 		}
 
@@ -61,11 +61,18 @@ int main(int argc, char ** argv)
 		if (!options.count("generator"))
 		{
 			std::cout << options.help({""}) << std::endl;
-			std::cerr << "Error: expected generator.hfstol as argument." << std::endl;
+			std::cerr << "ERROR: expected generator.hfstol as argument." << std::endl;
+			return(EXIT_FAILURE);
+		}
+		if (!options.count("messages"))
+		{
+			std::cout << options.help({""}) << std::endl;
+			std::cerr << "ERROR: expected errors.xml as argument." << std::endl;
 			return(EXIT_FAILURE);
 		}
 
 		const auto& genfile = options["generator"].as<std::string>();
+		const auto& msgfile = options["messages"].as<std::string>();
 		bool json = options.count("j");
 		bool verbose = options.count("v");
 
@@ -74,14 +81,25 @@ int main(int argc, char ** argv)
 		}
 		const hfst::HfstTransducer *t = gtd::readTransducer(genfile);
 		if (t == NULL) {
-			std::cerr << "Error: Couldn't read transducer "<< genfile << std::endl;
+			std::cerr << "ERROR: Couldn't read transducer "<< genfile << std::endl;
 			return(EXIT_FAILURE);
 		}
-		gtd::run(std::cin, std::cout, t, json);
+
+		if(verbose) {
+			std::cerr << "Reading messages xml" << msgfile << std::endl;
+		}
+		const auto m = gtd::readMessages(msgfile);
+		if (m.empty()) {
+			std::cerr << "WARNING: Couldn't read messages xml "<< msgfile << std::endl;
+			return(EXIT_FAILURE);
+		}
+
+		gtd::run(std::cin, std::cout, t, m, json);
+		gtd::closeTransducer(t);
 	}
 	catch (const cxxopts::OptionException& e)
 	{
-		std::cout << "Error: couldn't parse options: " << e.what() << std::endl;
+		std::cout << "ERROR: couldn't parse options: " << e.what() << std::endl;
 		return(EXIT_FAILURE);
 	}
 }

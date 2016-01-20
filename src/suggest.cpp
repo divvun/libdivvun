@@ -70,6 +70,35 @@ const std::basic_regex<char> CG_LINE ("^"
 				      "|(\t)+(\"[^\"]*\"\\S*)(\\s+\\S+)*" // reading, group 3, 4, 5
 				      ")");
 
+const msgmap readMessages(const std::string& file) {
+	msgmap msgs;
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_file(file.c_str());
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+
+	if (result) {
+		for (pugi::xml_node error: doc.child("errors").children("error")) {
+			for (pugi::xml_node child: error.child("header").children("title")) {
+				// child_value assumes we only ever have one PCDATA element here:
+				const auto& errtype = utf16conv.from_bytes(error.attribute("id").value());
+				const auto& msg = utf16conv.from_bytes(child.child_value());
+				const auto& lang = child.attribute("xml:lang").value();
+				if(msgs[lang].count(errtype) != 0) {
+					std::cerr << "WARNING: Duplicate titles for " << error.attribute("id").value() << std::endl;
+				}
+				msgs[lang][errtype] = msg;
+			}
+		}
+	}
+	else {
+		std::cerr << file << ":" << result.offset << " ERROR: " << result.description() << "\n";
+	}
+	return msgs;
+}
+
+void closeTransducer(const hfst::HfstTransducer *t) {
+	delete t;
+}
 
 const hfst::HfstTransducer *readTransducer(const std::string& file) {
 	hfst::HfstInputStream *in = NULL;
@@ -127,16 +156,17 @@ const std::tuple<bool, std::string, StringVec> get_gentags(const std::string& ta
 	return std::make_tuple(suggest, errtype, gentags);
 }
 
-const std::tuple<bool, std::string, std::string, StringSet>
+const std::tuple<bool, std::string, std::u16string, UStringSet>
 get_sugg(const hfst::HfstTransducer *t, const std::string& line) {
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	const auto& lemma_end = line.find("\" ");
 	const auto& lemma = line.substr(2, lemma_end-2);
 	const auto& tags = line.substr(lemma_end+2);
 	const auto& suggen = get_gentags(tags);
 	const auto& suggest = std::get<0>(suggen);
-	const auto& errtype = std::get<1>(suggen);
+	const auto& errtype = utf16conv.from_bytes(std::get<1>(suggen));
 	const auto& gentags = std::get<2>(suggen);
-	StringSet forms;
+	UStringSet forms;
 	const auto& tagsplus = join(gentags, "+");
 	const auto& ana = lemma+"+"+tagsplus;
 
@@ -154,24 +184,24 @@ get_sugg(const hfst::HfstTransducer *t, const std::string& line) {
 					form << symbol;
 				}
 			}
-			forms.insert(form.str());
+			forms.insert(utf16conv.from_bytes(form.str()));
 		}
 	}
 	return std::make_tuple(suggest, ana, errtype, forms);
 }
 
 
-void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
+void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t, const msgmap& msgs)
 {
 	json::sanity_test();
 	int pos = 0;
-	std::u16string errtype = u"&default";
+	std::u16string errtype = u"default";
 	bool first_err = true;
 	bool first_word = true;
 	std::u16string wf;
 	std::ostringstream text;
 	bool blank = false;
-	std::map<std::u16string, StringSet> cohort_err;
+	std::map<std::u16string, UStringSet> cohort_err;
 
 	// TODO: could use http://utfcpp.sourceforge.net, but it's not in macports;
 	// and ICU seems overkill just for iterating codepoints
@@ -191,10 +221,15 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 				first_err = false;
 				// TODO: currently we just pick one if there are several error types:
 				auto const& err = cohort_err.begin();
+				std::u16string msg = err->first;
+				if(msgs.at("se").count(msg) != 0) {
+					msg = msgs.at("se").at(msg);
+				}
 				os << "[" << json::str(wf)
 				   << "," << pos-wf.size()
 				   << "," << pos
 				   << "," << json::str(err->first)
+				   << "," << json::str(msg)
 				   << "," << json::str_arr(err->second)
 				   << "]";
 				cohort_err.clear();
@@ -215,7 +250,7 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 			// TODO: doesn't do anything with subreadings yet; needs to keep track of previous line(s) for that
 			const auto& sugg = get_sugg(t, line);
 			if(!std::get<2>(sugg).empty()) {
-				errtype = utf16conv.from_bytes(std::get<2>(sugg));
+				errtype = std::get<2>(sugg);
 			}
 			if(std::get<0>(sugg)) {
 				cohort_err[errtype].insert(std::get<3>(sugg).begin(),
@@ -238,6 +273,7 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 
 void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 {
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	// Simple debug function
 	std::ostringstream ss;
 	for (std::string line; std::getline(is, line);) {
@@ -253,23 +289,23 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 					os << ana << "\t" << "?" << std::endl;
 				}
 				else {
-					os << ana << "\t" << join(formv) << std::endl;
+					os << ana << "\t" << u16join(formv) << std::endl;
 				}
 			}
 			else {
 				const auto& errtype = std::get<2>(sugg);;
 				if(!errtype.empty()) {
-					os << errtype << std::endl;
+					os << utf16conv.to_bytes(errtype) << std::endl;
 				}
 			}
 		}
 	}
 }
 
-void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t, bool json)
+void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t, const msgmap& m, bool json)
 {
 	if(json) {
-		run_json(is, os, t);
+		run_json(is, os, t, m);
 	}
 	else {
 		run_cg(is, os, t);

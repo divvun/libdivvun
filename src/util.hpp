@@ -32,10 +32,12 @@
 #include <string>
 #include <algorithm>
 
+#include <locale>
+#include <codecvt>
+
 namespace gtd {
 
 typedef std::vector<std::string> StringVec;
-typedef std::set<std::string> StringSet;
 
 template<typename Container>
 inline const std::string join_quoted(const Container& ss, const std::string delim=" ") {
@@ -50,6 +52,18 @@ template<typename Container>
 inline const std::string join(const Container& ss, const std::string delim=" ") {
 	std::ostringstream os;
 	std::copy(ss.begin(), ss.end(), std::ostream_iterator<std::string>(os, delim.c_str()));
+	const auto& str = os.str();
+	return str.substr(0,
+			  str.size() - delim.size());
+}
+
+template<typename Container>
+inline const std::string u16join(const Container& ss, const std::string delim=" ") {
+	std::ostringstream os;
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	for(const auto& s : ss) {
+		os << utf16conv.to_bytes(s) << ",";
+	}
 	const auto& str = os.str();
 	return str.substr(0,
 			  str.size() - delim.size());
