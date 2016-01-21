@@ -233,7 +233,8 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t,
 				// TODO: currently we just pick one if there are several error types:
 				auto const& err = cohort_err.begin();
 				std::u16string msg = err->first;
-				if(msgs.at("se").count(msg) != 0) {
+				if(msgs.count("se") != 0
+				   && msgs.at("se").count(msg) != 0) {
 					msg = msgs.at("se").at(msg);
 				}
 				os << "[" << json::str(wf)
