@@ -1,7 +1,7 @@
 This should:
 
 - [X] read cg format
-- [ ] load errors.xml
+- [X] load errors.xml
 - [X] load an hfstol bin
 - [X] generate forms from CG-specified analyses
 - [X] only generate forms if analyses have a certain tag (and don't send that tag to generator)
@@ -11,3 +11,4 @@ This should:
 Also TODO:
 - [ ] better way to skip @FLAGDIACRITICS@ in output
 - [ ] deal with subreadings
+- [ ] input format needs to show where we have (and don't have) blanks
