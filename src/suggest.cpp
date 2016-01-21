@@ -199,7 +199,8 @@ const Reading proc_line(const hfst::HfstTransducer& t, const std::string& line) 
 	return {suggest, ana, errtype, sforms};
 }
 
-bool wants_prespc(std::string wf, bool blank, bool first_word) {
+// TODO: possible to run regex match on u16string?
+const bool wants_prespc(const std::string wf, const bool blank, const bool first_word) {
 	std::match_results<const char*> punct_prespc;
 	std::regex_match(wf.c_str(), punct_prespc, PUNCT_NOPRESPC_HACK);
 	// TODO: should actually check whether we've seen a real
@@ -222,6 +223,54 @@ std::map<std::u16string, UStringSet> sugg_append(std::u16string next_wf, std::ma
 	return fixed;
 }
 
+void proc_cohort(int& pos,
+		 bool& first_err,
+		 const bool& first_word,
+		 const bool& blank,
+		 const std::u16string& wf,
+		 std::map<std::u16string, UStringSet>& cohort_err,
+		 std::ostringstream& text,
+		 std::ostream& os,
+		 const hfst::HfstTransducer& t,
+		 const msgmap& msgs,
+		 std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>& utf16conv)
+{
+	std::string wfs = utf16conv.to_bytes(wf);
+	if(wants_prespc(wfs, blank, first_word)) {
+		text << " ";
+		pos += 1;
+	}
+	if(!cohort_err.empty()) {
+		std::cerr << "errs!" <<std::endl;
+		if(!first_err) {
+			os << ",";
+		}
+		first_err = false;
+		// TODO: currently we just pick one if there are several error types:
+		auto const& err = cohort_err.begin();
+		std::u16string msg = err->first;
+		// TODO: locale, how? One process per locale (command-line-arg) or print all messages?
+		if(msgs.count("se") != 0
+		   && msgs.at("se").count(msg) != 0) {
+			msg = msgs.at("se").at(msg);
+		}
+		else {
+			std::cerr << "WARNING: No message for " << json::str(err->first) << std::endl;
+		}
+		os << "[" << json::str(wf)
+		   << "," << pos
+		   << "," << pos+wf.size()
+		   << "," << json::str(err->first)
+		   << "," << json::str(msg)
+		   << "," << json::str_arr(err->second)
+		   << "]";
+		cohort_err.clear();
+	}
+	pos += wf.size();
+	text << wfs;
+	// TODO: wrapper for pos-increasing and text-adding, since they should always happen together
+}
+
 void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& msgs)
 {
 	json::sanity_test();
@@ -230,8 +279,8 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 	bool first_err = true;
 	bool first_word = true;
 	bool is_addcohort = true;
-	std::u16string wf;
 	bool blank = false;
+	std::u16string wf;
 	std::ostringstream text;
 	std::map<std::u16string, UStringSet> cohort_err;
 
@@ -251,40 +300,17 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 							 cohort_err);
 			}
 			else {
-				// TODO: in a function, since we need to do this at EOF as well
-				if(wants_prespc(result[2], blank, first_word)) {
-					text << " ";
-					pos += 1;
-				}
-				if(!cohort_err.empty()) {
-					std::cerr << "errs!" <<std::endl;
-					if(!first_err) {
-						os << ",";
-					}
-					first_err = false;
-					// TODO: currently we just pick one if there are several error types:
-					auto const& err = cohort_err.begin();
-					std::u16string msg = err->first;
-					// TODO: locale, how? One process per locale (command-line-arg) or print all messages?
-					if(msgs.count("se") != 0
-					   && msgs.at("se").count(msg) != 0) {
-						msg = msgs.at("se").at(msg);
-					}
-					else {
-						std::cerr << "WARNING: No message for " << json::str(err->first) << std::endl;
-					}
-					os << "[" << json::str(wf)
-					   << "," << pos
-					   << "," << pos+wf.size()
-					   << "," << json::str(err->first)
-					   << "," << json::str(msg)
-					   << "," << json::str_arr(err->second)
-					   << "]";
-					cohort_err.clear();
-				}
-				pos += wf.size();
-				text << utf16conv.to_bytes(wf);
-				// TODO: wrapper for pos-increasing and text-adding, since they should always happen together
+				proc_cohort(pos,
+					    first_err,
+					    first_word,
+					    blank,
+					    wf,
+					    cohort_err,
+					    text,
+					    os,
+					    t,
+					    msgs,
+					    utf16conv);
 			}
 			first_word = false;
 			blank = false;
@@ -314,6 +340,17 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 			blank = true;
 		}
 	}
+	proc_cohort(pos,
+		    first_err,
+		    first_word,
+		    blank,
+		    wf,
+		    cohort_err,
+		    text,
+		    os,
+		    t,
+		    msgs,
+		    utf16conv);
 	os << "]"
 	   << "," << json::key(u"text") << json::str(utf16conv.from_bytes(text.str()))
 	   << "}";
