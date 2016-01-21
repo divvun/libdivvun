@@ -137,7 +137,7 @@ const hfst::HfstTransducer *readTransducer(const std::string& file) {
 	return t;
 }
 
-const std::tuple<bool, std::string, StringVec> get_gentags(const std::string& tags) {
+const std::tuple<bool, std::string, StringVec> proc_tags(const std::string& tags) {
 	bool suggest = false;
 	std::string errtype;
 	StringVec gentags;
@@ -159,22 +159,28 @@ const std::tuple<bool, std::string, StringVec> get_gentags(const std::string& ta
 	return std::make_tuple(suggest, errtype, gentags);
 }
 
-const std::tuple<bool, std::string, std::u16string, UStringSet>
-get_sugg(const hfst::HfstTransducer& t, const std::string& line) {
+struct Reading {
+		bool suggest;
+		std::string ana;
+		std::u16string errtype;
+		UStringSet sforms;
+};
+
+const Reading proc_line(const hfst::HfstTransducer& t, const std::string& line) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	const auto& lemma_end = line.find("\" ");
 	const auto& lemma = line.substr(2, lemma_end-2);
 	const auto& tags = line.substr(lemma_end+2);
-	const auto& suggen = get_gentags(tags);
+	const auto& suggen = proc_tags(tags);
 	const auto& suggest = std::get<0>(suggen);
 	const auto& errtype = utf16conv.from_bytes(std::get<1>(suggen));
 	const auto& gentags = std::get<2>(suggen);
-	UStringSet forms;
+	UStringSet sforms;
 	const auto& tagsplus = join(gentags, "+");
 	const auto& ana = lemma+"+"+tagsplus;
 
 	if(!suggest) {
-		return std::make_tuple(suggest, ana, errtype, forms);
+		return {suggest, ana, errtype, sforms};
 	}
 
 	const auto& paths = t.lookup_fd({ ana }, -1, 10.0);
@@ -187,10 +193,10 @@ get_sugg(const hfst::HfstTransducer& t, const std::string& line) {
 					form << symbol;
 				}
 			}
-			forms.insert(utf16conv.from_bytes(form.str()));
+			sforms.insert(utf16conv.from_bytes(form.str()));
 		}
 	}
-	return std::make_tuple(suggest, ana, errtype, forms);
+	return {suggest, ana, errtype, sforms};
 }
 
 bool wants_prespc(std::string wf, bool blank, bool first_word) {
@@ -202,6 +208,20 @@ bool wants_prespc(std::string wf, bool blank, bool first_word) {
 	return !first_word && punct_prespc.empty(); // && !blank
 }
 
+/* If we have an inserted suggestion, then the next word has to be
+ * part of that, since we don't want to *replace* the word
+**/
+std::map<std::u16string, UStringSet> sugg_append(std::u16string next_wf, std::map<std::u16string, UStringSet> cohort_err)
+{
+	std::map<std::u16string, UStringSet> fixed;
+	for(auto& err : cohort_err) {
+		for(auto& f : err.second) {
+			fixed[err.first].insert(f + u" " + next_wf);
+		}
+	}
+	return fixed;
+}
+
 void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& msgs)
 {
 	json::sanity_test();
@@ -209,9 +229,10 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 	std::u16string errtype = u"default";
 	bool first_err = true;
 	bool first_word = true;
+	bool is_addcohort = true;
 	std::u16string wf;
-	std::ostringstream text;
 	bool blank = false;
+	std::ostringstream text;
 	std::map<std::u16string, UStringSet> cohort_err;
 
 	// TODO: could use http://utfcpp.sourceforge.net, but it's not in macports;
@@ -225,52 +246,62 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 		if (!result.empty() && result[2].length() != 0) {
-			if(!cohort_err.empty()) { // TODO: in a function, since we need to do this at EOF as well
-				if(!first_err) {
-					os << ",";
-				}
-				first_err = false;
-				// TODO: currently we just pick one if there are several error types:
-				auto const& err = cohort_err.begin();
-				std::u16string msg = err->first;
-				// TODO: locale, how? One process per locale (command-line-arg) or print all messages?
-				if(msgs.count("se") != 0
-				   && msgs.at("se").count(msg) != 0) {
-					msg = msgs.at("se").at(msg);
-				}
-				else {
-					std::cerr << "WARNING: No message for " << json::str(err->first) << std::endl;
-				}
-				os << "[" << json::str(wf)
-				   << "," << pos-wf.size()
-				   << "," << pos
-				   << "," << json::str(err->first)
-				   << "," << json::str(msg)
-				   << "," << json::str_arr(err->second)
-				   << "]";
-				cohort_err.clear();
+			if(is_addcohort) {
+				cohort_err = sugg_append(utf16conv.from_bytes(result[2]),
+							 cohort_err);
 			}
-			if(wants_prespc(result[2], blank, first_word)) {
-				text << " ";
-				pos += 1;
+			else {
+				// TODO: in a function, since we need to do this at EOF as well
+				if(!cohort_err.empty()) {
+					if(!first_err) {
+						os << ",";
+					}
+					first_err = false;
+					// TODO: currently we just pick one if there are several error types:
+					auto const& err = cohort_err.begin();
+					std::u16string msg = err->first;
+					// TODO: locale, how? One process per locale (command-line-arg) or print all messages?
+					if(msgs.count("se") != 0
+					   && msgs.at("se").count(msg) != 0) {
+						msg = msgs.at("se").at(msg);
+					}
+					else {
+						std::cerr << "WARNING: No message for " << json::str(err->first) << std::endl;
+					}
+					os << "[" << json::str(wf)
+					   << "," << pos-wf.size()
+					   << "," << pos
+					   << "," << json::str(err->first)
+					   << "," << json::str(msg)
+					   << "," << json::str_arr(err->second)
+					   << "]";
+					cohort_err.clear();
+				}
+				if(wants_prespc(result[2], blank, first_word)) {
+					text << " ";
+					pos += 1;
+				}
+				pos += wf.size();
+				text << utf16conv.to_bytes(wf);
+				// TODO: wrapper for pos-increasing and text-adding, since they should always happen together
 			}
 			first_word = false;
 			blank = false;
+			is_addcohort = true;
 			wf = utf16conv.from_bytes(result[2]);
-			pos += wf.size();
-			text << utf16conv.to_bytes(wf);
-			// TODO: wrapper for pos-increasing and text-adding, since they should always happen together
 		}
 		else if(!result.empty() && result[3].length() != 0) {
 			// TODO: doesn't do anything with subreadings yet; needs to keep track of previous line(s) for that
-			const auto& sugg = get_sugg(t, line);
-			if(!std::get<2>(sugg).empty()) {
-				errtype = std::get<2>(sugg);
+			const auto& sugg = proc_line(t, line);
+			if(!sugg.errtype.empty()) {
+				errtype = sugg.errtype;
 			}
-			if(std::get<0>(sugg)) {
-				cohort_err[errtype].insert(std::get<3>(sugg).begin(),
-							   std::get<3>(sugg).end());
-
+			if(sugg.suggest) {
+				cohort_err[errtype].insert(sugg.sforms.begin(),
+							   sugg.sforms.end());
+			}
+			else {
+				is_addcohort = false; // Seen at least one non-suggestion reading
 			}
 			blank = false;
 		}
@@ -297,10 +328,10 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 		if(!result.empty() && result[3].length() != 0) {
-			const auto& sugg = get_sugg(t, line);
-			if(std::get<0>(sugg)) {
-				const auto& ana = std::get<1>(sugg);;
-				const auto& formv = std::get<3>(sugg);
+			const auto& sugg = proc_line(t, line);
+			if(sugg.suggest) {
+				const auto& ana = sugg.ana;
+				const auto& formv = sugg.sforms;
 				if(formv.empty()) {
 					os << ana << "\t" << "?" << std::endl;
 				}
@@ -309,7 +340,7 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 				}
 			}
 			else {
-				const auto& errtype = std::get<2>(sugg);;
+				const auto& errtype = sugg.errtype;
 				if(!errtype.empty()) {
 					os << utf16conv.to_bytes(errtype) << std::endl;
 				}
