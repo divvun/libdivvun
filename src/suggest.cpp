@@ -252,7 +252,12 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 			}
 			else {
 				// TODO: in a function, since we need to do this at EOF as well
+				if(wants_prespc(result[2], blank, first_word)) {
+					text << " ";
+					pos += 1;
+				}
 				if(!cohort_err.empty()) {
+					std::cerr << "errs!" <<std::endl;
 					if(!first_err) {
 						os << ",";
 					}
@@ -269,17 +274,13 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 						std::cerr << "WARNING: No message for " << json::str(err->first) << std::endl;
 					}
 					os << "[" << json::str(wf)
-					   << "," << pos-wf.size()
 					   << "," << pos
+					   << "," << pos+wf.size()
 					   << "," << json::str(err->first)
 					   << "," << json::str(msg)
 					   << "," << json::str_arr(err->second)
 					   << "]";
 					cohort_err.clear();
-				}
-				if(wants_prespc(result[2], blank, first_word)) {
-					text << " ";
-					pos += 1;
 				}
 				pos += wf.size();
 				text << utf16conv.to_bytes(wf);
