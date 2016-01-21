@@ -233,9 +233,13 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 				// TODO: currently we just pick one if there are several error types:
 				auto const& err = cohort_err.begin();
 				std::u16string msg = err->first;
+				// TODO: locale, how? One process per locale (command-line-arg) or print all messages?
 				if(msgs.count("se") != 0
 				   && msgs.at("se").count(msg) != 0) {
 					msg = msgs.at("se").at(msg);
+				}
+				else {
+					std::cerr << "WARNING: No message for " << json::str(err->first) << std::endl;
 				}
 				os << "[" << json::str(wf)
 				   << "," << pos-wf.size()
