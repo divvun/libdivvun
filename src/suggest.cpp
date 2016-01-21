@@ -99,10 +99,6 @@ const msgmap readMessages(const std::string& file) {
 	return msgs;
 }
 
-void closeTransducer(const hfst::HfstTransducer *t) {
-	delete t;
-}
-
 const hfst::HfstTransducer *readTransducer(const std::string& file) {
 	hfst::HfstInputStream *in = NULL;
 	try
@@ -112,6 +108,10 @@ const hfst::HfstTransducer *readTransducer(const std::string& file) {
 	catch (StreamNotReadableException e)
 	{
 		std::cerr << "ERROR: File does not exist." << std::endl;
+		return NULL;
+	}
+	catch (HfstException e) {
+		std::cerr << "ERROR: HfstException." << std::endl;
 		return NULL;
 	}
 
@@ -160,7 +160,7 @@ const std::tuple<bool, std::string, StringVec> get_gentags(const std::string& ta
 }
 
 const std::tuple<bool, std::string, std::u16string, UStringSet>
-get_sugg(const hfst::HfstTransducer *t, const std::string& line) {
+get_sugg(const hfst::HfstTransducer& t, const std::string& line) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	const auto& lemma_end = line.find("\" ");
 	const auto& lemma = line.substr(2, lemma_end-2);
@@ -177,7 +177,7 @@ get_sugg(const hfst::HfstTransducer *t, const std::string& line) {
 		return std::make_tuple(suggest, ana, errtype, forms);
 	}
 
-	const auto& paths = t->lookup_fd({ ana }, -1, 10.0);
+	const auto& paths = t.lookup_fd({ ana }, -1, 10.0);
 	std::stringstream form;
 	if(paths->size() > 0) {
 		for(auto& p : *paths) {
@@ -202,7 +202,7 @@ bool wants_prespc(std::string wf, bool blank, bool first_word) {
 	return !first_word && punct_prespc.empty(); // && !blank
 }
 
-void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t, const msgmap& msgs)
+void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& msgs)
 {
 	json::sanity_test();
 	int pos = 0;
@@ -283,7 +283,7 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t,
 	   << "}";
 }
 
-void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
+void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	// Simple debug function
@@ -314,7 +314,7 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t)
 	}
 }
 
-void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t, const msgmap& m, bool json)
+void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& m, bool json)
 {
 	if(json) {
 		run_json(is, os, t, m);

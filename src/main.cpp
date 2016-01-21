@@ -79,8 +79,8 @@ int main(int argc, char ** argv)
 		if(verbose) {
 			std::cerr << "Reading transducer " << genfile << std::endl;
 		}
-		const hfst::HfstTransducer *t = gtd::readTransducer(genfile);
-		if (t == NULL) {
+		std::unique_ptr<const hfst::HfstTransducer> t(gtd::readTransducer(genfile));
+		if (!t) {
 			std::cerr << "ERROR: Couldn't read transducer "<< genfile << std::endl;
 			return(EXIT_FAILURE);
 		}
@@ -94,8 +94,7 @@ int main(int argc, char ** argv)
 			return(EXIT_FAILURE);
 		}
 
-		gtd::run(std::cin, std::cout, t, m, json);
-		gtd::closeTransducer(t);
+		gtd::run(std::cin, std::cout, *t, m, json);
 	}
 	catch (const cxxopts::OptionException& e)
 	{

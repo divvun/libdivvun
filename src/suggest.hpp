@@ -43,10 +43,9 @@ namespace gtd {
 typedef std::set<std::u16string> UStringSet;
 typedef std::unordered_map<std::string, std::unordered_map<std::u16string, std::u16string> > msgmap;
 
-void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer *t, const msgmap& m, bool json);
+void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& m, bool json);
 
 const hfst::HfstTransducer *readTransducer(const std::string& file);
-void closeTransducer(const hfst::HfstTransducer *t);
 
 const msgmap readMessages(const std::string& file);
 
