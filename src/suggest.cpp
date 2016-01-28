@@ -295,7 +295,7 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 		if (!result.empty() && result[2].length() != 0) {
-			if(is_addcohort) {
+			if(is_addcohort && prevtype != WordformL && !cohort_err.empty()) {
 				cohort_err = sugg_append(utf16conv.from_bytes(result[2]),
 							 cohort_err);
 			}
