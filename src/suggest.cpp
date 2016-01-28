@@ -200,13 +200,13 @@ const Reading proc_line(const hfst::HfstTransducer& t, const std::string& line) 
 }
 
 // TODO: possible to run regex match on u16string?
-const bool wants_prespc(const std::string wf, const bool blank, const bool first_word) {
+const bool wants_prespc(const std::string wf, const LineType prevtype, const bool first_word) {
 	std::match_results<const char*> punct_prespc;
 	std::regex_match(wf.c_str(), punct_prespc, PUNCT_NOPRESPC_HACK);
 	// TODO: should actually check whether we've seen a real
 	// blank, but current input format throws away that info, so
 	// instead we just have this stupid wordform-check:
-	return !first_word && punct_prespc.empty(); // && !blank
+	return !first_word && punct_prespc.empty(); // && !prevtype==BlankL
 }
 
 /* If we have an inserted suggestion, then the next word has to be
@@ -226,7 +226,7 @@ std::map<std::u16string, UStringSet> sugg_append(std::u16string next_wf, std::ma
 void proc_cohort(int& pos,
 		 bool& first_err,
 		 const bool& first_word,
-		 const bool& blank,
+		 const LineType& prevtype,
 		 const std::u16string& wf,
 		 std::map<std::u16string, UStringSet>& cohort_err,
 		 std::ostringstream& text,
@@ -236,7 +236,7 @@ void proc_cohort(int& pos,
 		 std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>& utf16conv)
 {
 	std::string wfs = utf16conv.to_bytes(wf);
-	if(wants_prespc(wfs, blank, first_word)) {
+	if(wants_prespc(wfs, prevtype, first_word)) {
 		text << " ";
 		pos += 1;
 	}
@@ -278,8 +278,8 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 	std::u16string errtype = u"default";
 	bool first_err = true;
 	bool first_word = true;
+	LineType prevtype = BlankL;
 	bool is_addcohort = true;
-	bool blank = false;
 	std::u16string wf;
 	std::ostringstream text;
 	std::map<std::u16string, UStringSet> cohort_err;
@@ -303,7 +303,7 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 				proc_cohort(pos,
 					    first_err,
 					    first_word,
-					    blank,
+					    prevtype,
 					    wf,
 					    cohort_err,
 					    text,
@@ -313,9 +313,9 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 					    utf16conv);
 			}
 			first_word = false;
-			blank = false;
 			is_addcohort = true;
 			wf = utf16conv.from_bytes(result[2]);
+			prevtype = WordformL;
 		}
 		else if(!result.empty() && result[3].length() != 0) {
 			// TODO: doesn't do anything with subreadings yet; needs to keep track of previous line(s) for that
@@ -330,20 +330,20 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 			else {
 				is_addcohort = false; // Seen at least one non-suggestion reading
 			}
-			blank = false;
+			prevtype = ReadingL;
 		}
 		else {
 			// TODO: remove []superblank and \\'s from superblank?
 			// TODO: Uncommented for now since current input format throws away blanks
 			// pos += utf16conv.from_bytes(line).size();
 			// text << line;
-			blank = true;
+			prevtype = BlankL;
 		}
 	}
 	proc_cohort(pos,
 		    first_err,
 		    first_word,
-		    blank,
+		    prevtype,
 		    wf,
 		    cohort_err,
 		    text,
