@@ -1,4 +1,4 @@
-AC_INIT([Divvun suggest], [0.1.0], [unhammer+apertium@mm.st])
+AC_INIT([Divvun suggest], [0.1.0], [unhammer+apertium@mm.st], [divvun-suggest], [http://giellatekno.uit.no/bugzilla/show_bug.cgi?id=2160])
 AC_CONFIG_SRCDIR([src/main.cpp])
 AM_INIT_AUTOMAKE
 
