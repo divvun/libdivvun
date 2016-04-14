@@ -1,3 +1,60 @@
+#+TITLE: divvun-suggest
+#+STARTUP: showall
+
+* Description
+
+This program does FST lookup on forms specified as Constraint
+Grammar format readings, and looks up error-tags in an XML file with
+human-readable messages. It is meant to be used as a late stage of a
+grammar checker pipeline. The main output format is JSON.
+
+* Prerequisites
+
+- gcc >=4.9.0 (or similarly recent version of clang, with full C++11
+  support)
+- libpugixml >=1.7.2
+- libhfst >=3.9.0
+
+Tested with gcc-5.2.0, gcc-5.3.1 and clang-703.0.29.
+
+(Should work all the way down to gcc-4.9, but will fail with e.g.
+gcc-4.8.4 or clang-3.5.0.)
+
+* Building
+
+#+BEGIN_SRC sh
+./autogen.sh
+./configure  # optionally with argument --prefix=$HOME/my/prefix
+make
+make install # with sudo if you didn't specify a prefix
+#+END_SRC
+
+* Usage
+
+Takes two arguments: a generator FST (in HFST optimised lookup
+format), and an error message XML file (see [[https://gtsvn.uit.no/langtech/trunk/langs/sme/tools/grammarcheckers/errors.xml][the one for Northern Saami]]
+for an example), with input/output as stdin and stdout:
+
+#+BEGIN_SRC sh
+src/divvun-suggest --json generator-gt-norm.hfstol errors.xml < input > output
+#+END_SRC
+
+More typically, it'll be in a pipeline after various runs of =vislcg3=:
+
+#+BEGIN_SRC sh
+echo words go here | hfst-tokenise -wacku: tokeniser.pmhfst | … | vislcg3 … \
+  | divvun-suggest --json generator-gt-norm.hfstol errors.xml
+#+END_SRC
+
+* Troubleshooting
+
+If you get
+: terminate called after throwing an instance of 'std::regex_error'
+:   what():  regex_error
+then your C++ compiler is too old. See [[*Prerequisites][Prerequisites]].
+
+* Progress [7/11]
+
 This should:
 
 - [X] read cg format
@@ -9,6 +66,9 @@ This should:
 - [X] optionally output as JSON
 
 Also TODO:
+
 - [ ] better way to skip @FLAGDIACRITICS@ in output
 - [ ] deal with subreadings
-- [ ] input format needs to show where we have (and don't have) blanks
+- [X] input format needs to show where we have (and don't have) blanks
+- [ ] deal with the new blank format given by hfst-tokenise (and
+  remove old blank hacks)
