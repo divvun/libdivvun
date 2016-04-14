@@ -68,10 +68,9 @@ const std::basic_regex<char> CG_SKIP_TAG (
 const std::basic_regex<char> CG_LINE ("^"
 				      "(\"<(.*)>\".*" // wordform, group 2
 				      "|(\t)+(\"[^\"]*\"\\S*)(\\s+\\S+)*" // reading, group 3, 4, 5
+				      "|:(.*)" // blank, group 6
 				      ")");
 
-
-const std::basic_regex<char> PUNCT_NOPRESPC_HACK ("^[.,)?!]+$");
 
 const msgmap readMessages(const std::string& file) {
 	msgmap msgs;
@@ -199,16 +198,6 @@ const Reading proc_line(const hfst::HfstTransducer& t, const std::string& line) 
 	return {suggest, ana, errtype, sforms};
 }
 
-// TODO: possible to run regex match on u16string?
-const bool wants_prespc(const std::string wf, const LineType prevtype, const bool first_word) {
-	std::match_results<const char*> punct_prespc;
-	std::regex_match(wf.c_str(), punct_prespc, PUNCT_NOPRESPC_HACK);
-	// TODO: should actually check whether we've seen a real
-	// blank, but current input format throws away that info, so
-	// instead we just have this stupid wordform-check:
-	return !first_word && punct_prespc.empty(); // && !prevtype==BlankL
-}
-
 /* If we have an inserted suggestion, then the next word has to be
  * part of that, since we don't want to *replace* the word
 **/
@@ -236,10 +225,6 @@ void proc_cohort(int& pos,
 		 std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>& utf16conv)
 {
 	std::string wfs = utf16conv.to_bytes(wf);
-	if(wants_prespc(wfs, prevtype, first_word)) {
-		text << " ";
-		pos += 1;
-	}
 	if(!cohort_err.empty()) {
 		std::cerr << "errs!" <<std::endl;
 		if(!first_err) {
@@ -332,11 +317,16 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 			}
 			prevtype = ReadingL;
 		}
-		else {
+		else if(!result.empty() && result[6].length() != 0) {
 			// TODO: remove []superblank and \\'s from superblank?
-			// TODO: Uncommented for now since current input format throws away blanks
-			// pos += utf16conv.from_bytes(line).size();
-			// text << line;
+			// (if we start using apertium-deshtml, that is)
+			std::regex nl("\\\\n"); // TODO: handle escaped escape before an n?
+			std::string blank = std::regex_replace ((std::string)result[6], nl, "\\n");
+			pos += utf16conv.from_bytes(blank).size();
+			text << blank;
+			prevtype = BlankL;
+		}
+		else {
 			prevtype = BlankL;
 		}
 	}

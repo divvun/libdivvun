@@ -53,7 +53,7 @@ If you get
 :   what():  regex_error
 then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequisites]].
 
-* Progress [7/11]
+* Progress [8/11]
 
 This should:
 
@@ -70,5 +70,5 @@ Also TODO:
 - [ ] better way to skip @FLAGDIACRITICS@ in output
 - [ ] deal with subreadings
 - [X] input format needs to show where we have (and don't have) blanks
-- [ ] deal with the new blank format given by hfst-tokenise (and
+- [X] deal with the new blank format given by hfst-tokenise (and
   remove old blank hacks)
