@@ -51,7 +51,7 @@ echo words go here | hfst-tokenise -wacku: tokeniser.pmhfst | … | vislcg3 … 
 If you get
 : terminate called after throwing an instance of 'std::regex_error'
 :   what():  regex_error
-then your C++ compiler is too old. See [[*Prerequisites][Prerequisites]].
+then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequisites]].
 
 * Progress [7/11]
 
