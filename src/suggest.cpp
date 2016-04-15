@@ -214,8 +214,6 @@ std::map<std::u16string, UStringSet> sugg_append(std::u16string next_wf, std::ma
 
 void proc_cohort(int& pos,
 		 bool& first_err,
-		 const bool& first_word,
-		 const LineType& prevtype,
 		 const std::u16string& wf,
 		 std::map<std::u16string, UStringSet>& cohort_err,
 		 std::ostringstream& text,
@@ -224,6 +222,9 @@ void proc_cohort(int& pos,
 		 const msgmap& msgs,
 		 std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>& utf16conv)
 {
+	if(wf.empty()) {
+		return;
+	}
 	std::string wfs = utf16conv.to_bytes(wf);
 	if(!cohort_err.empty()) {
 		std::cerr << "errs!" <<std::endl;
@@ -262,7 +263,6 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 	int pos = 0;
 	std::u16string errtype = u"default";
 	bool first_err = true;
-	bool first_word = true;
 	LineType prevtype = BlankL;
 	bool is_addcohort = true;
 	std::u16string wf;
@@ -279,25 +279,27 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 	for (std::string line; std::getline(is, line);) {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
+		bool appendsugg = is_addcohort && prevtype != WordformL && !cohort_err.empty();
+
+		if (!result.empty() && ((result[2].length() != 0 && !appendsugg)
+					|| result[6].length() != 0)) {
+			proc_cohort(pos,
+				    first_err,
+				    wf,
+				    cohort_err,
+				    text,
+				    os,
+				    t,
+				    msgs,
+				    utf16conv);
+			wf.clear();
+		}
+
 		if (!result.empty() && result[2].length() != 0) {
-			if(is_addcohort && prevtype != WordformL && !cohort_err.empty()) {
+			if(appendsugg) {
 				cohort_err = sugg_append(utf16conv.from_bytes(result[2]),
 							 cohort_err);
 			}
-			else {
-				proc_cohort(pos,
-					    first_err,
-					    first_word,
-					    prevtype,
-					    wf,
-					    cohort_err,
-					    text,
-					    os,
-					    t,
-					    msgs,
-					    utf16conv);
-			}
-			first_word = false;
 			is_addcohort = true;
 			wf = utf16conv.from_bytes(result[2]);
 			prevtype = WordformL;
@@ -327,13 +329,12 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 			prevtype = BlankL;
 		}
 		else {
+			// Blank lines without the prefix don't go into text output!
 			prevtype = BlankL;
 		}
 	}
 	proc_cohort(pos,
 		    first_err,
-		    first_word,
-		    prevtype,
 		    wf,
 		    cohort_err,
 		    text,
