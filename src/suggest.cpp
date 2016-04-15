@@ -212,28 +212,35 @@ std::map<std::u16string, UStringSet> sugg_append(std::u16string next_wf, std::ma
 	return fixed;
 }
 
+struct Cohort {
+	std::u16string form;
+	std::map<std::u16string, UStringSet> err;
+};
+
+bool cohort_empty(const Cohort& c) {
+	return c.form.empty();
+}
+
 void proc_cohort(int& pos,
 		 bool& first_err,
-		 const std::u16string& wf,
-		 std::map<std::u16string, UStringSet>& cohort_err,
+		 const Cohort& c,
 		 std::ostringstream& text,
 		 std::ostream& os,
 		 const hfst::HfstTransducer& t,
 		 const msgmap& msgs,
 		 std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>& utf16conv)
 {
-	if(wf.empty()) {
+	if(cohort_empty(c)) {
 		return;
 	}
-	std::string wfs = utf16conv.to_bytes(wf);
-	if(!cohort_err.empty()) {
-		std::cerr << "errs!" <<std::endl;
+	std::string wfs = utf16conv.to_bytes(c.form);
+	if(!c.err.empty()) {
 		if(!first_err) {
 			os << ",";
 		}
 		first_err = false;
 		// TODO: currently we just pick one if there are several error types:
-		auto const& err = cohort_err.begin();
+		auto const& err = c.err.begin();
 		std::u16string msg = err->first;
 		// TODO: locale, how? One process per locale (command-line-arg) or print all messages?
 		if(msgs.count("se") != 0
@@ -243,16 +250,15 @@ void proc_cohort(int& pos,
 		else {
 			std::cerr << "WARNING: No message for " << json::str(err->first) << std::endl;
 		}
-		os << "[" << json::str(wf)
+		os << "[" << json::str(c.form)
 		   << "," << pos
-		   << "," << pos+wf.size()
+		   << "," << pos+c.form.size()
 		   << "," << json::str(err->first)
 		   << "," << json::str(msg)
 		   << "," << json::str_arr(err->second)
 		   << "]";
-		cohort_err.clear();
 	}
-	pos += wf.size();
+	pos += c.form.size();
 	text << wfs;
 	// TODO: wrapper for pos-increasing and text-adding, since they should always happen together
 }
@@ -265,9 +271,8 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 	bool first_err = true;
 	LineType prevtype = BlankL;
 	bool is_addcohort = true;
-	std::u16string wf;
 	std::ostringstream text;
-	std::map<std::u16string, UStringSet> cohort_err;
+	Cohort c;
 
 	// TODO: could use http://utfcpp.sourceforge.net, but it's not in macports;
 	// and ICU seems overkill just for iterating codepoints
@@ -279,29 +284,28 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 	for (std::string line; std::getline(is, line);) {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
-		bool appendsugg = is_addcohort && prevtype != WordformL && !cohort_err.empty();
+		bool appendsugg = is_addcohort && prevtype != WordformL && !c.err.empty();
 
 		if (!result.empty() && ((result[2].length() != 0 && !appendsugg)
 					|| result[6].length() != 0)) {
 			proc_cohort(pos,
 				    first_err,
-				    wf,
-				    cohort_err,
+				    c,
 				    text,
 				    os,
 				    t,
 				    msgs,
 				    utf16conv);
-			wf.clear();
+			c = Cohort();
 		}
 
 		if (!result.empty() && result[2].length() != 0) {
 			if(appendsugg) {
-				cohort_err = sugg_append(utf16conv.from_bytes(result[2]),
-							 cohort_err);
+				c.err = sugg_append(utf16conv.from_bytes(result[2]),
+							 c.err);
 			}
 			is_addcohort = true;
-			wf = utf16conv.from_bytes(result[2]);
+			c.form = utf16conv.from_bytes(result[2]);
 			prevtype = WordformL;
 		}
 		else if(!result.empty() && result[3].length() != 0) {
@@ -311,7 +315,7 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 				errtype = sugg.errtype;
 			}
 			if(sugg.suggest) {
-				cohort_err[errtype].insert(sugg.sforms.begin(),
+				c.err[errtype].insert(sugg.sforms.begin(),
 							   sugg.sforms.end());
 			}
 			else {
@@ -335,8 +339,7 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 	}
 	proc_cohort(pos,
 		    first_err,
-		    wf,
-		    cohort_err,
+		    c,
 		    text,
 		    os,
 		    t,
