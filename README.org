@@ -67,7 +67,7 @@ This should:
 
 Also TODO:
 
-- [ ] better way to skip @FLAGDIACRITICS@ in output
+- [ ] better way to skip @FLAGDIACRITICS@ in generator [[file:src/suggest.cpp::if(symbol.size()>0%20&&%20symbol%5B0%5D!='@')%20{][output]]
 - [ ] deal with subreadings
 - [X] input format needs to show where we have (and don't have) blanks
 - [X] deal with the new blank format given by hfst-tokenise (and

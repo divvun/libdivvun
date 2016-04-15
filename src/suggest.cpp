@@ -221,6 +221,33 @@ bool cohort_empty(const Cohort& c) {
 	return c.form.empty();
 }
 
+std::string cohort_errs_json(const Cohort& c,
+			     const int pos,
+			     const hfst::HfstTransducer& t,
+			     const msgmap& msgs)
+{
+	std::string s;
+	// TODO: currently we just pick one if there are several error types:
+	auto const& err = c.err.begin();
+	std::u16string msg = err->first;
+	// TODO: locale, how? One process per locale (command-line-arg) or print all messages?
+	if(msgs.count("se") != 0
+	   && msgs.at("se").count(msg) != 0) {
+		msg = msgs.at("se").at(msg);
+	}
+	else {
+		std::cerr << "WARNING: No message for " << json::str(err->first) << std::endl;
+	}
+	s += "["; s += json::str(c.form);
+	s += ","; s += std::to_string(pos);
+	s += ","; s += std::to_string(pos+c.form.size());
+	s += ","; s += json::str(err->first);
+	s += ","; s += json::str(msg);
+	s += ","; s += json::str_arr(err->second);
+	s += "]";
+	return s;
+}
+
 void proc_cohort(int& pos,
 		 bool& first_err,
 		 const Cohort& c,
@@ -239,28 +266,19 @@ void proc_cohort(int& pos,
 			os << ",";
 		}
 		first_err = false;
-		// TODO: currently we just pick one if there are several error types:
-		auto const& err = c.err.begin();
-		std::u16string msg = err->first;
-		// TODO: locale, how? One process per locale (command-line-arg) or print all messages?
-		if(msgs.count("se") != 0
-		   && msgs.at("se").count(msg) != 0) {
-			msg = msgs.at("se").at(msg);
-		}
-		else {
-			std::cerr << "WARNING: No message for " << json::str(err->first) << std::endl;
-		}
-		os << "[" << json::str(c.form)
-		   << "," << pos
-		   << "," << pos+c.form.size()
-		   << "," << json::str(err->first)
-		   << "," << json::str(msg)
-		   << "," << json::str_arr(err->second)
-		   << "]";
+		os << cohort_errs_json(c, pos, t, msgs);
 	}
 	pos += c.form.size();
 	text << wfs;
 	// TODO: wrapper for pos-increasing and text-adding, since they should always happen together
+}
+
+std::string clean_blank(std::string raw)
+{
+	// TODO: remove []superblank and \\'s from superblank?
+	// (if we start using apertium-deshtml, that is)
+	std::regex nl("\\\\n"); // TODO: handle escaped escape before an n?
+	return std::regex_replace (raw, nl, "\\n");
 }
 
 void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& msgs)
@@ -316,7 +334,7 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 			}
 			if(sugg.suggest) {
 				c.err[errtype].insert(sugg.sforms.begin(),
-							   sugg.sforms.end());
+						      sugg.sforms.end());
 			}
 			else {
 				is_addcohort = false; // Seen at least one non-suggestion reading
@@ -324,10 +342,7 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 			prevtype = ReadingL;
 		}
 		else if(!result.empty() && result[6].length() != 0) {
-			// TODO: remove []superblank and \\'s from superblank?
-			// (if we start using apertium-deshtml, that is)
-			std::regex nl("\\\\n"); // TODO: handle escaped escape before an n?
-			std::string blank = std::regex_replace ((std::string)result[6], nl, "\\n");
+			const auto blank = clean_blank(result[6]);
 			pos += utf16conv.from_bytes(blank).size();
 			text << blank;
 			prevtype = BlankL;
