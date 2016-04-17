@@ -1,6 +1,9 @@
 #+TITLE: divvun-suggest
 #+STARTUP: showall
 
+#+CAPTION: Build Status
+[[https://travis-ci.org/unhammer/divvun-suggest][https://travis-ci.org/unhammer/divvun-suggest.svg]]
+
 * Description
 
 This program does FST lookup on forms specified as Constraint
