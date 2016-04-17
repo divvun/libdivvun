@@ -1,0 +1,19 @@
+#!/bin/bash
+
+cd "$(dirname "$0")"
+
+declare -i fail
+for input in input.*.cg; do
+    base=${input##input}
+    ../src/divvun-suggest --json generator.hfstol errors.xml < "${input}" > output"${base}" 2>err_output"${base}"
+    if ! diff expected"${base}" output"${base}"; then
+        echo "stdout differs for ${base}"
+        (( fail++ ))
+    fi
+    if ! diff err_expected"${base}" err_output"${base}"; then
+        echo "stderr differs for ${base}"
+        (( fail++ ))
+    fi
+done
+
+exit ${fail}
