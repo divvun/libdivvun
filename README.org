@@ -13,15 +13,12 @@ grammar checker pipeline. The main output format is JSON.
 
 * Prerequisites
 
-- gcc >=4.9.0 (or similarly recent version of clang, with full C++11
-  support)
+- gcc >=5.0.0 with libstdc++-5-dev (or similarly recent version of
+  clang, with full C++11 support)
 - libpugixml >=1.7.2
 - libhfst >=3.9.0
 
 Tested with gcc-5.2.0, gcc-5.3.1 and clang-703.0.29.
-
-(Should work all the way down to gcc-4.9, but will fail with e.g.
-gcc-4.8.4 or clang-3.5.0.)
 
 * Building
 
@@ -54,7 +51,13 @@ echo words go here | hfst-tokenise -wacku: tokeniser.pmhfst | … | vislcg3 … 
 If you get
 : terminate called after throwing an instance of 'std::regex_error'
 :   what():  regex_error
+or
+: util.hpp:36:19: fatal error: codecvt: No such file or directory
+:  #include <codecvt>
+:                    ^
+: compilation terminated.
 then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequisites]].
+
 
 * Progress [8/11]
 
