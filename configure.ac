@@ -2,6 +2,7 @@ AC_INIT([Divvun suggest], [0.1.0], [unhammer+apertium@mm.st], [divvun-suggest], 
 AC_CONFIG_SRCDIR([src/main.cpp])
 AM_INIT_AUTOMAKE
 
+AC_SUBST([GLIB_CFLAGS])
 CXXFLAGS="$CXXFLAGS -std=c++11 -Wall"
 
 PKG_CHECK_MODULES([HFST], [hfst >= 3.9.0])
