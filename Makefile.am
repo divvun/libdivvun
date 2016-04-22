@@ -1,7 +1,7 @@
 SUBDIRS = src
 
 test/generator.hfst: test/generator.strings
-	hfst-strings2fst -i $< -o $@
+	hfst-strings2fst -j -i $< -o $@
 
 test/generator.hfstol: test/generator.hfst
 	hfst-fst2fst -O -i $< -o $@

@@ -78,3 +78,4 @@ Also TODO:
 - [X] input format needs to show where we have (and don't have) blanks
 - [X] deal with the new blank format given by hfst-tokenise (and
   remove old blank hacks)
+- [ ] handle &DELETE nicely (UI also: sihko sáni = slett ordet)

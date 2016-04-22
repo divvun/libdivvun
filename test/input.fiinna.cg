@@ -1,0 +1,13 @@
+"<čáppa>"
+	"čáppat" A Sem/Hum Attr <W:0> @>N #11->11
+: 
+"<ja>"
+	"ja" CC <W:0> @CNP #12->12
+: 
+"<fiinna>"
+	"fiinnis" A Sem/Dummytag Attr <W:0> @>N &syn-pred-not-attr #13->13 ADD:9059:syn-pred-not-attr
+	"fiinnis" Sem/Dummytag <W:0> @>N A Sg Nom &SUGGEST #13->13 COPY:9060:syn-pred-not-attr
+"<.>"
+	"." CLB <W:0> #14->14
+:\n
+
