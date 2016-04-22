@@ -15,5 +15,5 @@ src/divvun-suggest
 /test/generator.hfst
 /test/generator.hfstol
 /compile
-/test/err_output.badjel.cg
-/test/output.badjel.cg
+/test/output.*.json
+/test/output.*.err
