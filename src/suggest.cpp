@@ -75,6 +75,7 @@ const std::basic_regex<char> CG_LINE ("^"
 
 const msgmap readMessages(const std::string& file) {
 	msgmap msgs;
+#ifdef PUGIXML_LIBS
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(file.c_str());
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
@@ -96,6 +97,7 @@ const msgmap readMessages(const std::string& file) {
 	else {
 		std::cerr << file << ":" << result.offset << " ERROR: " << result.description() << "\n";
 	}
+#endif
 	return msgs;
 }
 

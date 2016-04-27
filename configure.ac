@@ -31,12 +31,19 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE(
   AC_MSG_FAILURE(['$CXX $CXXFLAGS' does not accept ISO C++11]))
 
 
-AC_CHECK_HEADERS([pugixml.hpp])
-if test x"$ac_cv_header_pugixml_hpp" = xyes; then
-  AC_CHECK_LIB([pugixml], [main])
-fi
-PUGIXML_LIBS="-lpugixml"
-AC_SUBST(PUGIXML_LIBS)
+
+AC_ARG_ENABLE([xml],
+              AS_HELP_STRING([--disable-xml],
+                             [Disable errors.xml parsing (no longer requiring pugixml library)]))
+AS_IF([test "x$enable_xml" != "xno"], [
+  AC_CHECK_HEADERS([pugixml.hpp])
+  AS_IF([test x"$ac_cv_header_pugixml_hpp" = "xyes"], [
+    AC_CHECK_LIB([pugixml], [main])
+  ])
+  PUGIXML_LIBS="-lpugixml"
+  AC_SUBST(PUGIXML_LIBS)
+])
+
 
 
 AC_OUTPUT(Makefile src/Makefile)

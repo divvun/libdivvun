@@ -26,12 +26,14 @@ int main(int argc, char ** argv)
 {
 	try
 	{
-		cxxopts::Options options(argv[0], " - generate grammar checker suggestions from a CG stream");
+		cxxopts::Options options(argv[0], "BIN - generate grammar checker suggestions from a CG stream");
 
 		options.add_options()
 			("j,json", "Use JSON output format (default: CG)")
 			("g,generator", "Generator (HFSTOL format)", cxxopts::value<std::string>(), "BIN")
-			("m,messages", "ERROR messages (XML format, UNIMPLEMENTED)", cxxopts::value<std::string>(), "FILE")
+#ifdef PUGIXML_LIBS
+			("m,messages", "ERROR messages (XML format)", cxxopts::value<std::string>(), "FILE")
+#endif
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
 			("v,verbose", "Be verbose")
@@ -40,7 +42,9 @@ int main(int argc, char ** argv)
 
 		std::vector<std::string> pos = {
 			"generator",
+#ifdef PUGIXML_LIBS
 			"messages"
+#endif
 			//"input"
 			//"output"
 		};
@@ -64,15 +68,8 @@ int main(int argc, char ** argv)
 			std::cerr << "ERROR: expected generator.hfstol as argument." << std::endl;
 			return(EXIT_FAILURE);
 		}
-		if (!options.count("messages"))
-		{
-			std::cout << options.help({""}) << std::endl;
-			std::cerr << "ERROR: expected errors.xml as argument." << std::endl;
-			return(EXIT_FAILURE);
-		}
 
 		const auto& genfile = options["generator"].as<std::string>();
-		const auto& msgfile = options["messages"].as<std::string>();
 		bool json = options.count("j");
 		bool verbose = options.count("v");
 
@@ -85,14 +82,23 @@ int main(int argc, char ** argv)
 			return(EXIT_FAILURE);
 		}
 
-		if(verbose) {
-			std::cerr << "Reading messages xml" << msgfile << std::endl;
+		gtd::msgmap m;
+#ifdef PUGIXML_LIBS
+		if(options.count("messages")) {
+			const auto& msgfile = options["messages"].as<std::string>();
+			if(verbose) {
+				std::cerr << "Reading messages xml" << msgfile << std::endl;
+			}
+			m = gtd::readMessages(msgfile);
+			if (m.empty()) {
+				std::cerr << "WARNING: Couldn't read messages xml "<< msgfile << std::endl;
+				return(EXIT_FAILURE);
+			}
 		}
-		const auto m = gtd::readMessages(msgfile);
-		if (m.empty()) {
-			std::cerr << "WARNING: Couldn't read messages xml "<< msgfile << std::endl;
-			return(EXIT_FAILURE);
+		else {
+			std::cerr << "WARNING: no errors.xml argument; tags used as error messages." << std::endl;
 		}
+#endif
 
 		gtd::run(std::cin, std::cout, *t, m, json);
 	}

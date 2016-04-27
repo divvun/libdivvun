@@ -26,7 +26,9 @@
 #include <hfst/HfstInputStream.h>
 #include <hfst/HfstTransducer.h>
 
+#ifdef PUGIXML_LIBS
 #include <pugixml.hpp>
+#endif
 
 #include <locale>
 #include <codecvt>
