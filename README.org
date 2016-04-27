@@ -20,6 +20,13 @@ grammar checker pipeline. The main output format is JSON.
 
 Tested with gcc-5.2.0, gcc-5.3.1 and clang-703.0.29.
 
+
+If you can't easily install libpugixml, you can run
+[[file:scripts/get-pugixml-and-build][scripts/get-pugixml-and-build]] which will download libpugixml into this
+directory, build that (with cmake) and configure this program to use
+that library. Alternatively, you can run ./configure with
+--disable-xml if you don't care about human-readable error messages.
+
 * Building
 
 #+BEGIN_SRC sh
