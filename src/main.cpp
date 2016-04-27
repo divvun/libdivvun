@@ -31,7 +31,7 @@ int main(int argc, char ** argv)
 		options.add_options()
 			("j,json", "Use JSON output format (default: CG)")
 			("g,generator", "Generator (HFSTOL format)", cxxopts::value<std::string>(), "BIN")
-#ifdef PUGIXML_LIBS
+#ifdef HAVE_LIBPUGIXML
 			("m,messages", "ERROR messages (XML format)", cxxopts::value<std::string>(), "FILE")
 #endif
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
@@ -42,7 +42,7 @@ int main(int argc, char ** argv)
 
 		std::vector<std::string> pos = {
 			"generator",
-#ifdef PUGIXML_LIBS
+#ifdef HAVE_LIBPUGIXML
 			"messages"
 #endif
 			//"input"
@@ -83,7 +83,7 @@ int main(int argc, char ** argv)
 		}
 
 		gtd::msgmap m;
-#ifdef PUGIXML_LIBS
+#ifdef HAVE_LIBPUGIXML
 		if(options.count("messages")) {
 			const auto& msgfile = options["messages"].as<std::string>();
 			if(verbose) {

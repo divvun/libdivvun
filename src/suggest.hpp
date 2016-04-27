@@ -26,7 +26,7 @@
 #include <hfst/HfstInputStream.h>
 #include <hfst/HfstTransducer.h>
 
-#ifdef PUGIXML_LIBS
+#ifdef HAVE_LIBPUGIXML
 #include <pugixml.hpp>
 #endif
 
