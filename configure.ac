@@ -33,12 +33,15 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE(
 
 
 AC_ARG_ENABLE([xml],
-              AS_HELP_STRING([--disable-xml],
-                             [Disable errors.xml parsing (no longer requiring pugixml library)]))
+              AS_HELP_STRING([--disable-xml], [
+                Disable errors.xml parsing (no longer requiring pugixml library)
+              ]))
 AS_IF([test "x$enable_xml" != "xno"], [
   AC_CHECK_HEADERS([pugixml.hpp])
   AS_IF([test x"$ac_cv_header_pugixml_hpp" = "xyes"], [
     AC_CHECK_LIB([pugixml], [main])
+  ],[
+    AC_MSG_FAILURE([Couldn't find pugixml library (use --disable-xml if you don't want to parse error.xml messages)])
   ])
   PUGIXML_LIBS="-lpugixml"
   AC_SUBST(PUGIXML_LIBS)
