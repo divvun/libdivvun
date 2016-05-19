@@ -18,8 +18,8 @@ grammar checker pipeline. The main output format is JSON.
 - libpugixml >=1.7.2
 - libhfst >=3.9.0
 
-Tested with gcc-5.2.0, gcc-5.3.1 and clang-703.0.29.
-
+Tested with gcc-5.2.0, gcc-5.3.1 and clang-703.0.29. On Mac OS X, the
+newest XCode includes a modern C++ compiler.
 
 If you can't easily install libpugixml, you can run
 [[file:scripts/get-pugixml-and-build][scripts/get-pugixml-and-build]] which will download libpugixml into this
@@ -32,6 +32,18 @@ that library. Alternatively, you can run ./configure with
 #+BEGIN_SRC sh
 ./autogen.sh
 ./configure  # optionally with argument --prefix=$HOME/my/prefix
+make
+make install # with sudo if you didn't specify a prefix
+#+END_SRC
+
+
+On OS X, you may have to do this:
+
+#+BEGIN_SRC sh
+sudo port install pugixml
+export CC=clang CXX=clang++ "CXXFLAGS=-std=gnu++11 -stdlib=libc++"
+./autogen.sh
+./configure  LDFLAGS=-L/opt/local/lib # optionally with argument --prefix=$HOME/my/prefix
 make
 make install # with sudo if you didn't specify a prefix
 #+END_SRC
