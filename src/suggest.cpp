@@ -188,9 +188,9 @@ const Reading proc_line(const hfst::HfstTransducer& t, const std::string& line) 
 	}
 
 	const auto& paths = t.lookup_fd({ ana }, -1, 10.0);
-	std::stringstream form;
 	if(paths->size() > 0) {
 		for(auto& p : *paths) {
+			std::stringstream form;
 			for(auto& symbol : p.second) {
 				// TODO: this is a hack to avoid flag diacritics; is there a way to make lookup skip them?
 				if(symbol.size()>0 && symbol[0]!='@') {
