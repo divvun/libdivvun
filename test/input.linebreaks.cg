@@ -1,0 +1,14 @@
+:\n
+"<don>"
+	"don" Pron Sem/Hum Pers Sg2 Nom <W:0> @SUBJ> #1->1
+: 
+"<áibbašat>"
+	"áibbašit" <mv> V <LO-Ill-Any> <TH-Inf> <TH-maŋŋái-*Plc> <TH-lusa-Any> <TH-Acc-*Plc> <TH-Ill-Any> <XT-Adv-Xt> <TH-0> TV Ind Prs Sg2 <W:0> @+FMAINV #2->2
+: 
+"<liegga riikii>"
+	"lieggariika" §TH §LO N Sem/Plc Sg Ill Err/SpaceCmp <W:0> @<ADVL &msyn-compound #3->2
+	"lieggariika" §TH §LO N Sem/Plc Sg Ill <W:0> @<ADVL &SUGGEST #3->2
+"<.>"
+	"." CLB <W:0> #4->4
+:\n
+

@@ -34,11 +34,16 @@ inline const std::string esc(const std::u16string& str) {
 	std::ostringstream os;
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	for (const char16_t& c : str) {
-		if((sizeof(c) == 1 || static_cast<unsigned>(c) < 256)
-		   && ((int)c<20 || c == '\\' || c == '"')) {
-			os << utf16conv.to_bytes('\\');
+		if(c == '\n') {
+			os << "\\n";
 		}
-		os << utf16conv.to_bytes(c);
+		else {
+			if((sizeof(c) == 1 || static_cast<unsigned>(c) < 256)
+			   && ((int)c<20 || c == '\\' || c == '"')) {
+				os << utf16conv.to_bytes('\\');
+			}
+			os << utf16conv.to_bytes(c);
+		}
 	}
 	return os.str();
 }
@@ -66,7 +71,7 @@ inline const std::string str_arr(const Container& ss)
 
 inline void sanity_test() {
 	std::string got = json::key(u"e\tr\"r\\s\nfoo");
-	std::string want = "\"e\\\tr\\\"r\\\\s\\\nfoo\":";
+	std::string want = "\"e\\\tr\\\"r\\\\s\\nfoo\":";
 	if(got != want){
 		std::cerr << "Error in json::key\n GOT: "<< got << "\nWANT: " << want << std::endl;
 		std::exit(EXIT_FAILURE);

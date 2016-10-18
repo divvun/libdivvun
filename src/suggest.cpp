@@ -283,7 +283,7 @@ std::string clean_blank(std::string raw)
 	// TODO: remove []superblank and \\'s from superblank?
 	// (if we start using apertium-deshtml, that is)
 	std::regex nl("\\\\n"); // TODO: handle escaped escape before an n?
-	return std::regex_replace (raw, nl, "\\n");
+	return std::regex_replace (raw, nl, "\n");
 }
 
 void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& msgs)
