@@ -278,12 +278,38 @@ void proc_cohort(int& pos,
 	// TODO: wrapper for pos-increasing and text-adding, since they should always happen together
 }
 
-std::string clean_blank(std::string raw)
+/**
+ * Remove unescaped [ and ] (superblank delimiters from
+ * apertium-deformatter), turn \n into literal newline, unescape all
+ * other escaped chars.
+ */
+const std::string clean_blank(const std::string raw)
 {
-	// TODO: remove []superblank and \\'s from superblank?
-	// (if we start using apertium-deshtml, that is)
-	std::regex nl("\\\\n"); // TODO: handle escaped escape before an n?
-	return std::regex_replace (raw, nl, "\n");
+        bool escaped = false;
+	std::ostringstream text;
+        for(const auto& c: raw) {
+            if(escaped) {
+                if(c == 'n') {
+                    // hfst-tokenize escapes newlines like this; make
+                    // them literal before jsoning
+                    text << '\n';
+                }
+                else {
+                    // Unescape anything else
+                    text << c;
+                }
+                escaped = false;
+            }
+            // Skip the superblank delimiters
+            else if(c == '\\') {
+                escaped = true;
+            }
+            else if(c != '[' && c != ']') {
+                text << c;
+                escaped = false;
+            }
+        }
+	return text.str();
 }
 
 void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& msgs)
