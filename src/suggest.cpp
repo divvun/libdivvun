@@ -285,30 +285,30 @@ void proc_cohort(int& pos,
  */
 const std::string clean_blank(const std::string raw)
 {
-        bool escaped = false;
+	bool escaped = false;
 	std::ostringstream text;
-        for(const auto& c: raw) {
-            if(escaped) {
-                if(c == 'n') {
-                    // hfst-tokenize escapes newlines like this; make
-                    // them literal before jsoning
-                    text << '\n';
-                }
-                else {
-                    // Unescape anything else
-                    text << c;
-                }
-                escaped = false;
-            }
-            // Skip the superblank delimiters
-            else if(c == '\\') {
-                escaped = true;
-            }
-            else if(c != '[' && c != ']') {
-                text << c;
-                escaped = false;
-            }
-        }
+	for(const auto& c: raw) {
+		if(escaped) {
+			if(c == 'n') {
+				// hfst-tokenize escapes newlines like this; make
+				// them literal before jsoning
+				text << '\n';
+			}
+			else {
+				// Unescape anything else
+				text << c;
+			}
+			escaped = false;
+		}
+		// Skip the superblank delimiters
+		else if(c == '\\') {
+			escaped = true;
+		}
+		else if(c != '[' && c != ']') {
+			text << c;
+			escaped = false;
+		}
+	}
 	return text.str();
 }
 
