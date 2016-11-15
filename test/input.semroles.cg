@@ -1,0 +1,29 @@
+"<Lean>"
+	"leat" <aux> V <copula> <TH-Nom-Any> <mielde> <OR-Loc-HumGroup> <OR-eret-Plc> <árvvus> <LO-Loc-johtu><DE-Ill-Plc> <AT-Abe-Any> <AT-Nom-Any> <AT-Nom-Adj><EX-Ill-Ani> <PO-Gen-Hum> <MA-mielde-Any> <MA-Adv-Manner> <XT-Gen-Measr> <LO-maŋŋil-Time> <LO-Acc-Time> <LO-Loc-Time> <CO-Com-Ani> <ID-Nom-Any> <TH-Nom-Any><RO-Ess-Any><EX-Ill-Any> <EX-Ill-Ani><TH-Nom-Adj> <EX-Ill-Ani> <TH-Nom-Obj><RE-Ill-Ani> <LO-Loc-Any> <AktioEss> <RO-Ess-Any><PU-Ill-Act> <RO-Ess-Any> IV Ind Prs Sg1 <W:0> @+FAUXV #1->1 SUBSTITUTE:7357:SubV=aux SUBSTITUTE:8847
+: 
+"<oainnat>"
+	"oainnat" Adv <W:0> @ADVL> #2->2
+: 
+"<lohkan>"
+	"lohkat" <vdic> <mv> <vdic> V <RE-Loc-Ani> <RE-Ill-Ani><TH-ahte> <RE-Ill-Ani><TH-FS> <RE-Ill-Ani><TH-Acc-*Ani> <RE-Ill-Ani> <TH-Acc-Any><TH-Inf> <TH-Acc-Any><TH-PrfPrc> <TH-Acc-Any><TH-AktioEss> <TH-Inf><RO-Ess-Any> <TH-Acc-Any><RO-Ess-Any> <TH-ahte><RE-Ill-Any> <TH-Acc-Any><RE-Ill-Any> <TH-birra-Any> <TH-FS> <TH-ahte> <TH-Acc-Any> TV PrfPrc Err/Orth Err/Spellrelax <W:0> @-FMAINV #3->3 SUBSTITUTE:7356:SubV=mv SETCHILD:7670 SETCHILD:7720 SETCHILD:7725 SETCHILD:7728 SETCHILD:8322 SETCHILD:8326 SETCHILD:8329 SETCHILD:7720 SETCHILD:7725 SETCHILD:7728 SETCHILD:8322 SETCHILD:8326 SETCHILD:8329 SUBSTITUTE:9817:muitalit
+	"lohkat" <vdic> <mv> <vdic> V <RE-Loc-Ani> <RE-Ill-Ani><TH-ahte> <RE-Ill-Ani><TH-FS> <RE-Ill-Ani><TH-Acc-*Ani> <RE-Ill-Ani> <TH-Acc-Any><TH-Inf> <TH-Acc-Any><TH-PrfPrc> <TH-Acc-Any><TH-AktioEss> <TH-Inf><RO-Ess-Any> <TH-Acc-Any><RO-Ess-Any> <TH-ahte><RE-Ill-Any> <TH-Acc-Any><RE-Ill-Any> <TH-birra-Any> <TH-FS> <TH-ahte> <TH-Acc-Any> TV PrfPrc <W:0> @-FMAINV #3->3 SUBSTITUTE:7356:SubV=mv SUBSTITUTE:9817:muitalit
+: 
+"<42>"
+	"42" §TH Num Arab Sg Acc <W:0> @<OBJ #4->3 SUBSTITUTE:8511
+: 
+"<girjii>"
+	"girje" §TH §RE N Sem/Ani Sg Ill <W:0> @<ADVL &real-girjji #5->4 ADD:3983:girjji SUBSTITUTE:8565 SUBSTITUTE:8717 ADD:3983:girjji
+	"girji" Sem/Ani <W:0> @<ADVL §TH §RE N Sg Gen &SUGGEST #5->4 COPY:3984:real-girjjii SUBSTITUTE:8565 SUBSTITUTE:8717 SETPARENT:8880 SETPARENT:8880
+	"girji" §TH §RE Sem/Ani <W:0> @<ADVL N Sg Gen &SUGGEST #5->4 COPY:3984:real-girjjii
+"<,>"
+	"," CLB <W:0> #6->6
+: 
+"<šuohkeha>"
+	"šuohkihit" Err/Orth <vdic> <vdic> <mv> V IV Ind Prs Sg3 <W:0> @FMVdic #7->7 SUBSTITUTE:7356:SubV=mv SUBSTITUTE:7361:utt
+: 
+"<Line>"
+	"Line" N Prop Sem/Fem Sg Nom <W:0> @<SUBJ #8->8
+"<.>"
+	"." CLB <W:0> #9->9
+:\n
+

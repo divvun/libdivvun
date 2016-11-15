@@ -28,6 +28,7 @@ const std::basic_regex<char> CG_SKIP_TAG (
 	"|&(.+)"		// errtype
 	"|@"			// Syntactic tags
 	"|Sem/"			// Semantic tags
+	"|§"			// Semantic roles
 	"|<"			// E.g. weights <W:0>
 	"|R:"			// Relations
 	"|ID:"			// Relation ID's
