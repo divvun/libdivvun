@@ -9,7 +9,10 @@
 This program does FST lookup on forms specified as Constraint
 Grammar format readings, and looks up error-tags in an XML file with
 human-readable messages. It is meant to be used as a late stage of a
-grammar checker pipeline. The main output format is JSON.
+grammar checker pipeline.
+
+The main output format is JSON, although it can also simply annotate
+readings in CG stream format.
 
 * Prerequisites
 
@@ -58,11 +61,50 @@ for an example), with input/output as stdin and stdout:
 src/divvun-suggest --json generator-gt-norm.hfstol errors.xml < input > output
 #+END_SRC
 
+
 More typically, it'll be in a pipeline after various runs of =vislcg3=:
 
 #+BEGIN_SRC sh
 echo words go here | hfst-tokenise -wacku: tokeniser.pmhfst | … | vislcg3 … \
   | divvun-suggest --json generator-gt-norm.hfstol errors.xml
+#+END_SRC
+
+* JSON format
+The JSON output is meant to be sent to a client such as
+https://github.com/unhammer/divvun-webdemo. The current format is:
+
+: {errs:[[str:string, beg:number, end:number, typ:string, exp:string, [rep:string]]], text:string}
+
+The string =text= is the input, for sanity-checking.
+
+The array-of-arrays =errs= has one array per error. Within each
+error-array, =beg/end= are offsets in =text=, =typ= is the (internal)
+error type, =exp= is the human-readable explanation, and each =rep= is
+a possible suggestion for replacement of the text between =beg/end= in
+=text=.
+
+The index =beg= is inclusive, =end= exclusive, and both indices are
+based on a UTF-16 encoding (which is what JavaScript uses, so e.g. the
+emoji "🇳🇴" will increase the index of the following errors by 4).
+
+Example output:
+
+#+BEGIN_SRC js
+  {
+    "errs": [
+      [
+        "badjel",
+        37,
+        43,
+        "lex-bokte-not-badjel",
+        "\"bokte\" iige \"badjel\"",
+        [
+          "bokte"
+        ]
+      ]
+    ],
+    "text": "🇳🇴sáddejuvvot báhpirat interneahta badjel.\n"
+  }
 #+END_SRC
 
 * Troubleshooting
@@ -78,7 +120,7 @@ or
 then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequisites]].
 
 
-* Progress [8/11]
+* Progress [10/15]
 
 This should:
 
@@ -89,9 +131,12 @@ This should:
 - [X] only generate forms if analyses have a certain tag (and don't send that tag to generator)
 - [ ] possibly load some additional specification for how to extract forms from CG-format?
 - [X] optionally output as JSON
+- [X] handle superblanks
+- [X] 4+-byte UTF-8 input
 
 Also TODO:
 
+- [ ] <STREAMCMD:FLUSH>
 - [ ] better way to skip @FLAGDIACRITICS@ in generator [[file:src/suggest.cpp::if(symbol.size()>0%20&&%20symbol%5B0%5D!='@')%20{][output]]
 - [ ] deal with subreadings
 - [X] input format needs to show where we have (and don't have) blanks
