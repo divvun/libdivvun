@@ -400,7 +400,6 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	// Simple debug function
-	std::ostringstream ss;
 	for (std::string line; std::getline(is, line);) {
 		os << line << std::endl;
 		std::match_results<const char*> result;
