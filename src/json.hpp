@@ -31,21 +31,22 @@
 namespace json {
 
 inline const std::string esc(const std::u16string& str) {
-	std::ostringstream os;
+	std::vector<char16_t> os;
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	for (const char16_t& c : str) {
 		if(c == '\n') {
-			os << "\\n";
+			os.push_back('\\');
+			os.push_back('n');
 		}
 		else {
 			if((sizeof(c) == 1 || static_cast<unsigned>(c) < 256)
 			   && ((int)c<20 || c == '\\' || c == '"')) {
-				os << utf16conv.to_bytes('\\');
+				os.push_back('\\');
 			}
-			os << utf16conv.to_bytes(c);
+			os.push_back(c);
 		}
 	}
-	return os.str();
+	return utf16conv.to_bytes(std::u16string(os.begin(), os.end()));
 }
 
 inline const std::string str(const std::u16string& s)
