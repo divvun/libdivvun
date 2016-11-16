@@ -73,6 +73,7 @@ const std::basic_regex<char> CG_LINE ("^"
 				      "(\"<(.*)>\".*" // wordform, group 2
 				      "|(\t)+(\"[^\"]*\"\\S*)(\\s+\\S+)*" // reading, group 3, 4, 5
 				      "|:(.*)" // blank, group 6
+				      "|(<STREAMCMD:FLUSH>)" // flush, group 7
 				      ")");
 
 
@@ -313,7 +314,12 @@ const std::string clean_blank(const std::string raw)
 	return text.str();
 }
 
-void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& msgs)
+enum RunState {
+    flushing,
+    eof
+};
+
+RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& msgs)
 {
 	json::sanity_test();
 	int pos = 0;
@@ -323,15 +329,18 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 	bool is_addcohort = true;
 	std::ostringstream text;
 	Cohort c;
+        RunState runstate = eof;
 
 	// TODO: could use http://utfcpp.sourceforge.net, but it's not in macports;
 	// and ICU seems overkill just for iterating codepoints
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 
+	std::string line;
+	std::getline(is, line);	// TODO: Why do I need at least one getline before os<< after flushing?
 	os << "{"
 	   << json::key(u"errs")
 	   << "[";
-	for (std::string line; std::getline(is, line);) {
+	do {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 		bool appendsugg = is_addcohort && prevtype != WordformL && !c.err.empty();
@@ -379,11 +388,15 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 			text << blank;
 			prevtype = BlankL;
 		}
+		else if(!result.empty() && result[7].length() != 0) {
+			runstate = flushing;
+			break;
+		}
 		else {
 			// Blank lines without the prefix don't go into text output!
 			prevtype = BlankL;
 		}
-	}
+	} while(std::getline(is, line));
 	proc_cohort(pos,
 		    first_err,
 		    c,
@@ -395,12 +408,18 @@ void run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
 	os << "]"
 	   << "," << json::key(u"text") << json::str(utf16conv.from_bytes(text.str()))
 	   << "}";
+	if(runstate == flushing) {
+		os << '\0';
+		os.flush();
+		os.clear();
+	}
+	return runstate;
 }
 
 void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	// Simple debug function
+	// Simple debug function; no state kept between lines
 	for (std::string line; std::getline(is, line);) {
 		os << line << std::endl;
 		std::match_results<const char*> result;
@@ -424,13 +443,16 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 				}
 			}
 		}
+		else if(!result.empty() && result[7].length() != 0) {
+			os.flush();
+		}
 	}
 }
 
 void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& m, bool json)
 {
 	if(json) {
-		run_json(is, os, t, m);
+		while(run_json(is, os, t, m) == flushing);
 	}
 	else {
 		run_cg(is, os, t);

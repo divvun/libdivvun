@@ -6,8 +6,7 @@ test/generator.hfst: test/generator.strings
 test/generator.hfstol: test/generator.hfst
 	hfst-fst2fst -O -i $< -o $@
 
-check: test/generator.hfstol
-	@test/run
-	@echo "All tests pass"
+check_DATA=test/generator.hfstol
+TESTS=test/run test/run-flushing
 
 test: check

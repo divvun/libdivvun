@@ -1,8 +1,10 @@
 #!/bin/bash
 
+set -u
+
 cd "$(dirname "$0")"
 
-declare -i fail
+declare -i fail=0
 for input in input.*.cg; do
     base=${input##input}; base=${base%%cg}
     ../src/divvun-suggest --json generator.hfstol errors.xml \

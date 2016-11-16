@@ -17,3 +17,7 @@ src/divvun-suggest
 /compile
 /test/output.*.json
 /test/output.*.err
+/test/*.trs
+/test/*.log
+/test-driver
+/test-suite.log
