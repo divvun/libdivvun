@@ -104,7 +104,7 @@ int main(int argc, char ** argv)
 	}
 	catch (const cxxopts::OptionException& e)
 	{
-		std::cout << "ERROR: couldn't parse options: " << e.what() << std::endl;
+		std::cerr << "ERROR: couldn't parse options: " << e.what() << std::endl;
 		return(EXIT_FAILURE);
 	}
 }
