@@ -24,26 +24,54 @@
 #include <algorithm>
 #include <sstream>
 #include <iostream>
+#include <iomanip>
 
 #include <locale>
 #include <codecvt>
 
 namespace json {
 
+inline const std::string uhex(const int i)
+{
+	std::stringstream ss;
+	ss << "\\u";
+	ss << std::hex << std::setfill('0') << std::uppercase;
+	ss << std::setw(4) << static_cast<unsigned>(i);
+	return ss.str();
+}
+
 inline const std::string esc(const std::u16string& str) {
 	std::vector<char16_t> os;
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	for (const char16_t& c : str) {
-		if(c == '\n') {
-			os.push_back('\\');
-			os.push_back('n');
-		}
-		else {
-			if((sizeof(c) == 1 || static_cast<unsigned>(c) < 256)
-			   && ((int)c<20 || c == '\\' || c == '"')) {
+		switch(c) {
+			case '"':
 				os.push_back('\\');
-			}
-			os.push_back(c);
+				os.push_back('"');
+				break;
+			case '\\':
+				os.push_back('\\');
+				os.push_back('\\');
+				break;
+			case '\n': // Could use uhex, but looks nicer:
+				os.push_back('\\');
+				os.push_back('n');
+				break;
+			default:
+				int ci = (int)c;
+				if((sizeof(c) == 1 || static_cast<unsigned>(c) < 256)
+				   && (ci<0x1f ||
+				       ci==0x7f ||
+				       (ci>=0x80 && ci<=0x9f) ||
+				       c == '\\' ||
+				       c == '"')) {
+					for (const auto cc : uhex(ci)) {
+						os.push_back(cc);
+					}
+				}
+				else {
+					os.push_back(c);
+				}
 		}
 	}
 	return utf16conv.to_bytes(std::u16string(os.begin(), os.end()));
@@ -72,7 +100,7 @@ inline const std::string str_arr(const Container& ss)
 
 inline void sanity_test() {
 	std::string got = json::key(u"e\tr\"r\\s\nfoo");
-	std::string want = "\"e\\\tr\\\"r\\\\s\\nfoo\":";
+	std::string want = "\"e\\u0009r\\\"r\\\\s\\nfoo\":";
 	if(got != want){
 		std::cerr << "Error in json::key\n GOT: "<< got << "\nWANT: " << want << std::endl;
 		std::exit(EXIT_FAILURE);

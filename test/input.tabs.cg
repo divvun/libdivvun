@@ -1,0 +1,11 @@
+"<de>"
+	"de" Adv <W:0> @ADVL> MAP:16583:advl>HNOUN
+:	
+"<don>"
+	"don" Pron Sem/Hum Pers Sg2 Nom <W:0> @HNOUN SUBSTITUTE:3252 MAP:16564:hnounNom
+;	"dot" Pron Dem Sg Acc <W:0> REMOVE:4863:r897
+;	"dot" Pron Dem Sg Gen <W:0> REMOVE:4863:r897
+;	"dot" Pron Dem Sg Ill Attr <W:0> REMOVE:4863:r897
+;	"dot" Pron Dem Sg Loc Attr <W:0> REMOVE:4863:r897
+:\n
+
