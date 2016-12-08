@@ -116,12 +116,12 @@ const hfst::HfstTransducer *readTransducer(const std::string& file) {
 	{
 		in = new hfst::HfstInputStream(file);
 	}
-	catch (StreamNotReadableException e)
+	catch (StreamNotReadableException& e)
 	{
 		std::cerr << "ERROR: File does not exist." << std::endl;
 		return NULL;
 	}
-	catch (HfstException e) {
+	catch (HfstException& e) {
 		std::cerr << "ERROR: HfstException." << std::endl;
 		return NULL;
 	}
@@ -290,7 +290,7 @@ void proc_cohort(int& pos,
  * apertium-deformatter), turn \n into literal newline, unescape all
  * other escaped chars.
  */
-const std::string clean_blank(const std::string raw)
+const std::string clean_blank(const std::string& raw)
 {
 	bool escaped = false;
 	std::ostringstream text;

@@ -40,7 +40,7 @@ namespace gtd {
 typedef std::vector<std::string> StringVec;
 
 template<typename Container>
-inline const std::string join_quoted(const Container& ss, const std::string delim=" ") {
+inline const std::string join_quoted(const Container& ss, const std::string& delim=" ") {
 	std::ostringstream os;
 	std::for_each(ss.begin(), ss.end(), [&](const std::string& s){ os << "\"" << s << "\","; });
 	const auto& str = os.str();
@@ -49,7 +49,7 @@ inline const std::string join_quoted(const Container& ss, const std::string deli
 }
 
 template<typename Container>
-inline const std::string join(const Container& ss, const std::string delim=" ") {
+inline const std::string join(const Container& ss, const std::string& delim=" ") {
 	std::ostringstream os;
 	std::copy(ss.begin(), ss.end(), std::ostream_iterator<std::string>(os, delim.c_str()));
 	const auto& str = os.str();
@@ -58,7 +58,7 @@ inline const std::string join(const Container& ss, const std::string delim=" ") 
 }
 
 template<typename Container>
-inline const std::string u16join(const Container& ss, const std::string delim=" ") {
+inline const std::string u16join(const Container& ss, const std::string& delim=" ") {
 	std::ostringstream os;
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	for(const auto& s : ss) {
@@ -69,7 +69,7 @@ inline const std::string u16join(const Container& ss, const std::string delim=" 
 			  str.size() - delim.size());
 }
 
-inline const StringVec split(const std::string str, const char delim=' ')
+inline const StringVec split(const std::string& str, const char& delim=' ')
 {
 	std::string buf;
 	std::stringstream ss(str);
