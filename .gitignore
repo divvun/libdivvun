@@ -15,8 +15,10 @@ src/divvun-suggest
 /test/generator.hfst
 /test/generator.hfstol
 /compile
-/test/output.*.json
 /test/output.*.err
+/test/output.*.json
+/test/output-flushing.*.err
+/test/output-flushing.*.json
 /test/*.trs
 /test/*.log
 /test-driver

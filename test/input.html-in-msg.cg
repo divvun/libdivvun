@@ -1,0 +1,16 @@
+"<sáddejuvvot>"
+	"sáddet" VV TVV Der/PassL <mv> <mv> V <TH-Acc-Any><SO-Loc-Any><DE-Ill-Any> <TH-Acc-Any><DE-Ill-*Ani> IV Ind Prs Sg2 <W:0> @+FMAINV #1->1
+: 
+"<báhpirat>"
+	"bábir" N Sem/Mat_Txt Pl Nom <W:0> @<SUBJ #2->2
+: 
+"<interneahta>"
+	"interneahtta" N Sem/Plc-abstr Sg Gen <W:0> @>P #3->4
+: 
+"<badjel>"
+	"badjel" Po <W:0> @<ADVL &msyn-valency-go-inf #4->4
+	"bokte" Po <W:0> @<ADVL &SUGGEST #4->4
+"<.>"
+	"." CLB <W:0> #5->5
+:\n
+

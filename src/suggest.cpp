@@ -89,7 +89,12 @@ const msgmap readMessages(const std::string& file) {
 			for (pugi::xml_node child: error.child("header").children("title")) {
 				// child_value assumes we only ever have one PCDATA element here:
 				const auto& errtype = utf16conv.from_bytes(error.attribute("id").value());
-				const auto& msg = utf16conv.from_bytes(child.child_value());
+				std::ostringstream os;
+				for(const auto& cc: child.children())
+				{
+					cc.print(os, "", pugi::format_raw);
+				}
+				const auto& msg = utf16conv.from_bytes(os.str());
 				const auto& lang = child.attribute("xml:lang").value();
 				if(msgs[lang].count(errtype) != 0) {
 					std::cerr << "WARNING: Duplicate titles for " << error.attribute("id").value() << std::endl;
