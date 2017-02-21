@@ -19,7 +19,7 @@ before_install:
 before_script:
     - echo "$TRAVIS_OS_NAME"
     - if [[ "$TRAVIS_OS_NAME" = "linux" ]];then wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash; fi
-    - if [[ "$TRAVIS_OS_NAME" = "linux" ]];then sudo apt-get -f install -y libhfst47-dev libpugixml-dev; fi
+    - if [[ "$TRAVIS_OS_NAME" = "linux" ]];then sudo apt-get -f install -y libhfst48-dev libpugixml-dev; fi
     - if [[ "$TRAVIS_OS_NAME" = "osx" ]];then wget http://apertium.projectjj.com/osx/install-nightly.sh -O - | sudo bash; fi
     - ./autogen.sh
 
