@@ -33,6 +33,8 @@ int main(int argc, char ** argv)
 			("g,generator", "Generator (HFSTOL format)", cxxopts::value<std::string>(), "BIN")
 #ifdef HAVE_LIBPUGIXML
 			("m,messages", "ERROR messages (XML format)", cxxopts::value<std::string>(), "FILE")
+#else
+			("m,messages", "ERROR messages not supported (recompile with pugixml to use those)", cxxopts::value<std::string>(), "FILE")
 #endif
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
@@ -92,12 +94,17 @@ int main(int argc, char ** argv)
 			}
 			m = gtd::readMessages(msgfile);
 			if (m.empty()) {
-				std::cerr << "WARNING: Couldn't read messages xml "<< msgfile << std::endl;
+				std::cerr << "ERROR: Couldn't read messages xml "<< msgfile << std::endl;
 				return(EXIT_FAILURE);
 			}
 		}
 		else {
 			std::cerr << "WARNING: no errors.xml argument; tags used as error messages." << std::endl;
+		}
+#else
+		if(options.count("messages")) {
+			std::cerr << "ERROR: Please clean-recompile with pugixml to use -m/--messages xml" << std::endl;
+			return(EXIT_FAILURE);
 		}
 #endif
 
