@@ -23,3 +23,5 @@ src/divvun-suggest
 /test/*.log
 /test-driver
 /test-suite.log
+/test/.tern-port
+

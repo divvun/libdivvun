@@ -1,4 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE errors>
+
 <errors>
+
+  <defaults>
+    <default>
+      <ids>
+        <re v="real-.*"/>
+        <e id="unreal-girjji"/>
+      </ids>
+      <header>
+        <title xml:lang="en">Real-word error</title>
+        <title xml:lang="se">Čállinmeattáhus</title>
+      </header>
+      <body>
+        <description xml:lang="en">The word "$1" exists in the dictionary, but means something different in this context.</description>
+        <description xml:lang="se">"$1" maŋis galggašii leat blah</description>
+      </body>
+    </default>
+  </defaults>
+
+  <error id="real-override">
+    <header>
+      <title xml:lang="en">cake instead of cheese</title>
+      <title xml:lang="se">gáhkku iige vuostá</title>
+    </header>
+    <body>
+      <description xml:lang="en">this should be "cake" instead of "cheese"</description>
+      <description xml:lang="se">galggašii leat "gáhkku" iige "vuostá"</description>
+    </body>
+  </error>
 
   <error id="msyn-valency-ill">
     <header>

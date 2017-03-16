@@ -2,7 +2,7 @@
 
 set -u
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit 1
 
 declare -i fail=0
 for input in input.*.cg; do

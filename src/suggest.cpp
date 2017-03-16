@@ -85,6 +85,27 @@ const msgmap readMessages(const std::string& file) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 
 	if (result) {
+		for (pugi::xml_node def: doc.child("errors").child("defaults").children("default")) {
+			// std::cerr << "defaults" << std::endl;
+			for (pugi::xml_node child: def.child("header").children("title")) {
+				std::ostringstream os;
+				for(const auto& cc: child.children())
+				{
+					cc.print(os, "", pugi::format_raw);
+				}
+				const auto& msg = utf16conv.from_bytes(os.str());
+				const auto& lang = child.attribute("xml:lang").value();
+				for (pugi::xml_node e: def.child("ids").children("e")) {
+					// e_value assumes we only ever have one PCDATA element here:
+					const auto& errtype = utf16conv.from_bytes(e.attribute("id").value());
+					// std::cerr << utf16conv.to_bytes(errtype) << std::endl;
+					if(msgs[lang].count(errtype) != 0) {
+						std::cerr << "WARNING: Duplicate titles for " << e.attribute("id").value() << std::endl;
+					}
+					msgs[lang][errtype] = msg;
+				}
+			}
+		}
 		for (pugi::xml_node error: doc.child("errors").children("error")) {
 			for (pugi::xml_node child: error.child("header").children("title")) {
 				// child_value assumes we only ever have one PCDATA element here:
