@@ -44,9 +44,6 @@ matrix:
     - wget http://apertium.projectjj.com/osx/install-nightly.sh -O - | sudo bash
     script:
     - scripts/get-pugixml-and-build
-    before_install:
-      - brew update
-      - brew install xmllint
 
   - os: osx
     compiler: gcc
@@ -57,6 +54,3 @@ matrix:
     - wget http://apertium.projectjj.com/osx/install-nightly.sh -O - | sudo bash
     script:
     - scripts/get-pugixml-and-build
-    before_install:
-      - brew update
-      - brew install xmllint
