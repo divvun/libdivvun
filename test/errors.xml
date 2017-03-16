@@ -1,6 +1,6 @@
 <errors>
 
-  <error id="msyn-valency-ill" legacyid="-1">
+  <error id="msyn-valency-ill">
     <header>
       <title xml:lang="en">illative instead of accusative</title>
       <title xml:lang="se">illatiiva iige akkusatiiva</title>
@@ -16,7 +16,7 @@
   </error>
 
 
-  <error id="msyn-valency-ill" legacyid="-1">
+  <error id="msyn-valency-acc">
     <header>
       <title xml:lang="en">accusative instead of nominative</title>
       <title xml:lang="se">akkusatiiva iige nominatiiva</title>
@@ -31,7 +31,7 @@
     </body>
   </error>
 
-  <error id="lex-bokte-not-badjel" legacyid="-1">
+  <error id="lex-bokte-not-badjel">
     <header>
       <title xml:lang="en">"bokte" not "badjel"</title>
       <title xml:lang="se">"bokte" iige "badjel"</title>
@@ -46,7 +46,7 @@
     </body>
   </error>
 
-  <error id="msyn-valency-go-inf" legacyid="-1">
+  <error id="msyn-valency-go-inf">
     <header>
       <title xml:lang="en">Try a subclause with <em>go</em> instead of illative</title>
       <title xml:lang="se">Iskka<em>go</em>-oalgecealkaga iige infinitiiva</title>
