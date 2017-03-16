@@ -47,6 +47,12 @@ AS_IF([test "x$enable_xml" != "xno"], [
   AC_SUBST(PUGIXML_LIBS)
 ])
 
+AC_PATH_PROG([XMLLINT], [xmllint], [false], [$PATH$PATH_SEPARATOR$with_xmllint/bin])
+AS_IF([test x$XMLLINT = xfalse], [AC_MSG_ERROR([You don't have xmllint installed])])
+
+AC_PATH_PROG([BASH], [bash], [false], [$PATH$PATH_SEPARATOR$with_bash/bin])
+AS_IF([test x$BASH = xfalse], [AC_MSG_ERROR([You don't have bash installed])])
+
 
 
 AC_OUTPUT(Makefile src/Makefile)

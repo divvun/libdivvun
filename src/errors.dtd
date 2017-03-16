@@ -1,0 +1,52 @@
+<!ELEMENT errors (defaults?, error+)>
+	<!-- root element-->
+
+<!ELEMENT defaults (default*)>
+<!ELEMENT default (ids, header?, body?)>
+
+<!ELEMENT ids (e | re)*>
+<!ELEMENT re EMPTY>
+<!ATTLIST re
+          v CDATA #REQUIRED
+>
+<!ELEMENT e EMPTY>
+<!ATTLIST e
+          id ID #REQUIRED
+>
+
+<!ELEMENT error (header, body)>
+<!ATTLIST error
+          id ID #REQUIRED
+>
+
+<!ELEMENT header (title | references)+>
+
+<!ENTITY % Text "(#PCDATA | em)*">
+
+<!ELEMENT title %Text;>
+<!ATTLIST title
+          xml:lang CDATA #REQUIRED
+>
+
+<!ELEMENT references (ref+)>
+
+<!ELEMENT ref (#PCDATA)>
+<!ATTLIST ref
+          n CDATA #REQUIRED
+>
+
+<!ELEMENT body (description | examples)+>
+
+<!ELEMENT examples (ex+)>
+
+<!ELEMENT ex %Text;>
+<!ATTLIST ex
+          xml:lang CDATA #REQUIRED
+>
+
+<!ELEMENT description %Text;>
+<!ATTLIST description
+          xml:lang CDATA #REQUIRED
+>
+
+<!ELEMENT em (#PCDATA)>

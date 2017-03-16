@@ -1,0 +1,51 @@
+errors = element errors { attlist.errors, defaults?, error+ }
+attlist.errors &= empty
+
+#  root element
+defaults = element defaults { attlist.defaults, \default* }
+attlist.defaults &= empty
+
+\default = element default { attlist.default, ids, header?, body? }
+attlist.default &= empty
+
+ids = element ids { attlist.ids, (e | re)* }
+attlist.ids &= empty
+
+re = element re { attlist.re, empty }
+attlist.re &= attribute v { text }
+
+e = element e { attlist.e, empty }
+attlist.e &= attribute id { xsd:ID }
+
+error = element error { attlist.error, header, body }
+attlist.error &= attribute id { xsd:ID }
+
+header = element header { attlist.header, (title | references)+ }
+attlist.header &= empty
+
+Text = (text | em)*
+title = element title { attlist.title, Text }
+attlist.title &= attribute xml:lang { text }
+
+references = element references { attlist.references, ref+ }
+attlist.references &= empty
+
+ref = element ref { attlist.ref, text }
+attlist.ref &= attribute n { text }
+
+body = element body { attlist.body, (description | examples)+ }
+attlist.body &= empty
+
+examples = element examples { attlist.examples, ex+ }
+attlist.examples &= empty
+
+ex = element ex { attlist.ex, Text }
+attlist.ex &= attribute xml:lang { text }
+
+description = element description { attlist.description, Text }
+attlist.description &= attribute xml:lang { text }
+
+em = element em { attlist.em, text }
+attlist.em &= empty
+
+start = errors
