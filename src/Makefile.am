@@ -17,9 +17,12 @@ divvun-validate-suggest: Makefile.am validate-header.sh ../config.status
 	@echo "$(XMLLINT) --dtdvalid \"$(divvun_suggestdir)\"/errors.dtd --noout \"\$$FILE1\"" >>$@
 	@chmod a+x $@
 
-TRANG ?= $(HOME)/.jedit/jars/trang.jar
-
+if HAVE_TRANG
 errors.rnc: errors.dtd
-	java -jar $(TRANG) -I dtd -O rnc $< /dev/stdout >$@.tmp
+	test -f $(TRANG) && java -jar $(TRANG) -I dtd -O rnc $< /dev/stdout >$@.tmp
 	@awk '{print}/^attlist/{print ""}' <$@.tmp >$@
 	@rm -f $@.tmp
+else
+errors.rnc: errors.dtd
+	@echo Could not find TRANG=$(TRANG), not updating errors.rnc
+endif

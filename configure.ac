@@ -53,6 +53,8 @@ AS_IF([test x$XMLLINT = xfalse], [AC_MSG_ERROR([You don't have xmllint installed
 AC_PATH_PROG([BASH], [bash], [false], [$PATH$PATH_SEPARATOR$with_bash/bin])
 AS_IF([test x$BASH = xfalse], [AC_MSG_ERROR([You don't have bash installed])])
 
-
+AC_ARG_VAR([TRANG], [Path to trang.jar (dev dependency for updating DTD)])
+AC_ARG_WITH([trang], [AS_HELP_STRING([--with-trang],[Path to trang.jar (dev dependency for updating DTD)])], [TRANG=$withval], [TRANG=])
+AM_CONDITIONAL([HAVE_TRANG], [test x"$TRANG" != x])
 
 AC_OUTPUT(Makefile src/Makefile)
