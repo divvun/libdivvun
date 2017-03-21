@@ -99,10 +99,14 @@ const msgmap readMessages(const std::string& file) {
 					// e_value assumes we only ever have one PCDATA element here:
 					const auto& errtype = utf16conv.from_bytes(e.attribute("id").value());
 					// std::cerr << utf16conv.to_bytes(errtype) << std::endl;
-					if(msgs[lang].count(errtype) != 0) {
+					if(msgs[lang].first.count(errtype) != 0) {
 						std::cerr << "WARNING: Duplicate titles for " << e.attribute("id").value() << std::endl;
 					}
-					msgs[lang][errtype] = msg;
+					msgs[lang].first[errtype] = msg;
+				}
+				for (pugi::xml_node re: def.child("ids").children("re")) {
+					std::basic_regex<char> r(re.attribute("v").value());
+					msgs[lang].second.push_back(std::make_pair(r, msg));
 				}
 			}
 		}
@@ -117,10 +121,10 @@ const msgmap readMessages(const std::string& file) {
 				}
 				const auto& msg = utf16conv.from_bytes(os.str());
 				const auto& lang = child.attribute("xml:lang").value();
-				if(msgs[lang].count(errtype) != 0) {
+				if(msgs[lang].first.count(errtype) != 0) {
 					std::cerr << "WARNING: Duplicate titles for " << error.attribute("id").value() << std::endl;
 				}
-				msgs[lang][errtype] = msg;
+				msgs[lang].first[errtype] = msg;
 			}
 		}
 	}
@@ -234,7 +238,7 @@ const Reading proc_line(const hfst::HfstTransducer& t, const std::string& line) 
 /* If we have an inserted suggestion, then the next word has to be
  * part of that, since we don't want to *replace* the word
 **/
-std::map<std::u16string, UStringSet> sugg_append(std::u16string next_wf, std::map<std::u16string, UStringSet> cohort_err)
+std::map<std::u16string, UStringSet> sugg_append(const std::u16string& next_wf, std::map<std::u16string, UStringSet> cohort_err)
 {
 	std::map<std::u16string, UStringSet> fixed;
 	for(auto& err : cohort_err) {
@@ -259,17 +263,42 @@ std::string cohort_errs_json(const Cohort& c,
 			     const hfst::HfstTransducer& t,
 			     const msgmap& msgs)
 {
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::string s;
 	// TODO: currently we just pick one if there are several error types:
-	auto const& err = c.err.begin();
-	std::u16string msg = err->first;
+	const auto& err = c.err.begin();
+	const auto& errtype = err->first;
+	std::u16string msg;
 	// TODO: locale, how? One process per locale (command-line-arg) or print all messages?
-	if(msgs.count("se") != 0
-	   && msgs.at("se").count(msg) != 0) {
-		msg = msgs.at("se").at(msg);
+	std::string locale = "se";
+	if(msgs.count(locale) == 0) {
+		std::cerr << "WARNING: No message at all for " << locale << std::endl;
 	}
 	else {
-		std::cerr << "WARNING: No message for " << json::str(err->first) << std::endl;
+		const auto& lmsgs = msgs.at(locale);
+		if(lmsgs.first.count(errtype) != 0) {
+			msg = lmsgs.first.at(errtype);
+		}
+		else {
+			for(const auto& p : lmsgs.second) {
+				std::match_results<const char*> result;
+				const auto& et = utf16conv.to_bytes(errtype.c_str());
+				std::regex_match(et.c_str(), result, p.first);
+				if(!result.empty()
+				   && // Only consider full matches:
+				   result.position(0) == 0 && result.suffix().length() == 0) {
+					msg = p.second;
+					break;
+					// TODO: cache results? but then no more constness:
+					// lmsgs.first.at(errtype) = p.second;
+				}
+
+			}
+		}
+		if(msg.empty()) {
+			std::cerr << "WARNING: No message for " << json::str(err->first) << std::endl;
+			msg = errtype;
+		}
 	}
 	s += "["; s += json::str(c.form);
 	s += ","; s += std::to_string(pos);

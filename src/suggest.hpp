@@ -44,8 +44,12 @@ namespace gtd {
 
 typedef std::set<std::u16string> UStringSet;
 
-typedef std::unordered_map<std::u16string, std::u16string> id_map;
-typedef std::unordered_map<std::string, id_map > msgmap;
+typedef std::u16string msg;
+typedef std::u16string err_id;
+typedef std::basic_regex<char> err_re;
+typedef std::unordered_map<err_id, msg> id_map; // ids[errtype] = msg;
+typedef std::vector<std::pair<err_re, msg> > re_id_list; // re_ids = [(errtype_regex, msg), …];
+typedef std::unordered_map<std::string, std::pair<id_map, re_id_list> > msgmap;	// msgs[lang] = make_pair(id_map, re_id_list)
 
 enum LineType {
 	WordformL, ReadingL, BlankL
