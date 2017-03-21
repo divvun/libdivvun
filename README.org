@@ -120,7 +120,7 @@ or
 then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequisites]].
 
 
-* Progress [10/15]
+* Progress [12/16]
 
 This should:
 
@@ -133,10 +133,11 @@ This should:
 - [X] optionally output as JSON
 - [X] handle superblanks
 - [X] 4+-byte UTF-8 input
+- [X] default/fallback values for ids and regexes of ids in errors.xml
 
 Also TODO:
 
-- [ ] <STREAMCMD:FLUSH>
+- [X] <STREAMCMD:FLUSH>
 - [ ] better way to skip @FLAGDIACRITICS@ in generator [[file:src/suggest.cpp::if(symbol.size()>0%20&&%20symbol%5B0%5D!='@')%20{][output]]
 - [ ] deal with subreadings
 - [X] input format needs to show where we have (and don't have) blanks
