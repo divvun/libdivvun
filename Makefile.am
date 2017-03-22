@@ -7,6 +7,6 @@ test/generator.hfstol: test/generator.hfst
 	hfst-fst2fst -O -i $< -o $@
 
 check_DATA=test/generator.hfstol
-TESTS=test/run test/run-flushing
+TESTS=test/run test/run-flushing test/validate
 
 test: check
