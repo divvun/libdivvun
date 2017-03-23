@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if [ "$#" != 1 ]; then
+    echo "USAGE: divvun-validate-suggest FILE"
+    exit 1
+fi
+
+file="$1"
+
+if [ ! -e "${file}" ]; then
+    echo "ERROR: '${file}' file not found"
+    exit 1
+fi
+
+
+# If it looks like we're not installed, use the errors.dtd of the same
+# dir as this script; otherwise assume we're installed:
+d=$(dirname "$0")
+if [ "$0" != "@prefix@/bin/divvun-validate-suggest" ] && [ -e "$d"/errors.dtd ]; then
+    dir="$d"
+else
+    dir=@prefix@/share/divvun-suggest
+fi
+
+/usr/bin/xmllint --dtdvalid "${dir}"/errors.dtd --noout "${file}"

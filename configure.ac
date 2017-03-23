@@ -47,6 +47,8 @@ AS_IF([test "x$enable_xml" != "xno"], [
   AC_SUBST(PUGIXML_LIBS)
 ])
 
+AC_CONFIG_FILES([src/divvun-validate-suggest], [chmod +x src/divvun-validate-suggest])
+
 AC_PATH_PROG([XMLLINT], [xmllint], [false], [$PATH$PATH_SEPARATOR$with_xmllint/bin])
 AS_IF([test x$XMLLINT = xfalse], [AC_MSG_ERROR([You don't have xmllint installed])])
 
