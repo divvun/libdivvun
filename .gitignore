@@ -5,8 +5,6 @@ configure
 depcomp
 install-sh
 missing
-**/Makefile
-**/Makefile.in
 config.log
 config.status
 src/.deps/
@@ -24,4 +22,5 @@ src/divvun-suggest
 /test-driver
 /test-suite.log
 /test/.tern-port
-
+/**/Makefile
+/**/Makefile.in
