@@ -20,6 +20,8 @@ matrix:
   include:
   - os: linux
     compiler: clang
+    env:
+    - VERBOSE=1
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
     - sudo apt-get -f install -y libhfst48-dev
@@ -30,6 +32,8 @@ matrix:
     # Trusty's default gcc doesn't have C++11; can't be in env since then travis overrides it:
     install:
     - CXX="g++-5" CC="gcc-5"
+    env:
+    - VERBOSE=1
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
     - sudo apt-get -f install -y libhfst48-dev
