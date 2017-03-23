@@ -10,6 +10,7 @@ config.status
 src/.deps/
 src/*.o
 src/divvun-suggest
+src/divvun-validate-suggest
 /test/generator.hfst
 /test/generator.hfstol
 /compile
@@ -24,3 +25,4 @@ src/divvun-suggest
 /test/.tern-port
 /**/Makefile
 /**/Makefile.in
+old/
