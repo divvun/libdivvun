@@ -87,6 +87,17 @@ inline int startswith(std::string big, std::string start)
 	return big.compare(0, start.size(), start) == 0;
 }
 
+inline void replaceAll(std::u16string& str, const std::u16string& from, const std::u16string& to) {
+    if(from.empty()){
+        return;
+    }
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::u16string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
+}
+
 
 }
 

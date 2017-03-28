@@ -47,9 +47,31 @@ typedef std::set<std::u16string> UStringSet;
 typedef std::u16string msg;
 typedef std::u16string err_id;
 typedef std::basic_regex<char> err_re;
+
 typedef std::unordered_map<err_id, msg> id_map; // ids[errtype] = msg;
 typedef std::vector<std::pair<err_re, msg> > re_id_list; // re_ids = [(errtype_regex, msg), …];
 typedef std::unordered_map<std::string, std::pair<id_map, re_id_list> > msgmap;	// msgs[lang] = make_pair(id_map, re_id_list)
+
+typedef size_t rel_id;
+typedef std::unordered_map<std::string, rel_id> relations;
+
+struct Reading {
+	bool suggest;
+	std::string ana;
+	std::u16string errtype;
+	UStringSet sforms;
+	relations rels;	// rels[relname] = target.id
+	rel_id id;	// 0 if unset
+};
+
+struct Cohort {
+	std::u16string form;
+	std::map<std::u16string, UStringSet> err;
+	int pos;
+	rel_id id;
+	std::vector<Reading> readings;
+};
+typedef std::unordered_map<rel_id, size_t> CohortMap;
 
 enum LineType {
 	WordformL, ReadingL, BlankL
