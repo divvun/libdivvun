@@ -90,7 +90,7 @@ int main(int argc, char ** argv)
 		if(options.count("messages")) {
 			const auto& msgfile = options["messages"].as<std::string>();
 			if(verbose) {
-				std::cerr << "Reading messages xml" << msgfile << std::endl;
+				std::cerr << "Reading messages xml " << msgfile << std::endl;
 			}
 			m = gtd::readMessages(msgfile);
 			if (m.empty()) {
