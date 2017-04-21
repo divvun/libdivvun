@@ -24,7 +24,7 @@ matrix:
     - VERBOSE=1
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
-    - sudo apt-get -f install -y libhfst48-dev
+    - sudo apt-get -f install -y libhfst49-dev
     - ./autogen.sh
 
   - os: linux
@@ -36,7 +36,7 @@ matrix:
     - VERBOSE=1
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
-    - sudo apt-get -f install -y libhfst48-dev
+    - sudo apt-get -f install -y libhfst49-dev
     - ./autogen.sh
 
   - os: osx
