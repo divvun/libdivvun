@@ -481,7 +481,7 @@ RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer
 			prevtype = WordformL;
 		}
 		else if(!result.empty() && result[3].length() != 0) { // reading
-			// TODO: doesn't do anything with subreadings yet; needs to keep track of previous line(s) for that
+			// TODO: doesn't do anything with subreadings yet
 			const auto& reading = proc_reading(t, line);
 
 			if(!reading.errtype.empty()) {

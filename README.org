@@ -120,9 +120,9 @@ or
 then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequisites]].
 
 
-* Progress [12/16]
+* Progress [12/17]
 
-This should:
+divvun-suggest should:
 
 - [X] read cg format
 - [X] load errors.xml
@@ -134,13 +134,56 @@ This should:
 - [X] handle superblanks
 - [X] 4+-byte UTF-8 input
 - [X] default/fallback values for ids and regexes of ids in errors.xml
-
-Also TODO:
-
-- [X] <STREAMCMD:FLUSH>
-- [ ] better way to skip @FLAGDIACRITICS@ in generator [[file:src/suggest.cpp::if(symbol.size()>0%20&&%20symbol%5B0%5D!='@')%20{][output]]
-- [ ] deal with subreadings
+- [X] flush on seeing <STREAMCMD:FLUSH>
+- [ ] skip @FLAGDIACRITICS@ in generator output (is there a better way than [[file:src/suggest.cpp::if(symbol.size()>0%20&&%20symbol%5B0%5D!='@')%20{][excluding symbols starting with @]]?)
+- [ ] deal with subreadings: http://giellatekno.uit.no/bugzilla/show_bug.cgi?id=2317#c5
 - [X] input format needs to show where we have (and don't have) blanks
-- [X] deal with the new blank format given by hfst-tokenise (and
-  remove old blank hacks)
+- [X] deal with the new blank format given by hfst-tokenise (and remove old blank hacks)
+- [ ] handle [[*sketch for alternative suggestions on the same word][alternative suggestions on the same word]]
 - [ ] handle &DELETE nicely (UI also: sihko sáni = slett ordet)
+
+
+** sketch for alternative suggestions on the same word
+When we might have different error types, put the error tag on the
+&SUGGEST reading:
+
+#+begin_src cg
+  "<dego>"
+          "dego" CS <W:0> @CNP ID:11
+  :
+  "<lávvomuorran>"
+          "lávvomuorra" N Sem/Dummytag Ess <W:0> @COMP-CS< &syn-not-dego R:DELETE1:11
+          "lávvomuorra" N Sem/Dummytag Nom <W:0> @COMP-CS< &syn-dego-nom &SUGGEST
+  "<.>"
+#+end_src
+
+Here, /lávvomuorran/ is the (only) word carrying error tags. A reading
+on this word contains all info needed to generate the suggestion.
+
+The reading with the &SUGGEST tag thus needs to have the error tag on
+the same reading (otherwise we can't know which error tag-reading goes
+with which DELETE/SUGGEST-reading).
+
+-----
+
+Do we ever want &SUGGEST on the same error instance (underline)
+crossing at least two cohorts? In that case, we need e.g. R:RIGHT on
+the rightmost word to be included in one and the same error instance:
+
+#+begin_src cg
+  "<grønt>"
+          "grøn" A Pst Sg Ind Neut ID:41
+          "grøn" A Pst Sg Ind Masc &SUGGEST &så-veldig-feil-masc R:RIGHT:42
+          "grøn" A Pst Sg Def &SUGGEST &så-veldig-feil-def
+  :
+  "<osten>"
+          "ost" N Masc Sg Def ID:42
+          "ost" N Masc Sg Ind &SUGGEST &så-veldig-feil-masc
+  "<.>"
+#+end_src
+Here, on seeing R:RIGHT, we know we need to underline until the next
+word with the same error tag &så-veldig-feil-masc, giving the
+suggestion "grøn ost". Since a different suggestion was covered by
+that underline, we have to expand the underline for that word as well
+(giving "grøne osten"), since UI's can't typically handle overlapping
+underlines.
