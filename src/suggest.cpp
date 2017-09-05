@@ -81,11 +81,10 @@ const std::basic_regex<char> CG_LINE ("^"
 
 const std::basic_regex<char> MSG_TEMPLATE_VAR ("^[$][0-9]+$");
 
-const msgmap readMessages(const std::string& file) {
-	msgmap msgs;
 #ifdef HAVE_LIBPUGIXML
-	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_file(file.c_str());
+const msgmap readMessages(pugi::xml_document& doc, pugi::xml_parse_result& result)
+{
+	msgmap msgs;
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 
 	if (result) {
@@ -133,10 +132,72 @@ const msgmap readMessages(const std::string& file) {
 		}
 	}
 	else {
-		std::cerr << file << ":" << result.offset << " ERROR: " << result.description() << "\n";
+		std::cerr << "(buffer):" << result.offset << " ERROR: " << result.description() << "\n";
 	}
-#endif
 	return msgs;
+}
+#endif
+
+const msgmap readMessages(const char* buff, const size_t size) {
+#ifdef HAVE_LIBPUGIXML
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_buffer(buff, size);
+	return readMessages(doc, result);
+#else
+	msgmap msgs;
+	return msgs;
+#endif
+}
+
+const msgmap readMessages(const std::string& file) {
+#ifdef HAVE_LIBPUGIXML
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_file(file.c_str());
+	return readMessages(doc, result);
+#else
+	msgmap msgs;
+	return msgs;
+#endif
+}
+
+
+
+const hfst::HfstTransducer *readTransducer(std::istream& is) {
+	hfst::HfstInputStream *in = NULL;
+	try
+	{
+		in = new hfst::HfstInputStream(is);
+	}
+	catch (StreamNotReadableException& e)
+	{
+		std::cerr << "ERROR: Stream not readable." << std::endl;
+		return NULL;
+	}
+	catch (HfstException& e) {
+		std::cerr << "ERROR: HfstException." << std::endl;
+		return NULL;
+	}
+
+	hfst::HfstTransducer* t = NULL;
+	while (not in->is_eof())
+	{
+		if (in->is_bad())
+		{
+			std::cerr << "ERROR: Stream cannot be read." << std::endl;
+			return NULL;
+		}
+		t = new hfst::HfstTransducer(*in);
+		if(not in->is_eof()) {
+			std::cerr << "WARNING: >1 transducers in stream! Only using the first." << std::endl;
+		}
+		break;
+	}
+	in->close();
+	delete in;
+	if(t == NULL) {
+		std::cerr << "WARNING: Could not read any transducers!" << std::endl;
+	}
+	return t;
 }
 
 const hfst::HfstTransducer *readTransducer(const std::string& file) {
@@ -194,7 +255,6 @@ const std::tuple<bool, std::string, StringVec, rel_id, relations> proc_tags(cons
 		if (result.empty()) {
 			gentags.push_back(tag);
 			// std::cerr << "\033[1;35mgentag=\t" << tag << "\033[0m" << std::endl;
-
 		}
 		else if(result[2].length() != 0) {
 			// std::cerr << "\033[1;35msugtag=\t" << result[2] << "\033[0m" << std::endl;
@@ -226,6 +286,9 @@ const std::tuple<bool, std::string, StringVec, rel_id, relations> proc_tags(cons
 			}
 			// std::cerr << "\033[1;35mresult[5] (ID)=\t" << result[5] << "\033[0m" << std::endl;
 		}
+		// else {
+		// 	std::cerr << "\033[1;35mresult.length()=\t" << result[0] << "\033[0m" << std::endl;
+		// }
 
 	}
 	return std::make_tuple(suggest, errtype, gentags, id, rels);

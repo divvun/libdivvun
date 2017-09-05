@@ -1,0 +1,125 @@
+<!-- Copyright (C) 2017, Kevin Brubeck Unhammer <unhammer@fsfe.org> -->
+
+<!-- This program is free software: you can redistribute it and/or modify -->
+<!-- it under the terms of the GNU General Public License as published by -->
+<!-- the Free Software Foundation, either version 3 of the License, or -->
+<!-- (at your option) any later version. -->
+
+<!-- This program is distributed in the hope that it will be useful, -->
+<!-- but WITHOUT ANY WARRANTY; without even the implied warranty of -->
+<!-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the -->
+<!-- GNU General Public License for more details. -->
+
+<!-- You should have received a copy of the GNU General Public License -->
+<!-- along with this program.  If not, see <http://www.gnu.org/licenses/>. -->
+
+
+<!--
+
+*** WORK IN PROGRESS ***
+
+Må kunna ha fleire alternative pipelines:
+
+  pipeline_1=hfst-tokenise foo.hfst | vislcg3 -g foo.cg3 | cg-foo | divvun-suggest bar
+  pipeline_2=m4runner punct.m4
+
+For kvar pipeline, må kunne spesifisera kvart brukarval og kva verknad
+dei har på pipelinen:
+
+| Brukarval     |  $1  |  $2                  |  $3  |
+|–––––––––––––––+––––––+––––––––––––––––––––––+––––––|
+| realword      | 2,3,7| cat                  | cat  |
+| teiknsetjing  | 1,3  | cat                  | B    |
+| dialektx      | 1,5  | stat-munge ngram.bin | B    |
+
+  combiner($1)=concat
+  combiner($2)=union
+  combiner($3)=union
+
+Til dømes:
+
+  pipeline_1=hfst–tokenise foo.hfst | vislcg3 –g foo.cg3 ––sections=$1 | $2 | $3 | cg–foo | divvun–suggest bar
+
+Me unngår
+
+  pipeline_1=hfst–tokenise foo.hfst | vislcg3 –g foo.cg3 ––sections=1,3,1,5 | $2 | BB | cg–foo | divvun–suggest bar
+
+sidan {{$3}} er union, så når både teiknsetjing og dialektx er valt, så vil me ha berre B.
+
+* viss dialektx, så skru på sections 1 og 5 i cg, og legg til statistisk dings
+
+
+
+ -->
+
+<!-- Root element:-->
+<!ELEMENT pipespec (pipeline+)>
+<!ATTLIST pipespec
+          language CDATA #REQUIRED
+          developer CDATA #IMPLIED
+          copyright CDATA #IMPLIED
+          contact CDATA #IMPLIED
+          version CDATA #IMPLIED
+          depversions CDATA #IMPLIED
+          >
+<!--
+== pipespec attributes ==
+  language:    BCP-47, default language code for pipelines in this spec
+  contact:     typically an e-mail address
+  version:     version of this module
+  depversions: versions of sub-modules used by the pipeline, e.g. hfst
+ -->
+
+<!ELEMENT pipeline (prefs?, (sh|cg|tokenize|tokenise|mwesplit|suggest)+)>
+<!ATTLIST pipeline
+          name ID #REQUIRED
+          language CDATA #IMPLIED
+          type CDATA #IMPLIED
+          >
+<!--
+== pipeline attributes ==
+  name:        user-readable, but unique name of the pipeline
+  language:    BCP-47, may override the language code of the pipespec
+ -->
+
+<!ELEMENT prefs (pref+)>
+
+<!ELEMENT pref (option+)>
+<!ATTLIST pref
+          type CDATA #REQUIRED
+          name CDATA #REQUIRED
+>
+<!-- type and name are *not* unique here; several pipelines may have a pref for e.g. "Oxford comma" -->
+
+<!ELEMENT option (label+)>
+<!ATTLIST option
+          err-id CDATA #REQUIRED
+>
+
+<!ENTITY % Text "(#PCDATA | em)*">
+
+<!ELEMENT label %Text;>
+<!ATTLIST label
+          xml:lang CDATA #REQUIRED
+>
+
+<!-- General "system" command – pipelines with this can only be used
+     in settings where we can open processes: -->
+<!ELEMENT sh (arg*)>
+<!ATTLIST sh
+          prog CDATA #REQUIRED
+>
+
+<!-- Library-based commands – no IPC/process open() required since
+     these just use linked libraries: -->
+<!ELEMENT cg (arg)>           <!-- arg: grammar.cg3 -->
+<!ELEMENT tokenize (arg)>     <!-- arg: tokeniser.pmhfst -->
+<!ELEMENT tokenise (arg)>     <!-- en_GB alias of the above -->
+<!ELEMENT mwesplit EMPTY>     <!-- takes no arguments -->
+<!ELEMENT suggest (arg, arg)> <!-- arg1: generator.hfstol, arg2: error_messages.xml -->
+
+
+<!ELEMENT arg EMPTY>
+<!ATTLIST arg
+          n CDATA #REQUIRED
+>

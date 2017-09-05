@@ -80,8 +80,11 @@ enum LineType {
 void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& m, bool json);
 
 const hfst::HfstTransducer *readTransducer(const std::string& file);
+const hfst::HfstTransducer *readTransducer(const char* buff, const size_t size);
+const hfst::HfstTransducer *readTransducer(std::istream& is);
 
 const msgmap readMessages(const std::string& file);
+const msgmap readMessages(const char* buff, const size_t size);
 
 }
 

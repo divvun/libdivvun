@@ -17,5 +17,5 @@ tar xzvf "${pkg}".tar.gz
 
 ./autogen.sh
 ./configure CPPFLAGS=-I"$(pwd)"/"${pkg}"/src/ LDFLAGS=-L"$(pwd)"/"${pkg}"
-make -j
+make -j3
 make test VERBOSE=true

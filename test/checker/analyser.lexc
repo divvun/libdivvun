@@ -1,0 +1,44 @@
+
+Multichar_Symbols
+% Interj
+% CLB
+% CC
+% Adv
+% Err/Orth-a-á
+% V
+% TV
+% Ind
+% Prs
+% Pl1
+% Inf
+% Sem/Dummytag
+% Attr
+% A
+% N
+% Sem/Prod-cogn_Txt
+% Err/Orth
+% Pl
+% Com
+% Sem/Sign
+% ABBR
+% Sg
+% Acc
+% Gen
+% Nom
+
+
+LEXICON Root
+hm% Interj:Hm #;
+,% CLB:, #;
+ja% CC:Ja #;
+seammás% Err/Orth-a-á% Adv:seammas #;
+ballat% V% TV% Ind% Prs% Pl1:ballat #;
+ballat% V% TV% Inf:ballat #;
+ođas% A% Sem/Dummytag% Attr:ođđa #;
+diehtu% N% Sem/Prod-cogn_Txt% Err/Orth% Pl% Com:dieđuiguin #;
+diehtu% N% Sem/Prod-cogn_Txt% Pl% Com:dieđuiguin #;
+.% CLB:. #;
+n% N% Sem/Sign% ABBR% Attr:n #;
+n% N% Sem/Sign% ABBR% Sg% Acc:n #;
+n% N% Sem/Sign% ABBR% Sg% Gen:n #;
+n% N% Sem/Sign% ABBR% Sg% Nom:n #;

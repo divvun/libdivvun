@@ -15,6 +15,9 @@ addons:
     - clang
     - libpugixml-dev
     - libxml2-utils
+    - libarchive-dev
+    # because now building cg3:
+    - libboost-dev
 
 matrix:
   include:
@@ -25,7 +28,9 @@ matrix:
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
     - sudo apt-get -f install -y libhfst49-dev
-    - ./autogen.sh
+    # - ./autogen.sh
+    script:
+    - scripts/travis-build
 
   - os: linux
     compiler: gcc
@@ -37,24 +42,39 @@ matrix:
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
     - sudo apt-get -f install -y libhfst49-dev
-    - ./autogen.sh
+    # - ./autogen.sh
+    script:
+    - scripts/travis-build
 
   - os: osx
     compiler: clang
     # on osx, nightly goes in /usr/local
     env:
-    - LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib" PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
-    before_script:
-    - wget http://apertium.projectjj.com/osx/install-nightly.sh -O - | sudo bash
+    - PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
+    before_install:
+    - brew update
+    - brew ls --versions icu4c      || brew install icu4c
+    - brew ls --versions boost      || brew install boost
+    - brew ls --versions pugixml    || brew install pugixml
+    - brew ls --versions libarchive || brew install libarchive
     script:
-    - scripts/get-pugixml-and-build
+    - scripts/travis-build
 
   - os: osx
     compiler: gcc
     # on osx, nightly goes in /usr/local
     env:
-    - LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib" PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
-    before_script:
-    - wget http://apertium.projectjj.com/osx/install-nightly.sh -O - | sudo bash
+    - PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
+    before_install:
+    - brew update
+    - brew ls --versions icu4c      || brew install icu4c
+    - brew ls --versions boost      || brew install boost
+    - brew ls --versions pugixml    || brew install pugixml
+    - brew ls --versions libarchive || brew install libarchive
     script:
-    - scripts/get-pugixml-and-build
+    - scripts/travis-build
+
+cache:
+  directories:
+    - $HOME/gtd-cache
+    - $HOME/Library/Caches/Homebrew

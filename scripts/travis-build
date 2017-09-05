@@ -1,0 +1,91 @@
+#!/bin/bash
+
+set -e -u
+
+cd "$(dirname "$0")/.."
+
+export PKG_CONFIG_PATH LD_LIBRARY_PATH DYLD_LIBRARY_PATH LDFLAGS CPPFLAGS
+declare -a EXTRA_CMAKE_ARGS=()
+
+if [[ $TRAVIS_OS_NAME = osx ]]; then
+    # brew puts icu4c/pugixml/libarchive outside the regular paths:
+    LDFLAGS="${LDFLAGS:-} -L/usr/local/Cellar/pugixml/1.8.1/lib/pugixml-1.8"
+    LDFLAGS="${LDFLAGS:-} -L/usr/local/opt/icu4c/lib -L/usr/local/opt/icu4c/include"
+    LDFLAGS="${LDFLAGS:-} -L/usr/local/opt/libarchive/lib"
+    CPPFLAGS="${CPPFLAGS:-} -I/usr/local/Cellar/pugixml/1.8.1/include/pugixml-1.8"
+    CPPFLAGS="${CPPFLAGS:-} -I/usr/local/opt/icu4c/include"
+    CPPFLAGS="${CPPFLAGS:-} -I/usr/local/opt/libarchive/include"
+    PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}:/usr/local/opt/libarchive/lib/pkgconfig"
+    EXTRA_CMAKE_ARGS=(
+        -DCMAKE_INCLUDE_PATH="/usr/local/opt/icu4c/include"
+        -DCMAKE_LIBRARY_PATH="/usr/local/opt/icu4c/lib;/usr/local/opt/icu4c/include"
+    )
+
+    (
+        # A travis-caching version of
+        # http://apertium.projectjj.com/osx/install-nightly.sh
+        WHERE='/usr/local'
+        # Other locales may make Perl unhappy
+        export LANG=en_US.UTF-8
+        export LC_ALL=en_US.UTF-8
+        mkdir -p /tmp/aad.$$
+        cd /tmp/aad.$$
+        mkdir -p "$HOME"/gtd-cache
+        tarball="$HOME"/gtd-cache/apertium-all-dev.tar.bz2
+        if [[ -f "${tarball}" ]]; then
+            stat -f "Reusing cached %N from %Sm" "${tarball}" # assuming BSD stat
+        else
+            curl https://apertium.projectjj.com/osx/nightly/apertium-all-dev.tar.bz2 > "${tarball}"
+        fi
+        tar -jxf "${tarball}"
+        cd apertium-all-dev
+        (
+            set +e
+            find . -type f -name '*.la' -exec rm -fv '{}' \;
+        )
+        echo "Fixing hardcoded paths"
+        FILES=$(egrep -l '^#!/' $(grep -rl '/opt/osx' bin))
+        FILES="$FILES $(grep -rl '/opt/osx' lib/pkgconfig)"
+        for FILE in $FILES; do
+            echo "Fixing $FILE"
+            perl -pe "s@/opt/osx@$WHERE@g;" -i.orig "$FILE"
+        done
+        sudo mkdir -p "$WHERE/"
+        sudo cp -af ./* "$WHERE/"
+        sudo chmod -R uga+r "$WHERE"
+        cd /tmp
+        rm -rf /tmp/aad.$$
+    )
+fi
+
+test -d third-party || mkdir third-party
+(
+    cd third-party
+    (
+        git clone -b StreamApplicator-merge-r12311 https://github.com/unhammer/vislcg3 cg3
+        cd cg3
+        if [[ -n ${EXTRA_CMAKE_ARGS[@]:-} ]]; then
+            ./cmake.sh -DCMAKE_INSTALL_PREFIX=../installed "${EXTRA_CMAKE_ARGS[@]}"
+        else
+            ./cmake.sh -DCMAKE_INSTALL_PREFIX=../installed
+        fi
+        make -j3
+        make install
+    )
+
+)
+
+PKG_CONFIG_PATH="third-party/installed/share/pkgconfig:third-party/installed/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+CPPFLAGS="-Ithird-party/installed/include ${CPPFLAGS:-}"
+
+if [[ $TRAVIS_OS_NAME = osx ]]; then
+    LDFLAGS="${LDFLAGS:-} -Wl,-rpath,$(pwd)/third-party/installed/lib"
+else
+    PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}:$(pwd)/third-party/installed/lib/x86_64-linux-gnu/pkgconfig"
+    LDFLAGS="${LDFLAGS:-} -Wl,-rpath,$(pwd)/third-party/installed/lib/x86_64-linux-gnu"
+fi
+
+./autogen.sh
+./configure --enable-checker
+make -j3
+make check VERBOSE=true

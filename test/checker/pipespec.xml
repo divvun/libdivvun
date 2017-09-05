@@ -1,0 +1,72 @@
+<pipespec language="sme"
+          developer="Giellatekno"
+          version="0.42"
+          contact="Linda Wiechetek linda.wiechetek@uit.no">
+
+  <pipeline name="smepunct"
+            type="Punctuation">
+    <tokenize><arg n="tokeniser.pmhfst"/></tokenize>
+  </pipeline>
+
+  <pipeline name="smegram"
+            language="sme_NO"
+            type="Grammar error">
+    <prefs>
+      <pref type="Punctuation" name="Tusenskilje">
+        <option err-id="tusen-mellom">
+          <label xml:lang="nn">
+            Eg vil ha Mellomrom mellom 000, skjul &amp;tusen-mellom
+          </label>
+        </option>
+        <option err-id="tusen-punktum">
+          <label xml:lang="nn">
+            Punktum
+          </label>
+          <label xml:lang="se">
+            +PUNCT
+          </label>
+        </option>
+      </pref>
+    </prefs>
+    <tokenize><arg n="tokeniser.pmhfst"/></tokenize>
+    <cg><arg n="valency.cg3"/></cg>
+    <cg><arg n="mwe-dis.cg3"/></cg>
+    <mwesplit/>
+    <cg><arg n="disambiguator.cg3"/></cg>
+    <cg><arg n="grammarchecker.cg3"/></cg>
+    <suggest>
+      <arg n="generator.hfstol"/>
+      <arg n="errors.xml"/>
+    </suggest>
+  </pipeline>
+
+<!--
+    # Mapping av brukarval og ignorerbare feilmeldingar til
+    # brukargrensesnittet skal gå an å gjera automatisk:
+
+    # Hent desse frå
+    # //pipeline/@language
+(*) Nordsamisk, Sverige
+( ) Nordsamisk, Noreg
+
+    # Lag ein overkategori per type i
+    # //[@language=Sverige|@language=""]/prefs/@type
+    # //pipeline[@language=Sverige|@language=""]/@type
+    # errors.xml //default/@type
+    # errors.xml //error/@type
+[X] teikn
+    # //prefs gir ting du kan velja mellom:
+    (*) punktum som tusenskilje
+    ( ) mellomrom som tusenskilje
+[-] grammatikkfeil
+    # errors.xml gir ting du kan skjula, strengar frå //defaults/default/title
+    [X] ekteordsfeil
+    [ ] syntaksfeil
+
+    # Edge case: Sidan smegram_SE har ein pref[@type=Punctuation], så vil
+    # smepunct aldri bli brukt viss språket er sme_SE. Viss språket er
+    # sme_NO, så kan smepunct bli valt viss alt anna enn teikn er valt.
+    # I praksis vil me vel dette ikkje skje?
+-->
+</pipespec>
+

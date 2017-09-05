@@ -1,0 +1,156 @@
+/*
+* Copyright (C) 2015-2016, Kevin Brubeck Unhammer <unhammer@fsfe.org>
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+#include <stdlib.h>
+
+#include "checker.hpp"
+#include "cxxopts.hpp"
+
+
+int runXml(const std::string& specpath, const std::u16string& pipename, bool verbose) {
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	const auto& spec = gtd::readPipeSpec(specpath);
+	if(spec->pnodes.find(pipename) == spec->pnodes.end()) {
+		std::cerr << "ERROR: Couldn't find pipe " << utf16conv.to_bytes(pipename) << " in " << specpath << std::endl;
+		return EXIT_FAILURE;
+	}
+	auto pipeline = gtd::Pipeline(spec, pipename, verbose);
+	for (std::string line; std::getline(std::cin, line);) {
+		std::stringstream pipe_in(line);
+		std::stringstream pipe_out;
+		pipeline.proc(pipe_in, pipe_out);
+		std::cout << pipe_out.str() << std::endl;
+	}
+	return EXIT_SUCCESS;
+}
+
+int printNamesXml(const std::string& path, bool verbose) {
+	const auto& spec = gtd::readPipeSpec(path);
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	std::cout << "Please specify a pipeline variant with the -n/--variant option. Available variants in pipespec:" << std::endl;
+	for(const auto& p : spec->pnodes) {
+		const auto& name = utf16conv.to_bytes(p.first.c_str());
+		std::cout << name << std::endl;
+	}
+	return EXIT_SUCCESS;
+}
+
+int runAr(const std::string& path, const std::u16string& pipename, bool verbose) {
+	const auto& ar_spec = gtd::readArchiveSpec(path);
+	auto ar_pipeline = gtd::Pipeline(ar_spec, pipename, verbose);
+	for (std::string line; std::getline(std::cin, line);) {
+		std::stringstream pipe_in(line);
+		std::stringstream pipe_out;
+		ar_pipeline.proc(pipe_in, pipe_out);
+		std::cout << pipe_out.str() << std::endl;
+	}
+	return EXIT_SUCCESS;
+}
+
+int printNamesAr(const std::string& path, bool verbose) {
+	const auto& ar_spec = gtd::readArchiveSpec(path);
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	std::cout << "Please specify a pipeline variant with the -n/--variant option. Available variants in archive:" << std::endl;
+	for(const auto& p : ar_spec->spec->pnodes) {
+		const auto& name = utf16conv.to_bytes(p.first.c_str());
+		std::cout << name << std::endl;
+	}
+	return EXIT_SUCCESS;
+}
+
+int main(int argc, char ** argv)
+{
+	try
+	{
+		std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+		cxxopts::Options options(argv[0], "BIN - generate grammar checker suggestions from a CG stream");
+
+		options.add_options()
+			("s,spec", "Pipeline XML specification", cxxopts::value<std::string>(), "FILE")
+			("a,archive", "Zipped pipeline archive of language data", cxxopts::value<std::string>(), "FILE")
+			("n,variant", "Name of the pipeline variant", cxxopts::value<std::string>(), "NAME")
+			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
+			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
+			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 if --json).")
+			("v,verbose", "Be verbose")
+			("h,help", "Print help")
+			;
+
+		std::vector<std::string> pos = {
+			"spec",
+			"archive",
+			"variant"
+			//"input"
+			//"output"
+		};
+		options.parse_positional(pos);
+		options.parse(argc, argv);
+
+		if(argc > 1) {
+			std::cout << options.help({""}) << std::endl;
+			std::cerr << "ERROR: got " << argc-1+pos.size() <<" arguments; expected only " << pos.size() << std::endl;
+			return EXIT_SUCCESS;
+		}
+
+		if (options.count("help"))
+		{
+			std::cout << options.help({""}) << std::endl;
+			return EXIT_SUCCESS;
+		}
+		bool verbose = options.count("v");
+
+		if(options.count("spec")) {
+			const auto& specfile = options["spec"].as<std::string>();
+			if(verbose) {
+				std::cerr << "Reading specfile " << specfile << std::endl;
+			}
+			if(!options.count("variant")) {
+				return printNamesXml(specfile, verbose);
+			}
+			else {
+				const auto& pipename = utf16conv.from_bytes(options["variant"].as<std::string>());
+				return runXml(specfile, pipename, verbose);
+			}
+		}
+		else if(options.count("archive")) {
+			const auto& archive = options["archive"].as<std::string>();
+			if(verbose) {
+				std::cerr << "Reading zipped archive file " << archive << std::endl;
+			}
+			if(!options.count("variant")) {
+				return printNamesAr(archive, verbose);
+			}
+			else {
+				const auto& pipename = utf16conv.from_bytes(options["variant"].as<std::string>());
+				return runAr(archive, pipename, verbose);
+			}
+		}
+		else {
+			std::cerr << "ERROR: Pipespec file required" << std::endl;
+			return EXIT_FAILURE;
+		}
+
+	}
+	catch (const cxxopts::OptionException& e)
+	{
+		std::cerr << "ERROR: couldn't parse options: " << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
+}

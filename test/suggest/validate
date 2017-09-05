@@ -7,14 +7,14 @@ cd "$(dirname "$0")" || exit 1
 declare -i fail=0
 
 for xml in errors*.xml; do
-    if ! ../src/divvun-validate-suggest "${xml}"; then
+    if ! ../../src/divvun-validate-suggest "${xml}"; then
         echo "${xml} should validate, but didn't"
         (( fail++ ))
     fi
 done
 
 for xml in invalid*.xml; do
-    if ../src/divvun-validate-suggest "${xml}"; then
+    if ../../src/divvun-validate-suggest "${xml}"; then
         echo "${xml} shouldn't validate, but did"
         (( fail++ ))
     fi

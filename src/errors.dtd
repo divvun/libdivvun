@@ -19,6 +19,9 @@
 
 <!ELEMENT defaults (default*)>
 <!ELEMENT default (ids, header?, body?)>
+<!ATTLIST default
+          type CDATA #IMPLIED
+>
 
 <!ELEMENT ids (e | re)*>
 <!ELEMENT re EMPTY>
@@ -32,6 +35,7 @@
 
 <!ELEMENT error (header, body)>
 <!ATTLIST error
+          type CDATA #IMPLIED
           id ID #REQUIRED
 >
 

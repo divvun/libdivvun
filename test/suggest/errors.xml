@@ -4,7 +4,7 @@
 <errors>
 
   <defaults>
-    <default>
+    <default type="Grammar error">
       <ids>
         <re v="real-.*"/>
         <e id="unreal-girjji"/>
@@ -58,6 +58,21 @@
       <description xml:lang="se">illatiiva iige nominatiiva</description>
     <examples>
       <ex xml:lang="se">Mun čálán {reive}.</ex>
+    </examples>
+    </body>
+  </error>
+
+  <error id="msyn-valency-loc-com">
+    <header>
+      <title xml:lang="en">msyn thing</title>
+      <title xml:lang="se">msyn thingy</title>
+      <references><ref n=""/></references>
+    </header>
+    <body>
+      <description xml:lang="en">wrong word</description>
+      <description xml:lang="se">boasttut sátni</description>
+    <examples>
+      <ex xml:lang="se">Ovdalgihtiigeassima sierra máksingoartta ferte álohii atnit go máksá boastagiro dahje báŋku {badjel}.</ex>
     </examples>
     </body>
   </error>

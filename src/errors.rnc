@@ -28,7 +28,7 @@ defaults = element defaults { attlist.defaults, \default* }
 attlist.defaults &= empty
 
 \default = element default { attlist.default, ids, header?, body? }
-attlist.default &= empty
+attlist.default &= attribute type { text }?
 
 ids = element ids { attlist.ids, (e | re)* }
 attlist.ids &= empty
@@ -40,8 +40,10 @@ e = element e { attlist.e, empty }
 attlist.e &= attribute id { xsd:ID }
 
 error = element error { attlist.error, header, body }
-attlist.error &= attribute id { xsd:ID }
+attlist.error &=
 
+  attribute type { text }?,
+  attribute id { xsd:ID }
 header = element header { attlist.header, (title | references)+ }
 attlist.header &= empty
 

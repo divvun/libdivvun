@@ -7,7 +7,7 @@ cd "$(dirname "$0")" || exit 1
 declare -i fail=0
 for input in input.*.cg; do
     base=${input##input}; base=${base%%cg}
-    ../src/divvun-suggest --json generator.hfstol errors.xml \
+    ../../src/divvun-suggest --json generator.hfstol errors.xml \
                           < "${input}" \
                           > output"${base}"json \
                           2>output"${base}"err

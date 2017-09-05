@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e -u
+
+cd "$(dirname "$0")"/../..
+
+src/divvun-validate-pipespec test/checker/pipespec.xml
+
+(
+    cd test/checker
+    ../../src/divvun-checker -s pipespec.xml -n smegram <input >output
+)
+
+if ! diff test/checker/output test/checker/expected; then
+    echo diff test/checker/output test/checker/expected
+    exit 1
+fi
+
+
+(
+    cd test/checker
+    ../../src/divvun-checker -a sme.zcheck -n smegram <input >output
+)
+
+if ! diff test/checker/output test/checker/expected; then
+    echo diff test/checker/output test/checker/expected
+    exit 1
+fi

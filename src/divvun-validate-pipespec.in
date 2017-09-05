@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if [ "$#" != 1 ]; then
+    echo "USAGE: divvun-validate-pipespec FILE"
+    exit 1
+fi
+
+file="$1"
+
+if [ ! -e "${file}" ]; then
+    echo "ERROR: '${file}' file not found"
+    exit 1
+fi
+
+
+# If it looks like we're not installed, use the pipespec.dtd of the same
+# dir as this script; otherwise assume we're installed:
+d=$(dirname "$0")
+if [ "$0" != "@prefix@/bin/divvun-validate-pipespec" ] && [ -e "$d"/pipespec.dtd ]; then
+    dir="$d"
+else
+    dir=@prefix@/share/divvun-pipespec
+fi
+
+/usr/bin/xmllint --dtdvalid "${dir}"/pipespec.dtd --noout "${file}"

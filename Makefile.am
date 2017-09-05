@@ -1,12 +1,7 @@
-SUBDIRS = src
+SUBDIRS = src test/suggest
 
-test/generator.hfst: test/generator.strings
-	hfst-strings2fst -j -i $< -o $@
-
-test/generator.hfstol: test/generator.hfst
-	hfst-fst2fst -O -i $< -o $@
-
-check_DATA=test/generator.hfstol
-TESTS=test/run test/run-flushing test/validate
+if WANT_CHECKER
+SUBDIRS += test/checker
+endif
 
 test: check

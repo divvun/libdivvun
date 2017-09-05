@@ -12,10 +12,10 @@ to="${tmpd}/to"
 from="${tmpd}/from"
 mkfifo "${to}" "${from}"
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit 1
 
 # Server:
-../src/divvun-suggest --json generator.hfstol errors.xml <"${to}" >"${from}" 2>"${tmpd}/err" &
+../../src/divvun-suggest --json generator.hfstol errors.xml <"${to}" >"${from}" 2>"${tmpd}/err" &
 pid=$!
 trap 'kill $pid; rm -rf "${tmpd}"' EXIT
 

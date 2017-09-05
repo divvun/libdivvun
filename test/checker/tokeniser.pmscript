@@ -1,0 +1,23 @@
+set need-separators off
+
+Define morphology @bin"analyser.hfst" ;
+
+Define incondform      Punct | {“} | {”} | {…} | {­} ;
+
+Define blank           Whitespace | incondform ;
+
+Define incondword       morphology & [ incondform 0:?* ] ;
+Define morphoword       morphology                   LC([blank | #]) RC([blank | # ]);
+
+
+Define alphabet "a-z" | {á}|{š}|{ž}|{č}|{đ}|{ŋ}|{ŧ}|{æ}|{ä}|{ø}|{ö}|{å}
+              | "A-Z" | {Á}|{Š}|{Ž}|{Č}|{Đ}|{Ŋ}|{Ŧ}|{Æ}|{Ä}|{Ø}|{Ö}|{Å} ;
+Define alphaword alphabet+;
+
+Define unknownform [alphaword].u ;
+Define unknownwordEmpty unknownform:0 LC([blank | #]) RC([[blank ] | # ]);
+
+
+Define token [ morphoword | unknownwordEmpty | incondword ] EndTag(token);
+
+regex token ;
