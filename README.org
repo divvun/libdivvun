@@ -242,6 +242,7 @@ then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequis
 - [ ] Read CG input and spell all words by adding them as new readings
 - [ ] do NUL-flushing, outputting <STREAMCMD:FLUSH>
 - [ ] deal with subreadings, how?
+- [ ] have a timeout on generating suggestions (shouldn't use more than 0.5s per sentence?)
 
 ** TODO alternative suggestions on the same word
 
