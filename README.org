@@ -191,7 +191,7 @@ or
 then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequisites]].
 
 
-* Progress [27/35]
+* Progress [27/41]
 
 =divvun-suggest= should:
 
@@ -234,6 +234,14 @@ then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequis
 - [ ] get some API documentation
 - [X] travis (both Mac and Ubuntu)
 
+=divvun-cgspell= should:
+
+- [ ] load a zhfst bin (or?)
+- [ ] Read a word per line and spell with CG output
+- [ ] Read CG input and spell unknown words by adding them as new readings
+- [ ] Read CG input and spell all words by adding them as new readings
+- [ ] do NUL-flushing, outputting <STREAMCMD:FLUSH>
+- [ ] deal with subreadings, how?
 
 ** TODO alternative suggestions on the same word
 
