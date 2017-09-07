@@ -63,7 +63,7 @@ MweSplitCmd::MweSplitCmd (bool verbose)
 }
 void MweSplitCmd::run(std::stringstream& input, std::stringstream& output) const
 {
-	cg3_run_mwesplit_on_text(applicator.get(), (cg3_istream*)&input, (cg3_ostream*)&output);
+	cg3_run_mwesplit_on_text(applicator.get(), (std_istream*)&input, (std_ostream*)&output);
 }
 
 
@@ -87,7 +87,7 @@ CGCmd::CGCmd (const std::string& path, bool verbose)
 
 void CGCmd::run(std::stringstream& input, std::stringstream& output) const
 {
-	cg3_run_grammar_on_text(applicator.get(), (cg3_istream*)&input, (cg3_ostream*)&output);
+	cg3_run_grammar_on_text(applicator.get(), (std_istream*)&input, (std_ostream*)&output);
 }
 
 

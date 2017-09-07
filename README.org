@@ -46,7 +46,7 @@ that library. Alternatively, you can run ./configure with
   clang, with full C++11 support)
 - libhfst >=3.12.2
 - libpugixml >=1.7.2
-- vislcg3 >=1.1.2.12326
+- vislcg3 >=1.1.2.12327
 - libarchive >=3.2.2-2
 
 Tested with gcc-5.2.0, gcc-5.3.1 and clang-703.0.29. On Mac OS X, the
@@ -179,7 +179,7 @@ or
 then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequisites]].
 
 
-* Progress [28/43]
+* Progress [29/43]
 
 =divvun-suggest= should:
 
@@ -221,7 +221,7 @@ then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequis
 - [X] read zip-archive like zhfst
 - [ ] get some API documentation
 - [X] travis (both Mac and Ubuntu)
-- [ ] link to vislcg3 without needing the source (vislcg3 has to make the functions we use available from cg3.h)
+- [X] link to vislcg3 without needing the source (vislcg3 has to make the functions we use available from cg3.h)
 
 =divvun-cgspell= should:
 
