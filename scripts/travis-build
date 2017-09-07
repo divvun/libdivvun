@@ -62,7 +62,7 @@ test -d third-party || mkdir third-party
 (
     cd third-party
     (
-        git clone -b StreamApplicator-merge-r12311 https://github.com/unhammer/vislcg3 cg3
+        svn co http://visl.sdu.dk/svn/visl/tools/vislcg3/trunk cg3
         cd cg3
         if [[ -n ${EXTRA_CMAKE_ARGS[@]:-} ]]; then
             ./cmake.sh -DCMAKE_INSTALL_PREFIX=../installed "${EXTRA_CMAKE_ARGS[@]}"
