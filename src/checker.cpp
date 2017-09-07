@@ -58,31 +58,21 @@ void TokenizeCmd::run(std::stringstream& input, std::stringstream& output) const
 
 
 MweSplitCmd::MweSplitCmd (bool verbose)
-	: grammar(MweSplitCmd::load())
-	, applicator(new CG3::MweSplitApplicator(grammar->ux_stderr))
+	: applicator(new CG3::MweSplitApplicator(std::cerr))
 {
-	if(!grammar){
-		throw std::runtime_error("ERROR: Couldn't load the empty MweSplit grammar");
-	}
-	applicator->setGrammar(&*grammar);
+	// applicator.verbosity_level = 0;
+	// applicator->setGrammar(&*grammar);
 }
 void MweSplitCmd::run(std::stringstream& input, std::stringstream& output) const
 {
 	applicator->runGrammarOnText(input, output);
 }
 
-CG3::Grammar *MweSplitCmd::load() {
-	CG3::Grammar *grammar = CG3::MweSplitApplicator::emptyGrammar(
-		u_finit(stderr, uloc_getDefault(), ucnv_getDefaultName()),
-		u_finit(stdout, uloc_getDefault(), ucnv_getDefaultName()));
-	return grammar;
-}
-
 
 
 CGCmd::CGCmd (const char* buff, const size_t size, bool verbose)
 	: grammar(CGCmd::load_buffer(buff, size))
-	, applicator(new CG3::StreamApplicator(grammar->ux_stderr))
+	, applicator(new CG3::GrammarApplicator(*grammar->ux_stderr))
 {
 	if(!grammar){
 		throw std::runtime_error("ERROR: Couldn't load CG grammar");
@@ -91,7 +81,7 @@ CGCmd::CGCmd (const char* buff, const size_t size, bool verbose)
 }
 CGCmd::CGCmd (const std::string& path, bool verbose)
 	: grammar(CGCmd::load_file(path.c_str()))
-	, applicator(new CG3::StreamApplicator(grammar->ux_stderr))
+	, applicator(new CG3::GrammarApplicator(*grammar->ux_stderr))
 {
 	if(!grammar){
 		throw std::runtime_error(("ERROR: Couldn't load CG grammar " + path).c_str());
@@ -112,9 +102,8 @@ CG3::Grammar *CGCmd::load_buffer(const char* input, const size_t size) {
 	// }
 
 	CG3::Grammar *grammar = new CG3::Grammar;
-	// grammar->ux_stdin = u_finit(stdin, uloc_getDefault(), ucnv_getDefaultName());
-	grammar->ux_stderr = u_finit(stderr, uloc_getDefault(), ucnv_getDefaultName());
-	grammar->ux_stdout = u_finit(stdout, uloc_getDefault(), ucnv_getDefaultName());
+	grammar->ux_stderr = &std::cerr;
+	grammar->ux_stdout = &std::cout;
 
 	std::unique_ptr<CG3::IGrammarParser> parser;
 	// TODO: Support BinaryGrammar too?
@@ -125,10 +114,11 @@ CG3::Grammar *CGCmd::load_buffer(const char* input, const size_t size) {
 	// else {
 	// 	parser.reset(new CG3::TextualParser(*grammar, grammar->ux_stderr));
 	// }
-	parser.reset(new CG3::TextualParser(*grammar, grammar->ux_stderr));
+	parser.reset(new CG3::TextualParser(*grammar, *grammar->ux_stderr));
 
 	if (parser->parse_grammar(input, size)) {
 		std::cerr << "CG3 Error: Grammar could not be parsed!\n" << std::endl;
+		delete grammar;
 		return 0;
 	}
 
@@ -153,20 +143,21 @@ CG3::Grammar *CGCmd::load_file(const char *filename) {
 
 	CG3::Grammar *grammar = new CG3::Grammar;
 	// grammar->ux_stdin = u_finit(stdin, uloc_getDefault(), ucnv_getDefaultName());
-	grammar->ux_stderr = u_finit(stderr, uloc_getDefault(), ucnv_getDefaultName());
-	grammar->ux_stdout = u_finit(stdout, uloc_getDefault(), ucnv_getDefaultName());
+	grammar->ux_stderr = &std::cerr;
+	grammar->ux_stdout = &std::cout;
 
 	std::unique_ptr<CG3::IGrammarParser> parser;
 
 	if (CG3::cbuffers[0][0] == 'C' && CG3::cbuffers[0][1] == 'G' && CG3::cbuffers[0][2] == '3' && CG3::cbuffers[0][3] == 'B') {
 		std::cerr << "CG3 Info: Binary grammar detected.\n" << std::endl;
-		parser.reset(new CG3::BinaryGrammar(*grammar, grammar->ux_stderr));
+		parser.reset(new CG3::BinaryGrammar(*grammar, *grammar->ux_stderr));
 	}
 	else {
-		parser.reset(new CG3::TextualParser(*grammar, grammar->ux_stderr));
+		parser.reset(new CG3::TextualParser(*grammar, *grammar->ux_stderr));
 	}
-	if (parser->parse_grammar(filename, uloc_getDefault(), ucnv_getDefaultName())) {
+	if (parser->parse_grammar(filename)) {
 		std::cerr << "CG3 Error: Grammar could not be parsed!\n" << std::endl;
+		delete grammar;
 		return 0;
 	}
 

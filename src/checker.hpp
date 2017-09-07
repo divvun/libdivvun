@@ -30,7 +30,6 @@
 #include <TextualParser.hpp>
 #include <BinaryGrammar.hpp>
 #include <GrammarApplicator.hpp>
-#include <StreamApplicator.hpp>
 #include <MweSplitApplicator.hpp>
 // hfst:
 #include <hfst/implementations/optimized-lookup/pmatch.h>
@@ -160,7 +159,7 @@ class CGCmd: public PipeCmd {
 		void run(std::stringstream& input, std::stringstream& output) const;
 	private:
 		std::unique_ptr<CG3::Grammar> grammar;
-		std::unique_ptr<CG3::StreamApplicator> applicator;
+		std::unique_ptr<CG3::GrammarApplicator> applicator;
 		static CG3::Grammar *load_buffer(const char *string, const size_t size);
 		static CG3::Grammar *load_file(const char *filename);
 };
