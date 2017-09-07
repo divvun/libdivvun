@@ -1,28 +1,31 @@
 #!/bin/bash
 
-set -e u
+[[ "${BASH_SOURCE[0]}" != "${0}" ]] || set -eu
 
 unset CXXFLAGS CPPFLAGS
 
 for prefix in "$HOME"/PREFIX/gtd-gc "$HOME"/PREFIX/cg3; do
-    export LD_LIBRARY_PATH="${prefix}/lib:${prefix}/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}"
-    export PKG_CONFIG_PATH="${prefix}/share/pkgconfig:${prefix}/lib/pkgconfig:${PKG_CONFIG_PATH}:${prefix}/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH}"
-    export ACLOCAL_PATH="${prefix}/share/aclocal:${ACLOCAL_PATH}"
-    export CXXFLAGS="-I${prefix}/include $CXXFLAGS"
+    export LD_LIBRARY_PATH="${prefix}/lib:${prefix}/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+    export PKG_CONFIG_PATH="${prefix}/share/pkgconfig:${prefix}/lib/pkgconfig:${prefix}/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH:-}"
+    export ACLOCAL_PATH="${prefix}/share/aclocal:${ACLOCAL_PATH:-}"
+    export CXXFLAGS="-I${prefix}/include ${CXXFLAGS:-}"
 done
 
 # Would like to use gold, but it links divvun-checker to (relative path) ./.libs/libdivvun-suggest.so ?
-false && command -V ld.gold && export CXXFLAGS="-fuse-ld=gold $CXXFLAGS"
-export CXXFLAGS="-ggdb3 -O0 $CXXFLAGS"
+false && command -V ld.gold && export CXXFLAGS="-fuse-ld=gold ${CXXFLAGS:-}"
+export CXXFLAGS="-ggdb3 -O0 ${CXXFLAGS:-}"
 export CPPFLAGS=-DDEBUG
 
 # Without the below, would need LD_LIBRARY_PATH="$HOME/PREFIX/cg3/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}":
 export LDFLAGS="-Wl,-rpath,$HOME/PREFIX/cg3/lib/x86_64-linux-gnu/"
 
-./autogen.sh
-./configure --prefix="$HOME"/PREFIX/gtd-gc --with-trang="$HOME"/.jedit/jars/trang.jar --enable-checker
-make -j3 check
-cat test-suite.log
-make -j3 install
+# for make check:
+export VERBOSE=1
 
-src/divvun-checker test/lib/pipespec.xml
+build () {
+    ./autogen.sh
+    ./configure --prefix="$HOME"/PREFIX/gtd-gc --with-trang="$HOME"/.jedit/jars/trang.jar --enable-checker
+    make -j3 check
+}
+
+[[ "${BASH_SOURCE[0]}" != "${0}" ]] || build
