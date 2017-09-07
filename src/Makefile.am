@@ -30,8 +30,8 @@ if WANT_CHECKER
 # include_HEADERS += checker.hpp
 # divvun-checker binary:
 divvun_checker_SOURCES = main_checker.cpp checker.cpp cxxopts.hpp
-divvun_checker_CXXFLAGS = -I../third-party/cg3/include -I../third-party/cg3/src $(CG3_CFLAGS) $(HFSTOSPELL_CFLAGS) $(HFST_CFLAGS) $(PUGIXML_CFLAGS) $(LIBARCHIVE_CFLAGS)
-divvun_checker_LDADD = libdivvun-suggest.la -licui18n -licudata -licuio -licuuc $(CG3_LIBS) $(HFSTOSPELL_LIBS) $(HFST_LIBS) $(PUGIXML_LIBS) $(LIBARCHIVE_LIBS)
+divvun_checker_CXXFLAGS = $(CG3_CFLAGS) $(HFSTOSPELL_CFLAGS) $(HFST_CFLAGS) $(PUGIXML_CFLAGS) $(LIBARCHIVE_CFLAGS)
+divvun_checker_LDADD = libdivvun-suggest.la $(CG3_LIBS) $(HFSTOSPELL_LIBS) $(HFST_LIBS) $(PUGIXML_LIBS) $(LIBARCHIVE_LIBS)
 # TODO: shouldn't need to link to icu once we get a real cg3 api and can do that stuff there
 divvun_checkerdir = $(datadir)
 divvun_checker_DATA = pipespec.dtd pipespec.rnc

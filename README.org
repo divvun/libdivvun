@@ -46,7 +46,7 @@ that library. Alternatively, you can run ./configure with
   clang, with full C++11 support)
 - libhfst >=3.12.2
 - libpugixml >=1.7.2
-- vislcg3 >=1.1.2.12325
+- vislcg3 >=1.1.2.12326
 - libarchive >=3.2.2-2
 
 Tested with gcc-5.2.0, gcc-5.3.1 and clang-703.0.29. On Mac OS X, the
@@ -56,18 +56,6 @@ If you can't easily install libpugixml, you can run
 [[file:scripts/get-pugixml-and-build][scripts/get-pugixml-and-build]] which will download libpugixml into this
 directory, build that (with cmake) and configure this program to use
 that library.
-
-Unfortunately we need a checkout of vislcg3 at the moment, since
-vislcg3 doesn't install all header files. Our makefiles expect it to
-be in the folder third-party/cg3. To fetch and compile the code, do:
-
-#+BEGIN_SRC sh
-svn co http://visl.sdu.dk/svn/visl/tools/vislcg3/trunk third-party/cg3
-cd third-party/cg3
-./cmake.sh
-make -j3
-sudo make install
-#+END_SRC
 
 Now when building, pass =--enable-checker= to configure.
 
