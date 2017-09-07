@@ -27,16 +27,14 @@
 // divvun-suggest:
 #include "suggest.hpp"
 // cg3:
-#include <TextualParser.hpp>
-#include <BinaryGrammar.hpp>
-#include <GrammarApplicator.hpp>
-#include <MweSplitApplicator.hpp>
+#include <cg3.h>
 // hfst:
 #include <hfst/implementations/optimized-lookup/pmatch.h>
 #include <hfst/implementations/optimized-lookup/pmatch_tokenize.h>
 // zips:
 #include <archive.h>
 #include <archive_entry.h>
+
 
 namespace gtd {
 
@@ -138,6 +136,19 @@ class TokenizeCmd: public PipeCmd {
 		hfst_ol_tokenize::TokenizeSettings settings;
 };
 
+struct CGApplicatorDeleter {
+  void operator()(cg3_grammar* ptr)
+  {
+    cg3_grammar_free(ptr);
+  }
+};
+
+struct CGGrammarDeleter {
+  void operator()(cg3_applicator* ptr)
+  {
+    // cg3_applicator_free(ptr);
+  }
+};
 
 class MweSplitCmd: public PipeCmd {
 	public:
@@ -145,9 +156,8 @@ class MweSplitCmd: public PipeCmd {
 		explicit MweSplitCmd (bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const;
 	private:
-		std::unique_ptr<CG3::Grammar> grammar;
-		std::unique_ptr<CG3::MweSplitApplicator> applicator;
-		static CG3::Grammar *load();
+		std::unique_ptr<cg3_applicator, CGApplicatorDeleter> applicator;
+		// cg3_applicator* applicator;
 };
 
 
@@ -158,10 +168,10 @@ class CGCmd: public PipeCmd {
 		CGCmd (const std::string& path, bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const;
 	private:
-		std::unique_ptr<CG3::Grammar> grammar;
-		std::unique_ptr<CG3::GrammarApplicator> applicator;
-		static CG3::Grammar *load_buffer(const char *string, const size_t size);
-		static CG3::Grammar *load_file(const char *filename);
+		std::unique_ptr<cg3_grammar, CGGrammarDeleter> grammar;
+		// cg3_grammar* grammar;
+		std::unique_ptr<cg3_applicator, CGApplicatorDeleter> applicator;
+		// cg3_applicator* applicator;
 };
 
 
@@ -184,12 +194,8 @@ class Pipeline {
 		const bool verbose;
 	private:
 		std::vector<std::unique_ptr<PipeCmd>> cmds;
-
-		cg3_status cg3_init(FILE *in, FILE *out, FILE *err);
 };
 
-
-
-}
+} // namespace gtd
 
 #endif

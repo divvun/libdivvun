@@ -58,112 +58,36 @@ void TokenizeCmd::run(std::stringstream& input, std::stringstream& output) const
 
 
 MweSplitCmd::MweSplitCmd (bool verbose)
-	: applicator(new CG3::MweSplitApplicator(std::cerr))
+	: applicator(cg3_mwesplitapplicator_create())
 {
-	// applicator.verbosity_level = 0;
-	// applicator->setGrammar(&*grammar);
 }
 void MweSplitCmd::run(std::stringstream& input, std::stringstream& output) const
 {
-	applicator->runGrammarOnText(input, output);
+	cg3_run_mwesplit_on_text(applicator.get(), (cg3_istream*)&input, (cg3_ostream*)&output);
 }
 
 
 
 CGCmd::CGCmd (const char* buff, const size_t size, bool verbose)
-	: grammar(CGCmd::load_buffer(buff, size))
-	, applicator(new CG3::GrammarApplicator(*grammar->ux_stderr))
+	: grammar(cg3_grammar_load_buffer(buff, size))
+	, applicator(cg3_applicator_create(grammar.get()))
 {
 	if(!grammar){
 		throw std::runtime_error("ERROR: Couldn't load CG grammar");
 	}
-	applicator->setGrammar(&*grammar);
 }
 CGCmd::CGCmd (const std::string& path, bool verbose)
-	: grammar(CGCmd::load_file(path.c_str()))
-	, applicator(new CG3::GrammarApplicator(*grammar->ux_stderr))
+	: grammar(cg3_grammar_load(path.c_str()))
+	, applicator(cg3_applicator_create(grammar.get()))
 {
 	if(!grammar){
 		throw std::runtime_error(("ERROR: Couldn't load CG grammar " + path).c_str());
 	}
-	applicator->setGrammar(&*grammar);
 }
 
 void CGCmd::run(std::stringstream& input, std::stringstream& output) const
 {
-	applicator->runGrammarOnText(input, output);
-}
-
-CG3::Grammar *CGCmd::load_buffer(const char* input, const size_t size) {
-	// TODO
-	// if (!input.read(&CG3::cbuffers[0][0], 4)) {
-	// 	std::cerr << "CG3 Error: Error reading first 4 bytes from grammar!\n" << std::endl;
-	// 	return 0;
-	// }
-
-	CG3::Grammar *grammar = new CG3::Grammar;
-	grammar->ux_stderr = &std::cerr;
-	grammar->ux_stdout = &std::cout;
-
-	std::unique_ptr<CG3::IGrammarParser> parser;
-	// TODO: Support BinaryGrammar too?
-	// if (CG3::cbuffers[0][0] == 'C' && CG3::cbuffers[0][1] == 'G' && CG3::cbuffers[0][2] == '3' && CG3::cbuffers[0][3] == 'B') {
-	// 	std::cerr << "CG3 Info: Binary grammar detected.\n" << std::endl;
-	// 	parser.reset(new CG3::BinaryGrammar(*grammar, grammar->ux_stderr));
-	// }
-	// else {
-	// 	parser.reset(new CG3::TextualParser(*grammar, grammar->ux_stderr));
-	// }
-	parser.reset(new CG3::TextualParser(*grammar, *grammar->ux_stderr));
-
-	if (parser->parse_grammar(input, size)) {
-		std::cerr << "CG3 Error: Grammar could not be parsed!\n" << std::endl;
-		delete grammar;
-		return 0;
-	}
-
-	grammar->reindex();
-
-	return grammar;
-}
-
-
-CG3::Grammar *CGCmd::load_file(const char *filename) {
-	std::ifstream input(filename, std::ios::binary);
-	if (!input) {
-		// TODO: Throw here instead of return 0, since that segfaults
-		std::cerr << "CG3 Error: Error opening " << filename << " for reading!\n" << std::endl;
-		return 0;
-	}
-	if (!input.read(&CG3::cbuffers[0][0], 4)) {
-		std::cerr << "CG3 Error: Error reading first 4 bytes from grammar!\n" << std::endl;
-		return 0;
-	}
-	input.close();
-
-	CG3::Grammar *grammar = new CG3::Grammar;
-	// grammar->ux_stdin = u_finit(stdin, uloc_getDefault(), ucnv_getDefaultName());
-	grammar->ux_stderr = &std::cerr;
-	grammar->ux_stdout = &std::cout;
-
-	std::unique_ptr<CG3::IGrammarParser> parser;
-
-	if (CG3::cbuffers[0][0] == 'C' && CG3::cbuffers[0][1] == 'G' && CG3::cbuffers[0][2] == '3' && CG3::cbuffers[0][3] == 'B') {
-		std::cerr << "CG3 Info: Binary grammar detected.\n" << std::endl;
-		parser.reset(new CG3::BinaryGrammar(*grammar, *grammar->ux_stderr));
-	}
-	else {
-		parser.reset(new CG3::TextualParser(*grammar, *grammar->ux_stderr));
-	}
-	if (parser->parse_grammar(filename)) {
-		std::cerr << "CG3 Error: Grammar could not be parsed!\n" << std::endl;
-		delete grammar;
-		return 0;
-	}
-
-	grammar->reindex();
-
-	return grammar;
+	cg3_run_grammar_on_text(applicator.get(), (cg3_istream*)&input, (cg3_ostream*)&output);
 }
 
 
@@ -421,26 +345,6 @@ void Pipeline::proc(std::stringstream& input, std::stringstream& output) {
 		// if(DEBUG) { dbg("cur_out after run", cur_out); }
 	}
 	output << cur_out.str();
-}
-cg3_status Pipeline::cg3_init(FILE *in, FILE *out, FILE *err) {
-	UErrorCode status = U_ZERO_ERROR;
-	u_init(&status);
-	if (U_FAILURE(status) && status != U_FILE_ACCESS_ERROR) {
-		fprintf(err, "CG3 Error: Cannot initialize ICU. Status = %s\n", u_errorName(status));
-		return CG3_ERROR;
-	}
-	status = U_ZERO_ERROR;
-
-	ucnv_setDefaultName("UTF-8");
-
-	uloc_setDefault("en_US_POSIX", &status);
-	if (U_FAILURE(status)) {
-		fprintf(err, "CG3 Error: Failed to set default locale. Status = %s\n", u_errorName(status));
-		return CG3_ERROR;
-	}
-	status = U_ZERO_ERROR;
-
-	return CG3_SUCCESS;
 }
 
 std::unique_ptr<PipeSpec> readPipeSpec(const std::string& file) {
