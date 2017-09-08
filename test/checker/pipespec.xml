@@ -40,33 +40,5 @@
     </suggest>
   </pipeline>
 
-<!--
-    # Mapping av brukarval og ignorerbare feilmeldingar til
-    # brukargrensesnittet skal gå an å gjera automatisk:
-
-    # Hent desse frå
-    # //pipeline/@language
-(*) Nordsamisk, Sverige
-( ) Nordsamisk, Noreg
-
-    # Lag ein overkategori per type i
-    # //[@language=Sverige|@language=""]/prefs/@type
-    # //pipeline[@language=Sverige|@language=""]/@type
-    # errors.xml //default/@type
-    # errors.xml //error/@type
-[X] teikn
-    # //prefs gir ting du kan velja mellom:
-    (*) punktum som tusenskilje
-    ( ) mellomrom som tusenskilje
-[-] grammatikkfeil
-    # errors.xml gir ting du kan skjula, strengar frå //defaults/default/title
-    [X] ekteordsfeil
-    [ ] syntaksfeil
-
-    # Edge case: Sidan smegram_SE har ein pref[@type=Punctuation], så vil
-    # smepunct aldri bli brukt viss språket er sme_SE. Viss språket er
-    # sme_NO, så kan smepunct bli valt viss alt anna enn teikn er valt.
-    # I praksis vil me vel dette ikkje skje?
--->
 </pipespec>
 

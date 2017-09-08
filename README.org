@@ -166,6 +166,79 @@ Example output:
   }
 #+END_SRC
 
+* Pipespec XML
+
+The =divvun-checker= program and =libdivvun-checker= API has an XML
+format for specifying what programs go into the checker pipelines, and
+metadata about the pipelines.
+
+A =pipespec.xml= defines a set of grammar checker (or really any text
+processing) pipelines.
+
+There is a main language for each pipespec, but individual pipelines
+may override with variants.
+
+Each pipeline may define certain a set of mutually exclusive (radio
+button) preferences, and if there's a =<suggest>= element referring to
+an =errors.xml= file in the pipeline, error tags from that may be used
+to populate UI's for hiding certain errors.
+
+
+
+** Mapping from XML preferences to UI
+
+The mapping from preferences in the XML to a user interface should be
+possible to do automatically, so the UI writer doesn't have to know
+anything about what preferences the pipespec defines, but can just ask
+the API for a list of preferences.
+
+Preferences in the UI are either checkboxes [X] or radio buttons (*).
+
+
+We might for example get the following preferences UI:
+: (*) Nordsamisk, Sverige
+: ( ) Nordsamisk, Noreg
+:
+: [X] Punctuation
+:     (*) punktum som tusenskilje
+:     ( ) mellomrom som tusenskilje
+: [-] Grammar errors
+:     [X] ekteordsfeil
+:     [ ] syntaksfeil
+
+
+Here, the available languages are scraped from the pipespec.xml
+using =//pipeline/@language=.
+
+A language is selected, so we create a Main Category of error types from
+: pipespec.xml //[@language=Sverige|@language=""]/prefs/@type
+: pipespec.xml //pipeline[@language=Sverige|@language=""]/@type
+: errors.xml   //default/@type
+: errors.xml   //error/@type
+
+in this case giving the set { Punctuation, Grammar errors }.
+
+One Main Category type is Punctuation; the radio buttons under
+this main category are those defined in
+: pipespec.xml //prefs[@type="Punctuation"]
+
+The other Main Category type is Grammar errors; maybe we didn't have anything
+in
+: pipespec.xml //prefs[@type="Grammar errors"]
+but there are checkboxes for errors that we can hide in
+: errors.xml //defaults/default/title
+
+It should be possible for the UI to hide which underlying
+=<pipeline>='s are chosen, and only show the preferences (picking a
+pipeline based on preferences). But there is an edge case: Say the
+pipe named smegram_SE with language sme_SE and main type "Grammar
+errors" has a
+: pref[@type="Punctuation"]
+and there's another pipe named smepunct with main type "Punctuation".
+Now, assuming we select the language sme_SE, we'll never use smepunct,
+since smegram defines error types that smepunct doesn't, but not the
+other way around. Hopefully this is not a problem in practice.
+
 * Troubleshooting
 
 If you get

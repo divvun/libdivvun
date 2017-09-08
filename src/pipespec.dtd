@@ -13,45 +13,10 @@
 <!-- You should have received a copy of the GNU General Public License -->
 <!-- along with this program.  If not, see <http://www.gnu.org/licenses/>. -->
 
-
 <!--
+-->
 
-*** WORK IN PROGRESS ***
-
-Må kunna ha fleire alternative pipelines:
-
-  pipeline_1=hfst-tokenise foo.hfst | vislcg3 -g foo.cg3 | cg-foo | divvun-suggest bar
-  pipeline_2=m4runner punct.m4
-
-For kvar pipeline, må kunne spesifisera kvart brukarval og kva verknad
-dei har på pipelinen:
-
-| Brukarval     |  $1  |  $2                  |  $3  |
-|–––––––––––––––+––––––+––––––––––––––––––––––+––––––|
-| realword      | 2,3,7| cat                  | cat  |
-| teiknsetjing  | 1,3  | cat                  | B    |
-| dialektx      | 1,5  | stat-munge ngram.bin | B    |
-
-  combiner($1)=concat
-  combiner($2)=union
-  combiner($3)=union
-
-Til dømes:
-
-  pipeline_1=hfst–tokenise foo.hfst | vislcg3 –g foo.cg3 ––sections=$1 | $2 | $3 | cg–foo | divvun–suggest bar
-
-Me unngår
-
-  pipeline_1=hfst–tokenise foo.hfst | vislcg3 –g foo.cg3 ––sections=1,3,1,5 | $2 | BB | cg–foo | divvun–suggest bar
-
-sidan {{$3}} er union, så når både teiknsetjing og dialektx er valt, så vil me ha berre B.
-
-* viss dialektx, så skru på sections 1 og 5 i cg, og legg til statistisk dings
-
-
-
- -->
-
+<!ELEMENT option (label+)>
 <!-- Root element:-->
 <!ELEMENT pipespec (pipeline+)>
 <!ATTLIST pipespec
@@ -91,7 +56,8 @@ sidan {{$3}} er union, så når både teiknsetjing og dialektx er valt, så vil 
 >
 <!-- type and name are *not* unique here; several pipelines may have a pref for e.g. "Oxford comma" -->
 
-<!ELEMENT option (label+)>
+
+
 <!ATTLIST option
           err-id CDATA #REQUIRED
 >
