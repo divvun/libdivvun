@@ -203,7 +203,7 @@ Preferences in the UI are either checkboxes [X] or radio buttons (*).
 We might for example get the following preferences UI:
 : (*) Nordsamisk, Sverige
 : ( ) Nordsamisk, Noreg
-:
+: …
 : [X] Punctuation
 :     (*) punktum som tusenskilje
 :     ( ) mellomrom som tusenskilje

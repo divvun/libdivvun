@@ -3,8 +3,8 @@ lib_LTLIBRARIES = libdivvun.la
 divvunincludedir = $(includedir)/divvun
 divvuninclude_HEADERS = checker.hpp
 libdivvun_la_SOURCES = checker.cpp pipeline.cpp suggest.cpp
-libdivvun_la_LIBADD =
-libdivvun_CXXFLAGS = $(HFSTOSPELL_LIBS) $(HFST_LIBS) $(PUGIXML_LIBS)
+libdivvun_la_LIBADD = $(CG3_LIBS) $(HFSTOSPELL_LIBS) $(HFST_LIBS) $(PUGIXML_LIBS) $(LIBARCHIVE_LIBS)
+libdivvun_CXXFLAGS = $(CG3_CFLAGS) $(HFSTOSPELL_CFLAGS) $(HFST_CFLAGS) $(PUGIXML_CFLAGS) $(LIBARCHIVE_CFLAGS)
 libdivvun_la_LDFLAGS = -no-undefined
 # TODO something like -version-info 49:0:0
 endif
