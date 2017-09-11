@@ -4,20 +4,10 @@
 
 unset CXXFLAGS CPPFLAGS
 
-for prefix in "$HOME"/PREFIX/gtd-gc "$HOME"/PREFIX/cg3; do
-    export LD_LIBRARY_PATH="${prefix}/lib:${prefix}/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
-    export PKG_CONFIG_PATH="${prefix}/share/pkgconfig:${prefix}/lib/pkgconfig:${prefix}/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH:-}"
-    export ACLOCAL_PATH="${prefix}/share/aclocal:${ACLOCAL_PATH:-}"
-    export CXXFLAGS="-I${prefix}/include ${CXXFLAGS:-}"
-done
-
 # Would like to use gold, but it links divvun-checker to (relative path) ./.libs/libdivvun-suggest.so ?
 false && command -V ld.gold && export CXXFLAGS="-fuse-ld=gold ${CXXFLAGS:-}"
 export CXXFLAGS="-ggdb3 -O0 ${CXXFLAGS:-}"
 export CPPFLAGS=-DDEBUG
-
-# Without the below, would need LD_LIBRARY_PATH="$HOME/PREFIX/cg3/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}":
-export LDFLAGS="-Wl,-rpath,$HOME/PREFIX/cg3/lib/x86_64-linux-gnu/"
 
 # for make check:
 export VERBOSE=1

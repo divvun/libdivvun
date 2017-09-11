@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2015-2016, Kevin Brubeck Unhammer <unhammer@fsfe.org>
+* Copyright (C) 2017, Kevin Brubeck Unhammer <unhammer@fsfe.org>
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -20,18 +20,18 @@
 #endif
 #include <stdlib.h>
 
-#include "checker.hpp"
+#include "pipeline.hpp"
 #include "cxxopts.hpp"
 
 
 int runXml(const std::string& specpath, const std::u16string& pipename, bool verbose) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	const auto& spec = gtd::readPipeSpec(specpath);
+	const auto& spec = divvun::readPipeSpec(specpath);
 	if(spec->pnodes.find(pipename) == spec->pnodes.end()) {
 		std::cerr << "ERROR: Couldn't find pipe " << utf16conv.to_bytes(pipename) << " in " << specpath << std::endl;
 		return EXIT_FAILURE;
 	}
-	auto pipeline = gtd::Pipeline(spec, pipename, verbose);
+	auto pipeline = divvun::Pipeline(spec, pipename, verbose);
 	for (std::string line; std::getline(std::cin, line);) {
 		std::stringstream pipe_in(line);
 		std::stringstream pipe_out;
@@ -42,7 +42,7 @@ int runXml(const std::string& specpath, const std::u16string& pipename, bool ver
 }
 
 int printNamesXml(const std::string& path, bool verbose) {
-	const auto& spec = gtd::readPipeSpec(path);
+	const auto& spec = divvun::readPipeSpec(path);
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::cout << "Please specify a pipeline variant with the -n/--variant option. Available variants in pipespec:" << std::endl;
 	for(const auto& p : spec->pnodes) {
@@ -53,8 +53,8 @@ int printNamesXml(const std::string& path, bool verbose) {
 }
 
 int runAr(const std::string& path, const std::u16string& pipename, bool verbose) {
-	const auto& ar_spec = gtd::readArchiveSpec(path);
-	auto ar_pipeline = gtd::Pipeline(ar_spec, pipename, verbose);
+	const auto& ar_spec = divvun::readArPipeSpec(path);
+	auto ar_pipeline = divvun::Pipeline(ar_spec, pipename, verbose);
 	for (std::string line; std::getline(std::cin, line);) {
 		std::stringstream pipe_in(line);
 		std::stringstream pipe_out;
@@ -65,7 +65,7 @@ int runAr(const std::string& path, const std::u16string& pipename, bool verbose)
 }
 
 int printNamesAr(const std::string& path, bool verbose) {
-	const auto& ar_spec = gtd::readArchiveSpec(path);
+	const auto& ar_spec = divvun::readArPipeSpec(path);
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::cout << "Please specify a pipeline variant with the -n/--variant option. Available variants in archive:" << std::endl;
 	for(const auto& p : ar_spec->spec->pnodes) {

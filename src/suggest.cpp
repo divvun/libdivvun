@@ -17,7 +17,7 @@
 
 #include "suggest.hpp"
 
-namespace gtd {
+namespace divvun {
 
 const std::string CG_SUGGEST_TAG = "&SUGGEST";
 

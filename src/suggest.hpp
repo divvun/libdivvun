@@ -40,7 +40,7 @@
 #include <unordered_map>
 #include <exception>
 
-namespace gtd {
+namespace divvun {
 
 typedef std::set<std::u16string> UStringSet;
 

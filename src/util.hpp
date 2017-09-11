@@ -35,7 +35,7 @@
 #include <locale>
 #include <codecvt>
 
-namespace gtd {
+namespace divvun {
 
 typedef std::vector<std::string> StringVec;
 

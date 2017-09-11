@@ -22,10 +22,13 @@ old/
 /src/.libs/
 /src/divvun-checker
 /src/divvun-validate-pipespec
-/src/libdivvun-suggest.la
 /src/suggest.lo
+/src/checker.lo
+/src/libdivvun.la
+/src/libdivvun.lo
 
 /test-driver
+/test-suite.log
 
 /test/suggest/generator.hfst
 /test/suggest/generator.hfstol

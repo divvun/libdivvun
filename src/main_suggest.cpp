@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2015-2016, Kevin Brubeck Unhammer <unhammer@fsfe.org>
+* Copyright (C) 2015-2017, Kevin Brubeck Unhammer <unhammer@fsfe.org>
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -80,20 +80,20 @@ int main(int argc, char ** argv)
 		if(verbose) {
 			std::cerr << "Reading transducer " << genfile << std::endl;
 		}
-		std::unique_ptr<const hfst::HfstTransducer> t(gtd::readTransducer(genfile));
+		std::unique_ptr<const hfst::HfstTransducer> t(divvun::readTransducer(genfile));
 		if (!t) {
 			std::cerr << "ERROR: Couldn't read transducer "<< genfile << std::endl;
 			return(EXIT_FAILURE);
 		}
 
-		gtd::msgmap m;
+		divvun::msgmap m;
 #ifdef HAVE_LIBPUGIXML
 		if(options.count("messages")) {
 			const auto& msgfile = options["messages"].as<std::string>();
 			if(verbose) {
 				std::cerr << "Reading messages xml " << msgfile << std::endl;
 			}
-			m = gtd::readMessages(msgfile);
+			m = divvun::readMessages(msgfile);
 			if (m.empty()) {
 				std::cerr << "ERROR: Couldn't read messages xml "<< msgfile << std::endl;
 				return(EXIT_FAILURE);
@@ -109,7 +109,7 @@ int main(int argc, char ** argv)
 		}
 #endif
 
-		gtd::run(std::cin, std::cout, *t, m, json);
+		divvun::run(std::cin, std::cout, *t, m, json);
 	}
 	catch (const cxxopts::OptionException& e)
 	{
