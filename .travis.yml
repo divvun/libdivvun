@@ -50,9 +50,9 @@ matrix:
     env:
     - PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
     before_install:
-    - brew update
-    - brew ls --versions pugixml    || brew install pugixml
-    - brew ls --versions libarchive || brew install libarchive
+    - travis_retry brew update
+    - brew ls --versions pugixml    || travis_retry brew install pugixml
+    - brew ls --versions libarchive || travis_retry brew install libarchive
     script:
     - scripts/travis-build
 
@@ -62,9 +62,9 @@ matrix:
     env:
     - PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
     before_install:
-    - brew update
-    - brew ls --versions pugixml    || brew install pugixml
-    - brew ls --versions libarchive || brew install libarchive
+    - travis_retry brew update
+    - brew ls --versions pugixml    || travis_retry brew install pugixml
+    - brew ls --versions libarchive || travis_retry brew install libarchive
     script:
     - scripts/travis-build
 
