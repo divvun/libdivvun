@@ -16,8 +16,6 @@ addons:
     - libpugixml-dev
     - libxml2-utils
     - libarchive-dev
-    # because now building cg3:
-    - libboost-dev
 
 matrix:
   include:
@@ -27,7 +25,7 @@ matrix:
     - VERBOSE=1
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
-    - sudo apt-get -f install -y libhfst49-dev
+    - sudo apt-get -f install -y libhfst49-dev libcg3-dev
     # - ./autogen.sh
     script:
     - scripts/travis-build
@@ -41,7 +39,7 @@ matrix:
     - VERBOSE=1
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
-    - sudo apt-get -f install -y libhfst49-dev
+    - sudo apt-get -f install -y libhfst49-dev libcg3-dev
     # - ./autogen.sh
     script:
     - scripts/travis-build
@@ -53,8 +51,6 @@ matrix:
     - PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
     before_install:
     - brew update
-    - brew ls --versions icu4c      || brew install icu4c
-    - brew ls --versions boost      || brew install boost
     - brew ls --versions pugixml    || brew install pugixml
     - brew ls --versions libarchive || brew install libarchive
     script:
@@ -67,8 +63,6 @@ matrix:
     - PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
     before_install:
     - brew update
-    - brew ls --versions icu4c      || brew install icu4c
-    - brew ls --versions boost      || brew install boost
     - brew ls --versions pugixml    || brew install pugixml
     - brew ls --versions libarchive || brew install libarchive
     script:

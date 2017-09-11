@@ -58,33 +58,6 @@ if [[ $TRAVIS_OS_NAME = osx ]]; then
     )
 fi
 
-test -d third-party || mkdir third-party
-(
-    cd third-party
-    (
-        svn co http://visl.sdu.dk/svn/visl/tools/vislcg3/trunk cg3
-        cd cg3
-        if [[ -n ${EXTRA_CMAKE_ARGS[@]:-} ]]; then
-            ./cmake.sh -DCMAKE_INSTALL_PREFIX=../installed "${EXTRA_CMAKE_ARGS[@]}"
-        else
-            ./cmake.sh -DCMAKE_INSTALL_PREFIX=../installed
-        fi
-        make -j3
-        make install
-    )
-
-)
-
-PKG_CONFIG_PATH="third-party/installed/share/pkgconfig:third-party/installed/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
-CPPFLAGS="-Ithird-party/installed/include ${CPPFLAGS:-}"
-
-if [[ $TRAVIS_OS_NAME = osx ]]; then
-    LDFLAGS="${LDFLAGS:-} -Wl,-rpath,$(pwd)/third-party/installed/lib"
-else
-    PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}:$(pwd)/third-party/installed/lib/x86_64-linux-gnu/pkgconfig"
-    LDFLAGS="${LDFLAGS:-} -Wl,-rpath,$(pwd)/third-party/installed/lib/x86_64-linux-gnu"
-fi
-
 ./autogen.sh
 ./configure --enable-checker
 make -j3
