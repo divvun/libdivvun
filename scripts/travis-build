@@ -62,3 +62,10 @@ fi
 ./configure --enable-checker
 make -j3
 make check VERBOSE=true
+
+make distclean
+
+./autogen.sh
+./configure --disable-checker
+make -j3
+make check VERBOSE=true
