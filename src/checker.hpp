@@ -23,6 +23,7 @@
 #endif
 #include <stdlib.h>
 
+#include <string>
 #include <memory>
 #include <set>
 
