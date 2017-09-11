@@ -8,19 +8,20 @@
 
 This repository contains two programs:
 
-The =divvun-gramcheck= program, and =checker= library, opens a grammar
-checker pipeline XML specification and lets you run grammar checking
-on strings. It can also open zip files containing the XML and all
-required langauge data.
+The =divvun-gramcheck= program, opens a grammar checker pipeline XML
+specification and lets you run grammar checking on strings. It can
+also open zip files containing the XML and all required language data.
+There is a C++ library =libdivvun= (=divvun/checker.hpp=) which allows
+for the same features.
 
 
-The =divvun-suggest= program, and =suggest= library, does FST lookup
-on forms specified as Constraint Grammar format readings, and looks up
-error-tags in an XML file with human-readable messages. It is meant to
-be used as a late stage of a grammar checker pipeline.
+The =divvun-suggest= program does FST lookup on forms specified as
+Constraint Grammar format readings, and looks up error-tags in an XML
+file with human-readable messages. It is meant to be used as a late
+stage of a grammar checker pipeline.
 
-The main output format is JSON, although it can also simply annotate
-readings in CG stream format.
+The main output format of =divvun-suggest= is JSON, although it can
+also simply annotate readings in CG stream format.
 
 * Prerequisites
 
@@ -39,7 +40,7 @@ If you can't easily install libpugixml, you can run
 [[file:scripts/get-pugixml-and-build][scripts/get-pugixml-and-build]] which will download libpugixml into this
 directory, build that (with cmake) and configure this program to use
 that library. Alternatively, you can run ./configure with
---disable-xml if you don't care about human-readable error messages.
+=--disable-xml= if you don't care about human-readable error messages.
 
 ** For both =divvun-suggest= and =divvun-gramcheck=
 
@@ -84,9 +85,10 @@ make install # with sudo if you didn't specify a --prefix to ./configure
 
 * Usage
 
-=divvun-suggest= takes two arguments: a generator FST (in HFST optimised lookup
-format), and an error message XML file (see [[https://gtsvn.uit.no/langtech/trunk/langs/sme/tools/grammarcheckers/errors.xml][the one for Northern Saami]]
-for an example), with input/output as stdin and stdout:
+=divvun-suggest= takes two arguments: a generator FST (in HFST
+optimised lookup format), and an error message XML file (see [[https://gtsvn.uit.no/langtech/trunk/langs/sme/tools/grammarcheckers/errors.xml][the one
+for Northern Saami]] for an example), with input/output as stdin and
+stdout:
 
 #+BEGIN_SRC sh
 src/divvun-suggest --json generator-gt-norm.hfstol errors.xml < input > output
@@ -102,9 +104,9 @@ echo words go here | hfst-tokenise --giella-cg tokeniser.pmhfst | … | vislcg3 
 
 
 
-=divvun-checker= is an example command-line interface to
-=libdivvun-checker=. You can use it to test a =pipespec.xml= or a zip
-archive containing both the pipespec and langauge data, e.g.
+=divvun-checker= is an example command-line interface to =libdivvun=.
+You can use it to test a =pipespec.xml= or a zip archive containing
+both the pipespec and langauge data, e.g.
 
 #+BEGIN_SRC sh
 $ divvun-checker -a sme.zhfst
@@ -131,8 +133,9 @@ See the =test/= folder for an example of zipped archives.
 
 
 * JSON format
-The JSON output is meant to be sent to a client such as
-https://github.com/unhammer/divvun-webdemo. The current format is:
+The JSON output of =divvun-suggest= is meant to be sent to a client
+such as [[https://github.com/divvun/divvun-webdemo]]. The current format
+is:
 
 : {errs:[[str:string, beg:number, end:number, typ:string, exp:string, [rep:string]]], text:string}
 
@@ -170,9 +173,9 @@ Example output:
 
 * Pipespec XML
 
-The =divvun-checker= program and =libdivvun-checker= API has an XML
-format for specifying what programs go into the checker pipelines, and
-metadata about the pipelines.
+The =divvun-checker= program and =libdivvun= (=divvun/checker.hpp=)
+API has an XML format for specifying what programs go into the checker
+pipelines, and metadata about the pipelines.
 
 A =pipespec.xml= defines a set of grammar checker (or really any text
 processing) pipelines.
@@ -254,7 +257,7 @@ or
 then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequisites]].
 
 
-* Progress [29/43]
+* Progress [30/43]
 
 =divvun-suggest= should:
 
@@ -294,7 +297,8 @@ then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequis
 - [X] load CGCmd from char buffer
 - [X] load SuggestCmd from char buffer (HFST needs an =HfstOlInputStream(std::istream&)=)
 - [X] read zip-archive like zhfst
-- [ ] get some API documentation
+- [X] get some API documentation
+- [X] hide implementation, make an example project using the API
 - [X] travis (both Mac and Ubuntu)
 - [X] link to vislcg3 without needing the source (vislcg3 has to make the functions we use available from cg3.h)
 

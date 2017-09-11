@@ -58,4 +58,24 @@ old/
 /test/checker/.tern-port
 /test/checker/.dir-locals.elc
 
-/third-party/
+/examples/using-checker-lib-from-cpp/INSTALL
+/examples/using-checker-lib-from-cpp/Makefile
+/examples/using-checker-lib-from-cpp/Makefile.in
+/examples/using-checker-lib-from-cpp/aclocal.m4
+/examples/using-checker-lib-from-cpp/autom4te.cache/
+/examples/using-checker-lib-from-cpp/compile
+/examples/using-checker-lib-from-cpp/config.guess
+/examples/using-checker-lib-from-cpp/config.log
+/examples/using-checker-lib-from-cpp/config.status
+/examples/using-checker-lib-from-cpp/config.sub
+/examples/using-checker-lib-from-cpp/configure
+/examples/using-checker-lib-from-cpp/depcomp
+/examples/using-checker-lib-from-cpp/install-sh
+/examples/using-checker-lib-from-cpp/libtool
+/examples/using-checker-lib-from-cpp/ltmain.sh
+/examples/using-checker-lib-from-cpp/missing
+/examples/using-checker-lib-from-cpp/src/.deps/
+/examples/using-checker-lib-from-cpp/src/Makefile
+/examples/using-checker-lib-from-cpp/src/Makefile.in
+/examples/using-checker-lib-from-cpp/src/using-checker
+/examples/using-checker-lib-from-cpp/src/using_checker-using-checker.o

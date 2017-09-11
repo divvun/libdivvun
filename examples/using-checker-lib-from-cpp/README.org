@@ -1,0 +1,23 @@
+#+TITLE: Example of using divvun-gramcheck as lib
+#+STARTUP: showall
+
+* Description
+
+This is an example of using divvun-gramcheck's =libdivvun= from a C++
+project, basically reimplementing the =divvun-checker= binary of
+divvun-gramcheck.
+
+The purpose of this example is just to make it easy for others to use
+the library, and to check that it's possible to use the installed
+library without access to the divvun-gramcheck source.
+
+First, compile divvun-gramcheck with =./configure --enable-checker=
+and =sudo make install=, then from this directory you should be able to
+
+#+BEGIN_SRC sh
+./autogen.sh
+./configure
+make
+#+END_SRC
+
+and run e.g. =src/using-checker -s /path/to/pipespec.xml -n pipename=.
