@@ -4,9 +4,10 @@ set -e -u
 
 if [[ ${COVERITY_SCAN_BRANCH} = 1 ]]; then
     echo 'On coverity_scan branch, not running usual travis build + test suite.'
-    echo '$ head -999 cov-int/*log.txt'
-    head -999 cov-int/*log.txt
-    exit
+    for f in cov-int/*log.txt; do
+        test -f "$f" && echo "== $f ==" && cat "$f"
+    done
+    exit 0
 fi
 
 cd "$(dirname "$0")/.."
