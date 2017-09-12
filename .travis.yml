@@ -21,8 +21,8 @@ addons:
       name: "divvun/divvun-gramcheck"
       description: "Build submitted via Travis CI"
     notification_email: unhammer+dill@mm.st
-    build_command_prepend: "./autogen.sh && ./configure --enable-checker && make clean"
-    build_command:   "make -j4"
+    build_command_prepend: "cov-configure --compiler $CXX --template && ./autogen.sh && ./configure --enable-checker && make clean"
+    build_command:   "make -j4 VERBOSE=1; head -999 cov-int/build-log.txt cov-int/scm_log.txt"
     branch_pattern: coverity_scan
 
 matrix:
