@@ -22,7 +22,7 @@ addons:
       version: $TRAVIS_COMMIT
       description: "Build submitted via Travis CI"
     notification_email: unhammer+dill@mm.st
-    build_command_prepend: "cov-configure --comptype $COMPILER --compiler $CXX --template && ./autogen.sh && ./configure --enable-checker && make clean"
+    build_command_prepend: "./autogen.sh && ./configure --enable-checker && make clean"
     build_command:   "make -j4"
     branch_pattern: coverity_scan
 
@@ -33,8 +33,7 @@ matrix:
     env:
     - VERBOSE=1
     before_install:
-    - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt
-    - test $TRAVIS_BRANCH != coverity_scan -o ${TRAVIS_JOB_NUMBER##*.} = 1 || exit 0
+    - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "Running coverity_scan on this configuration …"; echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt; fi
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
     - sudo apt-get -f install -y libhfst49-dev libcg3-dev
@@ -46,12 +45,11 @@ matrix:
     compiler: gcc
     # Trusty's default gcc doesn't have C++11; can't be in env since then travis overrides it:
     install:
-    - CXX="g++-5" CC="gcc-5" COMPILER="gcc"
+    - CXX="g++-5" CC="gcc-5"
     env:
     - VERBOSE=1
     before_install:
-    - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt
-    - test $TRAVIS_BRANCH != coverity_scan -o ${TRAVIS_JOB_NUMBER##*.} = 1 || exit 0
+    - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "We only coverity_scan for one square of the matrix, exiting"; exit 0; fi
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
     - sudo apt-get -f install -y libhfst49-dev libcg3-dev
@@ -67,7 +65,7 @@ matrix:
     env:
     - PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
     before_install:
-    - test $TRAVIS_BRANCH != coverity_scan -o ${TRAVIS_JOB_NUMBER##*.} = 1 || exit 0
+    - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "We only coverity_scan for one square of the matrix, exiting"; exit 0; fi
     - travis_retry brew update
     - brew ls --versions pugixml    || travis_retry brew install pugixml
     - brew ls --versions libarchive || travis_retry brew install libarchive
@@ -80,7 +78,7 @@ matrix:
     env:
     - PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
     before_install:
-    - test $TRAVIS_BRANCH != coverity_scan -o ${TRAVIS_JOB_NUMBER##*.} = 1 || exit 0
+    - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "We only coverity_scan for one square of the matrix, exiting"; exit 0; fi
     - travis_retry brew update
     - brew ls --versions pugixml    || travis_retry brew install pugixml
     - brew ls --versions libarchive || travis_retry brew install libarchive
