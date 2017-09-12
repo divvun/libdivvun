@@ -18,7 +18,8 @@ addons:
     - libarchive-dev
   coverity_scan:
     project:
-      name: "divvun/divvun-gramcheck"
+      name: $TRAVIS_REPO_SLUG
+      version: $TRAVIS_COMMIT
       description: "Build submitted via Travis CI"
     notification_email: unhammer+dill@mm.st
     build_command_prepend: "cov-configure --comptype $COMPILER --compiler $CXX --template && ./autogen.sh && ./configure --enable-checker && make clean"
@@ -33,6 +34,7 @@ matrix:
     - VERBOSE=1
     before_install:
     - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt
+    - test $TRAVIS_BRANCH != coverity_scan -o ${TRAVIS_JOB_NUMBER##*.} = 1 || exit 0
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
     - sudo apt-get -f install -y libhfst49-dev libcg3-dev
@@ -49,6 +51,7 @@ matrix:
     - VERBOSE=1
     before_install:
     - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt
+    - test $TRAVIS_BRANCH != coverity_scan -o ${TRAVIS_JOB_NUMBER##*.} = 1 || exit 0
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
     - sudo apt-get -f install -y libhfst49-dev libcg3-dev
@@ -64,6 +67,7 @@ matrix:
     env:
     - PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
     before_install:
+    - test $TRAVIS_BRANCH != coverity_scan -o ${TRAVIS_JOB_NUMBER##*.} = 1 || exit 0
     - travis_retry brew update
     - brew ls --versions pugixml    || travis_retry brew install pugixml
     - brew ls --versions libarchive || travis_retry brew install libarchive
@@ -76,6 +80,7 @@ matrix:
     env:
     - PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
     before_install:
+    - test $TRAVIS_BRANCH != coverity_scan -o ${TRAVIS_JOB_NUMBER##*.} = 1 || exit 0
     - travis_retry brew update
     - brew ls --versions pugixml    || travis_retry brew install pugixml
     - brew ls --versions libarchive || travis_retry brew install libarchive
