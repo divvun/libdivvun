@@ -153,4 +153,9 @@ int main(int argc, char ** argv)
 		std::cerr << "ERROR: couldn't parse options: " << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
+	catch (const std::runtime_error& e)
+	{
+		std::cerr << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
 }
