@@ -123,17 +123,15 @@ class PipeCmd {
 
 class TokenizeCmd: public PipeCmd {
 	public:
-
-		TokenizeCmd (std::ifstream istream, bool verbose);
-		TokenizeCmd (std::istringstream& instream, bool verbose);
 		TokenizeCmd (std::istream& instream, bool verbose);
 		TokenizeCmd (const std::string& path, bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const;
 	private:
-		void setup(bool verbose);
-		std::unique_ptr<hfst_ol::PmatchContainer> container;
+		hfst_ol::PmatchContainer* mkContainer(std::istream& instream, bool verbose);
 		bool tokenize_multichar = false; // Not useful for analysing text, only generation/bidix
 		hfst_ol_tokenize::TokenizeSettings settings;
+		std::unique_ptr<std::istream> istream;
+		std::unique_ptr<hfst_ol::PmatchContainer> container;
 };
 
 struct CGApplicatorDeleter {

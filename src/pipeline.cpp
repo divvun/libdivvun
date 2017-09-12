@@ -25,30 +25,26 @@ void dbg(const std::string& label, std::stringstream& output) {
 	output.seekg(p, output.beg);
 }
 
-void
-TokenizeCmd::setup (bool verbose)
-{
-	container->set_verbose(verbose);
-	container->set_single_codepoint_tokenization(!tokenize_multichar);
-	settings.output_format = hfst_ol_tokenize::giellacg;
+hfst_ol::PmatchContainer*
+TokenizeCmd::mkContainer(std::istream& instream, bool verbose) {
 	settings.print_weights = true;
 	settings.print_all = true;
+	settings.output_format = hfst_ol_tokenize::giellacg;
 	settings.dedupe = true;
 	settings.max_weight_classes = 2;
+	auto* c = new hfst_ol::PmatchContainer(instream);
+	c->set_verbose(verbose);
+	c->set_single_codepoint_tokenization(!tokenize_multichar);
+	return c;
 }
 TokenizeCmd::TokenizeCmd (std::istream& instream, bool verbose)
-	: container(new hfst_ol::PmatchContainer(instream))
+	: istream(&instream)
+	, container(mkContainer(*istream, verbose))
 {
-	setup(verbose);
-}
-TokenizeCmd::TokenizeCmd (std::ifstream instream, bool verbose)
-	: container(new hfst_ol::PmatchContainer(instream))
-	// : TokenizeCmd(std::istream(instream), verbose) // why can't I just do this?
-{
-	setup(verbose);
 }
 TokenizeCmd::TokenizeCmd (const std::string& path, bool verbose)
-	: TokenizeCmd(std::ifstream(path.c_str(), std::ifstream::binary), verbose)
+	: istream(std::unique_ptr<std::istream>(new std::ifstream(path.c_str())))
+	, container(mkContainer(*istream, verbose))
 {
 }
 void TokenizeCmd::run(std::stringstream& input, std::stringstream& output) const
