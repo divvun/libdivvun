@@ -21,7 +21,7 @@ addons:
       name: "divvun/divvun-gramcheck"
       description: "Build submitted via Travis CI"
     notification_email: unhammer+dill@mm.st
-    build_command_prepend: "cov-configure --compiler $CXX --template && ./autogen.sh && ./configure --enable-checker && make clean"
+    build_command_prepend: "cov-configure --comptype $COMPILER --compiler $CXX --template && ./autogen.sh && ./configure --enable-checker && make clean"
     build_command:   "make -j4"
     branch_pattern: coverity_scan
 
@@ -44,7 +44,7 @@ matrix:
     compiler: gcc
     # Trusty's default gcc doesn't have C++11; can't be in env since then travis overrides it:
     install:
-    - CXX="g++-5" CC="gcc-5"
+    - CXX="g++-5" CC="gcc-5" COMPILER="gcc"
     env:
     - VERBOSE=1
     before_install:
@@ -58,6 +58,8 @@ matrix:
 
   - os: osx
     compiler: clang
+    install:
+    - COMPILER="gcc"
     # on osx, nightly goes in /usr/local
     env:
     - PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
