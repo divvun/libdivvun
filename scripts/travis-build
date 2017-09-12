@@ -3,7 +3,9 @@
 set -e -u
 
 if [[ ${COVERITY_SCAN_BRANCH} = 1 ]]; then
-    echo "On coverity_scan branch, not running usual travis build + test suite"
+    echo 'On coverity_scan branch, not running usual travis build + test suite.'
+    echo '$ head -999 cov-int/*log.txt'
+    head -999 cov-int/*log.txt
     exit
 fi
 
