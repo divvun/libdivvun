@@ -115,37 +115,49 @@ class PipeCmd {
 	public:
 		PipeCmd() {};
 		virtual void run(std::stringstream& input, std::stringstream& output) const = 0;
+		virtual ~PipeCmd() {};
 	private:
 		// no copying
 		PipeCmd(PipeCmd const &) = delete;
 		PipeCmd &operator=(PipeCmd const &) = delete;
 };
 
+
 class TokenizeCmd: public PipeCmd {
 	public:
 		TokenizeCmd (std::istream& instream, bool verbose);
 		TokenizeCmd (const std::string& path, bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const;
+		~TokenizeCmd() {};
 	private:
 		hfst_ol::PmatchContainer* mkContainer(std::istream& instream, bool verbose);
 		bool tokenize_multichar = false; // Not useful for analysing text, only generation/bidix
 		hfst_ol_tokenize::TokenizeSettings settings;
-		std::unique_ptr<std::istream> istream;
+		std::unique_ptr<std::istream> istream; // Only used if we're not given a stream in the first place
 		std::unique_ptr<hfst_ol::PmatchContainer> container;
 };
 
+
 struct CGApplicatorDeleter {
-  void operator()(cg3_grammar* ptr)
-  {
-    cg3_grammar_free(ptr);
-  }
+		void operator()(cg3_applicator* ptr)
+		{
+			cg3_applicator_free(ptr);
+		}
+};
+
+struct CGMweSplitApplicatorDeleter {
+		void operator()(cg3_mwesplitapplicator* ptr)
+		{
+			// cg3_mwesplitapplicator_free(ptr);
+			std::cerr << "TODO: use cg3_mwesplitapplicator_free once that's available" << std::endl;
+		}
 };
 
 struct CGGrammarDeleter {
-  void operator()(cg3_applicator* ptr)
-  {
-    // cg3_applicator_free(ptr);
-  }
+		void operator()(cg3_grammar* ptr)
+		{
+			cg3_grammar_free(ptr);
+		}
 };
 
 class MweSplitCmd: public PipeCmd {
@@ -153,8 +165,9 @@ class MweSplitCmd: public PipeCmd {
 		/* Assumes cg3_init has been called already */
 		explicit MweSplitCmd (bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const;
+		~MweSplitCmd() {};
 	private:
-		std::unique_ptr<cg3_applicator, CGApplicatorDeleter> applicator;
+		std::unique_ptr<cg3_mwesplitapplicator, CGMweSplitApplicatorDeleter> applicator;
 		// cg3_applicator* applicator;
 };
 
@@ -165,6 +178,7 @@ class CGCmd: public PipeCmd {
 		CGCmd (const char* buff, const size_t size, bool verbose);
 		CGCmd (const std::string& path, bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const;
+		~CGCmd() {};
 	private:
 		std::unique_ptr<cg3_grammar, CGGrammarDeleter> grammar;
 		// cg3_grammar* grammar;
@@ -178,10 +192,12 @@ class SuggestCmd: public PipeCmd {
 		SuggestCmd (const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose);
 		SuggestCmd (const std::string& gen_path, const std::string& msg_path, bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const override;
+		~SuggestCmd() {};
 	private:
 		std::unique_ptr<const hfst::HfstTransducer> generator;
 		divvun::msgmap msgs;
 };
+
 
 class Pipeline {
 	public:

@@ -38,8 +38,7 @@ TokenizeCmd::mkContainer(std::istream& instream, bool verbose) {
 	return c;
 }
 TokenizeCmd::TokenizeCmd (std::istream& instream, bool verbose)
-	: istream(&instream)
-	, container(mkContainer(*istream, verbose))
+	: container(mkContainer(instream, verbose))
 {
 }
 TokenizeCmd::TokenizeCmd (const std::string& path, bool verbose)
