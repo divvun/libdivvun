@@ -2,6 +2,14 @@
 
 set -e -u
 
+if [[ ${COVERITY_SCAN_BRANCH} = 1 ]]; then
+    echo 'On coverity_scan branch, not running usual travis build + test suite.'
+    for f in cov-int/*log.txt; do
+        test -f "$f" && echo "== $f ==" && cat "$f"
+    done
+    exit 0
+fi
+
 cd "$(dirname "$0")/.."
 
 export PKG_CONFIG_PATH LD_LIBRARY_PATH DYLD_LIBRARY_PATH LDFLAGS CPPFLAGS
