@@ -4,6 +4,9 @@
 #+CAPTION: Build Status
 [[https://travis-ci.org/divvun/divvun-gramcheck][https://travis-ci.org/divvun/divvun-gramcheck.svg]]
 
+#+CAPTION: Coverity static analysis
+[[https://scan.coverity.com/projects/divvun-divvun-gramcheck][https://scan.coverity.com/projects/13737/badge.svg]]
+
 * Description
 
 This repository contains two programs:
