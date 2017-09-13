@@ -23,6 +23,8 @@
 #endif
 #include <stdlib.h>
 
+#include <experimental/filesystem>
+
 #include <pugixml.hpp>
 // divvun-suggest:
 #include "suggest.hpp"
@@ -83,6 +85,8 @@ class PipeSpec {
 };
 
 std::unique_ptr<PipeSpec> readPipeSpec(const std::string& file);
+
+void writePipeSpecSh(const std::string& specfile, const std::u16string& pipename, std::ostream& os);
 
 // https://stackoverflow.com/a/1449527/69663
 struct OneShotReadBuf : public std::streambuf

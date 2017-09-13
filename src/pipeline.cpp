@@ -385,4 +385,55 @@ std::unique_ptr<ArPipeSpec> readArPipeSpec(const std::string& ar_path) {
 	return readArchiveExtract(ar_path, "pipespec.xml", f);
 }
 
+void writePipeSpecSh(const std::string& specfile, const std::u16string& pipename, std::ostream& os) {
+	const auto spec = readPipeSpec(specfile);
+	const auto dir = std::experimental::filesystem::absolute(specfile).remove_filename();
+	bool first = true;
+	const pugi::xml_node& pipeline = spec->pnodes.at(pipename);
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	os << "#!/bin/sh" << std::endl << std::endl;
+	for (const pugi::xml_node& cmd: pipeline.children()) {
+		const auto& name = utf16conv.from_bytes(cmd.name());
+		std::string prog;
+		std::vector<std::string> args;
+		for (const pugi::xml_node& arg: cmd.children("arg")) {
+			const auto& argn = arg.attribute("n").value();
+			args.push_back(argn);
+		}
+		if(name == u"tokenise" || name == u"tokenize") {
+			prog = "hfst-tokenise -g";
+		}
+		else if(name == u"cg") {
+			prog = "vislcg3 -g";
+		}
+		else if(name == u"mwesplit") {
+			prog = "cg-mwesplit";
+		}
+		else if(name == u"suggest") {
+			prog = "divvun-suggest";
+		}
+		else if(name == u"sh") {
+			prog = cmd.attribute("prog").value();
+		}
+		else if(name == u"prefs") {
+			// TODO: Do prefs make sense here?
+		}
+		else {
+			throw std::runtime_error("Unknown command '" + utf16conv.to_bytes(name) + "'");
+		}
+		if(!prog.empty()) {
+			if(!first) {
+				os << " \\" << std::endl << " | ";
+			}
+			first = false;
+			os << prog;
+			for(auto& a : args) {
+				// Wrap the whole thing in single-quotes, but put existing single-quotes in double-quotes
+				replaceAll(a, "'", "'\"'\"'");
+				os << " '" << (dir / a).string() << "'";
+			}
+		}
+	}
+}
+
 }

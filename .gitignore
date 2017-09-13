@@ -26,6 +26,8 @@ old/
 /src/checker.lo
 /src/libdivvun.la
 /src/libdivvun.lo
+/src/divvun-gen-sh
+/src/pipeline.lo
 
 /test-driver
 /test-suite.log
