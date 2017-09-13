@@ -19,7 +19,7 @@ d=$(dirname "$0")
 if [ "$0" != "@prefix@/bin/divvun-validate-pipespec" ] && [ -e "$d"/pipespec.dtd ]; then
     dir="$d"
 else
-    dir=@prefix@/share/divvun-pipespec
+    dir=@prefix@/share/divvun-gramcheck
 fi
 
 /usr/bin/xmllint --dtdvalid "${dir}"/pipespec.dtd --noout "${file}"

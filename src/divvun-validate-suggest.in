@@ -19,7 +19,7 @@ d=$(dirname "$0")
 if [ "$0" != "@prefix@/bin/divvun-validate-suggest" ] && [ -e "$d"/errors.dtd ]; then
     dir="$d"
 else
-    dir=@prefix@/share/divvun-suggest
+    dir=@prefix@/share/divvun-gramcheck
 fi
 
 /usr/bin/xmllint --dtdvalid "${dir}"/errors.dtd --noout "${file}"
