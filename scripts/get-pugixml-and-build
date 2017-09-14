@@ -16,6 +16,6 @@ tar xzvf "${pkg}".tar.gz
 ( cd "${pkg}" && cmake scripts && make )
 
 ./autogen.sh
-./configure CPPFLAGS=-I"$(pwd)"/"${pkg}"/src/ LDFLAGS=-L"$(pwd)"/"${pkg}"
+./configure --disable-checker CPPFLAGS=-I"$(pwd)"/"${pkg}"/src/ LDFLAGS=-L"$(pwd)"/"${pkg}"
 make -j3
 make test VERBOSE=true
