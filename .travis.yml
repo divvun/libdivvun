@@ -36,7 +36,7 @@ matrix:
     - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "Running coverity_scan on this configuration …"; echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt; fi
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
-    - sudo apt-get -f install -y libhfst49-dev libcg3-dev
+    - sudo apt-get -f install -y libhfst-dev libcg3-dev
     # - ./autogen.sh
     script:
     - scripts/travis-build
@@ -52,7 +52,7 @@ matrix:
     - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "We only coverity_scan for one square of the matrix, exiting"; exit 0; fi
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
-    - sudo apt-get -f install -y libhfst49-dev libcg3-dev
+    - sudo apt-get -f install -y libhfst-dev libcg3-dev
     # - ./autogen.sh
     script:
     - scripts/travis-build
