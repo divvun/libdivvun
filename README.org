@@ -9,7 +9,7 @@
 
 * Description
 
-This repository contains two programs:
+This repository contains two main programs:
 
 The =divvun-gramcheck= program, opens a grammar checker pipeline XML
 specification and lets you run grammar checking on strings. It can
@@ -25,6 +25,12 @@ stage of a grammar checker pipeline.
 
 The main output format of =divvun-suggest= is JSON, although it can
 also simply annotate readings in CG stream format.
+
+
+There are also some helper programs for validating XML
+(=divvun-validate-suggest=, =divvun-validate-pipespec=,
+=divvun-gen-xmlschemas=) and for generating shell scripts from
+pipeline specifications (=divvun-gen-sh=).
 
 * Prerequisites
 
