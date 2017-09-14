@@ -387,7 +387,10 @@ std::unique_ptr<ArPipeSpec> readArPipeSpec(const std::string& ar_path) {
 
 void writePipeSpecSh(const std::string& specfile, const std::u16string& pipename, std::ostream& os) {
 	const auto spec = readPipeSpec(specfile);
-	const auto dir = std::experimental::filesystem::absolute(specfile).remove_filename();
+	// const auto dir = std::experimental::filesystem::absolute(specfile).remove_filename(); // <experimental/filesystem>
+        char specabspath[PATH_MAX];
+	realpath(specfile.c_str(), specabspath);
+	const auto dir = dirname(std::string(specabspath));
 	bool first = true;
 	const pugi::xml_node& pipeline = spec->pnodes.at(pipename);
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
@@ -430,7 +433,8 @@ void writePipeSpecSh(const std::string& specfile, const std::u16string& pipename
 			for(auto& a : args) {
 				// Wrap the whole thing in single-quotes, but put existing single-quotes in double-quotes
 				replaceAll(a, "'", "'\"'\"'");
-				os << " '" << (dir / a).string() << "'";
+				// os << " '" << (dir / a).string() << "'"; // <experimental/filesystem>
+				os << " '" << dir << a << "'";
 			}
 		}
 	}

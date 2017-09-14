@@ -23,7 +23,11 @@
 #endif
 #include <stdlib.h>
 
-#include <experimental/filesystem>
+// Would like to
+// #include <experimental/filesystem>
+// but need to support macos
+#include <limits.h>
+#include <stdlib.h>
 
 #include <pugixml.hpp>
 // divvun-suggest:

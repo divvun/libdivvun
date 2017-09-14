@@ -109,6 +109,19 @@ inline void replaceAll(std::string& str, const std::string& from, const std::str
     }
 }
 
+template<typename string_t>
+string_t dirname(const string_t& path)
+{
+	string_t s = string_t(path);
+	if (s.size() <= 1) {
+		return s;
+	}
+	if (*(s.rbegin() + 1) == '/') {
+		s.pop_back();
+	}
+	s.erase(std::find(s.rbegin(), s.rend(), '/').base(), s.end());
+	return s;
+}
 
 
 }

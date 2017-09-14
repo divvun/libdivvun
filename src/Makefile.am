@@ -19,7 +19,8 @@ lib_LTLIBRARIES = libdivvun.la
 divvunincludedir = $(includedir)/divvun
 divvuninclude_HEADERS = checker.hpp
 libdivvun_la_SOURCES = checker.cpp pipeline.cpp suggest.cpp
-libdivvun_la_LIBADD =  -lstdc++fs $(CG3_LIBS)   $(LIBARCHIVE_LIBS)   $(divvun_suggest_LDADD)
+# would've liked to put -lstdc++fs in LIBADD for <experimental/filesystem>, but macos
+libdivvun_la_LIBADD =             $(CG3_LIBS)   $(LIBARCHIVE_LIBS)   $(divvun_suggest_LDADD)
 libdivvun_CXXFLAGS =              $(CG3_CFLAGS) $(LIBARCHIVE_CFLAGS) $(divvun_suggest_CXXFLAGS)
 libdivvun_la_LDFLAGS = -no-undefined
 # TODO something like -version-info 49:0:0
