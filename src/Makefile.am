@@ -1,17 +1,17 @@
 datadir = $(prefix)/share/divvun-gramcheck
 
-# Used by divvun-validate-suggest.in:
-divvun_suggestdir = $(datadir)
-divvun_suggest_DATA = errors.dtd errors.rnc
-EXTRA_DIST = errors.dtd errors.rnc
-
 # divvun-suggest binary:
 divvun_suggest_SOURCES = main_suggest.cpp util.hpp json.hpp suggest.cpp suggest.hpp cxxopts.hpp
 divvun_suggest_LDADD =    $(HFSTOSPELL_LIBS)   $(HFST_LIBS)   $(PUGIXML_LIBS)
 divvun_suggest_CXXFLAGS = $(HFSTOSPELL_CFLAGS) $(HFST_CFLAGS) $(PUGIXML_CFLAGS)
-
 bin_PROGRAMS = divvun-suggest
-bin_SCRIPTS = divvun-validate-suggest
+
+bin_SCRIPTS = divvun-gen-xmlschemas divvun-validate-suggest divvun-validate-pipespec
+# Used by the .in files of bin_SCRIPTS:
+divvun_suggestdir = $(datadir)
+divvun_suggest_DATA = errors.dtd errors.rnc pipespec.dtd pipespec.rnc
+EXTRA_DIST = errors.dtd errors.rnc pipespec.dtd pipespec.rnc
+# We make pipespec-stuff even if --disable-checker; it doesn't add to dependencies
 
 
 if WANT_CHECKER
@@ -25,15 +25,12 @@ libdivvun_la_LDFLAGS = -no-undefined
 # TODO something like -version-info 49:0:0
 
 bin_PROGRAMS += divvun-checker divvun-gen-sh
-bin_SCRIPTS += divvun-validate-pipespec
 
 # divvun-checker binary:
 divvun_checker_SOURCES = main_checker.cpp pipeline.cpp cxxopts.hpp
 divvun_checker_LDADD = libdivvun.la $(libdivvun_la_LIBADD)
 divvun_checker_CXXFLAGS =           $(libdivvun_CXXFLAGS)
 divvun_checkerdir = $(datadir)
-divvun_checker_DATA = pipespec.dtd pipespec.rnc
-EXTRA_DIST += pipespec.dtd pipespec.rnc
 
 # divvun-gen-sh binary:
 divvun_gen_sh_SOURCES = main_gen_sh.cpp pipeline.cpp cxxopts.hpp

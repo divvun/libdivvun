@@ -1,0 +1,42 @@
+#!/bin/sh
+
+if [ "$#" != 0 ]; then
+    cat <<EOF
+USAGE: divvun-gen-xmlschemas >schemas.xml
+
+If schemas.xml is in the same directory as errors.xml or pipespec.xml,
+Emacs will give on-the-fly validation using the DTD's.
+EOF
+    exit 1
+fi
+
+# If it looks like we're not installed, use the errors.dtd of the same
+# dir as this script; otherwise assume we're installed:
+d=$(dirname "$0")
+if [ "$0" != "@prefix@/bin/divvun-gen-xmlschemas" ] && [ -e "$d"/errors.dtd ]; then
+    dir="$d"
+else
+    dir=@prefix@/share/divvun-gramcheck
+fi
+
+cat <<EOF
+<?xml version="1.0"?>
+<locatingRules xmlns="http://thaiopensource.com/ns/locating-rules/1.0">
+
+  <!--
+       Having this file in the same dir as your XML's
+       lets Emacs show validation errors.
+       More information at:
+       https://www.gnu.org/software/emacs/manual/html_node/nxml-mode/Schema-locating-files.html#Schema-locating-files
+  -->
+
+  <typeId id="errors" uri="${dir}/errors.rnc"/>
+  <documentElement localName="errors" typeId="errors"/>
+  <uri pattern="errors.xml" typeId="errors"/>
+
+  <typeId id="pipespec" uri="${dir}/pipespec.rnc"/>
+  <documentElement localName="pipespec" typeId="pipespec"/>
+  <uri pattern="pipespec.xml" typeId="pipespec"/>
+
+</locatingRules>
+EOF

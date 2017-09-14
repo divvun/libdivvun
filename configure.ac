@@ -75,7 +75,8 @@ AS_IF([test "x$enable_checker" != xno],
                                      [enable_checker=no])])])])
 AM_CONDITIONAL([WANT_CHECKER], [test x$enable_checker != xno])
 
-AC_CONFIG_FILES([src/divvun-validate-suggest], [chmod +x src/divvun-validate-suggest])
+AC_CONFIG_FILES([src/divvun-gen-xmlschemas],    [chmod +x src/divvun-gen-xmlschemas])
+AC_CONFIG_FILES([src/divvun-validate-suggest],  [chmod +x src/divvun-validate-suggest])
 AC_CONFIG_FILES([src/divvun-validate-pipespec], [chmod +x src/divvun-validate-pipespec])
 
 AC_PATH_PROG([XMLLINT], [xmllint], [false], [$PATH$PATH_SEPARATOR$with_xmllint/bin])
