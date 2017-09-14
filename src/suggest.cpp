@@ -74,7 +74,7 @@ const std::basic_regex<char> CG_TAG_TYPE (
 
 const std::basic_regex<char> CG_LINE ("^"
 				      "(\"<(.*)>\".*" // wordform, group 2
-				      "|(\t)+(\"[^\"]*\"\\S*)(\\s+\\S+)*" // reading, group 3, 4, 5
+				      "|(\t+)(\"[^\"]*\"\\S*)(\\s+\\S+)*" // reading, group 3, 4, 5
 				      "|:(.*)" // blank, group 6
 				      "|(<STREAMCMD:FLUSH>)" // flush, group 7
 				      ")");
@@ -294,23 +294,46 @@ const std::tuple<bool, std::string, StringVec, rel_id, relations> proc_tags(cons
 	return std::make_tuple(suggest, errtype, gentags, id, rels);
 }
 
-const Reading proc_reading(const hfst::HfstTransducer& t, const std::string& line) {
+const Reading proc_subreading(const std::string& line) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	const auto& lemma_end = line.find("\" ");
-	const auto& lemma = line.substr(2, lemma_end-2);
+	Reading r;
+	const auto& lemma_beg = line.find("\"");
+	const auto& lemma_end = line.find("\" ", lemma_beg);
+	const auto& lemma = line.substr(lemma_beg + 1, lemma_end-lemma_beg-1);
 	const auto& tags = line.substr(lemma_end+2);
 	const auto& suggen = proc_tags(tags);
-	const auto& suggest = std::get<0>(suggen);
-	const auto& errtype = utf16conv.from_bytes(std::get<1>(suggen));
+	r.suggest = std::get<0>(suggen);
+	r.errtype = utf16conv.from_bytes(std::get<1>(suggen));
 	const auto& gentags = std::get<2>(suggen);
-	const auto& id = std::get<3>(suggen);
-	const auto& rels = std::get<4>(suggen);
+	r.id = std::get<3>(suggen);
+	r.rels = std::get<4>(suggen);
 	UStringSet sforms;
 	const auto& tagsplus = join(gentags, "+");
-	const auto& ana = lemma+"+"+tagsplus;
+	r.ana = lemma+"+"+tagsplus;
+	return r;
+};
 
-	if(suggest) {
-		const auto& paths = t.lookup_fd({ ana }, -1, 10.0);
+const Reading proc_reading(const hfst::HfstTransducer& t, const std::string& line) {
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	std::stringstream ss(line);
+	std::string subline;
+	std::deque<Reading> subs;
+	while(std::getline(ss, subline, '\n')){
+		subs.push_front(proc_subreading(subline));
+	}
+	Reading r;
+	const size_t n_subs = subs.size();
+	for(size_t i = 0; i < n_subs; ++i) {
+		const auto& sub = subs[i];
+		r.ana += sub.ana + (i+1 == n_subs ? "" : "#");
+		r.errtype += sub.errtype;
+		r.rels.insert(sub.rels.begin(), sub.rels.end());
+		// higher sub can override id if set; doesn't seem like cg3 puts ids on them though
+		r.id = (r.id == 0 ? sub.id : r.id);
+		r.suggest = r.suggest || sub.suggest;
+	}
+	if(r.suggest) {
+		const auto& paths = t.lookup_fd({ r.ana }, -1, 10.0);
 		if(paths->size() > 0) {
 			for(auto& p : *paths) {
 				std::stringstream form;
@@ -320,11 +343,11 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const std::string& lin
 						form << symbol;
 					}
 				}
-				sforms.insert(utf16conv.from_bytes(form.str()));
+				r.sforms.insert(utf16conv.from_bytes(form.str()));
 			}
 		}
 	}
-	return {suggest, ana, errtype, sforms, rels, id};
+	return r;
 }
 
 /* If we have an inserted suggestion, then the next word has to be
@@ -605,13 +628,15 @@ RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer
 void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	// Simple debug function; no state kept between lines
-	for (std::string line; std::getline(is, line);) {
-		os << line << std::endl;
+	// Simple debug function; only subreading state kept between lines
+	std::string readinglines;
+	for (std::string line;std::getline(is, line);) {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
-		if(!result.empty() && result[3].length() != 0) {
-			const auto& reading = proc_reading(t, line);
+
+		if(!readinglines.empty() && (result.empty() || result[3].length() <= 1)) {
+			os << readinglines;
+			const auto& reading = proc_reading(t, readinglines);
 			if(reading.suggest) {
 				const auto& ana = reading.ana;
 				const auto& formv = reading.sforms;
@@ -628,9 +653,19 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 					os << utf16conv.to_bytes(errtype) << std::endl;
 				}
 			}
+			readinglines = "";
+		}
+
+		if(!result.empty() && result[3].length() != 0) {
+			readinglines += line + "\n";
 		}
 		else if(!result.empty() && result[7].length() != 0) {
+			// TODO: Can we ever get a flush in the middle of readings?
 			os.flush();
+			os << line << std::endl;
+		}
+		else {
+			os << line << std::endl;
 		}
 	}
 }

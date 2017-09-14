@@ -56,12 +56,12 @@ typedef size_t rel_id;
 typedef std::unordered_map<std::string, rel_id> relations;
 
 struct Reading {
-	bool suggest;
+	bool suggest = false;
 	std::string ana;
 	std::u16string errtype;
 	UStringSet sforms;
 	relations rels;	// rels[relname] = target.id
-	rel_id id;	// 0 if unset
+	rel_id id = 0;
 };
 
 struct Cohort {
