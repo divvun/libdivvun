@@ -1,0 +1,27 @@
+"<Eallámušvallji>"
+	"vallji" N Sem/State Sg Nom <W:10.0000000000> @HNOUN
+		"eallit" V IV Der/muš N Cmp/SgGen Cmp <W:10.0000000000>
+	"vallji" N Sem/State Sg Nom <W:10.0000000000> @HNOUN
+		"eallit" V IV Der/muš N Cmp/SgNom Cmp <W:10.0000000000>
+	"vallji" N Sem/State Sg Nom <W:10.0000000000> @HNOUN
+		"eallámuš" N Sem/Dummytag Cmp/SgGen Cmp <W:10.0000000000>
+	"vallji" N Sem/State Sg Nom <W:10.0000000000> @HNOUN
+		"eallámuš" N Sem/Dummytag Cmp/SgNom Cmp <W:10.0000000000>
+	"vallji" N Sem/State Sg Nom <W:10.0000000000> @HNOUN
+		"eallát" V IV Der/muš N Cmp/SgGen Cmp <W:10.0000000000>
+	"vallji" N Sem/State Sg Nom <W:10.0000000000> @HNOUN
+		"eallát" V IV Der/muš N Cmp/SgNom Cmp <W:10.0000000000>
+	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &SUGGEST
+		"eallit" V IV Der/muš N Cmp/SgGen Cmp <W:10.0000000000>
+	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &SUGGEST
+		"eallit" V IV Der/muš N Cmp/SgNom Cmp <W:10.0000000000>
+	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &SUGGEST
+		"eallámuš" N Sem/Dummytag Cmp/SgGen Cmp <W:10.0000000000>
+	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &SUGGEST
+		"eallámuš" N Sem/Dummytag Cmp/SgNom Cmp <W:10.0000000000>
+	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &SUGGEST
+		"eallát" V IV Der/muš N Cmp/SgGen Cmp <W:10.0000000000>
+	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &SUGGEST
+		"eallát" V IV Der/muš N Cmp/SgNom Cmp <W:10.0000000000>
+:\n
+
