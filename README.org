@@ -266,7 +266,7 @@ or
 then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequisites]].
 
 
-* Progress [30/43]
+* Progress [32/44]
 
 =divvun-suggest= should:
 
@@ -282,7 +282,7 @@ then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequis
 - [X] default/fallback values for ids and regexes of ids in errors.xml
 - [X] flush on seeing <STREAMCMD:FLUSH>
 - [ ] skip @FLAGDIACRITICS@ in generator output (is there a better way than [[file:src/suggest.cpp::if(symbol.size()>0%20&&%20symbol%5B0%5D!='@')%20{][excluding symbols starting with @]]?)
-- [ ] deal with subreadings: http://giellatekno.uit.no/bugzilla/show_bug.cgi?id=2317#c5
+- [X] deal with subreadings: http://giellatekno.uit.no/bugzilla/show_bug.cgi?id=2317#c5
 - [X] input format needs to show where we have (and don't have) blanks
 - [X] deal with the new blank format given by hfst-tokenise (and remove old blank hacks)
 - [ ] handle [[*sketch for alternative suggestions on the same word][alternative suggestions on the same word]]
