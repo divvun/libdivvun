@@ -71,11 +71,26 @@ struct Cohort {
 	rel_id id;
 	std::vector<Reading> readings;
 };
+
 typedef std::unordered_map<rel_id, size_t> CohortMap;
+
+enum RunState {
+	flushing,
+	eof
+};
+
+struct Sentence {
+	std::vector<Cohort> cohorts;
+	CohortMap ids_cohorts;
+	std::ostringstream text;
+	RunState runstate;
+};
 
 enum LineType {
 	WordformL, ReadingL, BlankL
 };
+
+Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msgmap& m);
 
 void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& m, bool json);
 

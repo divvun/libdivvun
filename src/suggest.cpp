@@ -373,8 +373,7 @@ const Cohort DEFAULT_COHORT = {
 };
 
 std::string cohort_errs_json(const Cohort& c,
-			     const CohortMap& ids_cohorts,
-			     const std::vector<Cohort>& sentence,
+			     const Sentence& sentence,
 			     const hfst::HfstTransducer& t,
 			     const msgmap& msgs)
 {
@@ -428,16 +427,16 @@ std::string cohort_errs_json(const Cohort& c,
 				}
 				// TODO: Should check here that rel_name matches /[$][0-9]+/
 				const auto& target_id = rel.second;
-				if(ids_cohorts.find(target_id) == ids_cohorts.end()) {
+				if(sentence.ids_cohorts.find(target_id) == sentence.ids_cohorts.end()) {
 					std::cerr << "WARNING: Couldn't find relation target for " << rel.first << ":" << rel.second << std::endl;
 					continue;
 				}
-				const auto& i_c = ids_cohorts.at(target_id);
-				if(i_c >= sentence.size()) {
+				const auto& i_c = sentence.ids_cohorts.at(target_id);
+				if(i_c >= sentence.cohorts.size()) {
 					std::cerr << "WARNING: Couldn't find relation target for " << rel.first << ":" << rel.second << std::endl;
 					continue;
 				}
-				const auto& c_trg = sentence.at(i_c);
+				const auto& c_trg = sentence.cohorts.at(i_c);
 				replaceAll(msg, utf16conv.from_bytes(rel.first.c_str()), c_trg.form);
 			}
 		}
@@ -455,8 +454,7 @@ std::string cohort_errs_json(const Cohort& c,
 void proc_cohort_json(bool& first_err,
 		      const Cohort& c,
 		      std::ostream& os,
-		      const CohortMap& ids_cohorts,
-		      const std::vector<Cohort>& sentence,
+		      const Sentence& sentence,
 		      const hfst::HfstTransducer& t,
 		      const msgmap& msgs)
 {
@@ -468,7 +466,7 @@ void proc_cohort_json(bool& first_err,
 			os << ",";
 		}
 		first_err = false;
-		os << cohort_errs_json(c, ids_cohorts, sentence, t, msgs);
+		os << cohort_errs_json(c, sentence, t, msgs);
 	}
 	// TODO: wrapper for pos-increasing and text-adding, since they should always happen together
 }
@@ -507,24 +505,14 @@ const std::string clean_blank(const std::string& raw)
 	return text.str();
 }
 
-enum RunState {
-    flushing,
-    eof
-};
-
-RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& msgs)
-{
-	json::sanity_test();
+Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs) {
 	int pos = 0;
 	std::u16string errtype = u"default";
-	bool first_err = true;
 	LineType prevtype = BlankL;
 	bool is_addcohort = true;
-	std::ostringstream text;
 	Cohort c = DEFAULT_COHORT;
-	RunState runstate = eof;
-	std::vector<Cohort> sentence;
-	CohortMap ids_cohorts;
+	Sentence sentence;
+	sentence.runstate = eof;
 
 	// TODO: could use http://utfcpp.sourceforge.net, but it's not in macports;
 	// and ICU seems overkill just for iterating codepoints
@@ -533,9 +521,6 @@ RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer
 	std::string line;
 	std::string readinglines;
 	std::getline(is, line);	// TODO: Why do I need at least one getline before os<< after flushing?
-	os << "{"
-	   << json::key(u"errs")
-	   << "[";
 	do {
 		// std::cerr << "\033[1;34mline:\t" << line << "\033[0m" << std::endl;
 		std::match_results<const char*> result;
@@ -566,14 +551,13 @@ RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer
 					|| result[6].length() != 0)) { // blank
 			c.pos = pos;
 			if(!cohort_empty(c)) {
-				sentence.push_back(c);
+				sentence.cohorts.push_back(c);
 				if(c.id != 0) {
-
-					ids_cohorts[c.id] = sentence.size() - 1;
+					sentence.ids_cohorts[c.id] = sentence.cohorts.size() - 1;
 				}
 			}
 			pos += c.form.size();
-			text << utf16conv.to_bytes(c.form);
+			sentence.text << utf16conv.to_bytes(c.form);
 
 			c = DEFAULT_COHORT;
 		}
@@ -594,11 +578,11 @@ RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer
 		else if(!result.empty() && result[6].length() != 0) { // blank
 			const auto blank = clean_blank(result[6]);
 			pos += utf16conv.from_bytes(blank).size();
-			text << blank;
+			sentence.text << blank;
 			prevtype = BlankL;
 		}
 		else if(!result.empty() && result[7].length() != 0) { // flush
-			runstate = flushing;
+			sentence.runstate = flushing;
 			break;
 		}
 		else {
@@ -624,27 +608,41 @@ RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer
 	}
 
 	c.pos = pos;
-	sentence.push_back(c);
+	sentence.cohorts.push_back(c);
 	pos += c.form.size();
-	text << utf16conv.to_bytes(c.form);
-	for(const auto& c : sentence) {
+	sentence.text << utf16conv.to_bytes(c.form);
+	return sentence;
+}
+
+// TODO: a version of this that returns the std::vector<cohort> sentence instead!
+RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& msgs)
+{
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	json::sanity_test();
+	Sentence sentence = run_sentence(is, t, msgs);
+
+	// All processing done, output:
+	os << "{"
+	   << json::key(u"errs")
+	   << "[";
+	bool first_err = true;
+	for(const auto& c : sentence.cohorts) {
 		proc_cohort_json(first_err,
 				 c,
 				 os,
-				 ids_cohorts,
 				 sentence,
 				 t,
 				 msgs);
 	}
 	os << "]"
-	   << "," << json::key(u"text") << json::str(utf16conv.from_bytes(text.str()))
+	   << "," << json::key(u"text") << json::str(utf16conv.from_bytes(sentence.text.str()))
 	   << "}";
-	if(runstate == flushing) {
+	if(sentence.runstate == flushing) {
 		os << '\0';
 		os.flush();
 		os.clear();
 	}
-	return runstate;
+	return sentence.runstate;
 }
 
 

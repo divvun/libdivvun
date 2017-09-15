@@ -112,6 +112,10 @@ void SuggestCmd::run(std::stringstream& input, std::stringstream& output) const
 {
 	divvun::run(input, output, *generator, msgs, true);
 }
+Sentence SuggestCmd::run_sentence(std::stringstream& input) const
+{
+	return divvun::run_sentence(input, *generator, msgs);
+}
 
 
 
@@ -202,10 +206,6 @@ Ret readArchiveExtract(const std::string& ar_path,
 }
 
 
-Pipeline::Pipeline(const std::u16string& pipename, bool v) : verbose(v){
-
-}
-
 Pipeline::Pipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const std::u16string& pipename, bool v) : verbose(v)
 {
 	auto& spec = ar_spec->spec;
@@ -266,6 +266,7 @@ Pipeline::Pipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const std::u16str
 						 readArchiveExtract(ar_spec->ar_path, args[1], procMsgs),
 						 verbose);
 			cmds.emplace_back(s);
+			suggestcmd = s;
 		}
 		else if(name == u"sh") {
 			throw std::runtime_error("<sh> command not implemented yet!");
@@ -318,7 +319,9 @@ Pipeline::Pipeline(const std::unique_ptr<PipeSpec>& spec, const std::u16string& 
 			if(args.size() != 2) {
 				throw std::runtime_error("Wrong number of arguments to <suggest> command (expected 2), at byte offset " + std::to_string(cmd.offset_debug()));
 			}
-			cmds.emplace_back(new SuggestCmd(args[0], args[1], verbose));
+			auto *s = new SuggestCmd(args[0], args[1], verbose);
+			cmds.emplace_back(s);
+			suggestcmd = s;
 		}
 		else if(name == u"sh") {
 			throw std::runtime_error("<sh> command not implemented yet!");
@@ -344,6 +347,23 @@ void Pipeline::proc(std::stringstream& input, std::stringstream& output) {
 		// if(DEBUG) { dbg("cur_out after run", cur_out); }
 	}
 	output << cur_out.str();
+}
+Sentence Pipeline::proc(std::stringstream& input) {
+	if(suggestcmd == NULL || cmds.empty() || suggestcmd != cmds.back().get()) {
+		throw std::runtime_error("Can't create cohorts without a SuggestCmd as the final Pipeline command!");
+	}
+	std::stringstream cur_in;
+	std::stringstream cur_out(input.str());
+	size_t i_last = cmds.size()-1;
+	for (size_t i = 0; i < i_last; ++i) {
+		const auto& cmd = cmds[i];
+		cur_in.swap(cur_out);
+		cur_out.clear();
+		cur_out.str(std::string());
+		cmd->run(cur_in, cur_out);
+		// if(DEBUG) { dbg("cur_out after run", cur_out); }
+	}
+	return suggestcmd->run_sentence(cur_out);
 }
 
 std::unique_ptr<PipeSpec> readPipeSpec(const std::string& file) {

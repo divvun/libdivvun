@@ -135,7 +135,7 @@ class TokenizeCmd: public PipeCmd {
 	public:
 		TokenizeCmd (std::istream& instream, bool verbose);
 		TokenizeCmd (const std::string& path, bool verbose);
-		void run(std::stringstream& input, std::stringstream& output) const;
+		void run(std::stringstream& input, std::stringstream& output) const override;
 		~TokenizeCmd() {};
 	private:
 		hfst_ol::PmatchContainer* mkContainer(std::istream& instream, bool verbose);
@@ -172,7 +172,7 @@ class MweSplitCmd: public PipeCmd {
 	public:
 		/* Assumes cg3_init has been called already */
 		explicit MweSplitCmd (bool verbose);
-		void run(std::stringstream& input, std::stringstream& output) const;
+		void run(std::stringstream& input, std::stringstream& output) const override;
 		~MweSplitCmd() {};
 	private:
 		std::unique_ptr<cg3_mwesplitapplicator, CGMweSplitApplicatorDeleter> applicator;
@@ -185,7 +185,7 @@ class CGCmd: public PipeCmd {
 		/* Assumes cg3_init has been called already */
 		CGCmd (const char* buff, const size_t size, bool verbose);
 		CGCmd (const std::string& path, bool verbose);
-		void run(std::stringstream& input, std::stringstream& output) const;
+		void run(std::stringstream& input, std::stringstream& output) const override;
 		~CGCmd() {};
 	private:
 		std::unique_ptr<cg3_grammar, CGGrammarDeleter> grammar;
@@ -200,6 +200,7 @@ class SuggestCmd: public PipeCmd {
 		SuggestCmd (const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose);
 		SuggestCmd (const std::string& gen_path, const std::string& msg_path, bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const override;
+		Sentence run_sentence(std::stringstream& input) const;
 		~SuggestCmd() {};
 	private:
 		std::unique_ptr<const hfst::HfstTransducer> generator;
@@ -209,7 +210,6 @@ class SuggestCmd: public PipeCmd {
 
 class Pipeline {
 	public:
-		Pipeline(const std::u16string& pipename, bool v);
 		Pipeline(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool verbose);
 		Pipeline(const std::unique_ptr<ArPipeSpec>& spec, const std::u16string& pipename, bool verbose);
 		// ~Pipeline() {
@@ -219,9 +219,11 @@ class Pipeline {
 		// 	}
 		// }
 		void proc(std::stringstream& input, std::stringstream& output);
+		Sentence proc(std::stringstream& input);
 		const bool verbose;
 	private:
 		std::vector<std::unique_ptr<PipeCmd>> cmds;
+		SuggestCmd* suggestcmd; // the final command, if SuggestCmd, can also do non-stringly-typed output
 };
 
 } // namespace divvun
