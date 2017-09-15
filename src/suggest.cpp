@@ -313,18 +313,6 @@ const Reading proc_subreading(const std::string& line) {
 	return r;
 };
 
-const Reading merge_subreadings(const Reading& main, const Reading& sub) {
-	Reading r;
-	r.ana = sub.ana + "#" + main.ana;
-	r.errtype = sub.errtype + main.errtype;
-	r.rels.insert(sub.rels.begin(), sub.rels.end());
-	r.rels.insert(main.rels.begin(), main.rels.end());
-	// higher main can override id if set; doesn't seem like cg3 puts ids on them though
-	r.id = (main.id == 0 ? sub.id : main.id);
-	r.suggest = r.suggest || main.suggest;
-	return r;
-}
-
 const Reading proc_reading(const hfst::HfstTransducer& t, const std::string& line) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::stringstream ss(line);
@@ -618,6 +606,23 @@ RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer
 			prevtype = BlankL;
 		}
 	} while(std::getline(is, line));
+
+	if(!readinglines.empty()) {
+		const auto& reading = proc_reading(t, readinglines);
+		readinglines = "";
+		if(!reading.errtype.empty()) {
+			errtype = reading.errtype;
+		}
+		if(reading.suggest) {
+			c.err[errtype].insert(reading.sforms.begin(),
+					      reading.sforms.end());
+		}
+		if(reading.id != 0) {
+			c.id = reading.id;
+		}
+		c.readings.push_back(reading);
+	}
+
 	c.pos = pos;
 	sentence.push_back(c);
 	pos += c.form.size();
@@ -642,6 +647,29 @@ RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer
 	return runstate;
 }
 
+
+void print_cg_reading(const std::string& readinglines, std::ostream& os, const hfst::HfstTransducer& t, std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>& utf16conv) {
+	os << readinglines;
+	const auto& reading = proc_reading(t, readinglines);
+	if(reading.suggest) {
+		const auto& ana = reading.ana;
+		const auto& formv = reading.sforms;
+		if(formv.empty()) {
+			os << ana << "\t" << "?" << std::endl;
+		}
+		else {
+			os << ana << "\t" << u16join(formv) << std::endl;
+		}
+	}
+	else {
+		const auto& errtype = reading.errtype;
+		if(!errtype.empty()) {
+			os << utf16conv.to_bytes(errtype) << std::endl;
+		}
+	}
+
+}
+
 void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
@@ -652,24 +680,7 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 		std::regex_match(line.c_str(), result, CG_LINE);
 
 		if(!readinglines.empty() && (result.empty() || result[3].length() <= 1)) {
-			os << readinglines;
-			const auto& reading = proc_reading(t, readinglines);
-			if(reading.suggest) {
-				const auto& ana = reading.ana;
-				const auto& formv = reading.sforms;
-				if(formv.empty()) {
-					os << ana << "\t" << "?" << std::endl;
-				}
-				else {
-					os << ana << "\t" << u16join(formv) << std::endl;
-				}
-			}
-			else {
-				const auto& errtype = reading.errtype;
-				if(!errtype.empty()) {
-					os << utf16conv.to_bytes(errtype) << std::endl;
-				}
-			}
+			print_cg_reading(readinglines, os, t, utf16conv);
 			readinglines = "";
 		}
 
@@ -684,6 +695,9 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 		else {
 			os << line << std::endl;
 		}
+	}
+	if(!readinglines.empty()) {
+		print_cg_reading(readinglines, os, t, utf16conv);
 	}
 }
 
