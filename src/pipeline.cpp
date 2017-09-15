@@ -112,9 +112,9 @@ void SuggestCmd::run(std::stringstream& input, std::stringstream& output) const
 {
 	divvun::run(input, output, *generator, msgs, true);
 }
-Sentence SuggestCmd::run_sentence(std::stringstream& input) const
+std::vector<Err> SuggestCmd::run_errs(std::stringstream& input) const
 {
-	return divvun::run_sentence(input, *generator, msgs);
+	return divvun::run_errs(input, *generator, msgs);
 }
 
 
@@ -348,7 +348,7 @@ void Pipeline::proc(std::stringstream& input, std::stringstream& output) {
 	}
 	output << cur_out.str();
 }
-Sentence Pipeline::proc(std::stringstream& input) {
+std::vector<Err> Pipeline::proc(std::stringstream& input) {
 	if(suggestcmd == NULL || cmds.empty() || suggestcmd != cmds.back().get()) {
 		throw std::runtime_error("Can't create cohorts without a SuggestCmd as the final Pipeline command!");
 	}
@@ -363,7 +363,7 @@ Sentence Pipeline::proc(std::stringstream& input) {
 		cmd->run(cur_in, cur_out);
 		// if(DEBUG) { dbg("cur_out after run", cur_out); }
 	}
-	return suggestcmd->run_sentence(cur_out);
+	return suggestcmd->run_errs(cur_out);
 }
 
 std::unique_ptr<PipeSpec> readPipeSpec(const std::string& file) {

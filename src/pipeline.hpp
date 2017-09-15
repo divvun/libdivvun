@@ -200,7 +200,7 @@ class SuggestCmd: public PipeCmd {
 		SuggestCmd (const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose);
 		SuggestCmd (const std::string& gen_path, const std::string& msg_path, bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const override;
-		Sentence run_sentence(std::stringstream& input) const;
+		std::vector<Err> run_errs(std::stringstream& input) const;
 		~SuggestCmd() {};
 	private:
 		std::unique_ptr<const hfst::HfstTransducer> generator;
@@ -219,7 +219,7 @@ class Pipeline {
 		// 	}
 		// }
 		void proc(std::stringstream& input, std::stringstream& output);
-		Sentence proc(std::stringstream& input);
+		std::vector<Err> proc(std::stringstream& input);
 		const bool verbose;
 	private:
 		std::vector<std::unique_ptr<PipeCmd>> cmds;

@@ -372,15 +372,6 @@ const Cohort DEFAULT_COHORT = {
 	{}, {}, 0, 0, {}
 };
 
-struct Err {
-	std::u16string form;
-	size_t beg;
-	size_t end;
-	std::u16string err;
-	std::u16string msg;
-	std::set<std::u16string> rep;
-};
-
 Err cohort_errs(const Cohort& c,
 		const Sentence& sentence,
 		const hfst::HfstTransducer& t,
@@ -459,23 +450,6 @@ Err cohort_errs(const Cohort& c,
 	};
 }
 
-std::string cohort_errs_json(const Cohort& c,
-			     const Sentence& sentence,
-			     const hfst::HfstTransducer& t,
-			     const msgmap& msgs)
-{
-	Err e = cohort_errs(c, sentence, t, msgs);
-	std::string s;
-	s += "["; s += json::str(e.form);
-	s += ","; s += std::to_string(e.beg);
-	s += ","; s += std::to_string(e.end);
-	s += ","; s += json::str(e.err);
-	s += ","; s += json::str(e.msg);
-	s += ","; s += json::str_arr(e.rep);
-	s += "]";
-	return s;
-}
-
 void proc_cohort_json(bool& first_err,
 		      const Cohort& c,
 		      std::ostream& os,
@@ -491,7 +465,14 @@ void proc_cohort_json(bool& first_err,
 			os << ",";
 		}
 		first_err = false;
-		os << cohort_errs_json(c, sentence, t, msgs);
+		Err e = cohort_errs(c, sentence, t, msgs);
+		os << "["; os << json::str(e.form);
+		os << ","; os << std::to_string(e.beg);
+		os << ","; os << std::to_string(e.end);
+		os << ","; os << json::str(e.err);
+		os << ","; os << json::str(e.msg);
+		os << ","; os << json::str_arr(e.rep);
+		os << "]";
 	}
 }
 
@@ -638,7 +619,17 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 	return sentence;
 }
 
-// TODO: a version of this that returns the std::vector<cohort> sentence instead!
+std::vector<Err> run_errs(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs)
+{
+	Sentence sentence = run_sentence(is, t, msgs);
+	std::vector<Err> errs;
+	for(const auto& c : sentence.cohorts) {
+		errs.push_back(cohort_errs(c, sentence, t, msgs));
+	}
+	return errs;
+}
+
+
 RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& msgs)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;

@@ -86,11 +86,20 @@ struct Sentence {
 	RunState runstate;
 };
 
+struct Err {
+	std::u16string form;
+	size_t beg;
+	size_t end;
+	std::u16string err;
+	std::u16string msg;
+	std::set<std::u16string> rep;
+};
+
 enum LineType {
 	WordformL, ReadingL, BlankL
 };
 
-Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msgmap& m);
+std::vector<Err> run_errs(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs);
 
 void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& m, bool json);
 
