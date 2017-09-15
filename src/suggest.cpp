@@ -372,13 +372,21 @@ const Cohort DEFAULT_COHORT = {
 	{}, {}, 0, 0, {}
 };
 
-std::string cohort_errs_json(const Cohort& c,
-			     const Sentence& sentence,
-			     const hfst::HfstTransducer& t,
-			     const msgmap& msgs)
+struct Err {
+	std::u16string form;
+	size_t beg;
+	size_t end;
+	std::u16string err;
+	std::u16string msg;
+	std::set<std::u16string> rep;
+};
+
+Err cohort_errs(const Cohort& c,
+		const Sentence& sentence,
+		const hfst::HfstTransducer& t,
+		const msgmap& msgs)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	std::string s;
 	// TODO: currently we just pick one if there are several error types:
 	const auto& err = c.err.begin();
 	const auto& errtype = err->first;
@@ -441,12 +449,29 @@ std::string cohort_errs_json(const Cohort& c,
 			}
 		}
 	}
-	s += "["; s += json::str(c.form);
-	s += ","; s += std::to_string(c.pos);
-	s += ","; s += std::to_string(c.pos+c.form.size());
-	s += ","; s += json::str(err->first);
-	s += ","; s += json::str(msg);
-	s += ","; s += json::str_arr(err->second);
+	return {
+		c.form,
+		c.pos,
+		c.pos+c.form.size(),
+		err->first,
+		msg,
+		err->second,
+	};
+}
+
+std::string cohort_errs_json(const Cohort& c,
+			     const Sentence& sentence,
+			     const hfst::HfstTransducer& t,
+			     const msgmap& msgs)
+{
+	Err e = cohort_errs(c, sentence, t, msgs);
+	std::string s;
+	s += "["; s += json::str(e.form);
+	s += ","; s += std::to_string(e.beg);
+	s += ","; s += std::to_string(e.end);
+	s += ","; s += json::str(e.err);
+	s += ","; s += json::str(e.msg);
+	s += ","; s += json::str_arr(e.rep);
 	s += "]";
 	return s;
 }
@@ -468,7 +493,6 @@ void proc_cohort_json(bool& first_err,
 		first_err = false;
 		os << cohort_errs_json(c, sentence, t, msgs);
 	}
-	// TODO: wrapper for pos-increasing and text-adding, since they should always happen together
 }
 
 /**
@@ -506,7 +530,7 @@ const std::string clean_blank(const std::string& raw)
 }
 
 Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs) {
-	int pos = 0;
+	size_t pos = 0;
 	std::u16string errtype = u"default";
 	LineType prevtype = BlankL;
 	bool is_addcohort = true;
@@ -556,6 +580,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 					sentence.ids_cohorts[c.id] = sentence.cohorts.size() - 1;
 				}
 			}
+			// TODO: wrapper for pos-increasing and text-adding, since they should always happen together
 			pos += c.form.size();
 			sentence.text << utf16conv.to_bytes(c.form);
 
@@ -609,7 +634,6 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 
 	c.pos = pos;
 	sentence.cohorts.push_back(c);
-	pos += c.form.size();
 	sentence.text << utf16conv.to_bytes(c.form);
 	return sentence;
 }

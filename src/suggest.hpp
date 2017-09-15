@@ -67,7 +67,7 @@ struct Reading {
 struct Cohort {
 	std::u16string form;
 	std::map<std::u16string, UStringSet> err;
-	int pos;
+	size_t pos;
 	rel_id id;
 	std::vector<Reading> readings;
 };
