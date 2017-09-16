@@ -17,7 +17,7 @@ EXTRA_DIST = errors.dtd errors.rnc pipespec.dtd pipespec.rnc
 if WANT_CHECKER
 lib_LTLIBRARIES = libdivvun.la
 divvunincludedir = $(includedir)/divvun
-divvuninclude_HEADERS = checker.hpp
+divvuninclude_HEADERS = checker.hpp checkertypes.hpp
 libdivvun_la_SOURCES = checker.cpp pipeline.cpp suggest.cpp
 # would've liked to put -lstdc++fs in LIBADD for <experimental/filesystem>, but macos
 libdivvun_la_LIBADD =             $(CG3_LIBS)   $(LIBARCHIVE_LIBS)   $(divvun_suggest_LDADD)

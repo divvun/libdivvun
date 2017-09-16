@@ -15,8 +15,8 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
-#ifndef a361aad5b4636c78_CHECKER_H
-#define a361aad5b4636c78_CHECKER_H
+#ifndef a361aad5b4636c78_PIPELINE_H
+#define a361aad5b4636c78_PIPELINE_H
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -29,9 +29,10 @@
 #include <limits.h>
 #include <stdlib.h>
 
-#include <pugixml.hpp>
-// divvun-suggest:
+// divvun-gramcheck:
 #include "suggest.hpp"
+// xml:
+#include <pugixml.hpp>
 // cg3:
 #include <cg3.h>
 // hfst:
@@ -156,8 +157,7 @@ struct CGApplicatorDeleter {
 struct CGMweSplitApplicatorDeleter {
 		void operator()(cg3_mwesplitapplicator* ptr)
 		{
-			// cg3_mwesplitapplicator_free(ptr);
-			std::cerr << "TODO: use cg3_mwesplitapplicator_free once that's available" << std::endl;
+			cg3_mwesplitapplicator_free(ptr);
 		}
 };
 
@@ -219,7 +219,7 @@ class Pipeline {
 		// 	}
 		// }
 		void proc(std::stringstream& input, std::stringstream& output);
-		std::vector<Err> proc(std::stringstream& input);
+		std::vector<Err> proc_errs(std::stringstream& input);
 		const bool verbose;
 	private:
 		std::vector<std::unique_ptr<PipeCmd>> cmds;

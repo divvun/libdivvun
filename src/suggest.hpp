@@ -19,26 +19,26 @@
 #ifndef fe64e9a18486d375_SUGGEST_H
 #define fe64e9a18486d375_SUGGEST_H
 
-
-#include "util.hpp"
-#include "json.hpp"
-
-#include <hfst/HfstInputStream.h>
-#include <hfst/HfstTransducer.h>
-
-#ifdef HAVE_LIBPUGIXML
-#include <pugixml.hpp>
-#endif
-
 #include <locale>
 #include <codecvt>
-
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <regex>
 #include <unordered_map>
 #include <exception>
+
+// divvun-gramcheck:
+#include "util.hpp"
+#include "json.hpp"
+#include "checkertypes.hpp"
+// xml:
+#ifdef HAVE_LIBPUGIXML
+#include <pugixml.hpp>
+#endif
+// hfst:
+#include <hfst/HfstInputStream.h>
+#include <hfst/HfstTransducer.h>
 
 namespace divvun {
 
@@ -84,15 +84,6 @@ struct Sentence {
 	CohortMap ids_cohorts;
 	std::ostringstream text;
 	RunState runstate;
-};
-
-struct Err {
-	std::u16string form;
-	size_t beg;
-	size_t end;
-	std::u16string err;
-	std::u16string msg;
-	std::set<std::u16string> rep;
 };
 
 enum LineType {

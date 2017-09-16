@@ -348,7 +348,7 @@ void Pipeline::proc(std::stringstream& input, std::stringstream& output) {
 	}
 	output << cur_out.str();
 }
-std::vector<Err> Pipeline::proc(std::stringstream& input) {
+std::vector<Err> Pipeline::proc_errs(std::stringstream& input) {
 	if(suggestcmd == NULL || cmds.empty() || suggestcmd != cmds.back().get()) {
 		throw std::runtime_error("Can't create cohorts without a SuggestCmd as the final Pipeline command!");
 	}

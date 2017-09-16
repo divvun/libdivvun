@@ -15,8 +15,8 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
-#ifndef b28736af078229c6_LIBDIVVUN_H
-#define b28736af078229c6_LIBDIVVUN_H
+#ifndef b28736af078229c6_CHECKER_H
+#define b28736af078229c6_CHECKER_H
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -26,9 +26,15 @@
 #include <string>
 #include <memory>
 #include <set>
+#include <vector>
 
+#include "checkertypes.hpp"
 
 namespace divvun {
+
+/**
+ * Public types and functions for divvun-gramcheck library
+ */
 
 
 class PipeSpec;
@@ -57,7 +63,6 @@ class ArCheckerSpec {
 		const std::unique_ptr<ArPipeSpec> pImpl;
 };
 
-
 class Pipeline;
 
 class Checker {
@@ -66,6 +71,7 @@ class Checker {
 		Checker(const std::unique_ptr<ArPipeSpec>& spec, const std::u16string& pipename, bool verbose);
 		~Checker();
                 void proc(std::stringstream& input, std::stringstream& output);
+		std::vector<Err> proc_errs(std::stringstream& input);
 	private:
 		const std::unique_ptr<Pipeline> pImpl;
 };
