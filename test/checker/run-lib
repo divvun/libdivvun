@@ -8,6 +8,7 @@ cd "$(dirname "$0")"
 log="$(pwd)"/run-lib.verboselog
 
 destdir=$(mktemp -d -t divvun-suggest-test-lib.XXXXXXXXXX)
+trap 'echo "${log}:"; cat "${log}"' ERR
 trap 'rm -rf "${destdir}"' EXIT
 
 prefconf="$(grep '^prefix=' ../../config.log)"
@@ -29,9 +30,9 @@ cp ../checker/sme.zcheck "${destdir}"/examples/using-checker-lib-from-cpp/
 
 cd "${destdir}"/examples/using-checker-lib-from-cpp/
 
-export LDFLAGS="-L${destdir}/${prefix}/lib -ldivvun -lcg3 -lhfst -larchive" \
-       CXXFLAGS="-I${destdir}/${prefix}/include"                            \
-       LD_LIBRARY_PATH="${destdir}/${prefix}/lib:${destdir}/${prefix}/lib/x86_64-linux-gnu"
+export LDFLAGS="-L${destdir}/${prefix}/lib -ldivvun -lcg3 -lhfst -larchive ${LDFLAGS:-}" \
+       CXXFLAGS="-I${destdir}/${prefix}/include ${CXXFLAGS:-}"                           \
+       LD_LIBRARY_PATH="${destdir}/${prefix}/lib:${destdir}/${prefix}/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
 ./autogen.sh &>"${log}"
 ./configure  &>"${log}"
 make -j3     &>"${log}"
