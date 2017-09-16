@@ -27,6 +27,7 @@ old/
 /src/libdivvun.la
 /src/libdivvun.lo
 /src/divvun-gen-sh
+/src/divvun-gen-xmlschemas
 /src/pipeline.lo
 
 /test-driver

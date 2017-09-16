@@ -372,11 +372,14 @@ const Cohort DEFAULT_COHORT = {
 	{}, {}, 0, 0, {}
 };
 
-Err cohort_errs(const Cohort& c,
-		const Sentence& sentence,
-		const hfst::HfstTransducer& t,
-		const msgmap& msgs)
+mapbox::util::variant<Nothing, Err> cohort_errs(const Cohort& c,
+						const Sentence& sentence,
+						const hfst::HfstTransducer& t,
+						const msgmap& msgs)
 {
+	if(cohort_empty(c) || c.err.empty()) {
+		return Nothing();
+	}
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	// TODO: currently we just pick one if there are several error types:
 	const auto& err = c.err.begin();
@@ -440,7 +443,7 @@ Err cohort_errs(const Cohort& c,
 			}
 		}
 	}
-	return {
+	return Err {
 		c.form,
 		c.pos,
 		c.pos+c.form.size(),
@@ -448,32 +451,6 @@ Err cohort_errs(const Cohort& c,
 		msg,
 		err->second,
 	};
-}
-
-void proc_cohort_json(bool& first_err,
-		      const Cohort& c,
-		      std::ostream& os,
-		      const Sentence& sentence,
-		      const hfst::HfstTransducer& t,
-		      const msgmap& msgs)
-{
-	if(cohort_empty(c)) {
-		return;
-	}
-	if(!c.err.empty()) {
-		if(!first_err) {
-			os << ",";
-		}
-		first_err = false;
-		Err e = cohort_errs(c, sentence, t, msgs);
-		os << "["; os << json::str(e.form);
-		os << ","; os << std::to_string(e.beg);
-		os << ","; os << std::to_string(e.end);
-		os << ","; os << json::str(e.err);
-		os << ","; os << json::str(e.msg);
-		os << ","; os << json::str_arr(e.rep);
-		os << "]";
-	}
 }
 
 /**
@@ -622,9 +599,12 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 std::vector<Err> run_errs(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs)
 {
 	Sentence sentence = run_sentence(is, t, msgs);
+
 	std::vector<Err> errs;
 	for(const auto& c : sentence.cohorts) {
-		errs.push_back(cohort_errs(c, sentence, t, msgs));
+		const auto& ret = cohort_errs(c, sentence, t, msgs);
+		ret.match([]      (Nothing) {},
+			  [&errs] (Err e)   { errs.push_back(e); });
 	}
 	return errs;
 }
@@ -640,14 +620,23 @@ RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer
 	os << "{"
 	   << json::key(u"errs")
 	   << "[";
-	bool first_err = true;
+	bool wantsep = false;
 	for(const auto& c : sentence.cohorts) {
-		proc_cohort_json(first_err,
-				 c,
-				 os,
-				 sentence,
-				 t,
-				 msgs);
+		wantsep = cohort_errs(c, sentence, t, msgs).match(
+			[     wantsep] (Nothing) { return wantsep; },
+			[&os, wantsep] (Err e)   {
+				if(wantsep) {
+					os << ",";
+				}
+				os << "[" << json::str(e.form)
+				<< "," << std::to_string(e.beg)
+				<< "," << std::to_string(e.end)
+				<< "," << json::str(e.err)
+				<< "," << json::str(e.msg)
+				<< "," << json::str_arr(e.rep)
+				<< "]";
+				return true;
+			});
 	}
 	os << "]"
 	   << "," << json::key(u"text") << json::str(utf16conv.from_bytes(sentence.text.str()))

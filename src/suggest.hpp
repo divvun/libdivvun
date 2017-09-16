@@ -39,6 +39,8 @@
 // hfst:
 #include <hfst/HfstInputStream.h>
 #include <hfst/HfstTransducer.h>
+// variants:
+#include "mapbox/variant.hpp"
 
 namespace divvun {
 
@@ -88,6 +90,11 @@ struct Sentence {
 
 enum LineType {
 	WordformL, ReadingL, BlankL
+};
+
+// for variants
+struct Nothing
+{
 };
 
 std::vector<Err> run_errs(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs);

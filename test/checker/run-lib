@@ -4,12 +4,12 @@ set -u
 
 set -e
 
-log="$(pwd)"/lib.log
+cd "$(dirname "$0")"
+log="$(pwd)"/run-lib.verboselog
 
 destdir=$(mktemp -d -t divvun-suggest-test-lib.XXXXXXXXXX)
 trap 'rm -rf "${destdir}"' EXIT
 
-cd "$(dirname "$0")"
 prefconf="$(grep '^prefix=' ../../config.log)"
 eval "${prefconf}"
 if [[ ! -n "${prefix}" ]]; then
@@ -37,7 +37,8 @@ export LDFLAGS="-L${destdir}/${prefix}/lib -ldivvun -lcg3 -lhfst -larchive" \
 make -j3     &>"${log}"
 
 input="seammas ballat ođđa dieđuiguin"
-expected='{"errs":[["dieđuiguin",20,30,"msyn-valency-loc-com","msyn thingy",["diehtukorrekt"]]],"text":"seammas ballat ođđa dieđuiguin"}'
+expected='{"errs":[["dieđuiguin",20,30,"msyn-valency-loc-com","msyn thingy",["diehtukorrekt"]]],"text":"seammas ballat ođđa dieđuiguin"}
+form=dieđuiguin beg=20 end=30 err=msyn-valency-loc-com msg=msyn thingy rep=diehtukorrekt'
 echo "${input}"                                                             \
     | src/using-checker -a sme.zcheck -n smegram                            \
     | diff <(printf "%s\n" "${expected}") -

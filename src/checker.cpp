@@ -95,6 +95,9 @@ Checker::~Checker()
 void Checker::proc(std::stringstream& input, std::stringstream& output) {
 	pImpl->proc(input, output);
 };
+std::vector<Err> Checker::proc_errs(std::stringstream& input) {
+	return pImpl->proc_errs(input);
+};
 
 
 

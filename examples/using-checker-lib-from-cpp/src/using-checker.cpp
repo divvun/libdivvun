@@ -57,6 +57,7 @@ int printNamesXml(const std::string& path, bool verbose) {
 }
 
 int runAr(const std::string& path, const std::u16string& pipename, bool verbose) {
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
         const auto& ar_spec = std::unique_ptr<divvun::ArCheckerSpec>(new divvun::ArCheckerSpec(path));
         const auto& ar_pipeline = ar_spec->getChecker(pipename, verbose);
 	for (std::string line; std::getline(std::cin, line);) {
@@ -64,6 +65,19 @@ int runAr(const std::string& path, const std::u16string& pipename, bool verbose)
 		std::stringstream pipe_out;
 		ar_pipeline->proc(pipe_in, pipe_out);
 		std::cout << pipe_out.str() << std::endl;
+		std::stringstream pipe_in2(line);
+		const auto& errs = ar_pipeline->proc_errs(pipe_in2);
+		for(const auto& e : errs) {
+			std::cout << "form=" << utf16conv.to_bytes(e.form)
+				  << " beg=" << e.beg
+				  << " end=" << e.end
+				  << " err=" << utf16conv.to_bytes(e.err)
+				  << " msg=" << utf16conv.to_bytes(e.msg);
+			for(const auto& r : e.rep) {
+				std::cout << " rep=" << utf16conv.to_bytes(r);
+			}
+			std::cout  << std::endl;
+		}
 	}
 	return EXIT_SUCCESS;
 }

@@ -361,9 +361,9 @@ std::vector<Err> Pipeline::proc_errs(std::stringstream& input) {
 		cur_out.clear();
 		cur_out.str(std::string());
 		cmd->run(cur_in, cur_out);
-		// if(DEBUG) { dbg("cur_out after run", cur_out); }
 	}
-	return suggestcmd->run_errs(cur_out);
+	cur_in.swap(cur_out);
+	return suggestcmd->run_errs(cur_in);
 }
 
 std::unique_ptr<PipeSpec> readPipeSpec(const std::string& file) {
