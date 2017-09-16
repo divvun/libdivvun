@@ -60,6 +60,9 @@ old/
 /test/checker/test-suite.log
 /test/checker/.tern-port
 /test/checker/.dir-locals.elc
+/test/checker/run-lib.log
+/test/checker/run-lib.trs
+/test/checker/run-lib.verboselog
 
 /examples/using-checker-lib-from-cpp/INSTALL
 /examples/using-checker-lib-from-cpp/Makefile
