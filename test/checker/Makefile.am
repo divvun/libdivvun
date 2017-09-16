@@ -18,7 +18,7 @@ errors.xml: ../suggest/errors.xml
 	cp $< $@
 
 check_DATA = sme.zcheck tokeniser.pmhfst generator.hfstol errors.xml
-TESTS = ./run
+TESTS = ./run ./run-lib
 
 CLEANFILES = $(check_DATA) analyser.hfst generator.hfstol errors.xml
 

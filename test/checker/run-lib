@@ -1,0 +1,43 @@
+#!/bin/bash
+
+set -u
+
+set -e
+
+log="$(pwd)"/lib.log
+
+destdir=$(mktemp -d -t divvun-suggest-test-lib.XXXXXXXXXX)
+trap 'rm -rf "${destdir}"' EXIT
+
+cd "$(dirname "$0")"
+prefconf="$(grep '^prefix=' ../../config.log)"
+eval "${prefconf}"
+if [[ ! -n "${prefix}" ]]; then
+    echo "Couldn't get prefix from config.log – not configured correctly?"
+    exit 1
+fi
+export prefix
+(
+    cd ../..
+    make --quiet install DESTDIR="${destdir}" &>"${log}"
+)
+
+ls "${destdir}/${prefix}"/include/divvun/checker.hpp >/dev/null
+
+git --work-tree="${destdir}" checkout HEAD -- examples
+cp ../checker/sme.zcheck "${destdir}"/examples/using-checker-lib-from-cpp/
+
+cd "${destdir}"/examples/using-checker-lib-from-cpp/
+
+export LDFLAGS="-L${destdir}/${prefix}/lib -ldivvun -lcg3 -lhfst -larchive" \
+       CXXFLAGS="-I${destdir}/${prefix}/include"                            \
+       LD_LIBRARY_PATH="${destdir}/${prefix}/lib:${destdir}/${prefix}/lib/x86_64-linux-gnu"
+./autogen.sh &>"${log}"
+./configure  &>"${log}"
+make -j3     &>"${log}"
+
+input="seammas ballat ođđa dieđuiguin"
+expected='{"errs":[["dieđuiguin",20,30,"msyn-valency-loc-com","msyn thingy",["diehtukorrekt"]]],"text":"seammas ballat ođđa dieđuiguin"}'
+echo "${input}"                                                             \
+    | src/using-checker -a sme.zcheck -n smegram                            \
+    | diff <(printf "%s\n" "${expected}") -
