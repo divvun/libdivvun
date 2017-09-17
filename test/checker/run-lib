@@ -30,11 +30,18 @@ cp ../checker/sme.zcheck "${destdir}"/examples/using-checker-lib-from-cpp/
 
 cd "${destdir}"/examples/using-checker-lib-from-cpp/
 
-export LDFLAGS="-L${destdir}/${prefix}/lib -ldivvun -lcg3 -lhfst -larchive ${LDFLAGS:-}" \
+# NB: Test in Travis before and after changing the following paragraph:
+export LDFLAGS="-L${destdir}/${prefix}/lib -lcg3 -lhfst -larchive ${LDFLAGS:-}" \
        CXXFLAGS="-I${destdir}/${prefix}/include ${CXXFLAGS:-}"                           \
-       LD_LIBRARY_PATH="${destdir}/${prefix}/lib:${destdir}/${prefix}/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+       DYLD_LIBRARY_PATH="${destdir}/${prefix}/lib:${DYLD_LIBRARY_PATH:-}"
+DYLD_FALLBACK_LIBRARY_PATH="${destdir}/${prefix}/lib:${DYLD_FALLBACK_LIBRARY_PATH:-}"
+LD_LIBRARY_PATH="${destdir}/${prefix}/lib:${destdir}/${prefix}/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+
 ./autogen.sh &>"${log}"
-./configure  &>"${log}"
+if ! ./configure  &>"${log}"; then
+    cat config.log
+    exit 1
+fi
 make -j3     &>"${log}"
 
 input="seammas ballat ođđa dieđuiguin"

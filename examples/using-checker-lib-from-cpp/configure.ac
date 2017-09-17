@@ -31,4 +31,6 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE(
   AC_MSG_FAILURE(['$CXX $CXXFLAGS' does not accept ISO C++11]))
 
 
+AC_CHECK_LIB([divvun], [~Checker])
+
 AC_OUTPUT(Makefile src/Makefile)
