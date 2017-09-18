@@ -140,6 +140,11 @@ pipespec are relative to the current directory.
 
 See the =test/= folder for an example of zipped archives.
 
+See the [[file:examples/using-checker-lib-from-cpp][examples folder]] for how to link into divvun-gramcheck and use
+it as a library, getting out either the JSON-formatted list of errors,
+or a simple [[file:src/checkertypes.hpp::struct%20Err%20{][data structure]] that contains the same information as the
+JSON. The next section describes the JSON format.
+
 
 * JSON format
 The JSON output of =divvun-suggest= is meant to be sent to a client
@@ -307,6 +312,7 @@ then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequis
 - [X] load SuggestCmd from char buffer (HFST needs an =HfstOlInputStream(std::istream&)=)
 - [X] read zip-archive like zhfst
 - [X] get some API documentation
+- [X] return both string and real datastructure (latter only if Suggest as last cmd)
 - [X] hide implementation, make an example project using the API
 - [X] travis (both Mac and Ubuntu)
 - [X] link to vislcg3 without needing the source (vislcg3 has to make the functions we use available from cg3.h)
