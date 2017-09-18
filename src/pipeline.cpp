@@ -206,7 +206,9 @@ Ret readArchiveExtract(const std::string& ar_path,
 }
 
 
-Pipeline::Pipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const std::u16string& pipename, bool v) : verbose(v)
+Pipeline::Pipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const std::u16string& pipename, bool v)
+	: verbose(v)
+	, suggestcmd(NULL)
 {
 	auto& spec = ar_spec->spec;
 	const pugi::xml_node& pipeline = spec->pnodes.at(pipename);
@@ -282,7 +284,9 @@ Pipeline::Pipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const std::u16str
 	}
 }
 
-Pipeline::Pipeline(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool v) : verbose(v)
+Pipeline::Pipeline(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool v)
+	: verbose(v)
+	, suggestcmd(NULL)
 {
 	const pugi::xml_node& pipeline = spec->pnodes.at(pipename);
 	if (!cg3_init(stdin, stdout, stderr)) {

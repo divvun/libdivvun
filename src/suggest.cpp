@@ -372,10 +372,10 @@ const Cohort DEFAULT_COHORT = {
 	{}, {}, 0, 0, {}
 };
 
-mapbox::util::variant<Nothing, Err> cohort_errs(const Cohort& c,
-						const Sentence& sentence,
-						const hfst::HfstTransducer& t,
-						const msgmap& msgs)
+variant<Nothing, Err> cohort_errs(const Cohort& c,
+				  const Sentence& sentence,
+				  const hfst::HfstTransducer& t,
+				  const msgmap& msgs)
 {
 	if(cohort_empty(c) || c.err.empty()) {
 		return Nothing();

@@ -44,6 +44,8 @@
 
 namespace divvun {
 
+using mapbox::util::variant;
+
 typedef std::set<std::u16string> UStringSet;
 
 typedef std::u16string msg;
