@@ -338,8 +338,7 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const std::string& lin
 			for(auto& p : *paths) {
 				std::stringstream form;
 				for(auto& symbol : p.second) {
-					// TODO: this is a hack to avoid flag diacritics; is there a way to make lookup skip them?
-					if(symbol.size()>0 && symbol[0]!='@') {
+					if(!hfst::FdOperation::is_diacritic(symbol)) {
 						form << symbol;
 					}
 				}
