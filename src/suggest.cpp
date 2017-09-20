@@ -506,7 +506,6 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 		// std::cerr << "\033[1;34mline:\t" << line << "\033[0m" << std::endl;
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
-		bool appendsugg = is_addcohort && prevtype != WordformL && !c.err.empty();
 
 		// TODO: May have to run this block once after the do-block if last line is reading
 		if(!readinglines.empty() && (result.empty() || result[3].length() <= 1)) {
@@ -527,6 +526,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 			}
 			c.readings.push_back(reading);
 		}
+		bool appendsugg = is_addcohort && prevtype != WordformL && !c.err.empty();
 
 		if (!result.empty() && ((result[2].length() != 0 && !appendsugg) // wordform
 					|| result[6].length() != 0)) { // blank
