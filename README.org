@@ -271,6 +271,14 @@ or
 then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequisites]].
 
 
+If you get
+: configure: error: 'g++  -std=c++11 -Wall -I/usr/include/hfst/ @GLIB_CFLAGS@  -I/usr/include/ ' does not accept ISO C++11
+then you may be at the receiving end of
+https://github.com/hfst/hfst/issues/366. A workaround is to edit
+=/usr/lib64/pkgconfig/hfst.pc= and simply delete the string
+=@GLIB_CFLAGS@=.
+
+
 * Progress [34/45]
 
 =divvun-suggest= should:
