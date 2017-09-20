@@ -18,6 +18,20 @@
         <description xml:lang="se">"$1" maŋis galggašii leat blah</description>
       </body>
     </default>
+
+    <default type="Grammar error">
+      <ids>
+        <e id="default"/>
+      </ids>
+      <header>
+        <title xml:lang="en">Grammar error</title>
+        <title xml:lang="se">Čállinmeattáhus</title>
+      </header>
+      <body>
+        <description xml:lang="en">The word "$1" exists in the dictionary, but means something different in this context.</description>
+        <description xml:lang="se">"$1" maŋis galggašii leat blah</description>
+      </body>
+    </default>
   </defaults>
 
   <error id="real-override">
