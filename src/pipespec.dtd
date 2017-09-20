@@ -16,7 +16,6 @@
 <!--
 -->
 
-<!ELEMENT option (label+)>
 <!-- Root element:-->
 <!ELEMENT pipespec (pipeline+)>
 <!ATTLIST pipespec
@@ -57,7 +56,7 @@
 <!-- type and name are *not* unique here; several pipelines may have a pref for e.g. "Oxford comma" -->
 
 
-
+<!ELEMENT option (label+)>
 <!ATTLIST option
           err-id CDATA #REQUIRED
 >
