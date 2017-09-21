@@ -85,18 +85,30 @@ Checker::Checker(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pi
 	: pImpl(new Pipeline(spec, pipename, verbose))
 {
 };
+
 Checker::Checker(const std::unique_ptr<ArPipeSpec>& spec, const std::u16string& pipename, bool verbose)
 	: pImpl(new Pipeline(spec, pipename, verbose))
 {
 };
+
 Checker::~Checker()
 {
 };
+
 void Checker::proc(std::stringstream& input, std::stringstream& output) {
 	pImpl->proc(input, output);
 };
+
 std::vector<Err> Checker::proc_errs(std::stringstream& input) {
 	return pImpl->proc_errs(input);
+};
+
+const OptionSet& Checker::options() const {
+	return pImpl->options;
+};
+
+const ToggleSet& Checker::toggles() const {
+	return pImpl->toggles;
 };
 
 

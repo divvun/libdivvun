@@ -208,6 +208,25 @@ class SuggestCmd: public PipeCmd {
 };
 
 
+
+inline void parsePrefs(OptionSet& options, const pugi::xml_node& cmd) {
+	for (const pugi::xml_node& pref: cmd.children()) {
+		Option o;
+		o.type = pref.attribute("type").value();
+		o.name = pref.attribute("name").value();
+		for (const pugi::xml_node& option: pref.children()) {
+			OptionChoice c;
+			c.errId = option.attribute("err-id").value();
+			for (const pugi::xml_node& label: option.children()) {
+				const auto& lang = label.attribute("xml:lang").value();
+				c.labels[lang] = xml_raw_cdata(label);
+			}
+			o.choices.insert(c);
+		}
+		options.insert(o);
+	}
+};
+
 class Pipeline {
 	public:
 		Pipeline(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool verbose);
@@ -221,9 +240,21 @@ class Pipeline {
 		void proc(std::stringstream& input, std::stringstream& output);
 		std::vector<Err> proc_errs(std::stringstream& input);
 		const bool verbose;
+		// Preferences:
+		const OptionSet options;
+		const ToggleSet toggles;
 	private:
 		std::vector<std::unique_ptr<PipeCmd>> cmds;
-		SuggestCmd* suggestcmd; // the final command, if SuggestCmd, can also do non-stringly-typed output
+		// the final command, if it is SuggestCmd, can also do non-stringly-typed output, see proc_errs
+		const SuggestCmd* suggestcmd;
+		// "Real" constructors here since we can't init const members in constructor bodies:
+		static Pipeline mkPipeline(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool verbose);
+		static Pipeline mkPipeline(const std::unique_ptr<ArPipeSpec>& spec, const std::u16string& pipename, bool verbose);
+		Pipeline (OptionSet options,
+			  std::set<std::string> toggles,
+			  std::vector<std::unique_ptr<PipeCmd>> cmds,
+			  SuggestCmd* suggestcmd,
+			  bool verbose);
 };
 
 } // namespace divvun

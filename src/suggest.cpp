@@ -91,12 +91,7 @@ const msgmap readMessages(pugi::xml_document& doc, pugi::xml_parse_result& resul
 		for (pugi::xml_node def: doc.child("errors").child("defaults").children("default")) {
 			// std::cerr << "defaults" << std::endl;
 			for (pugi::xml_node child: def.child("header").children("title")) {
-				std::ostringstream os;
-				for(const auto& cc: child.children())
-				{
-					cc.print(os, "", pugi::format_raw);
-				}
-				const auto& msg = utf16conv.from_bytes(os.str());
+				const auto& msg = utf16conv.from_bytes(xml_raw_cdata(child));
 				const auto& lang = child.attribute("xml:lang").value();
 				for (pugi::xml_node e: def.child("ids").children("e")) {
 					// e_value assumes we only ever have one PCDATA element here:
@@ -117,12 +112,7 @@ const msgmap readMessages(pugi::xml_document& doc, pugi::xml_parse_result& resul
 			for (pugi::xml_node child: error.child("header").children("title")) {
 				// child_value assumes we only ever have one PCDATA element here:
 				const auto& errtype = utf16conv.from_bytes(error.attribute("id").value());
-				std::ostringstream os;
-				for(const auto& cc: child.children())
-				{
-					cc.print(os, "", pugi::format_raw);
-				}
-				const auto& msg = utf16conv.from_bytes(os.str());
+				const auto& msg = utf16conv.from_bytes(xml_raw_cdata(child));
 				const auto& lang = child.attribute("xml:lang").value();
 				if(msgs[lang].first.count(errtype) != 0) {
 					std::cerr << "WARNING: Duplicate titles for " << error.attribute("id").value() << std::endl;

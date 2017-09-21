@@ -59,6 +59,15 @@ typedef std::unordered_map<std::string, std::pair<id_map, re_id_list> > msgmap;	
 typedef size_t rel_id;
 typedef std::unordered_map<std::string, rel_id> relations;
 
+inline std::string xml_raw_cdata(const pugi::xml_node& label) {
+	std::ostringstream os;
+	for(const auto& cc: label.children())
+	{
+		cc.print(os, "", pugi::format_raw);
+	}
+	return os.str();
+}
+
 struct Reading {
 	bool suggest = false;
 	std::string ana;

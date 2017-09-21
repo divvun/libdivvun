@@ -25,6 +25,7 @@
 
 #include <string>
 #include <set>
+#include <unordered_map>
 
 namespace divvun {
 
@@ -40,6 +41,38 @@ struct Err {
 	std::u16string msg;
 	std::set<std::u16string> rep;
 };
+
+struct OptionChoice {
+		std::string errId;
+		std::unordered_map<std::string, std::string> labels;
+};
+struct OptionChoiceCompare {
+    bool operator() (const OptionChoice& a, const OptionChoice& b) const {
+        return a.errId < b.errId;
+    }
+};
+
+struct Option {
+		std::string type;
+		std::string name;
+		std::set<OptionChoice, OptionChoiceCompare> choices;
+};
+struct OptionCompare {
+    bool operator() (const Option& a, const Option& b) const {
+        return a.name < b.name;
+    }
+};
+
+/**
+ * Radio-button choices (e.g. Oxford comma vs no-Oxford comma)
+ */
+typedef std::set<Option, OptionCompare> OptionSet;
+
+/**
+ * Checkbox choices, ie. hiding certain error types
+ */
+typedef std::set<std::string> ToggleSet;
+
 
 } // namespace divvun
 

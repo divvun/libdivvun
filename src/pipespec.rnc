@@ -22,8 +22,8 @@
 
 #
 
-option = element option { attlist.option, label+ }
 #  Root element:
+
 pipespec = element pipespec { attlist.pipespec, pipeline+ }
 attlist.pipespec &=
 
@@ -61,6 +61,7 @@ attlist.pref &=
   attribute type { text },
   attribute name { text }
 # type and name are *not* unique here; several pipelines may have a pref for e.g. "Oxford comma"
+option = element option { attlist.option, label+ }
 attlist.option &= attribute err-id { text }
 
 Text = (text | em)*

@@ -205,19 +205,42 @@ Ret readArchiveExtract(const std::string& ar_path,
 	return ret;
 }
 
-
-Pipeline::Pipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const std::u16string& pipename, bool v)
-	: verbose(v)
-	, suggestcmd(NULL)
+Pipeline::Pipeline(OptionSet options_,
+		   ToggleSet toggles_,
+		   std::vector<std::unique_ptr<PipeCmd>> cmds_,
+		   SuggestCmd* suggestcmd_,
+		   bool verbose_)
+	: verbose(verbose_)
+	, options(std::move(options_))
+	, toggles(std::move(toggles_))
+	, cmds(std::move(cmds_))
+	, suggestcmd(suggestcmd_)
 {
+};
+
+Pipeline::Pipeline (const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool verbose)
+	: Pipeline(mkPipeline(spec, pipename, verbose))
+{
+};
+
+Pipeline::Pipeline (const std::unique_ptr<ArPipeSpec>& ar_spec, const std::u16string& pipename, bool verbose)
+	: Pipeline(mkPipeline(ar_spec, pipename, verbose))
+{
+};
+
+Pipeline Pipeline::mkPipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const std::u16string& pipename, bool verbose)
+{
+	OptionSet options;
+	ToggleSet toggles;
+	std::vector<std::unique_ptr<PipeCmd>> cmds;
+	SuggestCmd* suggestcmd;
 	auto& spec = ar_spec->spec;
-	const pugi::xml_node& pipeline = spec->pnodes.at(pipename);
 	if (!cg3_init(stdin, stdout, stderr)) {
 		// TODO: Move into a lib-general init function? Or can I call this safely once per CGCmd?
 		throw std::runtime_error("ERROR: Couldn't initialise ICU for vislcg3!");
 	}
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	for (const pugi::xml_node& cmd: pipeline.children()) {
+	for (const pugi::xml_node& cmd: spec->pnodes.at(pipename).children()) {
 		const auto& name = utf16conv.from_bytes(cmd.name());
 		std::vector<std::string> args;
 		for (const pugi::xml_node& arg: cmd.children("arg")) {
@@ -228,10 +251,10 @@ Pipeline::Pipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const std::u16str
 			if(args.size() != 1) {
 				throw std::runtime_error("Wrong number of arguments to <tokenize> command (expected 1), at byte offset " + std::to_string(cmd.offset_debug()));
 			}
-			ArEntryHandler<TokenizeCmd*> f = [v] (const std::string& ar_path, const void* buff, const size_t size) {
+			ArEntryHandler<TokenizeCmd*> f = [verbose] (const std::string& ar_path, const void* buff, const size_t size) {
 				OneShotReadBuf osrb((char*)buff, size);
 				std::istream is(&osrb);
-				return new TokenizeCmd(is, v);
+				return new TokenizeCmd(is, verbose);
 			};
 			TokenizeCmd* s = readArchiveExtract(ar_spec->ar_path, args[0], f);
 			cmds.emplace_back(s);
@@ -240,8 +263,8 @@ Pipeline::Pipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const std::u16str
 			if(args.size() != 1) {
 				throw std::runtime_error("Wrong number of arguments to <cg> command (expected 1), at byte offset " + std::to_string(cmd.offset_debug()));
 			}
-			ArEntryHandler<CGCmd*> f = [v] (const std::string& ar_path, const void* buff, const size_t size) {
-				return new CGCmd((char*)buff, size, v);
+			ArEntryHandler<CGCmd*> f = [verbose] (const std::string& ar_path, const void* buff, const size_t size) {
+				return new CGCmd((char*)buff, size, verbose);
 			};
 			CGCmd* s = readArchiveExtract(ar_spec->ar_path, args[0], f);
 			cmds.emplace_back(s);
@@ -276,25 +299,27 @@ Pipeline::Pipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const std::u16str
 			// cmds.emplace_back(new ShCmd(prog, args, verbose));
 		}
 		else if(name == u"prefs") {
-			std::cerr << "\033[0;35mTODO: implement <prefs>\033[0m" << std::endl;
+			parsePrefs(options, cmd);
 		}
 		else {
 			throw std::runtime_error("Unknown command '" + utf16conv.to_bytes(name) + "'");
 		}
 	}
+	return Pipeline(std::move(options), std::move(toggles), std::move(cmds), suggestcmd, verbose);
 }
 
-Pipeline::Pipeline(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool v)
-	: verbose(v)
-	, suggestcmd(NULL)
+Pipeline Pipeline::mkPipeline(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool verbose)
 {
-	const pugi::xml_node& pipeline = spec->pnodes.at(pipename);
+	OptionSet options;
+	ToggleSet toggles;
+	std::vector<std::unique_ptr<PipeCmd>> cmds;
+	SuggestCmd* suggestcmd;
 	if (!cg3_init(stdin, stdout, stderr)) {
 		// TODO: Move into a lib-general init function? Or can I call this safely once per CGCmd?
 		throw std::runtime_error("ERROR: Couldn't initialise ICU for vislcg3!");
 	}
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	for (const pugi::xml_node& cmd: pipeline.children()) {
+	for (const pugi::xml_node& cmd: spec->pnodes.at(pipename).children()) {
 		const auto& name = utf16conv.from_bytes(cmd.name());
 		std::vector<std::string> args;
 		for (const pugi::xml_node& arg: cmd.children("arg")) {
@@ -333,13 +358,15 @@ Pipeline::Pipeline(const std::unique_ptr<PipeSpec>& spec, const std::u16string& 
 			// cmds.emplace_back(new ShCmd(prog, args, verbose));
 		}
 		else if(name == u"prefs") {
-			std::cerr << "\033[0;35mTODO: implement <prefs>\033[0m" << std::endl;
+			parsePrefs(options, cmd);
 		}
 		else {
 			throw std::runtime_error("Unknown command '" + utf16conv.to_bytes(name) + "'");
 		}
 	}
+	return Pipeline(std::move(options), std::move(toggles), std::move(cmds), suggestcmd, verbose);
 }
+
 void Pipeline::proc(std::stringstream& input, std::stringstream& output) {
 	std::stringstream cur_in;
 	std::stringstream cur_out(input.str());
@@ -352,6 +379,7 @@ void Pipeline::proc(std::stringstream& input, std::stringstream& output) {
 	}
 	output << cur_out.str();
 }
+
 std::vector<Err> Pipeline::proc_errs(std::stringstream& input) {
 	if(suggestcmd == NULL || cmds.empty() || suggestcmd != cmds.back().get()) {
 		throw std::runtime_error("Can't create cohorts without a SuggestCmd as the final Pipeline command!");
