@@ -23,22 +23,28 @@
 #include "pipeline.hpp"
 #include "cxxopts.hpp"
 
+using divvun::variant;
+using divvun::Pipeline;
 
-int runXml(const std::string& specpath, const std::u16string& pipename, bool verbose) {
+
+variant<int, Pipeline> getPipelineXml(const std::string& path, const std::u16string& pipename, bool verbose) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	const auto& spec = divvun::readPipeSpec(specpath);
+	const auto& spec = divvun::readPipeSpec(path);
 	if(spec->pnodes.find(pipename) == spec->pnodes.end()) {
-		std::cerr << "ERROR: Couldn't find pipe " << utf16conv.to_bytes(pipename) << " in " << specpath << std::endl;
+		std::cerr << "ERROR: Couldn't find pipe " << utf16conv.to_bytes(pipename) << " in " << path << std::endl;
 		return EXIT_FAILURE;
 	}
-	auto pipeline = divvun::Pipeline(spec, pipename, verbose);
-	for (std::string line; std::getline(std::cin, line);) {
-		std::stringstream pipe_in(line);
-		std::stringstream pipe_out;
-		pipeline.proc(pipe_in, pipe_out);
-		std::cout << pipe_out.str() << std::endl;
+	return Pipeline(spec, pipename, verbose);
+}
+
+variant<int, Pipeline> getPipelineAr(const std::string& path, const std::u16string& pipename, bool verbose) {
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	const auto& ar_spec = divvun::readArPipeSpec(path);
+	if(ar_spec->spec->pnodes.find(pipename) == ar_spec->spec->pnodes.end()) {
+		std::cerr << "ERROR: Couldn't find pipe " << utf16conv.to_bytes(pipename) << " in " << path << std::endl;
+		return EXIT_FAILURE;
 	}
-	return EXIT_SUCCESS;
+	return Pipeline(ar_spec, pipename, verbose);
 }
 
 int printNamesXml(const std::string& path, bool verbose) {
@@ -48,18 +54,6 @@ int printNamesXml(const std::string& path, bool verbose) {
 	for(const auto& p : spec->pnodes) {
 		const auto& name = utf16conv.to_bytes(p.first.c_str());
 		std::cout << name << std::endl;
-	}
-	return EXIT_SUCCESS;
-}
-
-int runAr(const std::string& path, const std::u16string& pipename, bool verbose) {
-	const auto& ar_spec = divvun::readArPipeSpec(path);
-	auto ar_pipeline = divvun::Pipeline(ar_spec, pipename, verbose);
-	for (std::string line; std::getline(std::cin, line);) {
-		std::stringstream pipe_in(line);
-		std::stringstream pipe_out;
-		ar_pipeline.proc(pipe_in, pipe_out);
-		std::cout << pipe_out.str() << std::endl;
 	}
 	return EXIT_SUCCESS;
 }
@@ -75,12 +69,40 @@ int printNamesAr(const std::string& path, bool verbose) {
 	return EXIT_SUCCESS;
 }
 
+int run(Pipeline& pipeline) {
+	for (std::string line; std::getline(std::cin, line);) {
+		std::stringstream pipe_in(line);
+		std::stringstream pipe_out;
+		pipeline.proc(pipe_in, pipe_out);
+		std::cout << pipe_out.str() << std::endl;
+	}
+	return EXIT_SUCCESS;
+}
+
+void printPrefs(const Pipeline& pipeline) {
+	std::cout << "Toggles:" << std::endl;
+	for(const auto& t : pipeline.toggles) {
+		std::cout << "- [ ] " << t << std::endl;
+	}
+	std::cout << "Options:" << std::endl;
+	for(const divvun::Option& o : pipeline.options) {
+		std::cout << "- " << o.name << " (" << o.type << "):" << std::endl;
+		for(const auto& c : o.choices) {
+			std::cout << "  ( ) " << c.errId << " \t";
+			for(const auto& l : c.labels) {
+				std::cout << l.second << " (" << l.first << ") \t";
+			}
+			std::cout << std::endl;
+		}
+	}
+}
+
 int main(int argc, char ** argv)
 {
 	try
 	{
 		std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-		cxxopts::Options options(argv[0], "BIN - generate grammar checker suggestions from a CG stream");
+		cxxopts::Options options(argv[0], " - generate grammar checker suggestions from a CG stream");
 
 		options.add_options()
 			("s,spec", "Pipeline XML specification", cxxopts::value<std::string>(), "FILE")
@@ -89,16 +111,17 @@ int main(int argc, char ** argv)
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
 			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 if --json).")
+			("p,preferences", "Print the preferences defined by the given pipeline")
 			("v,verbose", "Be verbose")
 			("h,help", "Print help")
 			;
 
 		std::vector<std::string> pos = {
-			"spec",
-			"archive",
-			"variant"
-			//"input"
-			//"output"
+			// "spec",
+			// "archive",
+			// "variant"
+			// "input",
+			// "output"
 		};
 		options.parse_positional(pos);
 		options.parse(argc, argv);
@@ -126,7 +149,17 @@ int main(int argc, char ** argv)
 			}
 			else {
 				const auto& pipename = utf16conv.from_bytes(options["variant"].as<std::string>());
-				return runXml(specfile, pipename, verbose);
+				return getPipelineXml(specfile, pipename, verbose).match(
+					[]       (int r) { return r; },
+					[options](Pipeline& p){
+						if(options.count("preferences")) {
+							printPrefs(p);
+						}
+						else {
+							run(p);
+						}
+						return EXIT_SUCCESS;
+					});
 			}
 		}
 		else if(options.count("archive")) {
@@ -139,14 +172,23 @@ int main(int argc, char ** argv)
 			}
 			else {
 				const auto& pipename = utf16conv.from_bytes(options["variant"].as<std::string>());
-				return runAr(archive, pipename, verbose);
+				return getPipelineAr(archive, pipename, verbose).match(
+					[]       (int r) { return r; },
+					[options](Pipeline& p){
+						if(options.count("preferences")) {
+							printPrefs(p);
+						}
+						else {
+							run(p);
+						}
+						return EXIT_SUCCESS;
+					});
 			}
 		}
 		else {
 			std::cerr << "ERROR: Pipespec file required" << std::endl;
 			return EXIT_FAILURE;
 		}
-
 	}
 	catch (const cxxopts::OptionException& e)
 	{

@@ -14,17 +14,11 @@
     <prefs>
       <pref type="Punctuation" name="Tusenskilje">
         <option err-id="tusen-mellom">
-          <label xml:lang="nn">
-            Eg vil ha Mellomrom mellom 000, skjul &amp;tusen-mellom
-          </label>
+          <label xml:lang="nn">Eg vil ha mellomrom mellom 000</label>
         </option>
         <option err-id="tusen-punktum">
-          <label xml:lang="nn">
-            Punktum
-          </label>
-          <label xml:lang="se">
-            +PUNCT
-          </label>
+          <label xml:lang="nn">Eg vil ha punktum mellom 000</label>
+          <label xml:lang="se">makkár čuokkis</label>
         </option>
       </pref>
     </prefs>

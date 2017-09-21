@@ -219,7 +219,8 @@ inline void parsePrefs(OptionSet& options, const pugi::xml_node& cmd) {
 			c.errId = option.attribute("err-id").value();
 			for (const pugi::xml_node& label: option.children()) {
 				const auto& lang = label.attribute("xml:lang").value();
-				c.labels[lang] = xml_raw_cdata(label);
+				// c.labels[lang] = xml_raw_cdata(label);
+				c.labels[lang] = label.text().get();
 			}
 			o.choices.insert(c);
 		}
