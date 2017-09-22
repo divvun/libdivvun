@@ -231,7 +231,7 @@ Pipeline Pipeline::mkPipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const 
 {
 	LocalisedPrefs prefs;
 	std::vector<std::unique_ptr<PipeCmd>> cmds;
-	SuggestCmd* suggestcmd;
+	SuggestCmd* suggestcmd = NULL;
 	auto& spec = ar_spec->spec;
 	if (!cg3_init(stdin, stdout, stderr)) {
 		// TODO: Move into a lib-general init function? Or can I call this safely once per CGCmd?
@@ -311,7 +311,7 @@ Pipeline Pipeline::mkPipeline(const std::unique_ptr<PipeSpec>& spec, const std::
 {
 	LocalisedPrefs prefs;
 	std::vector<std::unique_ptr<PipeCmd>> cmds;
-	SuggestCmd* suggestcmd;
+	SuggestCmd* suggestcmd = NULL;
 	if (!cg3_init(stdin, stdout, stderr)) {
 		// TODO: Move into a lib-general init function? Or can I call this safely once per CGCmd?
 		throw std::runtime_error("ERROR: Couldn't initialise ICU for vislcg3!");
