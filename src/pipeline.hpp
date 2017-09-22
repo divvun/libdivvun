@@ -202,31 +202,49 @@ class SuggestCmd: public PipeCmd {
 		void run(std::stringstream& input, std::stringstream& output) const override;
 		std::vector<Err> run_errs(std::stringstream& input) const;
 		~SuggestCmd() {};
+		const msgmap msgs;
 	private:
 		std::unique_ptr<const hfst::HfstTransducer> generator;
-		divvun::msgmap msgs;
 };
 
 
 
-inline void parsePrefs(OptionSet& options, const pugi::xml_node& cmd) {
+inline void parsePrefs(LocalisedPrefs& prefs, const pugi::xml_node& cmd) {
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	for (const pugi::xml_node& pref: cmd.children()) {
-		Option o;
-		o.type = pref.attribute("type").value();
-		o.name = pref.attribute("name").value();
+		const auto type = pref.attribute("type").value();
+		const auto name = pref.attribute("name").value();
+		std::unordered_map<lang, std::unordered_map<err_id, msg>> lems;
 		for (const pugi::xml_node& option: pref.children()) {
-			OptionChoice c;
-			c.errId = option.attribute("err-id").value();
+			const auto errId = utf16conv.from_bytes(option.attribute("err-id").value());
 			for (const pugi::xml_node& label: option.children()) {
-				const auto& lang = label.attribute("xml:lang").value();
-				// c.labels[lang] = xml_raw_cdata(label);
-				c.labels[lang] = label.text().get();
+				const auto lang = label.attribute("xml:lang").value();
+				const auto msg = utf16conv.from_bytes(label.text().get()); // or xml_raw_cdata(label);
+				lems[lang][errId] = msg;
 			}
-			o.choices.insert(c);
 		}
-		options.insert(o);
+		for(const auto& lem : lems) {
+			const lang& lang = lem.first;
+			Option o;
+			o.type = type;
+			o.name = name;
+			for(const auto& em : lem.second) {
+				o.choices[em.first] = em.second;
+			}
+			prefs[lang].options.insert(o);
+		}
 	}
 };
+
+inline void mergePrefsFromMsgs(LocalisedPrefs& prefs, const msgmap& msgs) {
+	for(const auto& lm : msgs) {
+		const lang& lang = lm.first;
+		const ToggleIds& tids = lm.second.first;
+		const ToggleRes& tres = lm.second.second;
+		prefs[lang].toggleIds.insert(tids.begin(), tids.end());
+		prefs[lang].toggleRes.insert(prefs[lang].toggleRes.end(), tres.begin(), tres.end());
+	}
+}
 
 class Pipeline {
 	public:
@@ -242,8 +260,7 @@ class Pipeline {
 		std::vector<Err> proc_errs(std::stringstream& input);
 		const bool verbose;
 		// Preferences:
-		const OptionSet options;
-		const ToggleSet toggles;
+		const LocalisedPrefs prefs;
 	private:
 		std::vector<std::unique_ptr<PipeCmd>> cmds;
 		// the final command, if it is SuggestCmd, can also do non-stringly-typed output, see proc_errs
@@ -251,8 +268,7 @@ class Pipeline {
 		// "Real" constructors here since we can't init const members in constructor bodies:
 		static Pipeline mkPipeline(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool verbose);
 		static Pipeline mkPipeline(const std::unique_ptr<ArPipeSpec>& spec, const std::u16string& pipename, bool verbose);
-		Pipeline (OptionSet options,
-			  std::set<std::string> toggles,
+		Pipeline (LocalisedPrefs prefs,
 			  std::vector<std::unique_ptr<PipeCmd>> cmds,
 			  SuggestCmd* suggestcmd,
 			  bool verbose);

@@ -72,8 +72,7 @@ class Checker {
 		~Checker();
                 void proc(std::stringstream& input, std::stringstream& output);
 		std::vector<Err> proc_errs(std::stringstream& input);
-		const OptionSet& options() const;
-		const ToggleSet& toggles() const;
+		const LocalisedPrefs& prefs() const;
 	private:
 		const std::unique_ptr<Pipeline> pImpl;
 };

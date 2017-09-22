@@ -88,7 +88,7 @@ void CGCmd::run(std::stringstream& input, std::stringstream& output) const
 
 
 SuggestCmd::SuggestCmd (const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose)
-	: generator(generator), msgs(msgs)
+	: msgs(msgs), generator(generator)
 {
 	if (!generator) {
 		throw std::runtime_error("ERROR: Suggest command couldn't read generator");
@@ -98,8 +98,8 @@ SuggestCmd::SuggestCmd (const hfst::HfstTransducer* generator, divvun::msgmap ms
 	}
 }
 SuggestCmd::SuggestCmd (const std::string& gen_path, const std::string& msg_path, bool verbose)
-	: generator(divvun::readTransducer(gen_path.c_str()))
-	, msgs(divvun::readMessages(msg_path))
+	: msgs(divvun::readMessages(msg_path))
+	, generator(divvun::readTransducer(gen_path.c_str()))
 {
 	if (!generator) {
 		throw std::runtime_error("ERROR: Suggest command couldn't read transducer " + gen_path);
@@ -116,6 +116,7 @@ std::vector<Err> SuggestCmd::run_errs(std::stringstream& input) const
 {
 	return divvun::run_errs(input, *generator, msgs);
 }
+
 
 
 
@@ -205,14 +206,12 @@ Ret readArchiveExtract(const std::string& ar_path,
 	return ret;
 }
 
-Pipeline::Pipeline(OptionSet options_,
-		   ToggleSet toggles_,
+Pipeline::Pipeline(LocalisedPrefs prefs_,
 		   std::vector<std::unique_ptr<PipeCmd>> cmds_,
 		   SuggestCmd* suggestcmd_,
 		   bool verbose_)
 	: verbose(verbose_)
-	, options(std::move(options_))
-	, toggles(std::move(toggles_))
+	, prefs(std::move(prefs_))
 	, cmds(std::move(cmds_))
 	, suggestcmd(suggestcmd_)
 {
@@ -230,8 +229,7 @@ Pipeline::Pipeline (const std::unique_ptr<ArPipeSpec>& ar_spec, const std::u16st
 
 Pipeline Pipeline::mkPipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const std::u16string& pipename, bool verbose)
 {
-	OptionSet options;
-	ToggleSet toggles;
+	LocalisedPrefs prefs;
 	std::vector<std::unique_ptr<PipeCmd>> cmds;
 	SuggestCmd* suggestcmd;
 	auto& spec = ar_spec->spec;
@@ -291,6 +289,7 @@ Pipeline Pipeline::mkPipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const 
 						 readArchiveExtract(ar_spec->ar_path, args[1], procMsgs),
 						 verbose);
 			cmds.emplace_back(s);
+			mergePrefsFromMsgs(prefs, s->msgs);
 			suggestcmd = s;
 		}
 		else if(name == u"sh") {
@@ -299,19 +298,18 @@ Pipeline Pipeline::mkPipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const 
 			// cmds.emplace_back(new ShCmd(prog, args, verbose));
 		}
 		else if(name == u"prefs") {
-			parsePrefs(options, cmd);
+			parsePrefs(prefs, cmd);
 		}
 		else {
 			throw std::runtime_error("Unknown command '" + utf16conv.to_bytes(name) + "'");
 		}
 	}
-	return Pipeline(std::move(options), std::move(toggles), std::move(cmds), suggestcmd, verbose);
+	return Pipeline(std::move(prefs), std::move(cmds), suggestcmd, verbose);
 }
 
 Pipeline Pipeline::mkPipeline(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool verbose)
 {
-	OptionSet options;
-	ToggleSet toggles;
+	LocalisedPrefs prefs;
 	std::vector<std::unique_ptr<PipeCmd>> cmds;
 	SuggestCmd* suggestcmd;
 	if (!cg3_init(stdin, stdout, stderr)) {
@@ -350,6 +348,7 @@ Pipeline Pipeline::mkPipeline(const std::unique_ptr<PipeSpec>& spec, const std::
 			}
 			auto *s = new SuggestCmd(args[0], args[1], verbose);
 			cmds.emplace_back(s);
+			mergePrefsFromMsgs(prefs, s->msgs);
 			suggestcmd = s;
 		}
 		else if(name == u"sh") {
@@ -358,13 +357,13 @@ Pipeline Pipeline::mkPipeline(const std::unique_ptr<PipeSpec>& spec, const std::
 			// cmds.emplace_back(new ShCmd(prog, args, verbose));
 		}
 		else if(name == u"prefs") {
-			parsePrefs(options, cmd);
+			parsePrefs(prefs, cmd);
 		}
 		else {
 			throw std::runtime_error("Unknown command '" + utf16conv.to_bytes(name) + "'");
 		}
 	}
-	return Pipeline(std::move(options), std::move(toggles), std::move(cmds), suggestcmd, verbose);
+	return Pipeline(std::move(prefs), std::move(cmds), suggestcmd, verbose);
 }
 
 void Pipeline::proc(std::stringstream& input, std::stringstream& output) {

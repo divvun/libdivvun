@@ -80,19 +80,26 @@ int run(Pipeline& pipeline) {
 }
 
 void printPrefs(const Pipeline& pipeline) {
-	std::cout << "Toggles:" << std::endl;
-	for(const auto& t : pipeline.toggles) {
-		std::cout << "- [ ] " << t << std::endl;
-	}
-	std::cout << "Options:" << std::endl;
-	for(const divvun::Option& o : pipeline.options) {
-		std::cout << "- " << o.name << " (" << o.type << "):" << std::endl;
-		for(const auto& c : o.choices) {
-			std::cout << "  ( ) " << c.errId << " \t";
-			for(const auto& l : c.labels) {
-				std::cout << l.second << " (" << l.first << ") \t";
+	using namespace divvun;
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	std::cout << "== Available preferences ==" << std::endl;
+	for(const auto& lp : pipeline.prefs) {
+		const lang& lang = lp.first;
+		std::cout << std::endl << "=== with messages localised for '" << lang << "' ===" << std::endl;
+		const Prefs& prefs = lp.second;
+		std::cout << "==== Toggles: ====" << std::endl;
+		for(const auto& id : prefs.toggleIds) {
+			std::cout << "- [ ] &" << utf16conv.to_bytes(id.first) << " \t" << utf16conv.to_bytes(id.second) << std::endl;
+		}
+		for(const auto& re : prefs.toggleRes) {
+			std::cout << "- [ ] &[regex] \t" << utf16conv.to_bytes(re.second) << std::endl;
+		}
+		std::cout << "==== Options: ====" << std::endl;
+		for(const Option& o : prefs.options) {
+			std::cout << "- " << o.name << " (" << o.type << "):" << std::endl;
+			for(const auto& c : o.choices) {
+				std::cout << "- ( ) &" << utf16conv.to_bytes(c.first) << " \t" << utf16conv.to_bytes(c.second) << std::endl;
 			}
-			std::cout << std::endl;
 		}
 	}
 }

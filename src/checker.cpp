@@ -103,12 +103,8 @@ std::vector<Err> Checker::proc_errs(std::stringstream& input) {
 	return pImpl->proc_errs(input);
 };
 
-const OptionSet& Checker::options() const {
-	return pImpl->options;
-};
-
-const ToggleSet& Checker::toggles() const {
-	return pImpl->toggles;
+const LocalisedPrefs& Checker::prefs() const {
+	return pImpl->prefs;
 };
 
 
