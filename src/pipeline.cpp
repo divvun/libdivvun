@@ -110,11 +110,15 @@ SuggestCmd::SuggestCmd (const std::string& gen_path, const std::string& msg_path
 }
 void SuggestCmd::run(std::stringstream& input, std::stringstream& output) const
 {
-	divvun::run(input, output, *generator, msgs, true);
+	divvun::run(input, output, *generator, msgs, true, ignores);
 }
 std::vector<Err> SuggestCmd::run_errs(std::stringstream& input) const
 {
-	return divvun::run_errs(input, *generator, msgs);
+	return divvun::run_errs(input, *generator, msgs, ignores);
+}
+void SuggestCmd::setIgnores(const std::set<err_id>& ignores_)
+{
+	ignores = ignores_;
 }
 
 
@@ -395,6 +399,14 @@ std::vector<Err> Pipeline::proc_errs(std::stringstream& input) {
 	}
 	cur_in.swap(cur_out);
 	return suggestcmd->run_errs(cur_in);
+}
+void Pipeline::setIgnores(const std::set<err_id>& ignores) {
+	if(suggestcmd != NULL) {
+		suggestcmd->setIgnores(ignores);
+	}
+	else {
+		throw std::runtime_error("ERROR: Can't set ignores when last command of pipeline is not a SuggestCmd");
+	}
 }
 
 std::unique_ptr<PipeSpec> readPipeSpec(const std::string& file) {

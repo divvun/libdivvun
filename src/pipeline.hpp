@@ -202,9 +202,11 @@ class SuggestCmd: public PipeCmd {
 		void run(std::stringstream& input, std::stringstream& output) const override;
 		std::vector<Err> run_errs(std::stringstream& input) const;
 		~SuggestCmd() {};
+		void setIgnores(const std::set<err_id>& ignores);
 		const msgmap msgs;
 	private:
 		std::unique_ptr<const hfst::HfstTransducer> generator;
+		std::set<err_id> ignores;
 };
 
 
@@ -260,11 +262,12 @@ class Pipeline {
 		std::vector<Err> proc_errs(std::stringstream& input);
 		const bool verbose;
 		// Preferences:
+		void setIgnores(const std::set<err_id>& ignores);
 		const LocalisedPrefs prefs;
 	private:
 		std::vector<std::unique_ptr<PipeCmd>> cmds;
 		// the final command, if it is SuggestCmd, can also do non-stringly-typed output, see proc_errs
-		const SuggestCmd* suggestcmd;
+		SuggestCmd* suggestcmd;
 		// "Real" constructors here since we can't init const members in constructor bodies:
 		static Pipeline mkPipeline(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool verbose);
 		static Pipeline mkPipeline(const std::unique_ptr<ArPipeSpec>& spec, const std::u16string& pipename, bool verbose);

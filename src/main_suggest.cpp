@@ -109,7 +109,8 @@ int main(int argc, char ** argv)
 		}
 #endif
 
-		divvun::run(std::cin, std::cout, *t, m, json);
+		std::set<divvun::err_id> ignores; // TODO from args!
+		divvun::run(std::cin, std::cout, *t, m, json, ignores);
 	}
 	catch (const cxxopts::OptionException& e)
 	{

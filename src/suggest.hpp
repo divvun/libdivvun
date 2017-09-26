@@ -73,7 +73,7 @@ struct Reading {
 
 struct Cohort {
 	std::u16string form;
-	std::map<std::u16string, UStringSet> err;
+	std::map<err_id, UStringSet> err;
 	size_t pos;
 	rel_id id;
 	std::vector<Reading> readings;
@@ -102,9 +102,20 @@ struct Nothing
 {
 };
 
-std::vector<Err> run_errs(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs);
+inline variant<Nothing, std::pair<err_id, UStringSet>> pickErr(const std::map<std::u16string, UStringSet>& err,
+							       const std::set<err_id>& ignores) {
+	for(const auto& it : err) {
+		if(ignores.find(it.first) == ignores.end()) {
+			// TODO: currently we just pick the first unignored if there are several error types:
+			return it;
+		}
+	}
+	return Nothing();
+}
 
-void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& m, bool json);
+std::vector<Err> run_errs(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs, const std::set<err_id>& ignores);
+
+void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& m, bool json, const std::set<err_id>& ignores);
 
 const hfst::HfstTransducer *readTransducer(const std::string& file);
 const hfst::HfstTransducer *readTransducer(const char* buff, const size_t size);

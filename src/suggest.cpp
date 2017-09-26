@@ -361,18 +361,18 @@ const Cohort DEFAULT_COHORT = {
 	{}, {}, 0, 0, {}
 };
 
-variant<Nothing, Err> cohort_errs(const Cohort& c,
+variant<Nothing, Err> cohort_errs(const std::pair<err_id, UStringSet>& err,
+				  const Cohort& c,
 				  const Sentence& sentence,
 				  const hfst::HfstTransducer& t,
-				  const msgmap& msgs)
+				  const msgmap& msgs
+				  )
 {
 	if(cohort_empty(c) || c.err.empty()) {
 		return Nothing();
 	}
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	// TODO: currently we just pick one if there are several error types:
-	const auto& err = c.err.begin();
-	const auto& errtype = err->first;
+	const auto& errId = err.first;
 	std::u16string msg;
 	// TODO: locale, how? One process per locale (command-line-arg) or print all messages?
 	std::string locale = "se";
@@ -381,13 +381,13 @@ variant<Nothing, Err> cohort_errs(const Cohort& c,
 	}
 	else {
 		const auto& lmsgs = msgs.at(locale);
-		if(lmsgs.first.count(errtype) != 0) {
-			msg = lmsgs.first.at(errtype);
+		if(lmsgs.first.count(errId) != 0) {
+			msg = lmsgs.first.at(errId);
 		}
 		else {
 			for(const auto& p : lmsgs.second) {
 				std::match_results<const char*> result;
-				const auto& et = utf16conv.to_bytes(errtype.c_str());
+				const auto& et = utf16conv.to_bytes(errId.c_str());
 				std::regex_match(et.c_str(), result, p.first);
 				if(!result.empty()
 				   && // Only consider full matches:
@@ -395,14 +395,14 @@ variant<Nothing, Err> cohort_errs(const Cohort& c,
 					msg = p.second;
 					break;
 					// TODO: cache results? but then no more constness:
-					// lmsgs.first.at(errtype) = p.second;
+					// lmsgs.first.at(errId) = p.second;
 				}
 
 			}
 		}
 		if(msg.empty()) {
-			std::cerr << "WARNING: No message for " << json::str(err->first) << std::endl;
-			msg = errtype;
+			std::cerr << "WARNING: No message for " << json::str(errId) << std::endl;
+			msg = errId;
 		}
 		// TODO: Make suitable structure on creating msgmap instead?
 		replaceAll(msg, u"$1", c.form);
@@ -434,12 +434,12 @@ variant<Nothing, Err> cohort_errs(const Cohort& c,
 	}
 	return Err {
 		c.form,
-		c.pos,
-		c.pos+c.form.size(),
-		err->first,
-		msg,
-		err->second,
-	};
+			c.pos,
+			c.pos+c.form.size(),
+			errId,
+			msg,
+			err.second,
+			};
 }
 
 /**
@@ -585,21 +585,26 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 	return sentence;
 }
 
-std::vector<Err> run_errs(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs)
+std::vector<Err> run_errs(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs, const std::set<err_id>& ignores)
 {
 	Sentence sentence = run_sentence(is, t, msgs);
 
 	std::vector<Err> errs;
 	for(const auto& c : sentence.cohorts) {
-		const auto& ret = cohort_errs(c, sentence, t, msgs);
-		ret.match([]      (Nothing) {},
-			  [&errs] (Err e)   { errs.push_back(e); });
+		pickErr(c.err, ignores).match(
+			[]      (Nothing) {},
+			[&errs, &c, &sentence, &t, &msgs] (std::pair<err_id, UStringSet>& err)
+			{
+				cohort_errs(err, c, sentence, t, msgs).match(
+					[]      (Nothing) {},
+					[&errs] (Err e)   { errs.push_back(e); });
+			});
 	}
 	return errs;
 }
 
 
-RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& msgs)
+RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& msgs, const std::set<err_id>& ignores)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	json::sanity_test();
@@ -611,20 +616,25 @@ RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer
 	   << "[";
 	bool wantsep = false;
 	for(const auto& c : sentence.cohorts) {
-		wantsep = cohort_errs(c, sentence, t, msgs).match(
-			[     wantsep] (Nothing) { return wantsep; },
-			[&os, wantsep] (Err e)   {
-				if(wantsep) {
-					os << ",";
-				}
-				os << "[" << json::str(e.form)
-				<< "," << std::to_string(e.beg)
-				<< "," << std::to_string(e.end)
-				<< "," << json::str(e.err)
-				<< "," << json::str(e.msg)
-				<< "," << json::str_arr(e.rep)
-				<< "]";
-				return true;
+		pickErr(c.err, ignores).match(
+			[]      (Nothing) {},
+			[&os, &wantsep, &c, &sentence, &t, &msgs] (std::pair<err_id, UStringSet>& err)
+			{
+				cohort_errs(err, c, sentence, t, msgs).match(
+					[] (Nothing) {},
+					[&os, &wantsep] (Err& e)   {
+						if(wantsep) {
+							os << ",";
+						}
+						os << "[" << json::str(e.form)
+						   << "," << std::to_string(e.beg)
+						   << "," << std::to_string(e.end)
+						   << "," << json::str(e.err)
+						   << "," << json::str(e.msg)
+						   << "," << json::str_arr(e.rep)
+						   << "]";
+						wantsep = true;
+					});
 			});
 	}
 	os << "]"
@@ -692,13 +702,13 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 	}
 }
 
-void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& m, bool json)
+void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& m, bool json, const std::set<err_id>& ignores)
 {
 	if(json) {
-		while(run_json(is, os, t, m) == flushing);
+		while(run_json(is, os, t, m, ignores) == flushing);
 	}
 	else {
-		run_cg(is, os, t);
+		run_cg(is, os, t); // ignores ignores
 	}
 }
 
