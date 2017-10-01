@@ -12,7 +12,7 @@ if command -V wget >/dev/null 2>/dev/null; then
 else
     curl "${url}" -O "${pkg}".tar.gz
 fi
-tar xzvf "${pkg}".tar.gz
+tar xzf "${pkg}".tar.gz
 ( cd "${pkg}" && cmake scripts && make )
 
 ./autogen.sh
