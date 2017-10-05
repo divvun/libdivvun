@@ -85,3 +85,4 @@ old/
 /examples/using-checker-lib-from-cpp/src/Makefile.in
 /examples/using-checker-lib-from-cpp/src/using-checker
 /examples/using-checker-lib-from-cpp/src/using_checker-using-checker.o
+/src/divvun-cgspell
