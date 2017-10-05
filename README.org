@@ -9,7 +9,7 @@
 
 * Description
 
-This repository contains two main programs:
+This repository contains three main programs:
 
 The =divvun-gramcheck= program, opens a grammar checker pipeline XML
 specification and lets you run grammar checking on strings. It can
@@ -25,6 +25,10 @@ stage of a grammar checker pipeline.
 
 The main output format of =divvun-suggest= is JSON, although it can
 also simply annotate readings in CG stream format.
+
+
+The =divvun-cgspell= program spells unknown word forms from Constraint
+Grammar format readings, adding them as new readings.
 
 
 There are also some helper programs for validating XML
@@ -71,6 +75,13 @@ that library.
 
 Now when building, pass =--enable-checker= to configure.
 
+** If you also want =divvun-cgspell=
+
+- hfst-ospell-dev >=0.4.5 (compiled with either libxml or tinyxml)
+
+You can pass =--enable-cgspell= to configure to get an error if any
+=divvun-cgspell= dependencies are missing.
+
 * Building
 
 #+BEGIN_SRC sh
@@ -94,6 +105,8 @@ make install # with sudo if you didn't specify a --prefix to ./configure
 
 * Usage
 
+** =divvun-suggest=
+
 =divvun-suggest= takes two arguments: a generator FST (in HFST
 optimised lookup format), and an error message XML file (see [[https://gtsvn.uit.no/langtech/trunk/langs/sme/tools/grammarcheckers/errors.xml][the one
 for Northern Saami]] for an example), with input/output as stdin and
@@ -111,7 +124,26 @@ echo words go here | hfst-tokenise --giella-cg tokeniser.pmhfst | … | vislcg3 
   | divvun-suggest --json generator-gt-norm.hfstol errors.xml
 #+END_SRC
 
+** =divvun-cgspell=
 
+=divvun-cgspell= takes one file argument: a zhfst speller archive as
+used by [[https://github.com/hfst/hfst-ospell/][hfst-ospell]]. There are some options for limiting suggestions
+too, see =--help=. You'll probably want to use =--limit=.
+
+#+BEGIN_SRC sh
+src/divvun-cgspell --limit 5 se.zhfst < input > output
+#+END_SRC
+
+
+More typically, it'll be in a pipeline before/after various runs of =vislcg3=:
+
+#+BEGIN_SRC sh
+echo words go here | hfst-tokenise --giella-cg tokeniser.pmhfst | … | vislcg3 … \
+  | src/divvun-cgspell --limit 5 se.zhfst | vislcg3 …
+#+END_SRC
+
+
+** =divvun-checker=
 
 =divvun-checker= is an example command-line interface to =libdivvun=.
 You can use it to test a =pipespec.xml= or a zip archive containing
