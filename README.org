@@ -279,7 +279,7 @@ https://github.com/hfst/hfst/issues/366. A workaround is to edit
 =@GLIB_CFLAGS@=.
 
 
-* Progress [34/45]
+* Progress [37/45]
 
 =divvun-suggest= should:
 
@@ -327,12 +327,12 @@ https://github.com/hfst/hfst/issues/366. A workaround is to edit
 
 =divvun-cgspell= should:
 
-- [ ] load a zhfst bin (or?)
+- [X] load a zhfst bin
+- [ ] optionally load errmodel.hfst and acceptor.hfst instead of zhfst
 - [ ] Read a word per line and spell with CG output
-- [ ] Read CG input and spell unknown words by adding them as new readings
+- [X] Read CG input and spell unknown words by adding them as new readings
 - [ ] Read CG input and spell all words by adding them as new readings
-- [ ] do NUL-flushing, outputting <STREAMCMD:FLUSH>
-- [ ] deal with subreadings, how?
+- [X] do NUL-flushing, outputting <STREAMCMD:FLUSH>
 - [ ] have a timeout on generating suggestions (shouldn't use more than 0.5s per sentence?)
 
 ** TODO alternative suggestions on the same word

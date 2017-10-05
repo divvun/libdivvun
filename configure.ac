@@ -69,11 +69,26 @@ AS_IF([test "x$enable_checker" != xno],
                               [AC_DEFINE([HAVE_LIBARCHIVE], [1], [Use archives])
 	                       AC_DEFINE([USE_LIBARCHIVE_2], [1], [Use libarchive2])
                                enable_checker=yes],
-                              [AS_IF([test x$enable_checker != xcheck],
+                              [AS_IF([test x$enable_checker = xyes],
                                      [AC_MSG_ERROR([checker support requires either libarchive or libarchive2 for opening zipped pipespec archives])
                                       enable_checker=no],
                                      [enable_checker=no])])])])
 AM_CONDITIONAL([WANT_CHECKER], [test x$enable_checker != xno])
+
+AC_ARG_ENABLE([cgspell],
+              [AS_HELP_STRING([--enable-cgspell],
+                              [build divvun-cgspell, for spelling unknown (or even known) words from CG streams @<:@default=check@:>@])],
+              [enable_cgspell=$enableval],
+              [enable_cgspell=check])
+AS_IF([test "x$enable_cgspell" != xno],
+      [PKG_CHECK_MODULES([HFSTOSPELL], [hfstospell >= 0.4.3],
+                         [enable_cgspell=yes],
+                         [AS_IF([test x$enable_cgspell = xyes],
+                                [AC_MSG_ERROR([cgspell support requires libhfstospell / hfst-ospell-dev])
+                                 enable_cgspell=no],
+                                [enable_cgspell=no])])])
+AM_CONDITIONAL([WANT_CGSPELL], [test x$enable_cgspell != xno])
+
 
 AC_CONFIG_FILES([src/divvun-gen-xmlschemas],    [chmod +x src/divvun-gen-xmlschemas])
 AC_CONFIG_FILES([src/divvun-validate-suggest],  [chmod +x src/divvun-validate-suggest])
@@ -94,6 +109,7 @@ AC_OUTPUT(Makefile src/Makefile test/suggest/Makefile test/checker/Makefile)
 cat <<EOF
 -- Building $PACKAGE_STRING
     * checker support: $enable_checker
+    * cgspell support: $enable_cgspell
     * xml support: $enable_xml
     * trang: $TRANG
 EOF
