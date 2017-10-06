@@ -27,14 +27,15 @@ void dbg(const std::string& label, std::stringstream& output) {
 
 hfst_ol::PmatchContainer*
 TokenizeCmd::mkContainer(std::istream& instream, bool verbose) {
+	settings.output_format = hfst_ol_tokenize::giellacg;
+	settings.tokenize_multichar = true;
 	settings.print_weights = true;
 	settings.print_all = true;
-	settings.output_format = hfst_ol_tokenize::giellacg;
 	settings.dedupe = true;
 	settings.max_weight_classes = 2;
 	auto* c = new hfst_ol::PmatchContainer(instream);
 	c->set_verbose(verbose);
-	c->set_single_codepoint_tokenization(!tokenize_multichar);
+	c->set_single_codepoint_tokenization(!settings.tokenize_multichar);
 	return c;
 }
 TokenizeCmd::TokenizeCmd (std::istream& instream, bool verbose)
