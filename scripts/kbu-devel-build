@@ -2,11 +2,9 @@
 
 [[ "${BASH_SOURCE[0]}" != "${0}" ]] || set -eu
 
-unset CXXFLAGS CPPFLAGS
-
 # Would like to use gold, but it links divvun-checker to (relative path) ./.libs/libdivvun-suggest.so ?
 false && command -V ld.gold && export CXXFLAGS="-fuse-ld=gold ${CXXFLAGS:-}"
-export CXXFLAGS="-ggdb3 -O0 ${CXXFLAGS:-}"
+export CXXFLAGS="-ggdb3 -O0 -fPIC ${CXXFLAGS:-}"
 export CPPFLAGS=-DDEBUG
 
 # for make check:
