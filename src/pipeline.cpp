@@ -28,7 +28,7 @@ void dbg(const std::string& label, std::stringstream& output) {
 hfst_ol::PmatchContainer*
 TokenizeCmd::mkContainer(std::istream& instream, bool verbose) {
 	settings.output_format = hfst_ol_tokenize::giellacg;
-	settings.tokenize_multichar = true;
+	settings.tokenize_multichar = false; // TODO: https://github.com/hfst/hfst/issues/367#issuecomment-334922284
 	settings.print_weights = true;
 	settings.print_all = true;
 	settings.dedupe = true;
