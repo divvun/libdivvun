@@ -140,7 +140,6 @@ class TokenizeCmd: public PipeCmd {
 		~TokenizeCmd() {};
 	private:
 		hfst_ol::PmatchContainer* mkContainer(std::istream& instream, bool verbose);
-		bool tokenize_multichar = false; // Not useful for analysing text, only generation/bidix
 		hfst_ol_tokenize::TokenizeSettings settings;
 		std::unique_ptr<std::istream> istream; // Only used if we're not given a stream in the first place
 		std::unique_ptr<hfst_ol::PmatchContainer> container;

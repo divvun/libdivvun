@@ -35,7 +35,6 @@ TokenizeCmd::mkContainer(std::istream& instream, bool verbose) {
 	settings.max_weight_classes = 2;
 	auto* c = new hfst_ol::PmatchContainer(instream);
 	c->set_verbose(verbose);
-	c->set_single_codepoint_tokenization(!settings.tokenize_multichar);
 	return c;
 }
 TokenizeCmd::TokenizeCmd (std::istream& instream, bool verbose)
