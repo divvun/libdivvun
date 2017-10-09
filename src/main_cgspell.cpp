@@ -23,6 +23,7 @@
 #include "cgspell.hpp"
 #include "cxxopts.hpp"
 
+
 int main(int argc, char ** argv)
 {
 	try
@@ -31,11 +32,15 @@ int main(int argc, char ** argv)
 
 		options.add_options()
 			("a,archive", "zhfst format archive", cxxopts::value<std::string>(), "BIN")
-			("l,lexicon", "Lexicon (UNIMPLEMENTED, HFSTOL format)", cxxopts::value<std::string>(), "BIN")
-			("m,errmodel", "Error model (UNIMPLEMENTED, HFSTOL format)", cxxopts::value<std::string>(), "BIN")
-			("n,limit", "Show at most N suggestions", cxxopts::value<int>(), "N")
-			("w,max-weight", "Suppress corrections with correction weights above W", cxxopts::value<int>(), "W")
-			("W,max-analysis-weight", "Suppress corrections with analysis weights above WA", cxxopts::value<int>(), "WA")
+			("l,lexicon", "Use this lexicon (must also give erro model as option)", cxxopts::value<std::string>(), "BIN")
+			("m,errmodel", "Use this error model (must also give lexicon as option)", cxxopts::value<std::string>(), "BIN")
+			("n,limit", "Show at most N suggestions", cxxopts::value<unsigned long>(), "N")
+			("t,time-cutoff", "Stop trying to find better corrections after T seconds (T is a float)", cxxopts::value<float>(), "T")
+			("w,max-weight", "Suppress corrections with correction weight * weight-factor above W", cxxopts::value<unsigned long>(), "W")
+			("W,max-analysis-weight", "Suppress corrections with analysis weight * weight-factor above WA", cxxopts::value<unsigned long>(), "WA")
+			("b,beam", "Suppress corrections worse than best candidate by more than W (W is a float)", cxxopts::value<hfst_ol::Weight>(), "W")
+			("X,real-word", "Also suggest corrections to correct words (UNIMPLEMENTED)")
+			("f,weight-factor", "We multiply weights by this to get integral weights (default: 1000)", cxxopts::value<unsigned long>(), "F")
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
 			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 if --json).")
@@ -62,30 +67,50 @@ int main(int argc, char ** argv)
 			std::cout << options.help({""}) << std::endl;
 			return(EXIT_SUCCESS);
 		}
-		if (!options.count("archive"))
-		{
-			std::cout << options.help({""}) << std::endl;
-			std::cerr << "ERROR: expected archive.zhfst as argument." << std::endl;
-			return(EXIT_FAILURE);
-		}
 
-		const auto& zhfstfile = options["archive"].as<std::string>();
-		const auto& limit = options.count("limit") ? options["limit"].as<int>() : INT_MAX;
-		const auto& max_weight = options.count("max-weight") ? options["max-weight"].as<int>() : INT_MAX;
-		const auto& max_analysis_weight = options.count("max-analysis-weight") ? options["max-analysis-weight"].as<int>() : INT_MAX;
+		// See comments in run_cgspell; built-in hfst-ospell settings don't seem to work like we want
+		// const auto& limit = options.count("limit") ? options["limit"].as<unsigned long>() : 0;
+		// const auto& max_weight = options.count("max-weight") ? options["max-weight"].as<hfst_ol::Weight>() : -1.0;
+		const auto& limit = options.count("limit") ? options["limit"].as<unsigned long>() : ULONG_MAX;
+		const auto& max_weight = options.count("max-weight") ? options["max-weight"].as<unsigned long>() : ULONG_MAX;
+		const auto& max_analysis_weight = options.count("max-analysis-weight") ? options["max-analysis-weight"].as<unsigned long>() : ULONG_MAX;
+		const auto& beam = options.count("beam") ? options["beam"].as<hfst_ol::Weight>() : -1.0;
+		const auto& time_cutoff = options.count("time-cutoff") ? options["time-cutoff"].as<float>() : 0.0;
+		const auto& weight_factor = options.count("weight-factor") ? options["weight-factor"].as<unsigned long>() : 1000;
 		bool verbose = options.count("v");
 
-		if(verbose) {
-			std::cerr << "Reading archive " << zhfstfile << std::endl;
-		}
-		std::unique_ptr<hfst_ol::ZHfstOspeller> s(new hfst_ol::ZHfstOspeller);
-                s->read_zhfst(zhfstfile);
-		if (!s) {
-			std::cerr << "ERROR: Couldn't read transducer "<< zhfstfile << std::endl;
+		if ((options.count("archive") && (options.count("lexicon") || options.count("errmodel")))
+		    ||
+		    !(options.count("archive") || (options.count("lexicon") && options.count("errmodel"))))
+		{
+			std::cout << options.help({""}) << std::endl;
+			std::cerr << "ERROR: expected either --archive or both --lexicon and --errmodel options." << std::endl;
 			return(EXIT_FAILURE);
 		}
 
-		divvun::run_cgspell(std::cin, std::cout, *s, limit, max_weight, max_analysis_weight);
+		if (options.count("archive")) {
+			if (options.count("lexicon") || options.count("errmodel")) {
+				std::cout << options.help({""}) << std::endl;
+				std::cerr << "ERROR: expected either --archive or both --lexicon and --errmodel options." << std::endl;
+				return(EXIT_FAILURE);
+			}
+			const auto& zhfstfile = options["archive"].as<std::string>();
+			auto speller = divvun::Speller(zhfstfile, verbose,
+						       max_analysis_weight, max_weight, limit, beam, time_cutoff, weight_factor);
+			divvun::run_cgspell(std::cin, std::cout, speller);
+		}
+		else if (options.count("lexicon") || options.count("errmodel")) {
+			if  (options.count("archive")) {
+				std::cout << options.help({""}) << std::endl;
+				std::cerr << "ERROR: expected either --archive or both --lexicon and --errmodel options." << std::endl;
+				return(EXIT_FAILURE);
+			}
+			const auto& errfile = options["errmodel"].as<std::string>();
+			const auto& lexfile = options["lexicon"].as<std::string>();
+			auto speller = divvun::Speller(errfile, lexfile, verbose,
+						       max_analysis_weight, max_weight, limit, beam, time_cutoff, weight_factor);
+			divvun::run_cgspell(std::cin, std::cout, speller);
+		}
 	}
 	catch (const cxxopts::OptionException& e)
 	{

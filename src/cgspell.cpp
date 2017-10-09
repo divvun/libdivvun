@@ -19,13 +19,6 @@
 
 namespace divvun {
 
-const float WEIGHT_FACTOR = 1000.0;
-
-const std::string CGSPELL_TAG = "<spelled>";
-const std::string CGSPELL_CORRECT_TAG = "<spell_was_correct>";
-
-const std::basic_regex<char> DELIMITERS ("^[.!?]$");
-
 const std::basic_regex<char> CG_LINE ("^"
 				      "(\"<(.*)>\".*" // wordform, group 2
 				      "|(\t+)(\"[^\"]*\"\\S*)(\\s+\\S+)*" // reading, group 3, 4, 5
@@ -34,7 +27,7 @@ const std::basic_regex<char> CG_LINE ("^"
 				      ")");
 
 
-const void hacky_cg_anaformat(const std::string& ana, std::ostream& os) {
+const void Speller::hacky_cg_anaformat(const std::string& ana, std::ostream& os) const {
 	const auto lemma_end = ana.find("+");
 	if(lemma_end > 0) {
 		os << "\"" << ana.substr(0, lemma_end) << "\"";
@@ -49,19 +42,19 @@ const void hacky_cg_anaformat(const std::string& ana, std::ostream& os) {
 	}
 }
 
-void spell(const std::string& form, std::ostream& os, hfst_ol::ZHfstOspeller& s, int limit, int max_weight, int max_analysis_weight)
+void Speller::spell(const std::string& form, std::ostream& os)
 {
-	auto correct = s.spell(form);
+	auto correct = speller->spell(form);
 	if(correct) {
 		// This would happen if a correct form is in the
 		// speller, but not in whatever analyser you used to
 		// create the input to cgspell
-		auto acq = s.analyse(form);
+		auto acq = speller->analyse(form);
 		while(!acq.empty()) {
 			const auto elt = acq.top();
 			acq.pop();
 			const auto a = elt.first;
-			const auto w = (int)(elt.second * WEIGHT_FACTOR);
+			const auto w = (FactoredWeight)(elt.second * weight_factor);
 			// No max_weight for regular words
 			os << "\t";
 			hacky_cg_anaformat(a, os);
@@ -69,20 +62,25 @@ void spell(const std::string& form, std::ostream& os, hfst_ol::ZHfstOspeller& s,
 		}
 	}
 	else {
-		auto cq = s.suggest(form);
-		while(!cq.empty() && (limit--) > 0) {
+		auto cq = speller->suggest(form);
+		auto slimit = limit;
+		while(!cq.empty() && (slimit--) > 0) {
+
 			const auto& elt = cq.top();
 			const auto& f = elt.first;
-			const auto& w = (int)(elt.second * WEIGHT_FACTOR);
-			if(w >= max_weight) {
+			const auto& w = (FactoredWeight)(elt.second * weight_factor);
+			if(max_weight > 0.0 && w >= max_weight) {
 				break;
 			}
-			auto aq = s.analyse(f, true);
+
+			auto aq = speller->analyse(f, true);
 			while(!aq.empty()) {
 				const auto& elt = aq.top();
 				const auto& a = elt.first;
-				const auto& w_a = (int)(elt.second * WEIGHT_FACTOR);
-				if(w_a >= max_analysis_weight) {
+				const auto& w_a = (FactoredWeight)(elt.second * weight_factor);
+
+
+				if(max_analysis_weight > 0.0 && w_a >= max_analysis_weight) {
 					break;
 				}
 				os << "\t";
@@ -95,10 +93,12 @@ void spell(const std::string& form, std::ostream& os, hfst_ol::ZHfstOspeller& s,
 	}
 }
 
-void run_cgspell(std::istream& is, std::ostream& os, hfst_ol::ZHfstOspeller& s, int limit, int max_weight, int max_analysis_weight)
+void run_cgspell(std::istream& is,
+		 std::ostream& os,
+		 Speller& s)
 {
 	std::string wf;
-	for (std::string line;std::getline(is, line);) {
+	for (std::string line; std::getline(is, line);) {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 
@@ -108,7 +108,7 @@ void run_cgspell(std::istream& is, std::ostream& os, hfst_ol::ZHfstOspeller& s, 
 		}
 		else if(!result.empty() && result[5].length() != 0 && result[5] == " ?") {
 			os << line << std::endl;
-			spell(wf, os, s, limit, max_weight, max_analysis_weight);
+			s.spell(wf, os);
 		}
 		else if(!result.empty() && result[7].length() != 0) {
 			// TODO: Can we ever get a flush in the middle of readings?

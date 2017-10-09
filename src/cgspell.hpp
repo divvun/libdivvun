@@ -38,7 +38,85 @@
 
 namespace divvun {
 
-void run_cgspell(std::istream& is, std::ostream& os, hfst_ol::ZHfstOspeller& s, int limit, int max_weight, int max_analysis_weight);
+typedef unsigned long FactoredWeight;
+
+class Speller {
+	public:
+		Speller(const std::string& zhfstpath,
+			bool verbose,
+			FactoredWeight max_analysis_weight_,
+			FactoredWeight max_weight_,
+			unsigned long limit_,
+			hfst_ol::Weight beam,
+			float time_cutoff,
+			FactoredWeight weight_factor_)
+			: max_analysis_weight(max_analysis_weight_)
+			, max_weight(max_weight_)
+			, limit(limit_)
+			, weight_factor(weight_factor_)
+			, speller(new hfst_ol::ZHfstOspeller())
+		{
+			speller->read_zhfst(zhfstpath);
+			if (!speller) {
+				throw std::runtime_error("ERROR: Couldn't read zhfst archive " + zhfstpath);
+			}
+			else {
+				speller->set_beam(beam);
+				speller->set_time_cutoff(time_cutoff);
+				// s.set_queue_limit(limit); // TODO: This seems to choose first three, not top three (same with /usr/bin/hfst-ospell)
+				// s.set_weight_limit(max_weight); // TODO: Has no effect? (same with /usr/bin/hfst-ospell)
+			}
+		}
+		Speller(const std::string& errpath,
+			const std::string& lexpath,
+			bool verbose,
+			FactoredWeight max_analysis_weight_,
+			FactoredWeight max_weight_,
+			unsigned long limit_,
+			hfst_ol::Weight beam,
+			float time_cutoff,
+			FactoredWeight weight_factor_)
+			: max_analysis_weight(max_analysis_weight_)
+			, max_weight(max_weight_)
+			, limit(limit_)
+			, weight_factor(weight_factor_)
+			, speller(new hfst_ol::ZHfstOspeller())
+		{
+			FILE* err_fp = fopen(errpath.c_str(), "r");
+			FILE* lex_fp = fopen(lexpath.c_str(), "r");
+			err = std::unique_ptr<hfst_ol::Transducer> (new hfst_ol::Transducer(err_fp));
+			lex = std::unique_ptr<hfst_ol::Transducer> (new hfst_ol::Transducer(lex_fp));
+			// This one is freed by ZHfstOspeller, but it seems like its acceptor and errmodel are not!
+			auto lmspeller = new hfst_ol::Speller(&*err, &*lex);
+			speller->inject_speller(lmspeller);
+			if (!speller) {
+				throw std::runtime_error("ERROR: Couldn't read lexicon " + lexpath+ " / errmodel " + errpath);
+			}
+			else {
+				speller->set_beam(beam);
+				speller->set_time_cutoff(time_cutoff);
+				// s.set_queue_limit(limit); // TODO: This seems to choose first three, not top three (same with /usr/bin/hfst-ospell)
+				// s.set_weight_limit(max_weight); // TODO: Has no effect? (same with /usr/bin/hfst-ospell)
+			}
+		}
+		const FactoredWeight max_analysis_weight;
+		const FactoredWeight max_weight;
+		const unsigned long limit;
+		const FactoredWeight weight_factor;
+		void spell(const std::string& form, std::ostream& os);
+	private:
+		const void hacky_cg_anaformat(const std::string& ana, std::ostream& os) const;
+		std::unique_ptr<hfst_ol::ZHfstOspeller> speller;
+		const std::string CGSPELL_TAG = "<spelled>";
+		const std::string CGSPELL_CORRECT_TAG = "<spell_was_correct>";
+		// Only used when initialised with errpath/lexpath:
+		std::unique_ptr<hfst_ol::Transducer> err;
+		std::unique_ptr<hfst_ol::Transducer> lex;
+};
+
+void run_cgspell(std::istream& is,
+		 std::ostream& os,
+		 Speller& s);
 
 }
 
