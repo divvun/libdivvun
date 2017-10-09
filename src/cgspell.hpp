@@ -23,7 +23,6 @@
 #include <codecvt>
 #include <vector>
 #include <string>
-#include <algorithm>
 #include <regex>
 #include <unordered_map>
 #include <exception>
@@ -35,14 +34,25 @@
 // zhfstospeller.h conflicts with these:
 // #include <hfst/HfstInputStream.h>
 // #include <hfst/HfstTransducer.h>
+// variants:
+#include "mapbox/variant.hpp"
 
 namespace divvun {
+
+using mapbox::util::variant;
+using std::string;
+using std::vector;
+
+// for variants
+struct Nothing
+{
+};
 
 typedef unsigned long FactoredWeight;
 
 class Speller {
 	public:
-		Speller(const std::string& zhfstpath,
+		Speller(const string& zhfstpath,
 			bool verbose,
 			FactoredWeight max_analysis_weight_,
 			FactoredWeight max_weight_,
@@ -67,8 +77,8 @@ class Speller {
 				// s.set_weight_limit(max_weight); // TODO: Has no effect? (same with /usr/bin/hfst-ospell)
 			}
 		}
-		Speller(const std::string& errpath,
-			const std::string& lexpath,
+		Speller(const string& errpath,
+			const string& lexpath,
 			bool verbose,
 			FactoredWeight max_analysis_weight_,
 			FactoredWeight max_weight_,
@@ -103,12 +113,17 @@ class Speller {
 		const FactoredWeight max_weight;
 		const unsigned long limit;
 		const FactoredWeight weight_factor;
-		void spell(const std::string& form, std::ostream& os);
+		void spell(const string& form, std::ostream& os);
 	private:
-		const void hacky_cg_anaformat(const std::string& ana, std::ostream& os) const;
+		const void print_readings(const vector<string>& ana,
+					  const string& form,
+					  std::ostream& os,
+					  FactoredWeight w,
+					  variant<Nothing, FactoredWeight> w_a,
+					  const std::string& errtag) const;
 		std::unique_ptr<hfst_ol::ZHfstOspeller> speller;
-		const std::string CGSPELL_TAG = "<spelled>";
-		const std::string CGSPELL_CORRECT_TAG = "<spell_was_correct>";
+		const string CGSPELL_TAG = "<spelled>";
+		const string CGSPELL_CORRECT_TAG = "<spell_was_correct>";
 		// Only used when initialised with errpath/lexpath:
 		std::unique_ptr<hfst_ol::Transducer> err;
 		std::unique_ptr<hfst_ol::Transducer> lex;

@@ -26,66 +26,152 @@ const std::basic_regex<char> CG_LINE ("^"
 				      "|(<STREAMCMD:FLUSH>)" // flush, group 7
 				      ")");
 
+static const string subreading_separator = "#";
 
-const void Speller::hacky_cg_anaformat(const std::string& ana, std::ostream& os) const {
-	const auto lemma_end = ana.find("+");
-	if(lemma_end > 0) {
-		os << "\"" << ana.substr(0, lemma_end) << "\"";
-		auto from = lemma_end + 1;
-		ssize_t to = ana.find('+', from);
-		while(to > -1) {
-			os << " " << ana.substr(from, to-from);
-			from = to + 1;
-			to = ana.find('+', from);
+/**
+ * Return the size in bytes of the first complete UTF-8 codepoint in c,
+ * or 0 if invalid.
+ */
+size_t u8_first_codepoint_size(const unsigned char* c) {
+    if (*c <= 127) {
+        return 1;
+    }
+    else if ( (*c & (128 + 64 + 32 + 16)) == (128 + 64 + 32 + 16) ) {
+        return 4;
+    }
+    else if ( (*c & (128 + 64 + 32 )) == (128 + 64 + 32) ) {
+        return 3;
+    }
+    else if ( (*c & (128 + 64 )) == (128 + 64)) {
+        return 2;
+    }
+    else {
+        return 0;
+    }
+}
+
+bool is_cg_tag(const string & str) {
+    // Note: invalid codepoints are also treated as tags;  ¯\_(ツ)_/¯
+    return str.size() > u8_first_codepoint_size((const unsigned char*)str.c_str());
+}
+
+void print_cg_subreading(size_t indent,
+			 const string& form,
+			 const vector<string>::const_iterator beg,
+                         const vector<string>::const_iterator end,
+                         std::ostream & os,
+			 FactoredWeight w,
+			 variant<Nothing, FactoredWeight> mw_a,
+			 const std::string& errtag)
+{
+	os << string(indent, '\t');
+	bool in_lemma = false;
+	for(vector<string>::const_iterator it = beg; it != end; ++it) {
+		bool is_tag = is_cg_tag(*it);
+		if(in_lemma) {
+			if(is_tag) {
+				in_lemma = false;
+				os << "\"";
+			}
 		}
-		os << " " << ana.substr(from);
+		else {
+			if(!is_tag) {
+				in_lemma = true;
+				os << "\"";
+			}
+		}
+		os << (*it);
+	}
+	if(in_lemma) {
+		os << "\"";
+	}
+	if(indent == 1) {
+		os << " <W:" << w << ">";
+		mw_a.match([]      (Nothing) {},
+			   [&os] (FactoredWeight w_a) { os << " <WA:" << w_a; });
+		os << " " << errtag;
+		os << " \"<" << form << ">\"";
+	}
+	os << std::endl;
+}
+
+const void Speller::print_readings(const vector<string>& ana,
+				   const string& form,
+				   std::ostream& os,
+				   FactoredWeight w,
+				   variant<Nothing, FactoredWeight> w_a,
+				   const std::string& errtag) const
+{
+	size_t indent = 1;
+	vector<string>::const_iterator beg = ana.begin(), end = ana.end();
+	while(true) {
+		bool sub_found = false;
+		for(auto it = end-1; it > ana.begin(); --it) {
+			if(subreading_separator.compare(*it) == 0) {
+				// Found a sub-reading mark
+				beg = ++it;
+				sub_found = true;
+				break;
+			}
+		}
+		if(!sub_found) {
+			// No remaining sub-marks to the left
+			beg = ana.begin();
+		}
+		print_cg_subreading(indent,
+				    form,
+				    beg,
+				    end,
+				    os,
+				    w,
+				    w_a,
+				    errtag);
+		if(beg == ana.begin()) {
+			break;
+		}
+		else {
+			++indent;
+			end = beg;
+			if(sub_found) {
+				--end; // skip the subreading separator symbol
+			}
+		}
 	}
 }
 
-void Speller::spell(const std::string& form, std::ostream& os)
+void Speller::spell(const string& inform, std::ostream& os)
 {
-	auto correct = speller->spell(form);
+	auto correct = speller->spell(inform);
 	if(correct) {
-		// This would happen if a correct form is in the
+		// This would happen if a correct inform is in the
 		// speller, but not in whatever analyser you used to
 		// create the input to cgspell
-		auto acq = speller->analyse(form);
-		while(!acq.empty()) {
-			const auto elt = acq.top();
-			acq.pop();
-			const auto a = elt.first;
-			const auto w = (FactoredWeight)(elt.second * weight_factor);
+		auto aq = speller->analyseSymbols(inform);
+		while(!aq.empty()) {
+			const auto ana = aq.top().first;
+			const auto w = (FactoredWeight)(aq.top().second * weight_factor);
 			// No max_weight for regular words
-			os << "\t";
-			hacky_cg_anaformat(a, os);
-			os << " <W:" << w << "> " << CGSPELL_CORRECT_TAG << std::endl;
+			print_readings(ana, inform, os, w, Nothing(), CGSPELL_CORRECT_TAG);
+			aq.pop();
 		}
 	}
 	else {
-		auto cq = speller->suggest(form);
+		auto cq = speller->suggest(inform);
 		auto slimit = limit;
 		while(!cq.empty() && (slimit--) > 0) {
-
-			const auto& elt = cq.top();
-			const auto& f = elt.first;
-			const auto& w = (FactoredWeight)(elt.second * weight_factor);
+			const auto& corrform = cq.top().first;
+			const auto& w = (FactoredWeight)(cq.top().second * weight_factor);
 			if(max_weight > 0.0 && w >= max_weight) {
 				break;
 			}
-
-			auto aq = speller->analyse(f, true);
+			auto aq = speller->analyseSymbols(corrform, true);
 			while(!aq.empty()) {
-				const auto& elt = aq.top();
-				const auto& a = elt.first;
-				const auto& w_a = (FactoredWeight)(elt.second * weight_factor);
-
-
+				const auto& ana = aq.top().first;
+				const auto& w_a = (FactoredWeight)(aq.top().second * weight_factor);
 				if(max_analysis_weight > 0.0 && w_a >= max_analysis_weight) {
 					break;
 				}
-				os << "\t";
-				hacky_cg_anaformat(a, os);
-				os << " <W:" << w << "> <WA:" << w_a << "> \"<" << f << ">\" " << CGSPELL_TAG << std::endl;
+				print_readings(ana, corrform, os, w, w_a, CGSPELL_TAG);
 				aq.pop();
 			}
 			cq.pop();
@@ -97,8 +183,8 @@ void run_cgspell(std::istream& is,
 		 std::ostream& os,
 		 Speller& s)
 {
-	std::string wf;
-	for (std::string line; std::getline(is, line);) {
+	string wf;
+	for (string line; std::getline(is, line);) {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 
