@@ -89,7 +89,7 @@ void print_cg_subreading(size_t indent,
 	if(indent == 1) {
 		os << " <W:" << w << ">";
 		mw_a.match([]      (Nothing) {},
-			   [&os] (FactoredWeight w_a) { os << " <WA:" << w_a; });
+			   [&os] (FactoredWeight w_a) { os << " <WA:" << w_a << ">"; });
 		os << " " << errtag;
 		os << " \"<" << form << ">\"";
 	}
