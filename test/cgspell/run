@@ -4,22 +4,21 @@ set -e -u
 
 cd "$(dirname "$0")"/../..
 
-(
-    cd test/cgspell
-    ../../src/divvun-cgspell -l analyser.hfstol -m errmodel.hfst < input > output
-)
+check () {
+    n="$1"
+    shift
+    args=( "$@" )
+    (
+        cd test/cgspell
+        set -x
+        ../../src/divvun-cgspell -l analyser.hfstol -m errmodel.hfst "${args[@]}" < input."$n" > output."$n"
+    )
+    if ! diff test/cgspell/output."$n" test/cgspell/expected."$n"; then
+        echo diff test/cgspell/output."$n" test/cgspell/expected."$n"
+        exit 1
+    fi
+}
 
-if ! diff test/cgspell/output test/cgspell/expected; then
-    echo diff test/cgspell/output test/cgspell/expected
-    exit 1
-fi
-
-(
-    cd test/cgspell
-    ../../src/divvun-cgspell -X -l analyser.hfstol -m errmodel.hfst < input > output.X
-)
-
-if ! diff test/cgspell/output.X test/cgspell/expected.X; then
-    echo diff test/cgspell/output.X test/cgspell/expected.X
-    exit 1
-fi
+check default
+check X -X
+check n2 -n 2

@@ -66,8 +66,7 @@ old/
 /test/cgspell/analyser.hfst
 /test/cgspell/analyser.hfstol
 /test/cgspell/analyser.invhfst
-/test/cgspell/output
-/test/cgspell/output.X
+/test/cgspell/output.*
 /test/cgspell/run.log
 /test/cgspell/run.trs
 /test/cgspell/test-suite.log
