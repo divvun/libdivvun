@@ -58,11 +58,23 @@ old/
 /test/checker/run.log
 /test/checker/run.trs
 /test/checker/test-suite.log
-/test/checker/.tern-port
 /test/checker/.dir-locals.elc
 /test/checker/run-lib.log
 /test/checker/run-lib.trs
 /test/checker/run-lib.verboselog
+
+/test/cgspell/analyser.hfst
+/test/cgspell/analyser.hfstol
+/test/cgspell/analyser.invhfst
+/test/cgspell/output
+/test/cgspell/output.X
+/test/cgspell/run.log
+/test/cgspell/run.trs
+/test/cgspell/test-suite.log
+/test/cgspell/.dir-locals.elc
+/test/cgspell/run-lib.log
+/test/cgspell/run-lib.trs
+/test/cgspell/run-lib.verboselog
 
 /examples/using-checker-lib-from-cpp/INSTALL
 /examples/using-checker-lib-from-cpp/Makefile

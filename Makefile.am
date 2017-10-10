@@ -1,5 +1,9 @@
 SUBDIRS = src test/suggest
 
+if WANT_CGSPELL
+SUBDIRS += test/cgspell
+endif
+
 if WANT_CHECKER
 SUBDIRS += test/checker
 endif

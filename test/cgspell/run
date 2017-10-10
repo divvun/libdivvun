@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -e -u
+
+cd "$(dirname "$0")"/../..
+
+(
+    cd test/cgspell
+    ../../src/divvun-cgspell -l analyser.hfstol -m errmodel.hfst < input > output
+)
+
+if ! diff test/cgspell/output test/cgspell/expected; then
+    echo diff test/cgspell/output test/cgspell/expected
+    exit 1
+fi
+
+(
+    cd test/cgspell
+    ../../src/divvun-cgspell -X -l analyser.hfstol -m errmodel.hfst < input > output.X
+)
+
+if ! diff test/cgspell/output.X test/cgspell/expected.X; then
+    echo diff test/cgspell/output.X test/cgspell/expected.X
+    exit 1
+fi

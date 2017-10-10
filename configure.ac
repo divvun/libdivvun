@@ -104,7 +104,11 @@ AC_ARG_VAR([TRANG], [Path to trang.jar (dev dependency for updating DTD)])
 AC_ARG_WITH([trang], [AS_HELP_STRING([--with-trang],[Path to trang.jar (dev dependency for updating DTD)])], [TRANG=$withval], [TRANG=])
 AM_CONDITIONAL([HAVE_TRANG], [test x"$TRANG" != x])
 
-AC_OUTPUT(Makefile src/Makefile test/suggest/Makefile test/checker/Makefile)
+AC_OUTPUT(Makefile
+          src/Makefile
+          test/suggest/Makefile
+          test/checker/Makefile
+          test/cgspell/Makefile)
 
 cat <<EOF
 -- Building $PACKAGE_STRING
