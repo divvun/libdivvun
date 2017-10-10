@@ -185,18 +185,24 @@ void run_cgspell(std::istream& is,
 		 Speller& s)
 {
 	string wf;
+	bool cohort_spelled = false;
 	for (string line; std::getline(is, line);) {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 
-		if(!result.empty() && result[2].length() != 0) {
+		if (!result.empty() && result[2].length() != 0) {
 			os << line << std::endl;
 			wf = result[2];
+			cohort_spelled = false;
 		}
-		else if(!result.empty() && result[5].length() != 0 && (s.real_word
-								       || result[5] == unknown_analysis)) {
+		else if (!result.empty()
+			 && result[5].length() != 0
+			 && !cohort_spelled
+			 && (s.real_word || result[5] == unknown_analysis))
+		{
 			os << line << std::endl;
 			s.spell(wf, os);
+			cohort_spelled = true;
 		}
 		else if(!result.empty() && result[7].length() != 0) {
 			// TODO: Can we ever get a flush in the middle of readings?
