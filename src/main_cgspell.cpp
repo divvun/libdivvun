@@ -100,7 +100,7 @@ int main(int argc, char ** argv)
 		else if (options.count("lexicon") || options.count("errmodel")) {
 			if  (options.count("archive")) {
 				std::cout << options.help({""}) << std::endl;
-				std::cerr << "ERROR: expected either --archive or both --lexicon and --errmodel options." << std::endl;
+				std::cerr << "ERROR: expected either both --lexicon and --errmodel or --archive options." << std::endl;
 				return(EXIT_FAILURE);
 			}
 			const auto& errfile = options["errmodel"].as<std::string>();
