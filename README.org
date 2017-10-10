@@ -79,8 +79,8 @@ Now when building, pass =--enable-checker= to configure.
 
 - hfst-ospell-dev >=0.4.5 (compiled with either libxml or tinyxml)
 
-You can pass =--enable-cgspell= to configure to get an error if any
-=divvun-cgspell= dependencies are missing.
+You can pass =--enable-cgspell= to =./configure= if you would like to
+get an error if any of the =divvun-cgspell= dependencies are missing.
 
 * Building
 
@@ -142,6 +142,11 @@ echo words go here | hfst-tokenise --giella-cg tokeniser.pmhfst | … | vislcg3 
   | src/divvun-cgspell --limit 5 se.zhfst | vislcg3 …
 #+END_SRC
 
+You can also use it with unzipped, plain analyser and error model, e.g.
+
+#+BEGIN_SRC sh
+src/divvun-cgspell --limit 5 -l analyser.hfstol -m errmodel.hfst < input > output
+#+END_SRC
 
 ** =divvun-checker=
 
@@ -311,7 +316,7 @@ https://github.com/hfst/hfst/issues/366. A workaround is to edit
 =@GLIB_CFLAGS@=.
 
 
-* Progress [37/45]
+* Progress [40/45]
 
 =divvun-suggest= should:
 
@@ -360,12 +365,12 @@ https://github.com/hfst/hfst/issues/366. A workaround is to edit
 =divvun-cgspell= should:
 
 - [X] load a zhfst bin
-- [ ] optionally load errmodel.hfst and acceptor.hfst instead of zhfst
-- [ ] Read a word per line and spell with CG output
+- [X] optionally load errmodel.hfst and acceptor.hfst instead of zhfst
+- [ ] Read a word per line and spell with CG output (do we still need this?)
 - [X] Read CG input and spell unknown words by adding them as new readings
-- [ ] Read CG input and spell all words by adding them as new readings
+- [X] Read CG input and spell all words by adding them as new readings
 - [X] do NUL-flushing, outputting <STREAMCMD:FLUSH>
-- [ ] have a timeout on generating suggestions (shouldn't use more than 0.5s per sentence?)
+- [X] have a timeout on generating suggestions (shouldn't use more than 0.5s per sentence?)
 
 ** TODO alternative suggestions on the same word
 
