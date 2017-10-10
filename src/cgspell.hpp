@@ -56,12 +56,14 @@ class Speller {
 			bool verbose,
 			FactoredWeight max_analysis_weight_,
 			FactoredWeight max_weight_,
+			bool real_word_,
 			unsigned long limit_,
 			hfst_ol::Weight beam,
 			float time_cutoff,
 			FactoredWeight weight_factor_)
 			: max_analysis_weight(max_analysis_weight_)
 			, max_weight(max_weight_)
+			, real_word(real_word_)
 			, limit(limit_)
 			, weight_factor(weight_factor_)
 			, speller(new hfst_ol::ZHfstOspeller())
@@ -82,12 +84,14 @@ class Speller {
 			bool verbose,
 			FactoredWeight max_analysis_weight_,
 			FactoredWeight max_weight_,
+			bool real_word_,
 			unsigned long limit_,
 			hfst_ol::Weight beam,
 			float time_cutoff,
 			FactoredWeight weight_factor_)
 			: max_analysis_weight(max_analysis_weight_)
 			, max_weight(max_weight_)
+			, real_word(real_word_)
 			, limit(limit_)
 			, weight_factor(weight_factor_)
 			, speller(new hfst_ol::ZHfstOspeller())
@@ -111,16 +115,17 @@ class Speller {
 		}
 		const FactoredWeight max_analysis_weight;
 		const FactoredWeight max_weight;
+		const bool real_word;
 		const unsigned long limit;
 		const FactoredWeight weight_factor;
 		void spell(const string& form, std::ostream& os);
 	private:
-		const void print_readings(const vector<string>& ana,
-					  const string& form,
-					  std::ostream& os,
-					  FactoredWeight w,
-					  variant<Nothing, FactoredWeight> w_a,
-					  const std::string& errtag) const;
+		// const void print_readings(const vector<string>& ana,
+		// 			  const string& form,
+		// 			  std::ostream& os,
+		// 			  FactoredWeight w,
+		// 			  variant<Nothing, FactoredWeight> w_a,
+		// 			  const std::string& errtag) const;
 		std::unique_ptr<hfst_ol::ZHfstOspeller> speller;
 		const string CGSPELL_TAG = "<spelled>";
 		const string CGSPELL_CORRECT_TAG = "<spell_was_correct>";

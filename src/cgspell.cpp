@@ -27,6 +27,7 @@ const std::basic_regex<char> CG_LINE ("^"
 				      ")");
 
 static const string subreading_separator = "#";
+static const string unknown_analysis = " ?";
 
 /**
  * Return the size in bytes of the first complete UTF-8 codepoint in c,
@@ -95,12 +96,12 @@ void print_cg_subreading(size_t indent,
 	os << std::endl;
 }
 
-const void Speller::print_readings(const vector<string>& ana,
+const void print_readings(const vector<string>& ana,
 				   const string& form,
 				   std::ostream& os,
 				   FactoredWeight w,
 				   variant<Nothing, FactoredWeight> w_a,
-				   const std::string& errtag) const
+				   const std::string& errtag)
 {
 	size_t indent = 1;
 	vector<string>::const_iterator beg = ana.begin(), end = ana.end();
@@ -141,8 +142,8 @@ const void Speller::print_readings(const vector<string>& ana,
 
 void Speller::spell(const string& inform, std::ostream& os)
 {
-	auto correct = speller->spell(inform);
-	if(correct) {
+	bool do_suggest = real_word || !speller->spell(inform);
+	if(!do_suggest) {
 		// This would happen if a correct inform is in the
 		// speller, but not in whatever analyser you used to
 		// create the input to cgspell
@@ -192,7 +193,8 @@ void run_cgspell(std::istream& is,
 			os << line << std::endl;
 			wf = result[2];
 		}
-		else if(!result.empty() && result[5].length() != 0 && result[5] == " ?") {
+		else if(!result.empty() && result[5].length() != 0 && (s.real_word
+								       || result[5] == unknown_analysis)) {
 			os << line << std::endl;
 			s.spell(wf, os);
 		}
