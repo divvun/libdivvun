@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 
 ver=1.7
 pkg=pugixml-"${ver}"
-url=http://github.com/zeux/pugixml/releases/download/v"${ver}"/"${pkg}".tar.gz
+url=https://github.com/zeux/pugixml/releases/download/v"${ver}"/"${pkg}".tar.gz
 if command -V wget >/dev/null 2>/dev/null; then
     wget -nc "${url}"
 else
