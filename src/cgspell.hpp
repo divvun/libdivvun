@@ -42,30 +42,27 @@ namespace divvun {
 using mapbox::util::variant;
 using std::string;
 using std::vector;
+using hfst_ol::Weight;
 
 // for variants
 struct Nothing
 {
 };
 
-typedef unsigned long FactoredWeight;
-
 class Speller {
 	public:
 		Speller(const string& zhfstpath,
 			bool verbose,
-			FactoredWeight max_analysis_weight_,
-			FactoredWeight max_weight_,
+			Weight max_analysis_weight_,
+			Weight max_weight_,
 			bool real_word_,
 			unsigned long limit_,
 			hfst_ol::Weight beam,
-			float time_cutoff,
-			FactoredWeight weight_factor_)
+			float time_cutoff)
 			: max_analysis_weight(max_analysis_weight_)
 			, max_weight(max_weight_)
 			, real_word(real_word_)
 			, limit(limit_)
-			, weight_factor(weight_factor_)
 			, speller(new hfst_ol::ZHfstOspeller())
 		{
 			speller->read_zhfst(zhfstpath);
@@ -82,18 +79,16 @@ class Speller {
 		Speller(const string& errpath,
 			const string& lexpath,
 			bool verbose,
-			FactoredWeight max_analysis_weight_,
-			FactoredWeight max_weight_,
+			Weight max_analysis_weight_,
+			Weight max_weight_,
 			bool real_word_,
 			unsigned long limit_,
 			hfst_ol::Weight beam,
-			float time_cutoff,
-			FactoredWeight weight_factor_)
+			float time_cutoff)
 			: max_analysis_weight(max_analysis_weight_)
 			, max_weight(max_weight_)
 			, real_word(real_word_)
 			, limit(limit_)
-			, weight_factor(weight_factor_)
 			, speller(new hfst_ol::ZHfstOspeller())
 		{
 			FILE* err_fp = fopen(errpath.c_str(), "r");
@@ -113,18 +108,17 @@ class Speller {
 				// s.set_weight_limit(max_weight); // TODO: Has no effect? (same with /usr/bin/hfst-ospell)
 			}
 		}
-		const FactoredWeight max_analysis_weight;
-		const FactoredWeight max_weight;
+		const Weight max_analysis_weight;
+		const Weight max_weight;
 		const bool real_word;
 		const unsigned long limit;
-		const FactoredWeight weight_factor;
 		void spell(const string& form, std::ostream& os);
 	private:
 		// const void print_readings(const vector<string>& ana,
 		// 			  const string& form,
 		// 			  std::ostream& os,
-		// 			  FactoredWeight w,
-		// 			  variant<Nothing, FactoredWeight> w_a,
+		// 			  Weight w,
+		// 			  variant<Nothing, Weight> w_a,
 		// 			  const std::string& errtag) const;
 		std::unique_ptr<hfst_ol::ZHfstOspeller> speller;
 		const string CGSPELL_TAG = "<spelled>";

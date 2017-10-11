@@ -45,10 +45,8 @@ flags = [
 '-isystem', '/usr/local/include',
 '-I', '.',
 '-I', './src',
-'-I', './third-party/cg3',
-'-I', './third-party/cg3/src',
-'-I', './third-party/cg3/include',
 '-I', '../../PREFIX/hfst/include',
+'-I', '../../PREFIX/hfst-ospell/include',
 ]
 
 

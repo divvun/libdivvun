@@ -19,6 +19,5 @@ check () {
     fi
 }
 
-check default
-check X -X
-check n2 -n 2
+# Arg 1 is the name of test set; the rest of the args are passed to divvun-cgspell
+check "$@"

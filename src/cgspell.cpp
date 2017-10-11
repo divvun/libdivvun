@@ -61,8 +61,8 @@ void print_cg_subreading(size_t indent,
 			 const vector<string>::const_iterator beg,
                          const vector<string>::const_iterator end,
                          std::ostream & os,
-			 FactoredWeight w,
-			 variant<Nothing, FactoredWeight> mw_a,
+			 Weight w,
+			 variant<Nothing, Weight> mw_a,
 			 const std::string& errtag)
 {
 	os << string(indent, '\t');
@@ -89,7 +89,7 @@ void print_cg_subreading(size_t indent,
 	if(indent == 1) {
 		os << " <W:" << w << ">";
 		mw_a.match([]      (Nothing) {},
-			   [&os] (FactoredWeight w_a) { os << " <WA:" << w_a << ">"; });
+			   [&os] (Weight w_a) { os << " <WA:" << w_a << ">"; });
 		os << " " << errtag;
 		os << " \"<" << form << ">\"";
 	}
@@ -99,8 +99,8 @@ void print_cg_subreading(size_t indent,
 const void print_readings(const vector<string>& ana,
 				   const string& form,
 				   std::ostream& os,
-				   FactoredWeight w,
-				   variant<Nothing, FactoredWeight> w_a,
+				   Weight w,
+				   variant<Nothing, Weight> w_a,
 				   const std::string& errtag)
 {
 	size_t indent = 1;
@@ -150,7 +150,7 @@ void Speller::spell(const string& inform, std::ostream& os)
 		auto aq = speller->analyseSymbols(inform);
 		while(!aq.empty()) {
 			const auto ana = aq.top().first;
-			const auto w = (FactoredWeight)(aq.top().second * weight_factor);
+			const Weight& w = aq.top().second;
 			// No max_weight for regular words
 			print_readings(ana, inform, os, w, Nothing(), CGSPELL_CORRECT_TAG);
 			aq.pop();
@@ -161,14 +161,14 @@ void Speller::spell(const string& inform, std::ostream& os)
 		auto slimit = limit;
 		while(!cq.empty() && (slimit--) > 0) {
 			const auto& corrform = cq.top().first;
-			const auto& w = (FactoredWeight)(cq.top().second * weight_factor);
+			const Weight& w = cq.top().second;
 			if(max_weight > 0.0 && w >= max_weight) {
 				break;
 			}
 			auto aq = speller->analyseSymbols(corrform, true);
 			while(!aq.empty()) {
 				const auto& ana = aq.top().first;
-				const auto& w_a = (FactoredWeight)(aq.top().second * weight_factor);
+				const Weight& w_a = (aq.top().second);
 				if(max_analysis_weight > 0.0 && w_a >= max_analysis_weight) {
 					break;
 				}

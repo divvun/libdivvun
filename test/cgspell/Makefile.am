@@ -8,7 +8,7 @@
 	hfst-invert -i $< -o $@
 
 check_DATA = analyser.hfstol
-TESTS = ./run
+TESTS = ./run.default ./run.X ./run.n2
 
 CLEANFILES = $(check_DATA) analyser.hfst analyser.invhfst
 
