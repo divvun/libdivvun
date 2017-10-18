@@ -89,16 +89,16 @@ void printPrefs(const Pipeline& pipeline) {
 		const Prefs& prefs = lp.second;
 		std::cout << "==== Toggles: ====" << std::endl;
 		for(const auto& id : prefs.toggleIds) {
-			std::cout << "- [ ] &" << utf16conv.to_bytes(id.first) << " \t" << utf16conv.to_bytes(id.second) << std::endl;
+			std::cout << "- [ ] " << utf16conv.to_bytes(id.first) << " \t" << utf16conv.to_bytes(id.second) << std::endl;
 		}
 		for(const auto& re : prefs.toggleRes) {
-			std::cout << "- [ ] &[regex] \t" << utf16conv.to_bytes(re.second) << std::endl;
+			std::cout << "- [ ] [regex] \t" << utf16conv.to_bytes(re.second) << std::endl;
 		}
 		std::cout << "==== Options: ====" << std::endl;
 		for(const Option& o : prefs.options) {
 			std::cout << "- " << o.name << " (" << o.type << "):" << std::endl;
 			for(const auto& c : o.choices) {
-				std::cout << "- ( ) &" << utf16conv.to_bytes(c.first) << " \t" << utf16conv.to_bytes(c.second) << std::endl;
+				std::cout << "- ( ) " << utf16conv.to_bytes(c.first) << " \t" << utf16conv.to_bytes(c.second) << std::endl;
 			}
 		}
 	}
@@ -115,6 +115,7 @@ int main(int argc, char ** argv)
 			("s,spec", "Pipeline XML specification", cxxopts::value<std::string>(), "FILE")
 			("a,archive", "Zipped pipeline archive of language data", cxxopts::value<std::string>(), "FILE")
 			("n,variant", "Name of the pipeline variant", cxxopts::value<std::string>(), "NAME")
+			("I,ignore", "Comma-separated list of error tags to ignore (see -p for possible values)", cxxopts::value<std::string>(), "TAGS")
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
 			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 if --json).")
@@ -146,6 +147,13 @@ int main(int argc, char ** argv)
 		}
 		bool verbose = options.count("v");
 
+		auto ignores = std::set<divvun::err_id>();
+		if(options.count("ignore")) {
+			std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+			const auto es = divvun::split(utf16conv.from_bytes(options["ignore"].as<std::string>()), ',');
+			ignores.insert(es.begin(), es.end());
+		}
+
 		if(options.count("spec")) {
 			const auto& specfile = options["spec"].as<std::string>();
 			if(verbose) {
@@ -158,7 +166,8 @@ int main(int argc, char ** argv)
 				const auto& pipename = utf16conv.from_bytes(options["variant"].as<std::string>());
 				return getPipelineXml(specfile, pipename, verbose).match(
 					[]       (int r) { return r; },
-					[options](Pipeline& p){
+					[options, &ignores](Pipeline& p){
+						p.setIgnores(ignores);
 						if(options.count("preferences")) {
 							printPrefs(p);
 						}
@@ -181,7 +190,8 @@ int main(int argc, char ** argv)
 				const auto& pipename = utf16conv.from_bytes(options["variant"].as<std::string>());
 				return getPipelineAr(archive, pipename, verbose).match(
 					[]       (int r) { return r; },
-					[options](Pipeline& p){
+					[options, &ignores](Pipeline& p){
+						p.setIgnores(ignores);
 						if(options.count("preferences")) {
 							printPrefs(p);
 						}

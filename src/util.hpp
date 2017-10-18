@@ -82,6 +82,19 @@ inline const StringVec split(const std::string& str, const char& delim=' ')
 	return tokens;
 }
 
+inline const std::vector<std::u16string> split(const std::u16string& str, const char16_t& delim=' ')
+{
+	std::u16string buf;
+	std::basic_stringstream<char16_t> ss(str);
+	std::vector<std::u16string> tokens;
+	while (std::getline(ss, buf, delim)) {
+		if(!buf.empty()) {
+			tokens.push_back(buf);
+		}
+	}
+	return tokens;
+}
+
 inline int startswith(std::string big, std::string start)
 {
 	return big.compare(0, start.size(), start) == 0;
