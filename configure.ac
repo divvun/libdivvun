@@ -47,34 +47,13 @@ AS_IF([test "x$enable_xml" != xno],
       [AC_CHECK_HEADERS([pugixml.hpp])
        AS_IF([test x"$ac_cv_header_pugixml_hpp" = "xyes"],
              [AC_CHECK_LIB([pugixml], [main])],
-             [AC_MSG_FAILURE([Couldn't find pugixml library (use --disable-xml if you don't want to parse error.xml messages and don't need --enable-checker)])])
+             [AC_MSG_ERROR([cannot find pugixml library (use --disable-xml if you don't want to parse error.xml messages and don't need --enable-checker)])])
        PUGIXML_LIBS="-lpugixml"
        AC_SUBST(PUGIXML_LIBS)
        enable_xml=yes])
 AM_CONDITIONAL([HAVE_LIBPUGIXML], [test x"$PUGIXML_LIBS" != x])
 
-# Checker:
-AC_ARG_ENABLE([checker],
-              [AS_HELP_STRING([--enable-checker],
-                              [build divvun-checker, for running full pipelines from a library, with no IPC @<:@default=check@:>@])],
-              [enable_checker=$enableval],
-              [enable_checker=check])
-AS_IF([test "x$enable_checker" != xno],
-      [AS_IF([test x"$enable_xml" = xno],
-             [AC_MSG_FAILURE([--enable-xml required for checker])])
-       PKG_CHECK_MODULES([LIBARCHIVE], [libarchive > 3],
-                  [AC_DEFINE([HAVE_LIBARCHIVE], [1], [Use archives])
-                   enable_checker=yes],
-                  [PKG_CHECK_MODULES([LIBARCHIVE], [libarchive > 2],
-                              [AC_DEFINE([HAVE_LIBARCHIVE], [1], [Use archives])
-	                       AC_DEFINE([USE_LIBARCHIVE_2], [1], [Use libarchive2])
-                               enable_checker=yes],
-                              [AS_IF([test x$enable_checker = xyes],
-                                     [AC_MSG_ERROR([checker support requires either libarchive or libarchive2 for opening zipped pipespec archives])
-                                      enable_checker=no],
-                                     [enable_checker=no])])])])
-AM_CONDITIONAL([WANT_CHECKER], [test x$enable_checker != xno])
-
+# CGSpell:
 AC_ARG_ENABLE([cgspell],
               [AS_HELP_STRING([--enable-cgspell],
                               [build divvun-cgspell, for spelling unknown (or even known) words from CG streams @<:@default=check@:>@])],
@@ -89,16 +68,47 @@ AS_IF([test "x$enable_cgspell" != xno],
                                 [enable_cgspell=no])])])
 AM_CONDITIONAL([WANT_CGSPELL], [test x$enable_cgspell != xno])
 
+# Checker:
+AC_ARG_ENABLE([checker],
+              [AS_HELP_STRING([--enable-checker],
+                              [build divvun-checker, for running full pipelines from a library, with no IPC @<:@default=check@:>@])],
+              [enable_checker=$enableval],
+              [enable_checker=check])
+AS_IF([test "x$enable_checker" != xno],
+      [AS_IF([test x"$enable_checker" = xyes], dnl Explicitly enabled -- fail if missing xml/cgspell
+              AS_IF([test x"$enable_xml" = xno],
+                    [AC_MSG_ERROR([you need --enable-xml if you want --enable-checker
+
+                    Please run again with --enable-xml and ensure its dependencies are installed.
+                    ])])
+              AS_IF([test x"$enable_cgspell" = xno],
+                    [AC_MSG_ERROR([you need --enable-cgspell if you want --enable-checker
+
+                    Please run again with --enable-cgspell and ensure its dependencies are installed.
+                    ])]))
+       PKG_CHECK_MODULES([LIBARCHIVE], [libarchive > 3],
+                  [AC_DEFINE([HAVE_LIBARCHIVE], [1], [Use archives])
+                   enable_checker=yes],
+                  [PKG_CHECK_MODULES([LIBARCHIVE], [libarchive > 2],
+                              [AC_DEFINE([HAVE_LIBARCHIVE], [1], [Use archives])
+	                       AC_DEFINE([USE_LIBARCHIVE_2], [1], [Use libarchive2])
+                               enable_checker=yes],
+                              [AS_IF([test x$enable_checker = xyes],
+                                     [AC_MSG_ERROR([checker support requires either libarchive or libarchive2 for opening zipped pipespec archives])
+                                      enable_checker=no],
+                                     [enable_checker=no])])])])
+AM_CONDITIONAL([WANT_CHECKER], [test x$enable_checker != xno])
+
 
 AC_CONFIG_FILES([src/divvun-gen-xmlschemas],    [chmod +x src/divvun-gen-xmlschemas])
 AC_CONFIG_FILES([src/divvun-validate-suggest],  [chmod +x src/divvun-validate-suggest])
 AC_CONFIG_FILES([src/divvun-validate-pipespec], [chmod +x src/divvun-validate-pipespec])
 
 AC_PATH_PROG([XMLLINT], [xmllint], [false], [$PATH$PATH_SEPARATOR$with_xmllint/bin])
-AS_IF([test x$XMLLINT = xfalse], [AC_MSG_ERROR([You don't have xmllint installed])])
+AS_IF([test x$XMLLINT = xfalse], [AC_MSG_ERROR([you don't have xmllint installed])])
 
 AC_PATH_PROG([BASH], [bash], [false], [$PATH$PATH_SEPARATOR$with_bash/bin])
-AS_IF([test x$BASH = xfalse], [AC_MSG_ERROR([You don't have bash installed])])
+AS_IF([test x$BASH = xfalse], [AC_MSG_ERROR([you don't have bash installed])])
 
 AC_ARG_VAR([TRANG], [Path to trang.jar (dev dependency for updating DTD)])
 AC_ARG_WITH([trang], [AS_HELP_STRING([--with-trang],[Path to trang.jar (dev dependency for updating DTD)])], [TRANG=$withval], [TRANG=])

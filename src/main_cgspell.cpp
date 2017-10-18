@@ -23,7 +23,7 @@
 #include "cgspell.hpp"
 #include "cxxopts.hpp"
 
-using hfst_ol::Weight;
+using hfst_ospell::Weight;
 
 int main(int argc, char ** argv)
 {

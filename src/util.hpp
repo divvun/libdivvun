@@ -136,6 +136,11 @@ string_t dirname(const string_t& path)
 	return s;
 }
 
+// for variants
+struct Nothing
+{
+};
+
 
 }
 

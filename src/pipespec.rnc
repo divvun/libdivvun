@@ -42,7 +42,7 @@ pipeline =
   element pipeline {
     attlist.pipeline,
     prefs?,
-    (sh | cg | tokenize | tokenise | mwesplit | suggest)+
+    (sh | cg | cgspell | tokenize | tokenise | mwesplit | suggest)+
   }
 attlist.pipeline &=
 
@@ -79,6 +79,10 @@ cg = element cg { attlist.cg, arg }
 attlist.cg &= empty
 
 # arg: grammar.cg3
+cgspell = element cgspell { attlist.cgspell, arg, arg }
+attlist.cgspell &= empty
+
+# arg1: acceptor.hfstol, arg2: errmodel.hfst
 tokenize = element tokenize { attlist.tokenize, arg }
 attlist.tokenize &= empty
 

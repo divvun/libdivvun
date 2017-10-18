@@ -31,6 +31,7 @@
 
 // divvun-gramcheck:
 #include "suggest.hpp"
+#include "cgspell.hpp"
 // xml:
 #include <pugixml.hpp>
 // cg3:
@@ -191,6 +192,17 @@ class CGCmd: public PipeCmd {
 		// cg3_grammar* grammar;
 		std::unique_ptr<cg3_applicator, CGApplicatorDeleter> applicator;
 		// cg3_applicator* applicator;
+};
+
+
+class CGSpellCmd: public PipeCmd {
+	public:
+		CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, bool verbose);
+		CGSpellCmd (const std::string& err_path, const std::string& lex_path, bool verbose);
+		void run(std::stringstream& input, std::stringstream& output) const override;
+		~CGSpellCmd() {};
+	private:
+		std::unique_ptr<Speller> speller;
 };
 
 

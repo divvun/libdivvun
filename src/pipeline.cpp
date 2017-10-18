@@ -87,6 +87,25 @@ void CGCmd::run(std::stringstream& input, std::stringstream& output) const
 
 
 
+CGSpellCmd::CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, bool verbose)
+	: speller(new Speller(errmodel, acceptor, true, -1.0, -1.0, false, ULONG_MAX, -1.0, 0.0))
+{
+	if (!acceptor) {
+		throw std::runtime_error("ERROR: CGSpell command couldn't read acceptor");
+	}
+	if (!errmodel) {
+		throw std::runtime_error("ERROR: CGSpell command couldn't read errmodel");
+	}
+}
+CGSpellCmd::CGSpellCmd (const std::string& err_path, const std::string& lex_path, bool verbose)
+	: speller(new Speller(err_path, lex_path, true, -1.0, -1.0, false, ULONG_MAX, -1.0, 0.0))
+{
+}
+void CGSpellCmd::run(std::stringstream& input, std::stringstream& output) const
+{
+	divvun::run_cgspell(input, output, *speller);
+}
+
 SuggestCmd::SuggestCmd (const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose)
 	: msgs(msgs), generator(generator)
 {
@@ -271,6 +290,18 @@ Pipeline Pipeline::mkPipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const 
 			CGCmd* s = readArchiveExtract(ar_spec->ar_path, args[0], f);
 			cmds.emplace_back(s);
 		}
+		else if(name == u"cgspell") {
+			if(args.size() != 2) {
+				throw std::runtime_error("Wrong number of arguments to <cg> command (expected 2), at byte offset " + std::to_string(cmd.offset_debug()));
+			}
+			ArEntryHandler<hfst_ospell::Transducer*> f = [] (const std::string& ar_path, const void* buff, const size_t size) {
+				return new hfst_ospell::Transducer((char*)buff);
+			};
+			auto* s = new CGSpellCmd(readArchiveExtract(ar_spec->ar_path, args[0], f),
+						 readArchiveExtract(ar_spec->ar_path, args[1], f),
+						 verbose);
+			cmds.emplace_back(s);
+		}
 		else if(name == u"mwesplit") {
 			if(args.size() != 0) {
 				throw std::runtime_error("Wrong number of arguments to <mwesplit> command (expected 0), at byte offset " + std::to_string(cmd.offset_debug()));
@@ -340,6 +371,12 @@ Pipeline Pipeline::mkPipeline(const std::unique_ptr<PipeSpec>& spec, const std::
 			}
 			cmds.emplace_back(new CGCmd(args[0], verbose));
 		}
+		else if(name == u"cgspell") {
+			if(args.size() != 2) {
+				throw std::runtime_error("Wrong number of arguments to <cgspell> command (expected 2), at byte offset " + std::to_string(cmd.offset_debug()));
+			}
+			cmds.emplace_back(new CGSpellCmd(args[0], args[1], verbose));
+		}
 		else if(name == u"mwesplit") {
 			if(args.size() != 0) {
 				throw std::runtime_error("Wrong number of arguments to <mwesplit> command (expected 0), at byte offset " + std::to_string(cmd.offset_debug()));
@@ -404,7 +441,7 @@ void Pipeline::setIgnores(const std::set<err_id>& ignores) {
 	if(suggestcmd != NULL) {
 		suggestcmd->setIgnores(ignores);
 	}
-	else {
+	else if(!ignores.empty()) {
 		throw std::runtime_error("ERROR: Can't set ignores when last command of pipeline is not a SuggestCmd");
 	}
 }
@@ -471,6 +508,9 @@ void writePipeSpecSh(const std::string& specfile, const std::u16string& pipename
 		}
 		else if(name == u"cg") {
 			prog = "vislcg3 -g";
+		}
+		else if(name == u"cgspell") {
+			prog = "divvun-cgspell";
 		}
 		else if(name == u"mwesplit") {
 			prog = "cg-mwesplit";

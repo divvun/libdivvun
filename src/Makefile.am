@@ -16,8 +16,8 @@ EXTRA_DIST          = errors.dtd errors.rnc pipespec.dtd pipespec.rnc
 if WANT_CGSPELL
 # divvun-cgspell binary:
 divvun_cgspell_SOURCES  = main_cgspell.cpp cgspell.cpp cgspell.hpp cxxopts.hpp
-divvun_cgspell_LDADD    = $(HFSTOSPELL_LIBS)   $(PUGIXML_LIBS)
-divvun_cgspell_CXXFLAGS = $(HFSTOSPELL_CFLAGS) $(PUGIXML_CFLAGS)
+divvun_cgspell_LDADD    = $(HFSTOSPELL_LIBS)
+divvun_cgspell_CXXFLAGS = $(HFSTOSPELL_CFLAGS)
 bin_PROGRAMS           += divvun-cgspell
 endif
 
@@ -25,10 +25,10 @@ if WANT_CHECKER
 lib_LTLIBRARIES       = libdivvun.la
 divvunincludedir      = $(includedir)/divvun
 divvuninclude_HEADERS = checker.hpp checkertypes.hpp
-libdivvun_la_SOURCES  = checker.cpp pipeline.cpp suggest.cpp
+libdivvun_la_SOURCES  = checker.cpp pipeline.cpp suggest.cpp cgspell.cpp
 # would've liked to put -lstdc++fs in LIBADD for <experimental/filesystem>, but macos
-libdivvun_la_LIBADD   =              $(CG3_LIBS)   $(LIBARCHIVE_LIBS)   $(divvun_suggest_LDADD)
-libdivvun_CXXFLAGS    =              $(CG3_CFLAGS) $(LIBARCHIVE_CFLAGS) $(divvun_suggest_CXXFLAGS)
+libdivvun_la_LIBADD   =              $(CG3_LIBS)   $(LIBARCHIVE_LIBS)   $(divvun_suggest_LDADD)    $(divvun_cgspell_LDADD)
+libdivvun_CXXFLAGS    =              $(CG3_CFLAGS) $(LIBARCHIVE_CFLAGS) $(divvun_suggest_CXXFLAGS) $(divvun_cgspell_CXXFLAGS)
 libdivvun_la_LDFLAGS  = -no-undefined
 # TODO something like -version-info 49:0:0
 

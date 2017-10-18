@@ -97,11 +97,6 @@ enum LineType {
 	WordformL, ReadingL, BlankL
 };
 
-// for variants
-struct Nothing
-{
-};
-
 inline variant<Nothing, std::pair<err_id, UStringSet>> pickErr(const std::map<std::u16string, UStringSet>& err,
 							       const std::set<err_id>& ignores) {
 	for(const auto& it : err) {
@@ -112,6 +107,8 @@ inline variant<Nothing, std::pair<err_id, UStringSet>> pickErr(const std::map<st
 	}
 	return Nothing();
 }
+
+// TODO: Put these in a class; calls to divvun::run() are not very informative
 
 std::vector<Err> run_errs(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs, const std::set<err_id>& ignores);
 

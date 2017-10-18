@@ -34,7 +34,7 @@
   depversions: versions of sub-modules used by the pipeline, e.g. hfst
  -->
 
-<!ELEMENT pipeline (prefs?, (sh|cg|tokenize|tokenise|mwesplit|suggest)+)>
+<!ELEMENT pipeline (prefs?, (sh|cg|cgspell|tokenize|tokenise|mwesplit|suggest)+)>
 <!ATTLIST pipeline
           name ID #REQUIRED
           language CDATA #IMPLIED
@@ -78,6 +78,7 @@
 <!-- Library-based commands – no IPC/process open() required since
      these just use linked libraries: -->
 <!ELEMENT cg (arg)>           <!-- arg: grammar.cg3 -->
+<!ELEMENT cgspell (arg, arg)> <!-- arg1: acceptor.hfstol, arg2: errmodel.hfst -->
 <!ELEMENT tokenize (arg)>     <!-- arg: tokeniser.pmhfst -->
 <!ELEMENT tokenise (arg)>     <!-- en_GB alias of the above -->
 <!ELEMENT mwesplit EMPTY>     <!-- takes no arguments -->
