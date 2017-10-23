@@ -1,28 +1,30 @@
-#!/bin/bash
+##!/bin/bash
 
-set -e -u
+set -e
+if [[ ${BASH_VERSINFO[0]} -ge 4 ]]; then
+    # With the old macos bash, the function
+    # f () { shift;args=("$@");echo"${args[@]}"; }
+    # will be treated as use of undeclared variable, so don't -u there
+    set -u
+fi
 
 cd "$(dirname "$0")"/../..
 
-src/divvun-validate-pipespec test/checker/pipespec.xml
+check () {
+    local -r n="$1"
+    shift
+    local -ra args=( "$@" )
+    src/divvun-validate-pipespec test/checker/pipespec.xml
+    (
+        cd test/checker
+        set -x
+        ../../src/divvun-checker "${args[@]}" < input."$n".txt > output."$n".json
+    )
+    if ! diff test/checker/output."$n".json test/checker/expected."$n".json; then
+        echo diff test/checker/output."$n".json test/checker/expected."$n".json
+        exit 1
+    fi
+}
 
-(
-    cd test/checker
-    ../../src/divvun-checker -s pipespec.xml -n smegram <input >output
-)
-
-if ! diff test/checker/output test/checker/expected; then
-    echo diff test/checker/output test/checker/expected
-    exit 1
-fi
-
-
-(
-    cd test/checker
-    ../../src/divvun-checker -a sme.zcheck -n smegram <input >output
-)
-
-if ! diff test/checker/output test/checker/expected; then
-    echo diff test/checker/output test/checker/expected
-    exit 1
-fi
+# Arg 1 is the name of test set; the rest of the args are passed to divvun-cgspell
+check "$@"

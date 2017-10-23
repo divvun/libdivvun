@@ -26,6 +26,10 @@
     <cg><arg n="valency.cg3"/></cg>
     <cg><arg n="mwe-dis.cg3"/></cg>
     <mwesplit/>
+    <cgspell>
+      <arg n="errmodel.hfst"/>
+      <arg n="acceptor.hfstol"/>
+    </cgspell>
     <cg><arg n="disambiguator.cg3"/></cg>
     <cg><arg n="grammarchecker.cg3"/></cg>
     <suggest>
