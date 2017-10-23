@@ -24,6 +24,7 @@ old/
 /src/divvun-validate-pipespec
 /src/suggest.lo
 /src/checker.lo
+/src/cgspell.lo
 /src/libdivvun.la
 /src/libdivvun.lo
 /src/divvun-gen-sh
@@ -54,14 +55,22 @@ old/
 /test/checker/errors.xml
 /test/checker/tokeniser.pmhfst
 /test/checker/sme.zcheck
-/test/checker/output
-/test/checker/run.log
-/test/checker/run.trs
 /test/checker/test-suite.log
 /test/checker/.dir-locals.elc
 /test/checker/run-lib.log
 /test/checker/run-lib.trs
 /test/checker/run-lib.verboselog
+/test/checker/acceptor.hfstol
+/test/checker/errmodel.hfst
+/test/checker/output.archive.json
+/test/checker/output.spell.json
+/test/checker/output.xml.json
+/test/checker/run.archive.sh.log
+/test/checker/run.archive.sh.trs
+/test/checker/run.spell.sh.log
+/test/checker/run.spell.sh.trs
+/test/checker/run.xml.sh.log
+/test/checker/run.xml.sh.trs
 
 /test/cgspell/analyser.hfst
 /test/cgspell/analyser.hfstol
