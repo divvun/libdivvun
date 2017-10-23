@@ -11926,6 +11926,9 @@ COPY:punct-aistton ("”" &SUGGEST) EXCEPT ("»" &punct-aistton) TARGET ("»" &p
     
     # style error
     # -----------
+
+ADD (&typo &SUGGESTWF) (<spelled>);
+
     
 #COMMON USE, DELETE?ADD:sty-not_leat_go_buorre (sty-not_leat_go_buorre) TARGET ("leat") ( *1 ("buorre") BARRIER GRAMCHK-S-BOUNDARY OR GRAMCHK-VFIN LINK *1 ("ahte") BARRIER GRAMCHK-S-BOUNDARY OR GRAMCHK-VFIN);
 	## Márjá dadjá : –Leat go nu buorre, ahte guottát mu rastá eanu?

@@ -20,6 +20,7 @@
 namespace divvun {
 
 const std::string CG_SUGGEST_TAG = "&SUGGEST";
+const std::string CG_SUGGESTWF_TAG = "&SUGGESTWF";
 
 const std::basic_regex<char> DELIMITERS ("^[.!?]$");
 
@@ -27,10 +28,11 @@ const std::basic_regex<char> DELIMITERS ("^[.!?]$");
 // … or we could make an (h)fst out of these to match on lines :)
 const std::basic_regex<char> CG_TAG_TYPE (
 	"^"
-	"(#"			// Dependencies, comments
+	"(#"			// Group 1: Dependencies, comments
 	"|&(.+)"		// Group 2: Errtype
 	"|R:(.+):([0-9]+)"	// Group 3 & 4: Relation name and target
 	"|ID:([0-9]+)"		// Group 5: Relation ID
+	"|\"<(.+)>\""           // Group 6: Reading word-form
 	"|@"			// Syntactic tag
 	"|Sem/"			// Semantic tag
 	"|§"			// Semantic role
@@ -228,17 +230,19 @@ const hfst::HfstTransducer *readTransducer(const std::string& file) {
 	return t;
 }
 
-// return <suggen, errtype, gentags, id>
+// return <suggen, errtype, gentags, id, wf>
 // where suggen is true if we want to suggest based on this
 // errtype is the error tag (without leading ampersand)
 // gentags are the tags we generate with
 // id is 0 if unset, otherwise the relation id of this word
-const std::tuple<bool, std::string, StringVec, rel_id, relations> proc_tags(const std::string& tags) {
+const std::tuple<bool, std::string, StringVec, rel_id, relations, std::string, bool> proc_tags(const std::string& tags) {
 	bool suggest = false;
 	std::string errtype;
 	StringVec gentags;
 	rel_id id = 0; // CG-3 id's start at 1, should be safe. Want sum types :-/
 	relations rels;
+	std::string wf;
+	bool suggestwf = false;
 	for(auto& tag : split(tags)) {
 		std::match_results<const char*> result;
 		std::regex_match(tag.c_str(), result, CG_TAG_TYPE);
@@ -250,6 +254,9 @@ const std::tuple<bool, std::string, StringVec, rel_id, relations> proc_tags(cons
 			// std::cerr << "\033[1;35msugtag=\t" << result[2] << "\033[0m" << std::endl;
 			if(tag == CG_SUGGEST_TAG) {
 				suggest = true;
+			}
+			else if(tag == CG_SUGGESTWF_TAG) {
+				suggestwf = true;
 			}
 			else {
 				errtype = result[2];
@@ -276,12 +283,15 @@ const std::tuple<bool, std::string, StringVec, rel_id, relations> proc_tags(cons
 			}
 			// std::cerr << "\033[1;35mresult[5] (ID)=\t" << result[5] << "\033[0m" << std::endl;
 		}
+		else if(result[6].length() != 0) {
+			wf = result[6];
+		}
 		// else {
 		// 	std::cerr << "\033[1;35mresult.length()=\t" << result[0] << "\033[0m" << std::endl;
 		// }
 
 	}
-	return std::make_tuple(suggest, errtype, gentags, id, rels);
+	return std::make_tuple(suggest, errtype, gentags, id, rels, wf, suggestwf);
 }
 
 const Reading proc_subreading(const std::string& line) {
@@ -297,9 +307,13 @@ const Reading proc_subreading(const std::string& line) {
 	const auto& gentags = std::get<2>(suggen);
 	r.id = std::get<3>(suggen);
 	r.rels = std::get<4>(suggen);
-	UStringSet sforms;
 	const auto& tagsplus = join(gentags, "+");
 	r.ana = lemma+"+"+tagsplus;
+	r.wf = std::get<5>(suggen);
+	r.suggestwf = std::get<6>(suggen);
+	if(r.suggestwf) {
+		r.sforms.insert(utf16conv.from_bytes(r.wf));
+	}
 	return r;
 };
 
@@ -321,6 +335,9 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const std::string& lin
 		// higher sub can override id if set; doesn't seem like cg3 puts ids on them though
 		r.id = (r.id == 0 ? sub.id : r.id);
 		r.suggest = r.suggest || sub.suggest;
+		r.suggestwf = r.suggestwf || sub.suggestwf;
+		r.sforms.insert(sub.sforms.begin(), sub.sforms.end());
+		r.wf = r.wf.empty() ? sub.wf : r.wf;
 	}
 	if(r.suggest) {
 		const auto& paths = t.lookup_fd({ r.ana }, -1, 10.0);
@@ -504,7 +521,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 			if(!reading.errtype.empty()) {
 				errtype = reading.errtype;
 			}
-			if(reading.suggest) {
+			if(reading.suggest || reading.suggestwf) { // or unconditionally insert? Then don't need suggestwf on Reading
 				c.err[errtype].insert(reading.sforms.begin(),
 						      reading.sforms.end());
 			}

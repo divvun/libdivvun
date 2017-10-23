@@ -69,6 +69,8 @@ struct Reading {
 	UStringSet sforms;
 	relations rels;	// rels[relname] = target.id
 	rel_id id = 0;
+	std::string wf;
+	bool suggestwf = false;
 };
 
 struct Cohort {
