@@ -82,18 +82,23 @@ inline const StringVec split(const std::string& str, const char& delim=' ')
 	return tokens;
 }
 
-inline const std::vector<std::u16string> split(const std::u16string& str, const char16_t& delim=' ')
-{
-	std::u16string buf;
-	std::basic_stringstream<char16_t> ss(str);
-	std::vector<std::u16string> tokens;
-	while (std::getline(ss, buf, delim)) {
-		if(!buf.empty()) {
-			tokens.push_back(buf);
-		}
-	}
-	return tokens;
-}
+// TODO: This fails on macos with
+// In file included from /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/sstream:175:
+// /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/istream:295:26: error: implicit instantiation of undefined template 'std::__1::ctype<char16_t>'
+// if (!__ct.is(__ct.space, *__i))
+//
+// inline const std::vector<std::u16string> split(const std::u16string& str, const char16_t& delim=' ')
+// {
+// 	std::u16string buf;
+// 	std::basic_stringstream<char16_t> ss(str);
+// 	std::vector<std::u16string> tokens;
+// 	while (std::getline(ss, buf, delim)) {
+// 		if(!buf.empty()) {
+// 			tokens.push_back(buf);
+// 		}
+// 	}
+// 	return tokens;
+// }
 
 inline int startswith(std::string big, std::string start)
 {

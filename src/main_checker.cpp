@@ -150,8 +150,9 @@ int main(int argc, char ** argv)
 		auto ignores = std::set<divvun::err_id>();
 		if(options.count("ignore")) {
 			std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-			const auto es = divvun::split(utf16conv.from_bytes(options["ignore"].as<std::string>()), ',');
-			ignores.insert(es.begin(), es.end());
+			for(const auto& ignore : divvun::split(options["ignore"].as<std::string>(), ',')) {
+				ignores.insert(utf16conv.from_bytes(ignore));
+			}
 		}
 
 		if(options.count("spec")) {
