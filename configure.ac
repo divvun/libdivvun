@@ -6,7 +6,9 @@ AM_INIT_AUTOMAKE
 LT_INIT
 
 AC_SUBST([GLIB_CFLAGS])
-CXXFLAGS="$CXXFLAGS -std=c++11 -Wall"
+
+CXXFLAGS="$CXXFLAGS -std=c++11 -Wall -fstack-protector-strong"
+
 
 PKG_CHECK_MODULES([HFST], [hfst >= 3.12.2])
 CXXFLAGS="$CXXFLAGS $HFST_CFLAGS"
