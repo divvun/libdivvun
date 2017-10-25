@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cstdlib>
+
 #include "pipeline.hpp"
 
 namespace divvun {
@@ -266,7 +268,7 @@ Pipeline Pipeline::mkPipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const 
 		std::vector<std::string> args;
 		for (const pugi::xml_node& arg: cmd.children("arg")) {
 			const auto& argn = arg.attribute("n").value();
-			args.push_back(argn);
+			args.emplace_back(argn);
 		}
 		if(name == u"tokenise" || name == u"tokenize") {
 			if(args.size() != 1) {
@@ -357,7 +359,7 @@ Pipeline Pipeline::mkPipeline(const std::unique_ptr<PipeSpec>& spec, const std::
 		std::vector<std::string> args;
 		for (const pugi::xml_node& arg: cmd.children("arg")) {
 			const auto& argn = arg.attribute("n").value();
-			args.push_back(argn);
+			args.emplace_back(argn);
 		}
 		if(name == u"tokenise" || name == u"tokenize") {
 			if(args.size() != 1) {
@@ -501,7 +503,7 @@ void writePipeSpecSh(const std::string& specfile, const std::u16string& pipename
 		std::vector<std::string> args;
 		for (const pugi::xml_node& arg: cmd.children("arg")) {
 			const auto& argn = arg.attribute("n").value();
-			args.push_back(argn);
+			args.emplace_back(argn);
 		}
 		if(name == u"tokenise" || name == u"tokenize") {
 			prog = "hfst-tokenise -g";

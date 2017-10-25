@@ -104,7 +104,7 @@ const void print_readings(const vector<string>& ana,
 				   const std::string& errtag)
 {
 	size_t indent = 1;
-	vector<string>::const_iterator beg = ana.begin(), end = ana.end();
+	auto beg = ana.begin(), end = ana.end();
 	while(true) {
 		bool sub_found = false;
 		for(auto it = end-1; it > ana.begin(); --it) {
