@@ -496,16 +496,6 @@ const std::string clean_blank(const std::string& raw)
 }
 
 
-bool eqComp (const std::u16string &t1, const std::u16string &t2)
-{
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	std::cerr << "\033[1;35mt1=\t" << utf16conv.to_bytes(t1) << "\033[0m\t";
-	std::cerr << "\033[1;35mt2=\t" << utf16conv.to_bytes(t2) << "\033[0m" << std::endl;
-
-
-    return t1 == t2;
-}
-
 // https://stackoverflow.com/a/1464684/69663
 template<class Iterator>
 Iterator Dedupe(Iterator first, Iterator last)
