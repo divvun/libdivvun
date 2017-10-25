@@ -44,7 +44,7 @@ struct Err {
 		size_t end;
 		err_id err;
 		std::u16string msg;
-		std::set<std::u16string> rep;
+		std::vector<std::u16string> rep;
 };
 
 struct Option {

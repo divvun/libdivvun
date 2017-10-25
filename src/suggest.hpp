@@ -46,7 +46,7 @@ namespace divvun {
 
 using mapbox::util::variant;
 
-using UStringSet = std::set<std::u16string>;
+using UStringVector = std::vector<std::u16string>;
 
 using msgmap = std::unordered_map<lang, std::pair<ToggleIds, ToggleRes> >;	// msgs[lang] = make_pair(ToggleIds, ToggleRes)
 
@@ -66,7 +66,7 @@ struct Reading {
 	bool suggest = false;
 	std::string ana;
 	std::u16string errtype;
-	UStringSet sforms;
+	UStringVector sforms;
 	relations rels;	// rels[relname] = target.id
 	rel_id id = 0;
 	std::string wf;
@@ -75,7 +75,7 @@ struct Reading {
 
 struct Cohort {
 	std::u16string form;
-	std::map<err_id, UStringSet> err;
+	std::map<err_id, UStringVector> err;
 	size_t pos;
 	rel_id id;
 	std::vector<Reading> readings;
@@ -99,8 +99,8 @@ enum LineType {
 	WordformL, ReadingL, BlankL
 };
 
-inline variant<Nothing, std::pair<err_id, UStringSet>> pickErr(const std::map<std::u16string, UStringSet>& err,
-							       const std::set<err_id>& ignores) {
+inline variant<Nothing, std::pair<err_id, UStringVector>> pickErr(const std::map<std::u16string, UStringVector>& err,
+								  const std::set<err_id>& ignores) {
 	for(const auto& it : err) {
 		if(ignores.find(it.first) == ignores.end()) {
 			// TODO: currently we just pick the first unignored if there are several error types:

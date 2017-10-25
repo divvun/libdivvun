@@ -314,7 +314,7 @@ const Reading proc_subreading(const std::string& line) {
 	r.wf = std::get<5>(suggen);
 	r.suggestwf = std::get<6>(suggen);
 	if(r.suggestwf) {
-		r.sforms.insert(utf16conv.from_bytes(r.wf));
+		r.sforms.emplace_back(utf16conv.from_bytes(r.wf));
 	}
 	return r;
 };
@@ -338,7 +338,7 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const std::string& lin
 		r.id = (r.id == 0 ? sub.id : r.id);
 		r.suggest = r.suggest || sub.suggest;
 		r.suggestwf = r.suggestwf || sub.suggestwf;
-		r.sforms.insert(sub.sforms.begin(), sub.sforms.end());
+		r.sforms.insert(r.sforms.end(), sub.sforms.begin(), sub.sforms.end());
 		r.wf = r.wf.empty() ? sub.wf : r.wf;
 	}
 	if(r.suggest) {
@@ -351,7 +351,7 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const std::string& lin
 						form << symbol;
 					}
 				}
-				r.sforms.insert(utf16conv.from_bytes(form.str()));
+				r.sforms.emplace_back(utf16conv.from_bytes(form.str()));
 			}
 		}
 	}
@@ -361,12 +361,12 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const std::string& lin
 /* If we have an inserted suggestion, then the next word has to be
  * part of that, since we don't want to *replace* the word
 **/
-std::map<std::u16string, UStringSet> sugg_append(const std::u16string& next_wf, std::map<std::u16string, UStringSet> cohort_err)
+std::map<std::u16string, UStringVector> sugg_append(const std::u16string& next_wf, std::map<std::u16string, UStringVector> cohort_err)
 {
-	std::map<std::u16string, UStringSet> fixed;
+	std::map<std::u16string, UStringVector> fixed;
 	for(auto& err : cohort_err) {
 		for(auto& f : err.second) {
-			fixed[err.first].insert(f + u" " + next_wf);
+			fixed[err.first].emplace_back(f + u" " + next_wf);
 		}
 	}
 	return fixed;
@@ -380,7 +380,7 @@ const Cohort DEFAULT_COHORT = {
 	{}, {}, 0, 0, {}
 };
 
-variant<Nothing, Err> cohort_errs(const std::pair<err_id, UStringSet>& err,
+variant<Nothing, Err> cohort_errs(const std::pair<err_id, UStringVector>& err,
 				  const Cohort& c,
 				  const Sentence& sentence,
 				  const hfst::HfstTransducer& t,
@@ -495,6 +495,30 @@ const std::string clean_blank(const std::string& raw)
 	return text.str();
 }
 
+
+bool eqComp (const std::u16string &t1, const std::u16string &t2)
+{
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	std::cerr << "\033[1;35mt1=\t" << utf16conv.to_bytes(t1) << "\033[0m\t";
+	std::cerr << "\033[1;35mt2=\t" << utf16conv.to_bytes(t2) << "\033[0m" << std::endl;
+
+
+    return t1 == t2;
+}
+
+// https://stackoverflow.com/a/1464684/69663
+template<class Iterator>
+Iterator Dedupe(Iterator first, Iterator last)
+{
+	while (first != last)
+	{
+		Iterator next(first);
+		last = std::remove(++next, last, *first);
+		first = next;
+	}
+	return last;
+}
+
 Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs) {
 	size_t pos = 0;
 	std::u16string errtype = u"default";
@@ -524,8 +548,12 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 				errtype = reading.errtype;
 			}
 			if(reading.suggest || reading.suggestwf) { // or unconditionally insert? Then don't need suggestwf on Reading
-				c.err[errtype].insert(reading.sforms.begin(),
-						      reading.sforms.end());
+				auto& cerrs = c.err[errtype];
+				cerrs.insert(cerrs.end(),
+					     reading.sforms.begin(),
+					     reading.sforms.end());
+				cerrs.erase(Dedupe(cerrs.begin(), cerrs.end()),
+					    cerrs.end());
 			}
 			else {
 				is_addcohort = false; // Seen at least one non-suggestion reading
@@ -589,8 +617,12 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 			errtype = reading.errtype;
 		}
 		if(reading.suggest) {
-			c.err[errtype].insert(reading.sforms.begin(),
-					      reading.sforms.end());
+			auto& cerrs = c.err[errtype];
+			cerrs.insert(cerrs.end(),
+				     reading.sforms.begin(),
+				     reading.sforms.end());
+			cerrs.erase(Dedupe(cerrs.begin(), cerrs.end()),
+				    cerrs.end());
 		}
 		if(reading.id != 0) {
 			c.id = reading.id;
@@ -612,7 +644,7 @@ std::vector<Err> run_errs(std::istream& is, const hfst::HfstTransducer& t, const
 	for(const auto& c : sentence.cohorts) {
 		pickErr(c.err, ignores).match(
 			[]      (Nothing) {},
-			[&errs, &c, &sentence, &t, &msgs] (std::pair<err_id, UStringSet>& err)
+			[&errs, &c, &sentence, &t, &msgs] (std::pair<err_id, UStringVector>& err)
 			{
 				cohort_errs(err, c, sentence, t, msgs).match(
 					[]      (Nothing) {},
@@ -637,7 +669,7 @@ RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer
 	for(const auto& c : sentence.cohorts) {
 		pickErr(c.err, ignores).match(
 			[]      (Nothing) {},
-			[&os, &wantsep, &c, &sentence, &t, &msgs] (std::pair<err_id, UStringSet>& err)
+			[&os, &wantsep, &c, &sentence, &t, &msgs] (std::pair<err_id, UStringVector>& err)
 			{
 				cohort_errs(err, c, sentence, t, msgs).match(
 					[] (Nothing) {},
