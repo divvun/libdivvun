@@ -21,7 +21,6 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
-#include <stdlib.h>
 
 #include <string>
 #include <set>
@@ -34,10 +33,10 @@ namespace divvun {
  * Public types for divvun-gramcheck library
  */
 
-typedef std::string lang;
-typedef std::u16string msg;
-typedef std::u16string err_id;
-typedef std::basic_regex<char> err_re;
+using lang = std::string;
+using msg = std::u16string;
+using err_id = std::u16string;
+using err_re = std::basic_regex<char>;
 
 struct Err {
 		std::u16string form;
@@ -62,20 +61,20 @@ struct OptionCompare {
 /**
  * Radio-button choices (e.g. Oxford comma vs no-Oxford comma)
  */
-typedef std::set<Option, OptionCompare> OptionSet;
+using OptionSet = std::set<Option, OptionCompare>;
 
 /**
  * Checkbox choices, ie. hiding certain error types
  */
-typedef std::unordered_map<err_id, msg> ToggleIds;      // toggleIds[errtype] = msg;
-typedef std::vector<std::pair<err_re, msg> > ToggleRes; // toggleRes = [(errtype_regex, msg), …];
+using ToggleIds = std::unordered_map<err_id, msg>;      // toggleIds[errtype] = msg;
+using ToggleRes = std::vector<std::pair<err_re, msg> >; // toggleRes = [(errtype_regex, msg), …];
 
 struct Prefs {
 		ToggleIds toggleIds;
 		ToggleRes toggleRes;
 		OptionSet options;
 };
-typedef std::unordered_map<lang, Prefs> LocalisedPrefs;
+using LocalisedPrefs = std::unordered_map<lang, Prefs>;
 
 } // namespace divvun
 

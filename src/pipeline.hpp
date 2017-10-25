@@ -21,13 +21,10 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
-#include <stdlib.h>
 
 // Would like to
 // #include <experimental/filesystem>
 // but need to support macos
-#include <limits.h>
-#include <stdlib.h>
 
 // divvun-gramcheck:
 #include "suggest.hpp"
@@ -50,10 +47,10 @@ namespace divvun {
 const bool DEBUG=false;
 #endif
 
-typedef enum {
+using cg3_status = enum {
 	CG3_ERROR   = 0,
 	CG3_SUCCESS = 1
-} cg3_status;
+};
 
 
 // From archive.h, to make it usable with libarchive<3.2.2:
@@ -79,7 +76,7 @@ typedef int64_t la_int64_t;
 
 class PipeSpec {
 	public:
-		PipeSpec() {}
+		PipeSpec() = default;
 		PipeSpec(PipeSpec const &) = delete;
 		PipeSpec &operator=(PipeSpec const &) = delete;
 		// PipeSpec(const pugi::xml_document& doc, const std::unordered_map<std::u16string, pugi::xml_node>& pipespec)
@@ -105,8 +102,8 @@ struct OneShotReadBuf : public std::streambuf
 
 class ArPipeSpec {
 	public:
-		explicit ArPipeSpec(const std::string& ar_path)
-			: ar_path(ar_path)
+		explicit ArPipeSpec(const std::string& ar_path_)
+			: ar_path(ar_path_)
 			, spec(new PipeSpec) {}
 		ArPipeSpec(ArPipeSpec const &) = delete;
 		ArPipeSpec &operator=(ArPipeSpec const &) = delete;
@@ -123,10 +120,9 @@ std::unique_ptr<ArPipeSpec> readArPipeSpec(const std::string& ar_path);
 
 class PipeCmd {
 	public:
-		PipeCmd() {};
+		PipeCmd() = default;
 		virtual void run(std::stringstream& input, std::stringstream& output) const = 0;
-		virtual ~PipeCmd() {};
-	private:
+		virtual ~PipeCmd() = default;
 		// no copying
 		PipeCmd(PipeCmd const &) = delete;
 		PipeCmd &operator=(PipeCmd const &) = delete;
@@ -138,7 +134,7 @@ class TokenizeCmd: public PipeCmd {
 		TokenizeCmd (std::istream& instream, bool verbose);
 		TokenizeCmd (const std::string& path, bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const override;
-		~TokenizeCmd() {};
+		~TokenizeCmd() override = default;
 	private:
 		hfst_ol::PmatchContainer* mkContainer(std::istream& instream, bool verbose);
 		hfst_ol_tokenize::TokenizeSettings settings;
@@ -173,7 +169,7 @@ class MweSplitCmd: public PipeCmd {
 		/* Assumes cg3_init has been called already */
 		explicit MweSplitCmd (bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const override;
-		~MweSplitCmd() {};
+		~MweSplitCmd() override = default;
 	private:
 		std::unique_ptr<cg3_mwesplitapplicator, CGMweSplitApplicatorDeleter> applicator;
 		// cg3_applicator* applicator;
@@ -186,7 +182,7 @@ class CGCmd: public PipeCmd {
 		CGCmd (const char* buff, const size_t size, bool verbose);
 		CGCmd (const std::string& path, bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const override;
-		~CGCmd() {};
+		~CGCmd() override = default;
 	private:
 		std::unique_ptr<cg3_grammar, CGGrammarDeleter> grammar;
 		// cg3_grammar* grammar;
@@ -200,7 +196,7 @@ class CGSpellCmd: public PipeCmd {
 		CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, bool verbose);
 		CGSpellCmd (const std::string& err_path, const std::string& lex_path, bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const override;
-		~CGSpellCmd() {};
+		~CGSpellCmd() override = default;
 	private:
 		std::unique_ptr<Speller> speller;
 };
@@ -212,7 +208,7 @@ class SuggestCmd: public PipeCmd {
 		SuggestCmd (const std::string& gen_path, const std::string& msg_path, bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const override;
 		std::vector<Err> run_errs(std::stringstream& input) const;
-		~SuggestCmd() {};
+		~SuggestCmd() override = default;
 		void setIgnores(const std::set<err_id>& ignores);
 		const msgmap msgs;
 	private:

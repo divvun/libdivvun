@@ -37,7 +37,7 @@
 
 namespace divvun {
 
-typedef std::vector<std::string> StringVec;
+using StringVec = std::vector<std::string>;
 
 template<typename Container>
 inline const std::string join_quoted(const Container& ss, const std::string& delim=" ") {

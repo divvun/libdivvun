@@ -46,12 +46,12 @@ namespace divvun {
 
 using mapbox::util::variant;
 
-typedef std::set<std::u16string> UStringSet;
+using UStringSet = std::set<std::u16string>;
 
-typedef std::unordered_map<lang, std::pair<ToggleIds, ToggleRes> > msgmap;	// msgs[lang] = make_pair(ToggleIds, ToggleRes)
+using msgmap = std::unordered_map<lang, std::pair<ToggleIds, ToggleRes> >;	// msgs[lang] = make_pair(ToggleIds, ToggleRes)
 
-typedef size_t rel_id;
-typedef std::unordered_map<std::string, rel_id> relations;
+using rel_id = size_t;
+using relations = std::unordered_map<std::string, rel_id>;
 
 inline std::string xml_raw_cdata(const pugi::xml_node& label) {
 	std::ostringstream os;
@@ -81,7 +81,7 @@ struct Cohort {
 	std::vector<Reading> readings;
 };
 
-typedef std::unordered_map<rel_id, size_t> CohortMap;
+using CohortMap = std::unordered_map<rel_id, size_t>;
 
 enum RunState {
 	flushing,

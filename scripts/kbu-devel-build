@@ -16,6 +16,7 @@ build () {
     make -j3
     make -j3 install
     make -j3 check
+    git ls-files src | grep pp$ | grep -ve mapbox -e cxxopts | xargs -I{} clang-tidy --checks='-*,modernize-*,-modernize-raw-string-literal' {} -- -std=c++11
 }
 
 [[ "${BASH_SOURCE[0]}" != "${0}" ]] || build

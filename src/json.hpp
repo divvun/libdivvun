@@ -58,7 +58,7 @@ inline const std::string esc(const std::u16string& str) {
 				os.push_back('n');
 				break;
 			default:
-				int ci = (int)c;
+				auto ci = (int)c;
 				if((sizeof(c) == 1 || static_cast<unsigned>(c) < 256)
 				   && (ci<0x1f ||
 				       ci==0x7f ||

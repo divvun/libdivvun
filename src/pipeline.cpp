@@ -154,7 +154,7 @@ Ret archiveExtract(const std::string& ar_path,
 		   const std::string& entry_pathname,
 		   ArEntryHandler<Ret>procFile)
 {
-	struct archive_entry* entry = 0;
+	struct archive_entry* entry = nullptr;
 	for (int rr = archive_read_next_header(ar, &entry);
 	     rr != ARCHIVE_EOF;
 	     rr = archive_read_next_header(ar, &entry))
@@ -254,7 +254,7 @@ Pipeline Pipeline::mkPipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const 
 {
 	LocalisedPrefs prefs;
 	std::vector<std::unique_ptr<PipeCmd>> cmds;
-	SuggestCmd* suggestcmd = NULL;
+	SuggestCmd* suggestcmd = nullptr;
 	auto& spec = ar_spec->spec;
 	if (!cg3_init(stdin, stdout, stderr)) {
 		// TODO: Move into a lib-general init function? Or can I call this safely once per CGCmd?
@@ -346,7 +346,7 @@ Pipeline Pipeline::mkPipeline(const std::unique_ptr<PipeSpec>& spec, const std::
 {
 	LocalisedPrefs prefs;
 	std::vector<std::unique_ptr<PipeCmd>> cmds;
-	SuggestCmd* suggestcmd = NULL;
+	SuggestCmd* suggestcmd = nullptr;
 	if (!cg3_init(stdin, stdout, stderr)) {
 		// TODO: Move into a lib-general init function? Or can I call this safely once per CGCmd?
 		throw std::runtime_error("ERROR: Couldn't initialise ICU for vislcg3!");
@@ -421,7 +421,7 @@ void Pipeline::proc(std::stringstream& input, std::stringstream& output) {
 }
 
 std::vector<Err> Pipeline::proc_errs(std::stringstream& input) {
-	if(suggestcmd == NULL || cmds.empty() || suggestcmd != cmds.back().get()) {
+	if(suggestcmd == nullptr || cmds.empty() || suggestcmd != cmds.back().get()) {
 		throw std::runtime_error("Can't create cohorts without a SuggestCmd as the final Pipeline command!");
 	}
 	std::stringstream cur_in;
@@ -438,7 +438,7 @@ std::vector<Err> Pipeline::proc_errs(std::stringstream& input) {
 	return suggestcmd->run_errs(cur_in);
 }
 void Pipeline::setIgnores(const std::set<err_id>& ignores) {
-	if(suggestcmd != NULL) {
+	if(suggestcmd != nullptr) {
 		suggestcmd->setIgnores(ignores);
 	}
 	else if(!ignores.empty()) {

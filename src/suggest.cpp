@@ -155,7 +155,7 @@ const msgmap readMessages(const std::string& file) {
 
 
 const hfst::HfstTransducer *readTransducer(std::istream& is) {
-	hfst::HfstInputStream *in = NULL;
+	hfst::HfstInputStream *in = nullptr;
 	try
 	{
 		in = new hfst::HfstInputStream(is);
@@ -163,20 +163,20 @@ const hfst::HfstTransducer *readTransducer(std::istream& is) {
 	catch (StreamNotReadableException& e)
 	{
 		std::cerr << "ERROR: Stream not readable." << std::endl;
-		return NULL;
+		return nullptr;
 	}
 	catch (HfstException& e) {
 		std::cerr << "ERROR: HfstException." << std::endl;
-		return NULL;
+		return nullptr;
 	}
 
-	hfst::HfstTransducer* t = NULL;
+	hfst::HfstTransducer* t = nullptr;
 	while (not in->is_eof())
 	{
 		if (in->is_bad())
 		{
 			std::cerr << "ERROR: Stream cannot be read." << std::endl;
-			return NULL;
+			return nullptr;
 		}
 		t = new hfst::HfstTransducer(*in);
 		if(not in->is_eof()) {
@@ -186,14 +186,14 @@ const hfst::HfstTransducer *readTransducer(std::istream& is) {
 	}
 	in->close();
 	delete in;
-	if(t == NULL) {
+	if(t == nullptr) {
 		std::cerr << "WARNING: Could not read any transducers!" << std::endl;
 	}
 	return t;
 }
 
 const hfst::HfstTransducer *readTransducer(const std::string& file) {
-	hfst::HfstInputStream *in = NULL;
+	hfst::HfstInputStream *in = nullptr;
 	try
 	{
 		in = new hfst::HfstInputStream(file);
@@ -201,20 +201,20 @@ const hfst::HfstTransducer *readTransducer(const std::string& file) {
 	catch (StreamNotReadableException& e)
 	{
 		std::cerr << "ERROR: File does not exist." << std::endl;
-		return NULL;
+		return nullptr;
 	}
 	catch (HfstException& e) {
 		std::cerr << "ERROR: HfstException." << std::endl;
-		return NULL;
+		return nullptr;
 	}
 
-	hfst::HfstTransducer* t = NULL;
+	hfst::HfstTransducer* t = nullptr;
 	while (not in->is_eof())
 	{
 		if (in->is_bad())
 		{
 			std::cerr << "ERROR: Stream cannot be read." << std::endl;
-			return NULL;
+			return nullptr;
 		}
 		t = new hfst::HfstTransducer(*in);
 		if(not in->is_eof()) {
@@ -224,7 +224,7 @@ const hfst::HfstTransducer *readTransducer(const std::string& file) {
 	}
 	in->close();
 	delete in;
-	if(t == NULL) {
+	if(t == nullptr) {
 		std::cerr << "WARNING: Could not read any transducers!" << std::endl;
 	}
 	return t;
