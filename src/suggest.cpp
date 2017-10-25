@@ -24,6 +24,8 @@ const std::string CG_SUGGESTWF_TAG = "&SUGGESTWF";
 
 const std::basic_regex<char> DELIMITERS ("^[.!?]$");
 
+const std::basic_regex<char> CG_TAGS_RE ("\"[^\"]*\"|[^ ]+");
+
 // Anything *not* matched by CG_TAG_TYPE is sent to the generator.
 // … or we could make an (h)fst out of these to match on lines :)
 const std::basic_regex<char> CG_TAG_TYPE (
@@ -243,7 +245,7 @@ const std::tuple<bool, std::string, StringVec, rel_id, relations, std::string, b
 	relations rels;
 	std::string wf;
 	bool suggestwf = false;
-	for(auto& tag : split(tags)) {
+	for(auto& tag : allmatches(tags, CG_TAGS_RE)) {
 		std::match_results<const char*> result;
 		std::regex_match(tag.c_str(), result, CG_TAG_TYPE);
 		if (result.empty()) {

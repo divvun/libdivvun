@@ -69,6 +69,20 @@ inline const std::string u16join(const Container& ss, const std::string& delim="
 			  str.size() - delim.size());
 }
 
+inline const StringVec allmatches(const std::string& str, const std::basic_regex<char>& re)
+{
+	std::string s = str;	// copy!
+	std::smatch m;
+	StringVec tokens;
+	while (std::regex_search (s, m, re)) {
+		if(m[0].length() != 0) {
+			tokens.push_back(m[0]);
+		}
+		s = m.suffix().str();
+	}
+	return tokens;
+}
+
 inline const StringVec split(const std::string& str, const char& delim=' ')
 {
 	std::string buf;
