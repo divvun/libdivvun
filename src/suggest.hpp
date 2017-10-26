@@ -62,43 +62,6 @@ inline std::string xml_raw_cdata(const pugi::xml_node& label) {
 	return os.str();
 }
 
-struct Reading {
-	bool suggest = false;
-	std::string ana;
-	std::u16string errtype;
-	UStringVector sforms;
-	relations rels;	// rels[relname] = target.id
-	rel_id id = 0;
-	std::string wf;
-	bool suggestwf = false;
-};
-
-struct Cohort {
-	std::u16string form;
-	std::map<err_id, UStringVector> err;
-	size_t pos;
-	rel_id id;
-	std::vector<Reading> readings;
-};
-
-using CohortMap = std::unordered_map<rel_id, size_t>;
-
-enum RunState {
-	flushing,
-	eof
-};
-
-struct Sentence {
-	std::vector<Cohort> cohorts;
-	CohortMap ids_cohorts;
-	std::ostringstream text;
-	RunState runstate;
-};
-
-enum LineType {
-	WordformL, ReadingL, BlankL
-};
-
 inline variant<Nothing, std::pair<err_id, UStringVector>> pickErr(const std::map<std::u16string, UStringVector>& err,
 								  const std::set<err_id>& ignores) {
 	for(const auto& it : err) {
