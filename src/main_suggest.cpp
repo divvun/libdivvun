@@ -79,7 +79,7 @@ int main(int argc, char ** argv)
 		if(verbose) {
 			std::cerr << "Reading transducer " << genfile << std::endl;
 		}
-		std::unique_ptr<const hfst::HfstTransducer> t(divvun::readTransducer(genfile));
+		const hfst::HfstTransducer* t(divvun::Suggest::readTransducer(genfile));
 		if (!t) {
 			std::cerr << "ERROR: Couldn't read transducer "<< genfile << std::endl;
 			return(EXIT_FAILURE);
@@ -92,7 +92,7 @@ int main(int argc, char ** argv)
 			if(verbose) {
 				std::cerr << "Reading messages xml " << msgfile << std::endl;
 			}
-			m = divvun::readMessages(msgfile);
+			m = divvun::Suggest::readMessages(msgfile);
 			if (m.empty()) {
 				std::cerr << "ERROR: Couldn't read messages xml "<< msgfile << std::endl;
 				return(EXIT_FAILURE);
@@ -108,8 +108,8 @@ int main(int argc, char ** argv)
 		}
 #endif
 
-		std::set<divvun::err_id> ignores; // TODO from args!
-		divvun::run(std::cin, std::cout, *t, m, json, ignores);
+		divvun::Suggest s(t, m, verbose);
+		s.run(std::cin, std::cout, json);
 	}
 	catch (const cxxopts::OptionException& e)
 	{

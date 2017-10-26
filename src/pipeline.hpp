@@ -210,10 +210,9 @@ class SuggestCmd: public PipeCmd {
 		std::vector<Err> run_errs(std::stringstream& input) const;
 		~SuggestCmd() override = default;
 		void setIgnores(const std::set<err_id>& ignores);
-		const msgmap msgs;
+		const msgmap& getMsgs();
 	private:
-		std::unique_ptr<const hfst::HfstTransducer> generator;
-		std::set<err_id> ignores;
+		std::unique_ptr<Suggest> suggest;
 };
 
 

@@ -86,7 +86,7 @@ const std::basic_regex<char> CG_LINE ("^"
 const std::basic_regex<char> MSG_TEMPLATE_VAR ("^[$][0-9]+$");
 
 #ifdef HAVE_LIBPUGIXML
-const msgmap readMessages(pugi::xml_document& doc, pugi::xml_parse_result& result)
+const msgmap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& result)
 {
 	msgmap msgs;
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
@@ -132,22 +132,22 @@ const msgmap readMessages(pugi::xml_document& doc, pugi::xml_parse_result& resul
 }
 #endif
 
-const msgmap readMessages(const char* buff, const size_t size) {
+const msgmap Suggest::readMessages(const char* buff, const size_t size) {
 #ifdef HAVE_LIBPUGIXML
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_buffer(buff, size);
-	return readMessages(doc, result);
+	return readMessagesXml(doc, result);
 #else
 	msgmap msgs;
 	return msgs;
 #endif
 }
 
-const msgmap readMessages(const std::string& file) {
+const msgmap Suggest::readMessages(const std::string& file) {
 #ifdef HAVE_LIBPUGIXML
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(file.c_str());
-	return readMessages(doc, result);
+	return readMessagesXml(doc, result);
 #else
 	msgmap msgs;
 	return msgs;
@@ -156,7 +156,7 @@ const msgmap readMessages(const std::string& file) {
 
 
 
-const hfst::HfstTransducer *readTransducer(std::istream& is) {
+const hfst::HfstTransducer *Suggest::readTransducer(std::istream& is) {
 	hfst::HfstInputStream *in = nullptr;
 	try
 	{
@@ -194,7 +194,7 @@ const hfst::HfstTransducer *readTransducer(std::istream& is) {
 	return t;
 }
 
-const hfst::HfstTransducer *readTransducer(const std::string& file) {
+const hfst::HfstTransducer *Suggest::readTransducer(const std::string& file) {
 	hfst::HfstInputStream *in = nullptr;
 	try
 	{
@@ -626,17 +626,17 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 	return sentence;
 }
 
-std::vector<Err> run_errs(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs, const std::set<err_id>& ignores)
+std::vector<Err> Suggest::run_errs(std::istream& is)
 {
-	Sentence sentence = run_sentence(is, t, msgs);
+	Sentence sentence = run_sentence(is, *generator, msgs);
 
 	std::vector<Err> errs;
 	for(const auto& c : sentence.cohorts) {
 		pickErr(c.err, ignores).match(
 			[]      (Nothing) {},
-			[&errs, &c, &sentence, &t, &msgs] (std::pair<err_id, UStringVector>& err)
+			[&errs, &c, &sentence, this] (std::pair<err_id, UStringVector>& err)
 			{
-				cohort_errs(err, c, sentence, t, msgs).match(
+				cohort_errs(err, c, sentence, *generator, msgs).match(
 					[]      (Nothing) {},
 					[&errs] (Err e)   { errs.push_back(e); });
 			});
@@ -743,14 +743,42 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 	}
 }
 
-void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& m, bool json, const std::set<err_id>& ignores)
+void Suggest::run(std::istream& is, std::ostream& os, bool json)
 {
 	if(json) {
-		while(run_json(is, os, t, m, ignores) == flushing);
+		while(run_json(is, os, *generator, msgs, ignores) == flushing);
 	}
 	else {
-		run_cg(is, os, t); // ignores ignores
+		run_cg(is, os, *generator); // ignores ignores
 	}
+}
+
+Suggest::Suggest (const hfst::HfstTransducer* generator_, divvun::msgmap msgs_, bool verbose)
+	: msgs(msgs_)
+	, generator(generator_)
+{
+	if (!generator) {
+		throw std::runtime_error("ERROR: Suggest command couldn't read generator");
+	}
+	if (msgs.empty()) {
+		throw std::runtime_error("ERROR: Suggest command couldn't read messages xml");
+	}
+}
+Suggest::Suggest (const std::string& gen_path, const std::string& msg_path, bool verbose)
+	: msgs(readMessages(msg_path))
+	, generator(readTransducer(gen_path))
+{
+	if (!generator) {
+		throw std::runtime_error("ERROR: Suggest command couldn't read transducer " + gen_path);
+	}
+	if (msgs.empty()) {
+		throw std::runtime_error("ERROR: Suggest command couldn't read messages xml " + msg_path);
+	}
+}
+
+void Suggest::setIgnores(const std::set<err_id>& ignores_)
+{
+	ignores = ignores_;
 }
 
 }

@@ -110,18 +110,29 @@ inline variant<Nothing, std::pair<err_id, UStringVector>> pickErr(const std::map
 	return Nothing();
 }
 
-// TODO: Put these in a class; calls to divvun::run() are not very informative
+class Suggest {
+	public:
+		Suggest (const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose);
+		Suggest (const std::string& gen_path, const std::string& msg_path, bool verbose);
+		~Suggest() = default;
 
-std::vector<Err> run_errs(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs, const std::set<err_id>& ignores);
+		void run(std::istream& is, std::ostream& os, bool json);
 
-void run(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& m, bool json, const std::set<err_id>& ignores);
+		std::vector<Err> run_errs(std::istream& is);
+		void setIgnores(const std::set<err_id>& ignores);
 
-const hfst::HfstTransducer *readTransducer(const std::string& file);
-const hfst::HfstTransducer *readTransducer(const char* buff, const size_t size);
-const hfst::HfstTransducer *readTransducer(std::istream& is);
+		static const hfst::HfstTransducer *readTransducer(const std::string& file);
+		static const hfst::HfstTransducer *readTransducer(const char* buff, const size_t size);
+		static const hfst::HfstTransducer *readTransducer(std::istream& is);
 
-const msgmap readMessages(const std::string& file);
-const msgmap readMessages(const char* buff, const size_t size);
+		static const msgmap readMessages(const std::string& file);
+		static const msgmap readMessages(const char* buff, const size_t size);
+
+		const msgmap msgs;
+	private:
+		std::unique_ptr<const hfst::HfstTransducer> generator;
+		std::set<err_id> ignores;
+};
 
 }
 

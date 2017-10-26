@@ -109,37 +109,28 @@ void CGSpellCmd::run(std::stringstream& input, std::stringstream& output) const
 }
 
 SuggestCmd::SuggestCmd (const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose)
-	: msgs(msgs), generator(generator)
+	: suggest(new Suggest(generator, msgs, verbose))
 {
-	if (!generator) {
-		throw std::runtime_error("ERROR: Suggest command couldn't read generator");
-	}
-	if (msgs.empty()) {
-		throw std::runtime_error("ERROR: Suggest command couldn't read messages xml");
-	}
 }
 SuggestCmd::SuggestCmd (const std::string& gen_path, const std::string& msg_path, bool verbose)
-	: msgs(divvun::readMessages(msg_path))
-	, generator(divvun::readTransducer(gen_path.c_str()))
+	: suggest(new Suggest(gen_path, msg_path, verbose))
 {
-	if (!generator) {
-		throw std::runtime_error("ERROR: Suggest command couldn't read transducer " + gen_path);
-	}
-	if (msgs.empty()) {
-		throw std::runtime_error("ERROR: Suggest command couldn't read messages xml " + msg_path);
-	}
 }
 void SuggestCmd::run(std::stringstream& input, std::stringstream& output) const
 {
-	divvun::run(input, output, *generator, msgs, true, ignores);
+	suggest->run(input, output, true);
 }
 std::vector<Err> SuggestCmd::run_errs(std::stringstream& input) const
 {
-	return divvun::run_errs(input, *generator, msgs, ignores);
+	return suggest->run_errs(input);
 }
-void SuggestCmd::setIgnores(const std::set<err_id>& ignores_)
+void SuggestCmd::setIgnores(const std::set<err_id>& ignores)
 {
-	ignores = ignores_;
+	suggest->setIgnores(ignores);
+}
+const msgmap& SuggestCmd::getMsgs()
+{
+	return suggest->msgs;
 }
 
 
@@ -317,16 +308,16 @@ Pipeline Pipeline::mkPipeline(const std::unique_ptr<ArPipeSpec>& ar_spec, const 
 			ArEntryHandler<const hfst::HfstTransducer*> procGen = [] (const std::string& ar_path, const void* buff, const size_t size) {
 				OneShotReadBuf osrb((char*)buff, size);
 				std::istream is(&osrb);
-				return divvun::readTransducer(is);
+				return Suggest::readTransducer(is);
 			};
 			ArEntryHandler<divvun::msgmap> procMsgs = [] (const std::string& ar_path, const void* buff, const size_t size) {
-				return divvun::readMessages((char*)buff, size);
+				return Suggest::readMessages((char*)buff, size);
 			};
 			auto* s = new SuggestCmd(readArchiveExtract(ar_spec->ar_path, args[0], procGen),
 						 readArchiveExtract(ar_spec->ar_path, args[1], procMsgs),
 						 verbose);
 			cmds.emplace_back(s);
-			mergePrefsFromMsgs(prefs, s->msgs);
+			mergePrefsFromMsgs(prefs, s->getMsgs());
 			suggestcmd = s;
 		}
 		else if(name == u"sh") {
@@ -391,7 +382,7 @@ Pipeline Pipeline::mkPipeline(const std::unique_ptr<PipeSpec>& spec, const std::
 			}
 			auto *s = new SuggestCmd(args[0], args[1], verbose);
 			cmds.emplace_back(s);
-			mergePrefsFromMsgs(prefs, s->msgs);
+			mergePrefsFromMsgs(prefs, s->getMsgs());
 			suggestcmd = s;
 		}
 		else if(name == u"sh") {
