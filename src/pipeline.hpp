@@ -197,6 +197,14 @@ class CGSpellCmd: public PipeCmd {
 		CGSpellCmd (const std::string& err_path, const std::string& lex_path, bool verbose);
 		void run(std::stringstream& input, std::stringstream& output) const override;
 		~CGSpellCmd() override = default;
+		// Some sane defaults for the speller
+		// TODO: Do we want any of this configurable from pipespec.xml, or from the Checker API?
+		static constexpr Weight max_analysis_weight = -1.0;
+		static constexpr Weight max_weight = -1.0;
+		static constexpr bool real_word = false;
+		static constexpr unsigned long limit = 25;
+		static constexpr hfst_ospell::Weight beam = -1.0;
+		static constexpr float time_cutoff = 0.0;
 	private:
 		std::unique_ptr<Speller> speller;
 };

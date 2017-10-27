@@ -88,9 +88,8 @@ void CGCmd::run(std::stringstream& input, std::stringstream& output) const
 }
 
 
-
 CGSpellCmd::CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, bool verbose)
-	: speller(new Speller(errmodel, acceptor, true, -1.0, -1.0, false, ULONG_MAX, -1.0, 0.0))
+	: speller(new Speller(errmodel, acceptor, verbose, max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff))
 {
 	if (!acceptor) {
 		throw std::runtime_error("ERROR: CGSpell command couldn't read acceptor");
@@ -100,7 +99,7 @@ CGSpellCmd::CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transduc
 	}
 }
 CGSpellCmd::CGSpellCmd (const std::string& err_path, const std::string& lex_path, bool verbose)
-	: speller(new Speller(err_path, lex_path, true, -1.0, -1.0, false, ULONG_MAX, -1.0, 0.0))
+	: speller(new Speller(err_path, lex_path, verbose, max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff))
 {
 }
 void CGSpellCmd::run(std::stringstream& input, std::stringstream& output) const
