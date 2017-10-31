@@ -11,6 +11,7 @@ src/.deps/
 src/*.o
 /src/divvun-suggest
 /src/divvun-validate-suggest
+/src/divvun-cgspell
 /compile
 /**/Makefile
 /**/Makefile.in
@@ -30,6 +31,7 @@ old/
 /src/divvun-gen-sh
 /src/divvun-gen-xmlschemas
 /src/pipeline.lo
+/src/#*#
 
 /test-driver
 /test-suite.log
@@ -102,4 +104,3 @@ old/
 /examples/using-checker-lib-from-cpp/src/Makefile.in
 /examples/using-checker-lib-from-cpp/src/using-checker
 /examples/using-checker-lib-from-cpp/src/using_checker-using-checker.o
-/src/divvun-cgspell

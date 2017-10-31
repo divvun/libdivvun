@@ -12,9 +12,9 @@
 		"neahtis" A Sem/Hum Attr Cmp/Cit Cmp/Hyph Cmp <W:10.0000000000>
 : 
 "<,>"
-	"," CLB &SUGGEST
+	"," CLB &punct-rihkku &ADDED ID:5
 "<ja>"
-	"ja" CC <W:0.0000000000> @CVP &punct-rihkku
+	"ja" CC <W:0.0000000000> @CVP &punct-rihkku R:LEFT:5
 : 
 "<mobiila>"
 	"mobiila" A Sem/Dummytag Attr <W:0.0000000000> @>N

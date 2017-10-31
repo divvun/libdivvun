@@ -21,6 +21,7 @@ namespace divvun {
 
 const std::string CG_SUGGEST_TAG = "&SUGGEST";
 const std::string CG_SUGGESTWF_TAG = "&SUGGESTWF";
+const std::string CG_ADDED_TAG = "&ADDED";
 
 const std::basic_regex<char> DELIMITERS ("^[.!?]$");
 
@@ -84,35 +85,6 @@ const std::basic_regex<char> CG_LINE ("^"
 				      ")");
 
 const std::basic_regex<char> MSG_TEMPLATE_VAR ("^[$][0-9]+$");
-
-
-struct Reading {
-	bool suggest = false;
-	std::string ana;
-	std::u16string errtype;
-	UStringVector sforms;
-	relations rels;	// rels[relname] = target.id
-	rel_id id = 0;
-	std::string wf;
-	bool suggestwf = false;
-};
-
-struct Cohort {
-	std::u16string form;
-	std::map<err_id, UStringVector> err;
-	size_t pos;
-	rel_id id;
-	std::vector<Reading> readings;
-};
-
-using CohortMap = std::unordered_map<rel_id, size_t>;
-
-struct Sentence {
-	std::vector<Cohort> cohorts;
-	CohortMap ids_cohorts;
-	std::ostringstream text;
-	RunState runstate;
-};
 
 enum LineType {
 	WordformL, ReadingL, BlankL
@@ -272,7 +244,7 @@ const hfst::HfstTransducer *Suggest::readTransducer(const std::string& file) {
 // errtype is the error tag (without leading ampersand)
 // gentags are the tags we generate with
 // id is 0 if unset, otherwise the relation id of this word
-const std::tuple<bool, std::string, StringVec, rel_id, relations, std::string, bool> proc_tags(const std::string& tags) {
+const std::tuple<bool, std::string, StringVec, rel_id, relations, std::string, bool, bool> proc_tags(const std::string& tags) {
 	bool suggest = false;
 	std::string errtype;
 	StringVec gentags;
@@ -280,6 +252,7 @@ const std::tuple<bool, std::string, StringVec, rel_id, relations, std::string, b
 	relations rels;
 	std::string wf;
 	bool suggestwf = false;
+	bool added = false;
 	for(auto& tag : allmatches(tags, CG_TAGS_RE)) {
 		std::match_results<const char*> result;
 		std::regex_match(tag.c_str(), result, CG_TAG_TYPE);
@@ -294,6 +267,9 @@ const std::tuple<bool, std::string, StringVec, rel_id, relations, std::string, b
 			}
 			else if(tag == CG_SUGGESTWF_TAG) {
 				suggestwf = true;
+			}
+			else if(tag == CG_ADDED_TAG) {
+				added = true;
 			}
 			else {
 				errtype = result[2];
@@ -328,7 +304,7 @@ const std::tuple<bool, std::string, StringVec, rel_id, relations, std::string, b
 		// }
 
 	}
-	return std::make_tuple(suggest, errtype, gentags, id, rels, wf, suggestwf);
+	return std::make_tuple(suggest, errtype, gentags, id, rels, wf, suggestwf, added);
 }
 
 const Reading proc_subreading(const std::string& line) {
@@ -348,6 +324,7 @@ const Reading proc_subreading(const std::string& line) {
 	r.ana = lemma+"+"+tagsplus;
 	r.wf = std::get<5>(suggen);
 	r.suggestwf = std::get<6>(suggen);
+	r.added = std::get<7>(suggen);
 	if(r.suggestwf) {
 		r.sforms.emplace_back(utf16conv.from_bytes(r.wf));
 	}
@@ -373,9 +350,14 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const std::string& lin
 		r.id = (r.id == 0 ? sub.id : r.id);
 		r.suggest = r.suggest || sub.suggest;
 		r.suggestwf = r.suggestwf || sub.suggestwf;
+		r.added = r.added || sub.added;
 		r.sforms.insert(r.sforms.end(), sub.sforms.begin(), sub.sforms.end());
 		r.wf = r.wf.empty() ? sub.wf : r.wf;
 	}
+	// for(const auto& s : r.rels) {
+	// 	std::cerr << "\033[1;35ms=\t" << s.first << "\033[0m\t";
+	// 	std::cerr << "\033[1;35ms=\t" << s.second << "\033[0m" << std::endl;
+	// }
 	if(r.suggest) {
 		const auto& paths = t.lookup_fd({ r.ana }, -1, 10.0);
 		if(paths->size() > 0) {
@@ -412,21 +394,48 @@ bool cohort_empty(const Cohort& c) {
 }
 
 const Cohort DEFAULT_COHORT = {
-	{}, {}, 0, 0, {}
+	{}, 0, 0, {}, u"", false
 };
 
-variant<Nothing, Err> cohort_errs(const std::pair<err_id, UStringVector>& err,
-				  const Cohort& c,
-				  const Sentence& sentence,
-				  const hfst::HfstTransducer& t,
-				  const msgmap& msgs
-				  )
+// https://stackoverflow.com/a/1464684/69663
+template<class Iterator>
+Iterator Dedupe(Iterator first, Iterator last)
 {
-	if(cohort_empty(c) || c.err.empty()) {
+	while (first != last)
+	{
+		Iterator next(first);
+		last = std::remove(++next, last, *first);
+		first = next;
+	}
+	return last;
+}
+
+variant<Nothing, size_t> rel_target(const relations& rels, const std::string& name, const Sentence& sentence) {
+	const auto& rel = rels.find(name);
+	if(rel == rels.end()) {
+		return Nothing();
+	}
+	const auto& target_id = rel->second;
+	if(sentence.ids_cohorts.find(target_id) == sentence.ids_cohorts.end()) {
+		std::cerr << "WARNING: Couldn't find relation target for " << rel->first << ":" << rel->second << std::endl;
+		return Nothing();
+	}
+	const auto& i_c = sentence.ids_cohorts.at(target_id);
+	if(i_c >= sentence.cohorts.size()) {
+		std::cerr << "WARNING: Couldn't find relation target for " << rel->first << ":" << rel->second << std::endl;
+		return Nothing();
+	}
+	return i_c;
+}
+
+variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
+					   const Cohort& c,
+					   const Sentence& sentence)
+{
+	if(cohort_empty(c) || c.added) {
 		return Nothing();
 	}
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	const auto& errId = err.first;
 	std::u16string msg;
 	// TODO: locale, how? One process per locale (command-line-arg) or print all messages?
 	std::string locale = "se";
@@ -435,13 +444,13 @@ variant<Nothing, Err> cohort_errs(const std::pair<err_id, UStringVector>& err,
 	}
 	else {
 		const auto& lmsgs = msgs.at(locale);
-		if(lmsgs.first.count(errId) != 0) {
-			msg = lmsgs.first.at(errId);
+		if(lmsgs.first.count(err_id) != 0) {
+			msg = lmsgs.first.at(err_id);
 		}
 		else {
 			for(const auto& p : lmsgs.second) {
 				std::match_results<const char*> result;
-				const auto& et = utf16conv.to_bytes(errId.c_str());
+				const auto& et = utf16conv.to_bytes(err_id.c_str());
 				std::regex_match(et.c_str(), result, p.first);
 				if(!result.empty()
 				   && // Only consider full matches:
@@ -455,45 +464,92 @@ variant<Nothing, Err> cohort_errs(const std::pair<err_id, UStringVector>& err,
 			}
 		}
 		if(msg.empty()) {
-			std::cerr << "WARNING: No message for " << json::str(errId) << std::endl;
-			msg = errId;
+			std::cerr << "WARNING: No message for " << json::str(err_id) << std::endl;
+			msg = err_id;
 		}
 		// TODO: Make suitable structure on creating msgmap instead?
 		replaceAll(msg, u"$1", c.form);
 		for(const auto& r: c.readings) {
+			if((!r.errtype.empty()) && err_id != r.errtype) {
+				continue;
+			}
 			for(const auto& rel: r.rels) {
-				if(rel.first == "$1") {
-					std::cerr << "WARNING: $1 relation overwritten by CG rule" << std::endl;
-				}
 				std::match_results<const char*> result;
 				std::regex_match(rel.first.c_str(), result, MSG_TEMPLATE_VAR);
 				if(result.empty()) { // Other relation
 					continue;
 				}
-				// TODO: Should check here that rel_name matches /[$][0-9]+/
-				const auto& target_id = rel.second;
-				if(sentence.ids_cohorts.find(target_id) == sentence.ids_cohorts.end()) {
-					std::cerr << "WARNING: Couldn't find relation target for " << rel.first << ":" << rel.second << std::endl;
-					continue;
+				if(rel.first == "$1") {
+					std::cerr << "WARNING: $1 relation overwritten by CG rule" << std::endl;
 				}
-				const auto& i_c = sentence.ids_cohorts.at(target_id);
-				if(i_c >= sentence.cohorts.size()) {
-					std::cerr << "WARNING: Couldn't find relation target for " << rel.first << ":" << rel.second << std::endl;
-					continue;
-				}
-				const auto& c_trg = sentence.cohorts.at(i_c);
-				replaceAll(msg, utf16conv.from_bytes(rel.first.c_str()), c_trg.form);
+				rel_target(r.rels, rel.first, sentence).match(
+					[]      (Nothing) {},
+					[&] (size_t i_c) {
+						const auto& c_trg = sentence.cohorts.at(i_c);
+						replaceAll(msg, utf16conv.from_bytes(rel.first.c_str()), c_trg.form);
+					});
 			}
 		}
+	} // msgs
+	auto beg = c.pos;
+	auto end = c.pos + c.form.size();
+	auto form = c.form;
+	UStringVector rep;
+	for(const auto& r: c.readings) {
+		if((!r.errtype.empty()) && err_id != r.errtype) {
+			continue;
+		}
+		rep.insert(rep.end(),
+			   r.sforms.begin(),
+			   r.sforms.end());
+		rep.erase(Dedupe(rep.begin(), rep.end()),
+			  rep.end());
+		// If there are LEFT/RIGHT added relations, add suggestions with those concatenated to our form
+		// TODO: What about our current suggestions of the same error tag? Currently just using wordform
+		rel_target(r.rels, "LEFT", sentence).match(
+			[]      (Nothing) {},
+			[&] (size_t i_c) {
+				const auto& trg = sentence.cohorts.at(i_c);
+				for(const auto& tr: trg.readings) {
+					if(tr.added && tr.errtype == r.errtype) {
+						rep.push_back(trg.form + u" " + c.form);
+					}
+				}
+			});
+		rel_target(r.rels, "RIGHT", sentence).match(
+			[]      (Nothing) {},
+			[&] (size_t i_c) {
+				const auto& trg = sentence.cohorts.at(i_c);
+				for(const auto& tr: trg.readings) {
+					if(tr.added && tr.errtype == r.errtype) {
+						rep.push_back(c.form + u" " + trg.form);
+					}
+				}
+			});
+		rel_target(r.rels, "DELETE1", sentence).match(
+			[]      (Nothing) {},
+			[&] (size_t i_c) {
+				const auto& trg = sentence.cohorts.at(i_c);
+				if(trg.pos < c.pos) {
+					beg = trg.pos;
+				}
+				else {
+					end = trg.pos + trg.form.size();
+				}
+				form = utf16conv.from_bytes(sentence.text.str()).substr(beg,
+											end - beg);
+				rep.push_back(c.form);
+				// TODO: if beg/end changed, all *other* replacements also need to cover the surrounding area
+			});
 	}
 	return Err {
-		c.form,
-			c.pos,
-			c.pos+c.form.size(),
-			errId,
-			msg,
-			err.second,
-			};
+		form,
+		beg,
+		end,
+		err_id,
+		msg,
+		rep
+	};
 }
 
 /**
@@ -531,24 +587,8 @@ const std::string clean_blank(const std::string& raw)
 }
 
 
-// https://stackoverflow.com/a/1464684/69663
-template<class Iterator>
-Iterator Dedupe(Iterator first, Iterator last)
-{
-	while (first != last)
-	{
-		Iterator next(first);
-		last = std::remove(++next, last, *first);
-		first = next;
-	}
-	return last;
-}
-
 Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs) {
 	size_t pos = 0;
-	std::u16string errtype = u"default";
-	LineType prevtype = BlankL;
-	bool is_addcohort = true;
 	Cohort c = DEFAULT_COHORT;
 	Sentence sentence;
 	sentence.runstate = eof;
@@ -561,37 +601,24 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 	std::string readinglines;
 	std::getline(is, line);	// TODO: Why do I need at least one getline before os<< after flushing?
 	do {
-		// std::cerr << "\033[1;34mline:\t" << line << "\033[0m" << std::endl;
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 
-		// TODO: May have to run this block once after the do-block if last line is reading
 		if(!readinglines.empty() && (result.empty() || result[3].length() <= 1)) {
 			const auto& reading = proc_reading(t, readinglines);
 			readinglines = "";
 			if(!reading.errtype.empty()) {
-				errtype = reading.errtype;
-			}
-			if(reading.suggest || reading.suggestwf) { // or unconditionally insert? Then don't need suggestwf on Reading
-				auto& cerrs = c.err[errtype];
-				cerrs.insert(cerrs.end(),
-					     reading.sforms.begin(),
-					     reading.sforms.end());
-				cerrs.erase(Dedupe(cerrs.begin(), cerrs.end()),
-					    cerrs.end());
-			}
-			else {
-				is_addcohort = false; // Seen at least one non-suggestion reading
+				c.default_errtype = reading.errtype;
 			}
 			if(reading.id != 0) {
 				c.id = reading.id;
 			}
+			c.added = reading.added || c.added;
 			c.readings.push_back(reading);
 		}
-		bool appendsugg = is_addcohort && prevtype != WordformL && !c.err.empty();
 
-		if (!result.empty() && ((result[2].length() != 0 && !appendsugg) // wordform
-					|| result[6].length() != 0)) { // blank
+		if (!result.empty() && ((result[2].length() != 0) // wordform or blank: reset Cohort
+					|| result[6].length() != 0)) {
 			c.pos = pos;
 			if(!cohort_empty(c)) {
 				sentence.cohorts.push_back(c);
@@ -599,31 +626,23 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 					sentence.ids_cohorts[c.id] = sentence.cohorts.size() - 1;
 				}
 			}
-			// TODO: wrapper for pos-increasing and text-adding, since they should always happen together
-			pos += c.form.size();
-			sentence.text << utf16conv.to_bytes(c.form);
-
+			if(!c.added) {
+				pos += c.form.size();
+				sentence.text << utf16conv.to_bytes(c.form);
+			}
 			c = DEFAULT_COHORT;
 		}
 
 		if (!result.empty() && result[2].length() != 0) { // wordform
-			if(appendsugg) {
-				c.err = sugg_append(utf16conv.from_bytes(result[2]),
-						    c.err);
-			}
-			is_addcohort = true;
 			c.form = utf16conv.from_bytes(result[2]);
-			prevtype = WordformL;
 		}
 		else if(!result.empty() && result[3].length() != 0) { // reading
 			readinglines += line + "\n";
-			prevtype = ReadingL;
 		}
 		else if(!result.empty() && result[6].length() != 0) { // blank
 			const auto blank = clean_blank(result[6]);
 			pos += utf16conv.from_bytes(blank).size();
 			sentence.text << blank;
-			prevtype = BlankL;
 		}
 		else if(!result.empty() && result[7].length() != 0) { // flush
 			sentence.runstate = flushing;
@@ -631,7 +650,6 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 		}
 		else {
 			// Blank lines without the prefix don't go into text output!
-			prevtype = BlankL;
 		}
 	} while(std::getline(is, line));
 
@@ -639,43 +657,133 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 		const auto& reading = proc_reading(t, readinglines);
 		readinglines = "";
 		if(!reading.errtype.empty()) {
-			errtype = reading.errtype;
-		}
-		if(reading.suggest) {
-			auto& cerrs = c.err[errtype];
-			cerrs.insert(cerrs.end(),
-				     reading.sforms.begin(),
-				     reading.sforms.end());
-			cerrs.erase(Dedupe(cerrs.begin(), cerrs.end()),
-				    cerrs.end());
+			c.default_errtype = reading.errtype;
 		}
 		if(reading.id != 0) {
 			c.id = reading.id;
 		}
+		c.added = reading.added || c.added;
 		c.readings.push_back(reading);
 	}
 
 	c.pos = pos;
-	sentence.cohorts.push_back(c);
-	sentence.text << utf16conv.to_bytes(c.form);
+	if(!cohort_empty(c)) {
+		sentence.cohorts.push_back(c);
+		if(c.id != 0) {
+			sentence.ids_cohorts[c.id] = sentence.cohorts.size() - 1;
+		}
+	}
+	if(!c.added) {
+		pos += c.form.size();
+		sentence.text << utf16conv.to_bytes(c.form);
+	}
 	return sentence;
+}
+
+bool compareByBeg(const Err &a, const Err &b)
+{
+    return a.beg < b.beg;
+}
+
+bool compareByEnd(const Err &a, const Err &b)
+{
+    return a.end < b.end;
+}
+
+/**
+ * Errors may overlap, in which case we want to expand their forms,
+ * replacements and beg/end indices so we never have *partial* overlaps.
+ *
+ * Ie. if we have
+ *
+ * [["dego lávvomuorran",0,17,"syn-not-dego","Remove dego when essive",["lávvomuorran"]]
+ * ,["lávvomuorran",5,17,"syn-dego-nom","Nominative after dego",["lávvomuorra"]]]
+ *
+ * then we want
+ *
+ * [["dego lávvomuorran",0,17,"syn-not-dego","Remove dego when essive",["lávvomuorran"]]
+ * ,["dego lávvomuorran",0,17,"syn-dego-nom","Nominative after dego",["dego lávvomuorran"]]]
+ *
+ * Unfortunately, naïve interval-checking is O(2N²). We can perhaps
+ * mitigate the blow-up by sending shorter Sentence's in (errors
+ * shouldn't cross paragraph boundaries?). Or we could first create an
+ * Interval Tree or similar, if this turns out to be a bottleneck.
+ * (e.g.
+ * https://github.com/ekg/intervaltree/blob/master/IntervalTree.h )
+ */
+void expand_errs(std::vector<Err>& errs, const Sentence& sentence) {
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	const auto& text = utf16conv.from_bytes(sentence.text.str());
+	const auto n = errs.size();
+	if(n < 2) {
+		return;
+	}
+	// First expand "backwards" towards errors with lower beg's:
+	// Since we sort errs by beg, we only have to compare
+	// this.beg against the set of lower beg, and filter out
+	// those that have a lower end than this.beg (or the exact same beg)
+	std::sort(errs.begin(), errs.end(), compareByBeg);
+	for(size_t i = 1; i < n; ++i) {
+		auto& e = errs[i]; // mut
+		for(size_t j = 0; j < i; ++j) {
+			const auto& f = errs[j];
+			if(f.beg < e.beg &&
+			   f.end >= e.beg) {
+				const auto len = e.beg - f.beg;
+				const auto& add = text.substr(f.beg, len);
+				e.form = add + e.form;
+				e.beg = e.beg - len;
+				for(auto& r : e.rep) {
+					r = add + r;
+				}
+			}
+		}
+	}
+	// Then expand "forwards" towards errors with higher end's:
+	std::sort(errs.begin(), errs.end(), compareByEnd);
+	for(size_t i = n - 1; i > 0; --i) {
+		auto& e = errs[i-1]; // mut
+		for(size_t j = n; j > i; --j) {
+			const auto& f = errs[j-1];
+			if(f.end > e.end &&
+			   f.beg <= e.end) {
+				const auto len = f.end - e.end;
+				const auto& add = text.substr(e.end, len);
+				e.form = e.form + add;
+				e.end = e.end + len;
+				for(auto& r : e.rep) {
+					r = r + add;
+				}
+			}
+		}
+	}
+}
+
+std::vector<Err> Suggest::mk_errs(const Sentence &sentence) {
+	std::vector<Err> errs;
+	for(const auto& c : sentence.cohorts) {
+		std::map<err_id, std::vector<size_t>> c_errs;
+		for(size_t i = 0; i < c.readings.size(); ++i) {
+			c_errs[c.readings[i].errtype].push_back(i);
+		}
+		for(const auto& e : c_errs) {
+			if(e.first.empty()) {
+				continue;
+			}
+			cohort_errs(e.first, c, sentence).match(
+				[]      (Nothing) {},
+				[&] (Err e)   {
+					errs.push_back(e);
+				});
+		}
+	}
+	expand_errs(errs, sentence);
+	return errs;
 }
 
 std::vector<Err> Suggest::run_errs(std::istream& is)
 {
-	Sentence sentence = run_sentence(is, *generator, msgs);
-
-	std::vector<Err> errs;
-	for(const auto& c : sentence.cohorts) {
-		pickErr(c.err, ignores).match(
-			[]      (Nothing) {},
-			[&] (std::pair<err_id, UStringVector>& err) {
-				cohort_errs(err, c, sentence, *generator, msgs).match(
-					[]      (Nothing) {},
-					[&errs] (Err e)   { errs.push_back(e); });
-			});
-	}
-	return errs;
+	return mk_errs(run_sentence(is, *generator, msgs));
 }
 
 
@@ -690,26 +798,19 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os)
 	   << json::key(u"errs")
 	   << "[";
 	bool wantsep = false;
-	for(const auto& c : sentence.cohorts) {
-		pickErr(c.err, ignores).match(
-			[]      (Nothing) {},
-			[&] (std::pair<err_id, UStringVector>& err) {
-				cohort_errs(err, c, sentence, *generator, msgs).match(
-					[] (Nothing) {},
-					[&] (Err& e) {
-						if(wantsep) {
-							os << ",";
-						}
-						os << "[" << json::str(e.form)
-						   << "," << std::to_string(e.beg)
-						   << "," << std::to_string(e.end)
-						   << "," << json::str(e.err)
-						   << "," << json::str(e.msg)
-						   << "," << json::str_arr(e.rep)
-						   << "]";
-						wantsep = true;
-					});
-			});
+	std::vector<Err> errs = mk_errs(sentence);
+	for(const auto& e : errs) {
+		if(wantsep) {
+			os << ",";
+		}
+		os << "[" << json::str(e.form)
+		   << "," << std::to_string(e.beg)
+		   << "," << std::to_string(e.end)
+		   << "," << json::str(e.err)
+		   << "," << json::str(e.msg)
+		   << "," << json::str_arr(e.rep)
+		   << "]";
+		wantsep = true;
 	}
 	os << "]"
 	   << "," << json::key(u"text") << json::str(utf16conv.from_bytes(sentence.text.str()))
@@ -727,6 +828,8 @@ void print_cg_reading(const std::string& readinglines, std::ostream& os, const h
 	os << readinglines;
 	const auto& reading = proc_reading(t, readinglines);
 	if(reading.suggest) {
+		// std::cerr << "\033[1;35mreading.suggest=\t" << reading.suggest << "\033[0m" << std::endl;
+
 		const auto& ana = reading.ana;
 		const auto& formv = reading.sforms;
 		if(formv.empty()) {

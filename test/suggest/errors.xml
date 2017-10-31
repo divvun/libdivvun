@@ -45,6 +45,28 @@
     </body>
   </error>
 
+  <error id="msyn-compound">
+    <header>
+      <title xml:lang="en">Compound error</title>
+      <title xml:lang="se">Orru leahkime goallossátni</title>
+    </header>
+    <body>
+      <description xml:lang="en">should be one word</description>
+      <description xml:lang="se">Orru leahkime goallossátni</description>
+    </body>
+  </error>
+
+  <error id="punct-rihkku">
+    <header>
+      <title xml:lang="en">Missing comma</title>
+      <title xml:lang="se">Rihkku</title>
+    </header>
+    <body>
+      <description xml:lang="en">comma</description>
+      <description xml:lang="se">rihkku</description>
+    </body>
+  </error>
+
   <error id="msyn-valency-ill">
     <header>
       <title xml:lang="en">illative instead of accusative</title>
@@ -103,6 +125,24 @@
     <examples>
       <ex xml:lang="se">Ovdalgihtiigeassima sierra máksingoartta ferte álohii atnit go máksá boastagiro dahje báŋku {badjel}.</ex>
     </examples>
+    </body>
+  </error>
+
+  <error id="syn-dego-nom">
+    <header>
+      <title xml:lang="se">dego nom</title>
+    </header>
+    <body>
+      <description xml:lang="se">blah</description>
+    </body>
+  </error>
+
+  <error id="syn-not-dego">
+    <header>
+      <title xml:lang="se">not dego</title>
+    </header>
+    <body>
+      <description xml:lang="se">blah</description>
     </body>
   </error>
 

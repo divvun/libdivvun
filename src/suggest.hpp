@@ -50,9 +50,6 @@ using UStringVector = std::vector<std::u16string>;
 
 using msgmap = std::unordered_map<lang, std::pair<ToggleIds, ToggleRes> >;	// msgs[lang] = make_pair(ToggleIds, ToggleRes)
 
-using rel_id = size_t;
-using relations = std::unordered_map<std::string, rel_id>;
-
 inline std::string xml_raw_cdata(const pugi::xml_node& label) {
 	std::ostringstream os;
 	for(const auto& cc: label.children())
@@ -62,20 +59,44 @@ inline std::string xml_raw_cdata(const pugi::xml_node& label) {
 	return os.str();
 }
 
-inline variant<Nothing, std::pair<err_id, UStringVector>> pickErr(const std::map<std::u16string, UStringVector>& err,
-								  const std::set<err_id>& ignores) {
-	for(const auto& it : err) {
-		if(ignores.find(it.first) == ignores.end()) {
-			// TODO: currently we just pick the first unignored if there are several error types:
-			return it;
-		}
-	}
-	return Nothing();
-}
-
 enum RunState {
 	flushing,
 	eof
+};
+
+using rel_id = size_t;
+using relations = std::unordered_map<std::string, rel_id>;
+
+struct Reading {
+	bool suggest = false;
+	std::string ana;
+	std::u16string errtype;
+	UStringVector sforms;
+	relations rels;	// rels[relname] = target.id
+	rel_id id = 0;
+	std::string wf;
+	bool suggestwf = false;
+	bool added = false;
+};
+
+struct Cohort {
+	std::u16string form;
+	size_t pos;
+	rel_id id;
+	std::vector<Reading> readings;
+	std::u16string default_errtype;
+	bool added;
+};
+
+using CohortMap = std::unordered_map<rel_id, size_t>;
+
+struct Sentence {
+	std::vector<Cohort> cohorts;
+	CohortMap ids_cohorts;
+	// TODO: can we make this an encoded stringstream? would avoid a lot of from/to_bytes calls
+	// std::basic_ostringstream<char16_t> text;
+	std::ostringstream text;
+	RunState runstate;
 };
 
 class Suggest {
@@ -101,6 +122,8 @@ class Suggest {
 		RunState run_json(std::istream& is, std::ostream& os);
 		std::unique_ptr<const hfst::HfstTransducer> generator;
 		std::set<err_id> ignores;
+		variant<Nothing, Err> cohort_errs(const err_id& err_id, const Cohort& c, const Sentence& sentence);
+		std::vector<Err> mk_errs(const Sentence &sentence);
 };
 
 }
