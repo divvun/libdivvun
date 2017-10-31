@@ -797,23 +797,11 @@ Suggest::Suggest (const hfst::HfstTransducer* generator_, divvun::msgmap msgs_, 
 	: msgs(msgs_)
 	, generator(generator_)
 {
-	if (!generator) {
-		throw std::runtime_error("ERROR: Suggest command couldn't read generator");
-	}
-	if (msgs.empty()) {
-		throw std::runtime_error("ERROR: Suggest command couldn't read messages xml");
-	}
 }
 Suggest::Suggest (const std::string& gen_path, const std::string& msg_path, bool verbose)
 	: msgs(readMessages(msg_path))
 	, generator(readTransducer(gen_path))
 {
-	if (!generator) {
-		throw std::runtime_error("ERROR: Suggest command couldn't read transducer " + gen_path);
-	}
-	if (msgs.empty()) {
-		throw std::runtime_error("ERROR: Suggest command couldn't read messages xml " + msg_path);
-	}
 }
 
 void Suggest::setIgnores(const std::set<err_id>& ignores_)
