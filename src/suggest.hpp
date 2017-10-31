@@ -73,6 +73,11 @@ inline variant<Nothing, std::pair<err_id, UStringVector>> pickErr(const std::map
 	return Nothing();
 }
 
+enum RunState {
+	flushing,
+	eof
+};
+
 class Suggest {
 	public:
 		Suggest (const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose);
@@ -93,6 +98,7 @@ class Suggest {
 
 		const msgmap msgs;
 	private:
+		RunState run_json(std::istream& is, std::ostream& os);
 		std::unique_ptr<const hfst::HfstTransducer> generator;
 		std::set<err_id> ignores;
 };

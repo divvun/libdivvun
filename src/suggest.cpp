@@ -107,11 +107,6 @@ struct Cohort {
 
 using CohortMap = std::unordered_map<rel_id, size_t>;
 
-enum RunState {
-	flushing,
-	eof
-};
-
 struct Sentence {
 	std::vector<Cohort> cohorts;
 	CohortMap ids_cohorts;
@@ -674,8 +669,7 @@ std::vector<Err> Suggest::run_errs(std::istream& is)
 	for(const auto& c : sentence.cohorts) {
 		pickErr(c.err, ignores).match(
 			[]      (Nothing) {},
-			[&errs, &c, &sentence, this] (std::pair<err_id, UStringVector>& err)
-			{
+			[&] (std::pair<err_id, UStringVector>& err) {
 				cohort_errs(err, c, sentence, *generator, msgs).match(
 					[]      (Nothing) {},
 					[&errs] (Err e)   { errs.push_back(e); });
@@ -685,11 +679,11 @@ std::vector<Err> Suggest::run_errs(std::istream& is)
 }
 
 
-RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, const msgmap& msgs, const std::set<err_id>& ignores)
+RunState Suggest::run_json(std::istream& is, std::ostream& os)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	json::sanity_test();
-	Sentence sentence = run_sentence(is, t, msgs);
+	Sentence sentence = run_sentence(is, *generator, msgs);
 
 	// All processing done, output:
 	os << "{"
@@ -699,11 +693,10 @@ RunState run_json(std::istream& is, std::ostream& os, const hfst::HfstTransducer
 	for(const auto& c : sentence.cohorts) {
 		pickErr(c.err, ignores).match(
 			[]      (Nothing) {},
-			[&os, &wantsep, &c, &sentence, &t, &msgs] (std::pair<err_id, UStringVector>& err)
-			{
-				cohort_errs(err, c, sentence, t, msgs).match(
+			[&] (std::pair<err_id, UStringVector>& err) {
+				cohort_errs(err, c, sentence, *generator, msgs).match(
 					[] (Nothing) {},
-					[&os, &wantsep] (Err& e)   {
+					[&] (Err& e) {
 						if(wantsep) {
 							os << ",";
 						}
@@ -786,7 +779,7 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 void Suggest::run(std::istream& is, std::ostream& os, bool json)
 {
 	if(json) {
-		while(run_json(is, os, *generator, msgs, ignores) == flushing);
+		while(run_json(is, os) == flushing);
 	}
 	else {
 		run_cg(is, os, *generator); // ignores ignores
