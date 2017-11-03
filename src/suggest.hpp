@@ -93,9 +93,7 @@ using CohortMap = std::unordered_map<rel_id, size_t>;
 struct Sentence {
 	std::vector<Cohort> cohorts;
 	CohortMap ids_cohorts;
-	// TODO: can we make this an encoded stringstream? would avoid a lot of from/to_bytes calls
-	// std::basic_ostringstream<char16_t> text;
-	std::ostringstream text;
+	std::basic_ostringstream<char16_t> text;
 	RunState runstate;
 };
 

@@ -536,8 +536,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 				else {
 					end = trg.pos + trg.form.size();
 				}
-				form = utf16conv.from_bytes(sentence.text.str()).substr(beg,
-											end - beg);
+				form = sentence.text.str().substr(beg, end - beg);
 				rep.push_back(c.form);
 				// TODO: if beg/end changed, all *other* replacements also need to cover the surrounding area
 			});
@@ -557,16 +556,16 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
  * apertium-deformatter), turn \n into literal newline, unescape all
  * other escaped chars.
  */
-const std::string clean_blank(const std::string& raw)
+const std::u16string clean_blank(const std::u16string& raw)
 {
 	bool escaped = false;
-	std::ostringstream text;
+	std::basic_ostringstream<char16_t> text;
 	for(const auto& c: raw) {
 		if(escaped) {
-			if(c == 'n') {
+			if(c == u'n') {
 				// hfst-tokenize escapes newlines like this; make
 				// them literal before jsoning
-				text << '\n';
+				text << u'\n';
 			}
 			else {
 				// Unescape anything else
@@ -575,10 +574,10 @@ const std::string clean_blank(const std::string& raw)
 			escaped = false;
 		}
 		// Skip the superblank delimiters
-		else if(c == '\\') {
+		else if(c == u'\\') {
 			escaped = true;
 		}
-		else if(c != '[' && c != ']') {
+		else if(c != u'[' && c != u']') {
 			text << c;
 			escaped = false;
 		}
@@ -628,7 +627,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 			}
 			if(!c.added) {
 				pos += c.form.size();
-				sentence.text << utf16conv.to_bytes(c.form);
+				sentence.text << c.form;
 			}
 			c = DEFAULT_COHORT;
 		}
@@ -640,8 +639,8 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 			readinglines += line + "\n";
 		}
 		else if(!result.empty() && result[6].length() != 0) { // blank
-			const auto blank = clean_blank(result[6]);
-			pos += utf16conv.from_bytes(blank).size();
+			const auto blank = clean_blank(utf16conv.from_bytes(result[6]));
+			pos += blank.size();
 			sentence.text << blank;
 		}
 		else if(!result.empty() && result[7].length() != 0) { // flush
@@ -675,7 +674,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 	}
 	if(!c.added) {
 		pos += c.form.size();
-		sentence.text << utf16conv.to_bytes(c.form);
+		sentence.text << c.form;
 	}
 	return sentence;
 }
@@ -713,7 +712,7 @@ bool compareByEnd(const Err &a, const Err &b)
  */
 void expand_errs(std::vector<Err>& errs, const Sentence& sentence) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	const auto& text = utf16conv.from_bytes(sentence.text.str());
+	const auto& text = sentence.text.str();
 	const auto n = errs.size();
 	if(n < 2) {
 		return;
@@ -813,7 +812,7 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os)
 		wantsep = true;
 	}
 	os << "]"
-	   << "," << json::key(u"text") << json::str(utf16conv.from_bytes(sentence.text.str()))
+	   << "," << json::key(u"text") << json::str(sentence.text.str())
 	   << "}";
 	if(sentence.runstate == flushing) {
 		os << '\0';
