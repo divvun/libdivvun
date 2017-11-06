@@ -84,7 +84,10 @@ const std::basic_regex<char> CG_LINE ("^"
 				      "|(<STREAMCMD:FLUSH>)" // flush, group 7
 				      ")");
 
-const std::basic_regex<char> MSG_TEMPLATE_VAR ("^[$][0-9]+$");
+const std::basic_regex<char> MSG_TEMPLATE_REL ("^[$][0-9]+$");
+const std::basic_regex<char> LEFT_REL ("^LEFT$");
+const std::basic_regex<char> RIGHT_REL ("^RIGHT");
+const std::basic_regex<char> DELETE_REL ("^DELETE[0-9]+");
 
 enum LineType {
 	WordformL, ReadingL, BlankL
@@ -410,27 +413,35 @@ Iterator Dedupe(Iterator first, Iterator last)
 	return last;
 }
 
-variant<Nothing, size_t> rel_target(const relations& rels, const std::string& name, const Sentence& sentence) {
-	const auto& rel = rels.find(name);
-	if(rel == rels.end()) {
-		return Nothing();
+void rel_on_match(const relations& rels,
+		  const std::basic_regex<char>& name,
+		  const Sentence& sentence,
+		  const std::function<void(const std::string& relname, const Cohort& trg)>& fn) {
+	for(const auto& rel: rels) {
+		std::match_results<const char*> result;
+		std::regex_match(rel.first.c_str(), result, name);
+		if(result.empty()) { // Other relation
+			continue;
+		}
+		const auto& target_id = rel.second;
+		if(sentence.ids_cohorts.find(target_id) == sentence.ids_cohorts.end()) {
+			std::cerr << "WARNING: Couldn't find relation target for " << rel.first << ":" << rel.second << std::endl;
+			continue;
+		}
+		const auto& i_c = sentence.ids_cohorts.at(target_id);
+		if(i_c >= sentence.cohorts.size()) {
+			std::cerr << "WARNING: Couldn't find relation target for " << rel.first << ":" << rel.second << std::endl;
+			continue;
+		}
+		fn(rel.first,
+		   sentence.cohorts.at(i_c));
 	}
-	const auto& target_id = rel->second;
-	if(sentence.ids_cohorts.find(target_id) == sentence.ids_cohorts.end()) {
-		std::cerr << "WARNING: Couldn't find relation target for " << rel->first << ":" << rel->second << std::endl;
-		return Nothing();
-	}
-	const auto& i_c = sentence.ids_cohorts.at(target_id);
-	if(i_c >= sentence.cohorts.size()) {
-		std::cerr << "WARNING: Couldn't find relation target for " << rel->first << ":" << rel->second << std::endl;
-		return Nothing();
-	}
-	return i_c;
 }
 
 variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 					   const Cohort& c,
-					   const Sentence& sentence)
+					   const Sentence& sentence,
+					   const std::u16string& text)
 {
 	if(cohort_empty(c) || c.added) {
 		return Nothing();
@@ -473,22 +484,10 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 			if((!r.errtype.empty()) && err_id != r.errtype) {
 				continue;
 			}
-			for(const auto& rel: r.rels) {
-				std::match_results<const char*> result;
-				std::regex_match(rel.first.c_str(), result, MSG_TEMPLATE_VAR);
-				if(result.empty()) { // Other relation
-					continue;
-				}
-				if(rel.first == "$1") {
-					std::cerr << "WARNING: $1 relation overwritten by CG rule" << std::endl;
-				}
-				rel_target(r.rels, rel.first, sentence).match(
-					[]      (Nothing) {},
-					[&] (size_t i_c) {
-						const auto& c_trg = sentence.cohorts.at(i_c);
-						replaceAll(msg, utf16conv.from_bytes(rel.first.c_str()), c_trg.form);
-					});
-			}
+			rel_on_match(r.rels, MSG_TEMPLATE_REL, sentence,
+				     [&] (const std::string& relname, const Cohort& trg) {
+					     replaceAll(msg, utf16conv.from_bytes(relname.c_str()), trg.form);
+				     });
 		}
 	} // msgs
 	auto beg = c.pos;
@@ -504,41 +503,33 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 			   r.sforms.end());
 		// If there are LEFT/RIGHT added relations, add suggestions with those concatenated to our form
 		// TODO: What about our current suggestions of the same error tag? Currently just using wordform
-		rel_target(r.rels, "LEFT", sentence).match(
-			[]      (Nothing) {},
-			[&] (size_t i_c) {
-				const auto& trg = sentence.cohorts.at(i_c);
-				for(const auto& tr: trg.readings) {
-					if(tr.added && tr.errtype == r.errtype) {
-						rep.push_back(trg.form + u" " + c.form);
-					}
-				}
-			});
-		rel_target(r.rels, "RIGHT", sentence).match(
-			[]      (Nothing) {},
-			[&] (size_t i_c) {
-				const auto& trg = sentence.cohorts.at(i_c);
-				for(const auto& tr: trg.readings) {
-					if(tr.added && tr.errtype == r.errtype) {
-						rep.push_back(c.form + u" " + trg.form);
-					}
-				}
-			});
-		rel_target(r.rels, "DELETE1", sentence).match(
-			[]      (Nothing) {},
-			[&] (size_t i_c) {
-				const auto& trg = sentence.cohorts.at(i_c);
-				if(trg.pos < c.pos) {
-					beg = trg.pos;
-				}
-				else {
-					end = trg.pos + trg.form.size();
-				}
-				form = utf16conv.from_bytes(sentence.text.str()).substr(beg,
-											end - beg);
-				rep.push_back(c.form);
-				// TODO: if beg/end changed, all *other* replacements also need to cover the surrounding area
-			});
+		rel_on_match(r.rels, LEFT_REL, sentence,
+			     [&] (const std::string& relname, const Cohort& trg) {
+				     for(const auto& tr: trg.readings) {
+					     if(tr.added && tr.errtype == r.errtype) {
+						     rep.push_back(trg.form + u" " + c.form);
+					     }
+				     }
+			     });
+		rel_on_match(r.rels, RIGHT_REL, sentence,
+			     [&] (const std::string& relname, const Cohort& trg) {
+				     for(const auto& tr: trg.readings) {
+					     if(tr.added && tr.errtype == r.errtype) {
+						     rep.push_back(c.form + u" " + trg.form);
+					     }
+				     }
+			     });
+		rel_on_match(r.rels, DELETE_REL, sentence,
+			     [&] (const std::string& relname, const Cohort& trg) {
+				     if(trg.pos < c.pos) {
+					     beg = trg.pos;
+				     }
+				     else {
+					     end = trg.pos + trg.form.size();
+				     }
+				     form = text.substr(beg, end - beg);
+				     rep.push_back(c.form);
+			     });
 	}
 	rep.erase(std::remove_if(rep.begin(),
 				 rep.end(),
@@ -715,9 +706,7 @@ bool compareByEnd(const Err &a, const Err &b)
  * (e.g.
  * https://github.com/ekg/intervaltree/blob/master/IntervalTree.h )
  */
-void expand_errs(std::vector<Err>& errs, const Sentence& sentence) {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	const auto& text = utf16conv.from_bytes(sentence.text.str());
+void expand_errs(std::vector<Err>& errs, const std::u16string& text) {
 	const auto n = errs.size();
 	if(n < 2) {
 		return;
@@ -764,6 +753,8 @@ void expand_errs(std::vector<Err>& errs, const Sentence& sentence) {
 }
 
 std::vector<Err> Suggest::mk_errs(const Sentence &sentence) {
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	const auto& text = utf16conv.from_bytes(sentence.text.str());
 	std::vector<Err> errs;
 	for(const auto& c : sentence.cohorts) {
 		std::map<err_id, std::vector<size_t>> c_errs;
@@ -774,14 +765,12 @@ std::vector<Err> Suggest::mk_errs(const Sentence &sentence) {
 			if(e.first.empty()) {
 				continue;
 			}
-			cohort_errs(e.first, c, sentence).match(
-				[]      (Nothing) {},
-				[&] (Err e)   {
-					errs.push_back(e);
-				});
+			cohort_errs(e.first, c, sentence, text).match(
+				[]  (Nothing) {},
+				[&] (Err e)   { errs.push_back(e); });
 		}
 	}
-	expand_errs(errs, sentence);
+	expand_errs(errs, text);
 	return errs;
 }
 

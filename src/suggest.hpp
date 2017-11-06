@@ -125,7 +125,7 @@ class Suggest {
 		RunState run_json(std::istream& is, std::ostream& os);
 		std::unique_ptr<const hfst::HfstTransducer> generator;
 		std::set<err_id> ignores;
-		variant<Nothing, Err> cohort_errs(const err_id& err_id, const Cohort& c, const Sentence& sentence);
+		variant<Nothing, Err> cohort_errs(const err_id& err_id, const Cohort& c, const Sentence& sentence, const std::u16string& text);
 		std::vector<Err> mk_errs(const Sentence &sentence);
 };
 
