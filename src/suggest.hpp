@@ -45,6 +45,9 @@
 namespace divvun {
 
 using mapbox::util::variant;
+using std::string;
+using std::u16string;
+using std::vector;
 
 using UStringVector = std::vector<std::u16string>;
 

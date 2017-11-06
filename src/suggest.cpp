@@ -542,6 +542,10 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 				// TODO: if beg/end changed, all *other* replacements also need to cover the surrounding area
 			});
 	}
+	rep.erase(std::remove_if(rep.begin(),
+				 rep.end(),
+				 [&](const std::u16string& r) { return r == form; }),
+		  rep.end());
 	return Err {
 		form,
 		beg,
