@@ -502,8 +502,6 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 		rep.insert(rep.end(),
 			   r.sforms.begin(),
 			   r.sforms.end());
-		rep.erase(Dedupe(rep.begin(), rep.end()),
-			  rep.end());
 		// If there are LEFT/RIGHT added relations, add suggestions with those concatenated to our form
 		// TODO: What about our current suggestions of the same error tag? Currently just using wordform
 		rel_target(r.rels, "LEFT", sentence).match(
@@ -545,6 +543,8 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 	rep.erase(std::remove_if(rep.begin(),
 				 rep.end(),
 				 [&](const std::u16string& r) { return r == form; }),
+		  rep.end());
+	rep.erase(Dedupe(rep.begin(), rep.end()),
 		  rep.end());
 	return Err {
 		form,
