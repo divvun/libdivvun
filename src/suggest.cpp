@@ -378,20 +378,6 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const std::string& lin
 	return r;
 }
 
-/* If we have an inserted suggestion, then the next word has to be
- * part of that, since we don't want to *replace* the word
-**/
-std::map<std::u16string, UStringVector> sugg_append(const std::u16string& next_wf, std::map<std::u16string, UStringVector> cohort_err)
-{
-	std::map<std::u16string, UStringVector> fixed;
-	for(auto& err : cohort_err) {
-		for(auto& f : err.second) {
-			fixed[err.first].emplace_back(f + u" " + next_wf);
-		}
-	}
-	return fixed;
-}
-
 bool cohort_empty(const Cohort& c) {
 	return c.form.empty();
 }
