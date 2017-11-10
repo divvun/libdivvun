@@ -26,6 +26,9 @@
 // #include <experimental/filesystem>
 // but need to support macos
 
+#include <cstring>
+#include <errno.h>
+
 // divvun-gramcheck:
 #include "suggest.hpp"
 #include "cgspell.hpp"
@@ -96,6 +99,7 @@ class PipeSpec {
 unique_ptr<PipeSpec> readPipeSpec(const string& file);
 
 void writePipeSpecSh(const string& specfile, const u16string& pipename, std::ostream& os);
+void writePipeSpecShDir(const string& specfile, const string& modesdir);
 
 // https://stackoverflow.com/a/1449527/69663
 struct OneShotReadBuf : public std::streambuf

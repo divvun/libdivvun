@@ -477,16 +477,9 @@ unique_ptr<ArPipeSpec> readArPipeSpec(const string& ar_path) {
 	return readArchiveExtract(ar_path, "pipespec.xml", f);
 }
 
-void writePipeSpecSh(const string& specfile, const u16string& pipename, std::ostream& os) {
-	const auto spec = readPipeSpec(specfile);
-	// const auto dir = std::experimental::filesystem::absolute(specfile).remove_filename(); // <experimental/filesystem>
-        char specabspath[PATH_MAX];
-	realpath(specfile.c_str(), specabspath);
-	const auto dir = dirname(string(specabspath));
-	bool first = true;
-	const pugi::xml_node& pipeline = spec->pnodes.at(pipename);
+std::vector<string> toPipeSpecShVector(const std::string& dir, const pugi::xml_node& pipeline, const u16string& pipename) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	os << "#!/bin/sh" << std::endl << std::endl;
+	vector<string> cmds = {};
 	for (const pugi::xml_node& cmd: pipeline.children()) {
 		const auto& name = utf16conv.from_bytes(cmd.name());
 		string prog;
@@ -520,18 +513,74 @@ void writePipeSpecSh(const string& specfile, const u16string& pipename, std::ost
 			throw std::runtime_error("Unknown command '" + utf16conv.to_bytes(name) + "'");
 		}
 		if(!prog.empty()) {
-			if(!first) {
-				os << " \\" << std::endl << " | ";
-			}
-			first = false;
-			os << prog;
+			std::ostringstream part;
+			part << prog;
 			for(auto& a : args) {
 				// Wrap the whole thing in single-quotes, but put existing single-quotes in double-quotes
 				replaceAll(a, "'", "'\"'\"'");
 				// os << " '" << (dir / a).string() << "'"; // <experimental/filesystem>
-				os << " '" << dir << a << "'";
+				part << " '" << dir << a << "'";
 			}
+			cmds.push_back(part.str());
 		}
+	}
+	return cmds;
+}
+
+void writePipeSpecSh(const string& specfile, const u16string& pipename, std::ostream& os) {
+	const auto spec = readPipeSpec(specfile);
+	// const auto dir = std::experimental::filesystem::absolute(specfile).remove_filename(); // <experimental/filesystem>
+        char specabspath[PATH_MAX];
+	realpath(specfile.c_str(), specabspath);
+	const auto dir = dirname(string(specabspath));
+	const auto& pipeline = spec->pnodes.at(pipename);
+	const auto cmds = toPipeSpecShVector(dir, pipeline, pipename);
+	bool first = true;
+	os << "#!/bin/sh" << std::endl << std::endl;
+	for (const auto& cmd: cmds) {
+		if(!first) {
+			os << " \\" << std::endl << " | ";
+		}
+		first = false;
+		os << cmd;
+	}
+}
+
+void writePipeSpecShDirOne(const vector<string> cmds, const u16string& pipename, const string& modesdir) {
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	// TODO: (modesdir / …) when we get <experimental/filesystem>
+	const auto basepath = modesdir + "/" + utf16conv.to_bytes(pipename);
+	for (size_t i = 0; i < cmds.size(); ++i) {
+		const auto path = basepath + std::to_string(i) + ".mode";
+		std::cerr << "\033[1;35m" << path << "\033[0m" << std::endl;
+		std::ofstream ofs;
+		ofs.open(path, std::ofstream::out | std::ofstream::trunc);
+		if(!ofs) {
+			throw std::runtime_error("ERROR: Couldn't open " + path + " for writing! " + std::strerror(errno));
+		}
+		bool first = true;
+		ofs << "#!/bin/sh" << std::endl << std::endl;
+		for (size_t j = 0; j <= i; ++j) {
+			const auto& cmd = cmds[j];
+			if(!first) {
+				ofs << " \\" << std::endl << " | ";
+			}
+			first = false;
+			ofs << cmd;
+		}
+	}
+}
+
+void writePipeSpecShDir(const string& specfile, const string& modesdir) {
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	const auto spec = readPipeSpec(specfile);
+	// const auto dir = std::experimental::filesystem::absolute(specfile).remove_filename(); // <experimental/filesystem>
+        char specabspath[PATH_MAX];
+	realpath(specfile.c_str(), specabspath);
+	const auto dir = dirname(string(specabspath));
+	for(const auto& p : spec->pnodes) {
+		const auto cmds = toPipeSpecShVector(dir, p.second, p.first);
+		writePipeSpecShDirOne(cmds, p.first, modesdir);
 	}
 }
 

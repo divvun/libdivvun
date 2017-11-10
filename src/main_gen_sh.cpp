@@ -30,10 +30,11 @@ int main(int argc, char ** argv)
 		cxxopts::Options options(argv[0], "BIN - generate shell script to run checker pipeline from XML pipespec");
 
 		options.add_options()
-			("s,spec", "Pipeline XML specification", cxxopts::value<std::string>(), "FILE")
-			("n,variant", "Name of the pipeline variant", cxxopts::value<std::string>(), "NAME")
+			("s,spec"   , "Pipeline XML specification"          , cxxopts::value<std::string>(), "FILE")
+			("n,variant", "Name of the pipeline variant"        , cxxopts::value<std::string>(), "NAME")
+			("d,dir"    , "Write all pipelines to directory DIR", cxxopts::value<std::string>(), "DIR")
 			("v,verbose", "Be verbose")
-			("h,help", "Print help")
+			("h,help"   , "Print help")
 			;
 
 		std::vector<std::string> pos = {
@@ -61,14 +62,19 @@ int main(int argc, char ** argv)
 			if(verbose) {
 				std::cerr << "Reading specfile " << specfile << std::endl;
 			}
-			if(!options.count("variant")) {
-				std::cerr << "ERROR: Please specify a variant (try divvun-checker to list variants)" << std::endl;
-				return EXIT_FAILURE;
-			}
-			else {
+			if(options.count("variant")) {
 				const auto& pipename = utf16conv.from_bytes(options["variant"].as<std::string>());
 				divvun::writePipeSpecSh(specfile, pipename, std::cout);
 				return EXIT_SUCCESS;
+			}
+			else if(options.count("dir")) {
+				const auto& modesdir = options["dir"].as<std::string>();
+				divvun::writePipeSpecShDir(specfile, modesdir);
+				return EXIT_SUCCESS;
+			}
+			else {
+				std::cerr << "ERROR: Please specify a variant (try divvun-checker to list variants)" << std::endl;
+				return EXIT_FAILURE;
 			}
 		}
 		else {
