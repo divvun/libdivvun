@@ -43,6 +43,12 @@
 
 namespace divvun {
 
+using std::string;
+using std::stringstream;
+using std::u16string;
+using std::vector;
+using std::unique_ptr;
+
 #ifndef DEBUG
 const bool DEBUG=false;
 #endif
@@ -79,17 +85,17 @@ class PipeSpec {
 		PipeSpec() = default;
 		PipeSpec(PipeSpec const &) = delete;
 		PipeSpec &operator=(PipeSpec const &) = delete;
-		// PipeSpec(const pugi::xml_document& doc, const std::unordered_map<std::u16string, pugi::xml_node>& pipespec)
+		// PipeSpec(const pugi::xml_document& doc, const std::unordered_map<u16string, pugi::xml_node>& pipespec)
 		// {
 		// 	throw std::runtime_error("PipeSpec can't be copied ");
 		// }
 		pugi::xml_document doc; // needs to be alive for as long as we're referring to nodes in it
-		std::unordered_map<std::u16string, pugi::xml_node> pnodes;
+		std::unordered_map<u16string, pugi::xml_node> pnodes;
 };
 
-std::unique_ptr<PipeSpec> readPipeSpec(const std::string& file);
+unique_ptr<PipeSpec> readPipeSpec(const string& file);
 
-void writePipeSpecSh(const std::string& specfile, const std::u16string& pipename, std::ostream& os);
+void writePipeSpecSh(const string& specfile, const u16string& pipename, std::ostream& os);
 
 // https://stackoverflow.com/a/1449527/69663
 struct OneShotReadBuf : public std::streambuf
@@ -102,26 +108,26 @@ struct OneShotReadBuf : public std::streambuf
 
 class ArPipeSpec {
 	public:
-		explicit ArPipeSpec(const std::string& ar_path_)
+		explicit ArPipeSpec(const string& ar_path_)
 			: ar_path(ar_path_)
 			, spec(new PipeSpec) {}
 		ArPipeSpec(ArPipeSpec const &) = delete;
 		ArPipeSpec &operator=(ArPipeSpec const &) = delete;
-		// ArPipeSpec(const std::unique_ptr<PipeSpec> spec, const std::string& ar_path)
+		// ArPipeSpec(const unique_ptr<PipeSpec> spec, const string& ar_path)
 		// {
 		// 	throw std::runtime_error("ArPipeSpec can't be copied ");
 		// }
-		const std::string ar_path;
-		std::unique_ptr<PipeSpec> spec;
+		const string ar_path;
+		unique_ptr<PipeSpec> spec;
 };
 
-std::unique_ptr<ArPipeSpec> readArPipeSpec(const std::string& ar_path);
+unique_ptr<ArPipeSpec> readArPipeSpec(const string& ar_path);
 
 
 class PipeCmd {
 	public:
 		PipeCmd() = default;
-		virtual void run(std::stringstream& input, std::stringstream& output) const = 0;
+		virtual void run(stringstream& input, stringstream& output) const = 0;
 		virtual ~PipeCmd() = default;
 		// no copying
 		PipeCmd(PipeCmd const &) = delete;
@@ -132,14 +138,14 @@ class PipeCmd {
 class TokenizeCmd: public PipeCmd {
 	public:
 		TokenizeCmd (std::istream& instream, bool verbose);
-		TokenizeCmd (const std::string& path, bool verbose);
-		void run(std::stringstream& input, std::stringstream& output) const override;
+		TokenizeCmd (const string& path, bool verbose);
+		void run(stringstream& input, stringstream& output) const override;
 		~TokenizeCmd() override = default;
 	private:
 		hfst_ol::PmatchContainer* mkContainer(std::istream& instream, bool verbose);
 		hfst_ol_tokenize::TokenizeSettings settings;
-		std::unique_ptr<std::istream> istream; // Only used if we're not given a stream in the first place
-		std::unique_ptr<hfst_ol::PmatchContainer> container;
+		unique_ptr<std::istream> istream; // Only used if we're not given a stream in the first place
+		unique_ptr<hfst_ol::PmatchContainer> container;
 };
 
 
@@ -168,10 +174,10 @@ class MweSplitCmd: public PipeCmd {
 	public:
 		/* Assumes cg3_init has been called already */
 		explicit MweSplitCmd (bool verbose);
-		void run(std::stringstream& input, std::stringstream& output) const override;
+		void run(stringstream& input, stringstream& output) const override;
 		~MweSplitCmd() override = default;
 	private:
-		std::unique_ptr<cg3_mwesplitapplicator, CGMweSplitApplicatorDeleter> applicator;
+		unique_ptr<cg3_mwesplitapplicator, CGMweSplitApplicatorDeleter> applicator;
 		// cg3_applicator* applicator;
 };
 
@@ -180,13 +186,13 @@ class CGCmd: public PipeCmd {
 	public:
 		/* Assumes cg3_init has been called already */
 		CGCmd (const char* buff, const size_t size, bool verbose);
-		CGCmd (const std::string& path, bool verbose);
-		void run(std::stringstream& input, std::stringstream& output) const override;
+		CGCmd (const string& path, bool verbose);
+		void run(stringstream& input, stringstream& output) const override;
 		~CGCmd() override = default;
 	private:
-		std::unique_ptr<cg3_grammar, CGGrammarDeleter> grammar;
+		unique_ptr<cg3_grammar, CGGrammarDeleter> grammar;
 		// cg3_grammar* grammar;
-		std::unique_ptr<cg3_applicator, CGApplicatorDeleter> applicator;
+		unique_ptr<cg3_applicator, CGApplicatorDeleter> applicator;
 		// cg3_applicator* applicator;
 };
 
@@ -194,8 +200,8 @@ class CGCmd: public PipeCmd {
 class CGSpellCmd: public PipeCmd {
 	public:
 		CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, bool verbose);
-		CGSpellCmd (const std::string& err_path, const std::string& lex_path, bool verbose);
-		void run(std::stringstream& input, std::stringstream& output) const override;
+		CGSpellCmd (const string& err_path, const string& lex_path, bool verbose);
+		void run(stringstream& input, stringstream& output) const override;
 		~CGSpellCmd() override = default;
 		// Some sane defaults for the speller
 		// TODO: Do we want any of this configurable from pipespec.xml, or from the Checker API?
@@ -206,21 +212,21 @@ class CGSpellCmd: public PipeCmd {
 		static constexpr hfst_ospell::Weight beam = -1.0;
 		static constexpr float time_cutoff = 0.0;
 	private:
-		std::unique_ptr<Speller> speller;
+		unique_ptr<Speller> speller;
 };
 
 
 class SuggestCmd: public PipeCmd {
 	public:
 		SuggestCmd (const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose);
-		SuggestCmd (const std::string& gen_path, const std::string& msg_path, bool verbose);
-		void run(std::stringstream& input, std::stringstream& output) const override;
-		std::vector<Err> run_errs(std::stringstream& input) const;
+		SuggestCmd (const string& gen_path, const string& msg_path, bool verbose);
+		void run(stringstream& input, stringstream& output) const override;
+		vector<Err> run_errs(stringstream& input) const;
 		~SuggestCmd() override = default;
 		void setIgnores(const std::set<err_id>& ignores);
 		const msgmap& getMsgs();
 	private:
-		std::unique_ptr<Suggest> suggest;
+		unique_ptr<Suggest> suggest;
 };
 
 
@@ -264,29 +270,29 @@ inline void mergePrefsFromMsgs(LocalisedPrefs& prefs, const msgmap& msgs) {
 
 class Pipeline {
 	public:
-		Pipeline(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool verbose);
-		Pipeline(const std::unique_ptr<ArPipeSpec>& spec, const std::u16string& pipename, bool verbose);
+		Pipeline(const unique_ptr<PipeSpec>& spec, const u16string& pipename, bool verbose);
+		Pipeline(const unique_ptr<ArPipeSpec>& spec, const u16string& pipename, bool verbose);
 		// ~Pipeline() {
-		// TODO: gives /usr/include/c++/6/bits/stl_construct.h:75:7: error: use of deleted function ‘std::unique_ptr<_Tp, _Dp>::unique_ptr(const std::unique_ptr<_Tp, _Dp>&) [with _Tp = divvun::PipeCmd; _Dp = std::default_delete<divvun::PipeCmd>]’
+		// TODO: gives /usr/include/c++/6/bits/stl_construct.h:75:7: error: use of deleted function ‘unique_ptr<_Tp, _Dp>::unique_ptr(const unique_ptr<_Tp, _Dp>&) [with _Tp = divvun::PipeCmd; _Dp = std::default_delete<divvun::PipeCmd>]’
 		// 	if (!cg3_cleanup()) {
 		// 		std::cerr << "WARNING: Couldn't cleanup from CG3" << std::endl;
 		// 	}
 		// }
-		void proc(std::stringstream& input, std::stringstream& output);
-		std::vector<Err> proc_errs(std::stringstream& input);
+		void proc(stringstream& input, stringstream& output);
+		vector<Err> proc_errs(stringstream& input);
 		const bool verbose;
 		// Preferences:
 		void setIgnores(const std::set<err_id>& ignores);
 		const LocalisedPrefs prefs;
 	private:
-		std::vector<std::unique_ptr<PipeCmd>> cmds;
+		vector<unique_ptr<PipeCmd>> cmds;
 		// the final command, if it is SuggestCmd, can also do non-stringly-typed output, see proc_errs
 		SuggestCmd* suggestcmd;
 		// "Real" constructors here since we can't init const members in constructor bodies:
-		static Pipeline mkPipeline(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool verbose);
-		static Pipeline mkPipeline(const std::unique_ptr<ArPipeSpec>& spec, const std::u16string& pipename, bool verbose);
+		static Pipeline mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string& pipename, bool verbose);
+		static Pipeline mkPipeline(const unique_ptr<ArPipeSpec>& spec, const u16string& pipename, bool verbose);
 		Pipeline (LocalisedPrefs prefs,
-			  std::vector<std::unique_ptr<PipeCmd>> cmds,
+			  vector<unique_ptr<PipeCmd>> cmds,
 			  SuggestCmd* suggestcmd,
 			  bool verbose);
 };

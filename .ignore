@@ -1,3 +1,6 @@
 # ag requires these too
 /Makefile
 /Makefile.in
+/src/cxxopts.hpp
+/src/mapbox/
+/examples/

@@ -19,9 +19,9 @@
 
 namespace divvun {
 
-const std::string CG_SUGGEST_TAG = "&SUGGEST";
-const std::string CG_SUGGESTWF_TAG = "&SUGGESTWF";
-const std::string CG_ADDED_TAG = "&ADDED";
+const string CG_SUGGEST_TAG = "&SUGGEST";
+const string CG_SUGGESTWF_TAG = "&SUGGESTWF";
+const string CG_ADDED_TAG = "&ADDED";
 
 const std::basic_regex<char> DELIMITERS ("^[.!?]$");
 
@@ -153,7 +153,7 @@ const msgmap Suggest::readMessages(const char* buff, const size_t size) {
 #endif
 }
 
-const msgmap Suggest::readMessages(const std::string& file) {
+const msgmap Suggest::readMessages(const string& file) {
 #ifdef HAVE_LIBPUGIXML
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(file.c_str());
@@ -204,7 +204,7 @@ const hfst::HfstTransducer *Suggest::readTransducer(std::istream& is) {
 	return t;
 }
 
-const hfst::HfstTransducer *Suggest::readTransducer(const std::string& file) {
+const hfst::HfstTransducer *Suggest::readTransducer(const string& file) {
 	hfst::HfstInputStream *in = nullptr;
 	try
 	{
@@ -247,13 +247,13 @@ const hfst::HfstTransducer *Suggest::readTransducer(const std::string& file) {
 // errtype is the error tag (without leading ampersand)
 // gentags are the tags we generate with
 // id is 0 if unset, otherwise the relation id of this word
-const std::tuple<bool, std::string, StringVec, rel_id, relations, std::string, bool, bool> proc_tags(const std::string& tags) {
+const std::tuple<bool, string, StringVec, rel_id, relations, string, bool, bool> proc_tags(const string& tags) {
 	bool suggest = false;
-	std::string errtype;
+	string errtype;
 	StringVec gentags;
 	rel_id id = 0; // CG-3 id's start at 1, should be safe. Want sum types :-/
 	relations rels;
-	std::string wf;
+	string wf;
 	bool suggestwf = false;
 	bool added = false;
 	for(auto& tag : allmatches(tags, CG_TAGS_RE)) {
@@ -310,7 +310,7 @@ const std::tuple<bool, std::string, StringVec, rel_id, relations, std::string, b
 	return std::make_tuple(suggest, errtype, gentags, id, rels, wf, suggestwf, added);
 }
 
-const Reading proc_subreading(const std::string& line) {
+const Reading proc_subreading(const string& line) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	Reading r;
 	const auto& lemma_beg = line.find("\"");
@@ -334,10 +334,10 @@ const Reading proc_subreading(const std::string& line) {
 	return r;
 };
 
-const Reading proc_reading(const hfst::HfstTransducer& t, const std::string& line) {
+const Reading proc_reading(const hfst::HfstTransducer& t, const string& line) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	std::stringstream ss(line);
-	std::string subline;
+	stringstream ss(line);
+	string subline;
 	std::deque<Reading> subs;
 	while(std::getline(ss, subline, '\n')){
 		subs.push_front(proc_subreading(subline));
@@ -365,7 +365,7 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const std::string& lin
 		const auto& paths = t.lookup_fd({ r.ana }, -1, 10.0);
 		if(paths->size() > 0) {
 			for(auto& p : *paths) {
-				std::stringstream form;
+				stringstream form;
 				for(auto& symbol : p.second) {
 					if(!hfst::FdOperation::is_diacritic(symbol)) {
 						form << symbol;
@@ -402,7 +402,7 @@ Iterator Dedupe(Iterator first, Iterator last)
 void rel_on_match(const relations& rels,
 		  const std::basic_regex<char>& name,
 		  const Sentence& sentence,
-		  const std::function<void(const std::string& relname, const Cohort& trg)>& fn) {
+		  const std::function<void(const string& relname, const Cohort& trg)>& fn) {
 	for(const auto& rel: rels) {
 		std::match_results<const char*> result;
 		std::regex_match(rel.first.c_str(), result, name);
@@ -427,15 +427,15 @@ void rel_on_match(const relations& rels,
 variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 					   const Cohort& c,
 					   const Sentence& sentence,
-					   const std::u16string& text)
+					   const u16string& text)
 {
 	if(cohort_empty(c) || c.added || ignores.find(err_id) != ignores.end()) {
 		return Nothing();
 	}
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	std::u16string msg;
+	u16string msg;
 	// TODO: locale, how? One process per locale (command-line-arg) or print all messages?
-	std::string locale = "se";
+	string locale = "se";
 	if(msgs.count(locale) == 0) {
 		std::cerr << "WARNING: No message at all for " << locale << std::endl;
 	}
@@ -471,7 +471,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 				continue;
 			}
 			rel_on_match(r.rels, MSG_TEMPLATE_REL, sentence,
-				     [&] (const std::string& relname, const Cohort& trg) {
+				     [&] (const string& relname, const Cohort& trg) {
 					     replaceAll(msg, utf16conv.from_bytes(relname.c_str()), trg.form);
 				     });
 		}
@@ -490,7 +490,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 		// TODO: What about our current suggestions of the same error tag? Currently just using wordform
 		// TODO: Allow words in between?
 		rel_on_match(r.rels, LEFT_REL, sentence,
-			     [&] (const std::string& relname, const Cohort& trg) {
+			     [&] (const string& relname, const Cohort& trg) {
 				     for(const auto& tr: trg.readings) {
 					     if(tr.added && tr.errtype == r.errtype) {
 						     rep.push_back(trg.form + u" " + c.form);
@@ -498,7 +498,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 				     }
 			     });
 		rel_on_match(r.rels, RIGHT_REL, sentence,
-			     [&] (const std::string& relname, const Cohort& trg) {
+			     [&] (const string& relname, const Cohort& trg) {
 				     for(const auto& tr: trg.readings) {
 					     if(tr.added && tr.errtype == r.errtype) {
 						     rep.push_back(c.form + u" " + trg.form);
@@ -507,7 +507,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 			     });
 		std::map<size_t, size_t> deleted;
 		rel_on_match(r.rels, DELETE_REL, sentence,
-			     [&] (const std::string& relname, const Cohort& trg) {
+			     [&] (const string& relname, const Cohort& trg) {
 				     size_t del_beg = trg.pos;
 				     size_t del_end = del_beg + trg.form.size();
 				     // Expand (unless we've already expanded more in that direction):
@@ -539,7 +539,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 	auto form = text.substr(beg, end - beg);
 	rep.erase(std::remove_if(rep.begin(),
 				 rep.end(),
-				 [&](const std::u16string& r) { return r == form; }),
+				 [&](const u16string& r) { return r == form; }),
 		  rep.end());
 	rep.erase(Dedupe(rep.begin(), rep.end()),
 		  rep.end());
@@ -558,7 +558,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
  * apertium-deformatter), turn \n into literal newline, unescape all
  * other escaped chars.
  */
-const std::string clean_blank(const std::string& raw)
+const string clean_blank(const string& raw)
 {
 	bool escaped = false;
 	std::ostringstream text;
@@ -598,8 +598,8 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 	// and ICU seems overkill just for iterating codepoints
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 
-	std::string line;
-	std::string readinglines;
+	string line;
+	string readinglines;
 	std::getline(is, line);	// TODO: Why do I need at least one getline before os<< after flushing?
 	do {
 		std::match_results<const char*> result;
@@ -712,7 +712,7 @@ bool compareByEnd(const Err &a, const Err &b)
  * (e.g.
  * https://github.com/ekg/intervaltree/blob/master/IntervalTree.h )
  */
-void expand_errs(std::vector<Err>& errs, const std::u16string& text) {
+void expand_errs(vector<Err>& errs, const u16string& text) {
 	const auto n = errs.size();
 	if(n < 2) {
 		return;
@@ -758,12 +758,12 @@ void expand_errs(std::vector<Err>& errs, const std::u16string& text) {
 	}
 }
 
-std::vector<Err> Suggest::mk_errs(const Sentence &sentence) {
+vector<Err> Suggest::mk_errs(const Sentence &sentence) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	const auto& text = utf16conv.from_bytes(sentence.text.str());
-	std::vector<Err> errs;
+	vector<Err> errs;
 	for(const auto& c : sentence.cohorts) {
-		std::map<err_id, std::vector<size_t>> c_errs;
+		std::map<err_id, vector<size_t>> c_errs;
 		for(size_t i = 0; i < c.readings.size(); ++i) {
 			c_errs[c.readings[i].errtype].push_back(i);
 		}
@@ -780,7 +780,7 @@ std::vector<Err> Suggest::mk_errs(const Sentence &sentence) {
 	return errs;
 }
 
-std::vector<Err> Suggest::run_errs(std::istream& is)
+vector<Err> Suggest::run_errs(std::istream& is)
 {
 	return mk_errs(run_sentence(is, *generator, msgs));
 }
@@ -797,7 +797,7 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os)
 	   << json::key(u"errs")
 	   << "[";
 	bool wantsep = false;
-	std::vector<Err> errs = mk_errs(sentence);
+	vector<Err> errs = mk_errs(sentence);
 	for(const auto& e : errs) {
 		if(wantsep) {
 			os << ",";
@@ -823,7 +823,7 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os)
 }
 
 
-void print_cg_reading(const std::string& readinglines, std::ostream& os, const hfst::HfstTransducer& t, std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>& utf16conv) {
+void print_cg_reading(const string& readinglines, std::ostream& os, const hfst::HfstTransducer& t, std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>& utf16conv) {
 	os << readinglines;
 	const auto& reading = proc_reading(t, readinglines);
 	if(reading.suggest) {
@@ -851,8 +851,8 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	// Simple debug function; only subreading state kept between lines
-	std::string readinglines;
-	for (std::string line;std::getline(is, line);) {
+	string readinglines;
+	for (string line;std::getline(is, line);) {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 
@@ -893,7 +893,7 @@ Suggest::Suggest (const hfst::HfstTransducer* generator_, divvun::msgmap msgs_, 
 	, generator(generator_)
 {
 }
-Suggest::Suggest (const std::string& gen_path, const std::string& msg_path, bool verbose)
+Suggest::Suggest (const string& gen_path, const string& msg_path, bool verbose)
 	: msgs(readMessages(msg_path))
 	, generator(readTransducer(gen_path))
 {
