@@ -519,13 +519,17 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 					     }
 				     }
 			     });
+		// TODO: want to be able to have words in between the deleted one and this!
 		rel_on_match(r.rels, DELETE_REL, sentence,
 			     [&] (const std::string& relname, const Cohort& trg) {
-				     if(trg.pos < c.pos) {
+				     if(trg.pos < beg) {
 					     beg = trg.pos;
 				     }
 				     else {
-					     end = trg.pos + trg.form.size();
+					     size_t end_trg = trg.pos + trg.form.size();
+					     if(end_trg > end) {
+						     end = end_trg;
+					     }
 				     }
 				     form = text.substr(beg, end - beg);
 				     rep.push_back(c.form);
