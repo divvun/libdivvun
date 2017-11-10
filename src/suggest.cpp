@@ -429,7 +429,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 					   const Sentence& sentence,
 					   const std::u16string& text)
 {
-	if(cohort_empty(c) || c.added) {
+	if(cohort_empty(c) || c.added || ignores.find(err_id) != ignores.end()) {
 		return Nothing();
 	}
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;

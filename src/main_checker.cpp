@@ -166,7 +166,7 @@ int main(int argc, char ** argv)
 				const auto& pipename = utf16conv.from_bytes(options["variant"].as<std::string>());
 				return getPipelineXml(specfile, pipename, verbose).match(
 					[]       (int r) { return r; },
-					[options, &ignores](Pipeline& p){
+					[&](Pipeline& p) {
 						p.setIgnores(ignores);
 						if(options.count("preferences")) {
 							printPrefs(p);
@@ -190,7 +190,7 @@ int main(int argc, char ** argv)
 				const auto& pipename = utf16conv.from_bytes(options["variant"].as<std::string>());
 				return getPipelineAr(archive, pipename, verbose).match(
 					[]       (int r) { return r; },
-					[options, &ignores](Pipeline& p){
+					[&](Pipeline& p) {
 						p.setIgnores(ignores);
 						if(options.count("preferences")) {
 							printPrefs(p);
