@@ -477,40 +477,70 @@ unique_ptr<ArPipeSpec> readArPipeSpec(const string& ar_path) {
 	return readArchiveExtract(ar_path, "pipespec.xml", f);
 }
 
-std::vector<string> toPipeSpecShVector(const std::string& dir, const pugi::xml_node& pipeline, const u16string& pipename) {
+string makeDebugSuff(string name, vector<string> args) {
+	if(name == "cg" && args.size() > 0) {
+		if(args[0].substr(0, 14) == "grammarchecker") {
+			return "gc";
+		}
+		if(args[0].substr(0, 7) == "mwe-dis") {
+			return "mwe-dis";
+		}
+		if(args[0].substr(0, 7) == "valency") {
+			return "val";
+		}
+		if(args[0].substr(0, 13) == "disambiguator") {
+			return "disam";
+		}
+	}
+	if(name == "tokenize" || name == "tokenise") {
+		return "morph";
+	}
+	if(name == "suggest") {
+		return "suggest";
+	}
+	if(name == "mwesplit") {
+		return "mwe-split";
+	}
+	if(name == "cgspell") {
+		return "spell";
+	}
+	return name;
+}
+
+vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pugi::xml_node& pipeline, const u16string& pipename) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	vector<string> cmds = {};
+	vector<std::pair<string, string>> cmds = {};
 	for (const pugi::xml_node& cmd: pipeline.children()) {
-		const auto& name = utf16conv.from_bytes(cmd.name());
+		const auto& name = std::string(cmd.name());
 		string prog;
 		vector<string> args;
 		for (const pugi::xml_node& arg: cmd.children("arg")) {
 			const auto& argn = arg.attribute("n").value();
 			args.emplace_back(argn);
 		}
-		if(name == u"tokenise" || name == u"tokenize") {
+		if(name == "tokenise" || name == "tokenize") {
 			prog = "hfst-tokenise -g";
 		}
-		else if(name == u"cg") {
+		else if(name == "cg") {
 			prog = "vislcg3 -g";
 		}
-		else if(name == u"cgspell") {
+		else if(name == "cgspell") {
 			prog = "divvun-cgspell";
 		}
-		else if(name == u"mwesplit") {
+		else if(name == "mwesplit") {
 			prog = "cg-mwesplit";
 		}
-		else if(name == u"suggest") {
+		else if(name == "suggest") {
 			prog = "divvun-suggest";
 		}
-		else if(name == u"sh") {
+		else if(name == "sh") {
 			prog = cmd.attribute("prog").value();
 		}
-		else if(name == u"prefs") {
+		else if(name == "prefs") {
 			// TODO: Do prefs make sense here?
 		}
 		else {
-			throw std::runtime_error("Unknown command '" + utf16conv.to_bytes(name) + "'");
+			throw std::runtime_error("Unknown command '" + name + "'");
 		}
 		if(!prog.empty()) {
 			std::ostringstream part;
@@ -521,7 +551,8 @@ std::vector<string> toPipeSpecShVector(const std::string& dir, const pugi::xml_n
 				// os << " '" << (dir / a).string() << "'"; // <experimental/filesystem>
 				part << " '" << dir << a << "'";
 			}
-			cmds.push_back(part.str());
+			cmds.push_back(std::make_pair(part.str(),
+						      makeDebugSuff(name, args)));
 		}
 	}
 	return cmds;
@@ -542,17 +573,20 @@ void writePipeSpecSh(const string& specfile, const u16string& pipename, std::ost
 			os << " \\" << std::endl << " | ";
 		}
 		first = false;
-		os << cmd;
+		os << cmd.first;
 	}
 }
 
-void writePipeSpecShDirOne(const vector<string> cmds, const u16string& pipename, const string& modesdir) {
+void writePipeSpecShDirOne(const vector<std::pair<string, string>> cmds, const string& pipename, const string& modesdir) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	// TODO: (modesdir / …) when we get <experimental/filesystem>
-	const auto basepath = modesdir + "/" + utf16conv.to_bytes(pipename);
 	for (size_t i = 0; i < cmds.size(); ++i) {
-		const auto path = basepath + std::to_string(i) + ".mode";
-		std::cerr << "\033[1;35m" << path << "\033[0m" << std::endl;
+		string debug_suff = "";
+		if(i < cmds.size() - 1) {
+			debug_suff = std::to_string(i) + "-" + cmds[i].second;
+		}
+		const auto path = modesdir + "/" + pipename + debug_suff + ".mode";
+		std::cout << path << std::endl;
 		std::ofstream ofs;
 		ofs.open(path, std::ofstream::out | std::ofstream::trunc);
 		if(!ofs) {
@@ -566,7 +600,7 @@ void writePipeSpecShDirOne(const vector<string> cmds, const u16string& pipename,
 				ofs << " \\" << std::endl << " | ";
 			}
 			first = false;
-			ofs << cmd;
+			ofs << cmd.first;
 		}
 	}
 }
@@ -580,7 +614,7 @@ void writePipeSpecShDir(const string& specfile, const string& modesdir) {
 	const auto dir = dirname(string(specabspath));
 	for(const auto& p : spec->pnodes) {
 		const auto cmds = toPipeSpecShVector(dir, p.second, p.first);
-		writePipeSpecShDirOne(cmds, p.first, modesdir);
+		writePipeSpecShDirOne(cmds, utf16conv.to_bytes(p.first), modesdir);
 	}
 }
 
