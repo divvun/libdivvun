@@ -522,14 +522,22 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 		std::map<size_t, size_t> deleted;
 		rel_on_match(r.rels, DELETE_REL, sentence,
 			     [&] (const std::string& relname, const Cohort& trg) {
-				     size_t end_trg = trg.pos + trg.form.size();
+				     size_t del_beg = trg.pos;
+				     size_t del_end = del_beg + trg.form.size();
+				     // Expand (unless we've already expanded more in that direction):
 				     if(trg.pos < beg) {
 					     beg = trg.pos;
 				     }
-				     else if(end_trg > end) {
-					     end = end_trg;
+				     else if(del_end > end) {
+					     end = del_end;
 				     }
-				     deleted[trg.pos] = trg.form.size();
+				     if(trg.pos < c.pos && text.substr(del_end, 1) == u" ") { // trim right if left
+					     ++del_end;
+				     }
+				     if(trg.pos > c.pos && text.substr(del_beg - 1, 1) == u" ") { // trim left if right
+					     --del_beg;
+				     }
+				     deleted[del_beg] = del_end - del_beg;
 			     });
 		if(!deleted.empty()) {
 			auto repform = text.substr(beg, end - beg);
@@ -538,13 +546,6 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 				auto del_beg = it->first - beg;
 				auto del_len = it->second;
 				repform = repform.erase(del_beg, del_len);
-				// TODO: Alter indices in above rel_on_match handler instead:
-				if(del_beg > 0 && repform.substr(del_beg -1 , 1) == u" ") { // delete right
-					repform.erase(del_beg - 1, 1);
-				}
-				else if(repform.substr(del_beg , 1) == u" ") { // delete left
-					repform.erase(del_beg, 1);
-				}
 			}
 			rep.push_back(repform);
 		}
