@@ -1,0 +1,8 @@
+"<dego>"
+	"dego" CS <W:0> @CNP ID:10
+: 
+"<…>"
+	"…" PUNCT
+: 
+"<lávvomuorran>"
+	"lávvomuorra" N Sem/Dummytag Ess <W:0> @COMP-CS< &syn-not-dego R:DELETE42:10

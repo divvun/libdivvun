@@ -85,8 +85,8 @@ const std::basic_regex<char> CG_LINE ("^"
 				      ")");
 
 const std::basic_regex<char> MSG_TEMPLATE_REL ("^[$][0-9]+$");
-const std::basic_regex<char> LEFT_REL ("^LEFT$");
-const std::basic_regex<char> RIGHT_REL ("^RIGHT");
+const std::basic_regex<char> LEFT_REL ("^LEFT$"); // cohort added to the left
+const std::basic_regex<char> RIGHT_REL ("^RIGHT"); // cohort added to the right
 const std::basic_regex<char> DELETE_REL ("^DELETE[0-9]+");
 
 enum LineType {
@@ -492,7 +492,6 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 	} // msgs
 	auto beg = c.pos;
 	auto end = c.pos + c.form.size();
-	auto form = c.form;
 	UStringVector rep;
 	for(const auto& r: c.readings) {
 		if((!r.errtype.empty()) && err_id != r.errtype) {
@@ -503,6 +502,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 			   r.sforms.end());
 		// If there are LEFT/RIGHT added relations, add suggestions with those concatenated to our form
 		// TODO: What about our current suggestions of the same error tag? Currently just using wordform
+		// TODO: Allow words in between?
 		rel_on_match(r.rels, LEFT_REL, sentence,
 			     [&] (const std::string& relname, const Cohort& trg) {
 				     for(const auto& tr: trg.readings) {
@@ -519,22 +519,37 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 					     }
 				     }
 			     });
-		// TODO: want to be able to have words in between the deleted one and this!
+		std::map<size_t, size_t> deleted;
 		rel_on_match(r.rels, DELETE_REL, sentence,
 			     [&] (const std::string& relname, const Cohort& trg) {
+				     size_t end_trg = trg.pos + trg.form.size();
 				     if(trg.pos < beg) {
 					     beg = trg.pos;
 				     }
-				     else {
-					     size_t end_trg = trg.pos + trg.form.size();
-					     if(end_trg > end) {
-						     end = end_trg;
-					     }
+				     else if(end_trg > end) {
+					     end = end_trg;
 				     }
-				     form = text.substr(beg, end - beg);
-				     rep.push_back(c.form);
+				     deleted[trg.pos] = trg.form.size();
 			     });
+		if(!deleted.empty()) {
+			auto repform = text.substr(beg, end - beg);
+			// go from end of ordered map so we can chop off without indices changing:
+			for(auto it = deleted.rbegin(); it != deleted.rend(); ++it) {
+				auto del_beg = it->first - beg;
+				auto del_len = it->second;
+				repform = repform.erase(del_beg, del_len);
+				// TODO: Alter indices in above rel_on_match handler instead:
+				if(del_beg > 0 && repform.substr(del_beg -1 , 1) == u" ") { // delete right
+					repform.erase(del_beg - 1, 1);
+				}
+				else if(repform.substr(del_beg , 1) == u" ") { // delete left
+					repform.erase(del_beg, 1);
+				}
+			}
+			rep.push_back(repform);
+		}
 	}
+	auto form = text.substr(beg, end - beg);
 	rep.erase(std::remove_if(rep.begin(),
 				 rep.end(),
 				 [&](const std::u16string& r) { return r == form; }),
