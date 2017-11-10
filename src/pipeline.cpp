@@ -507,7 +507,7 @@ string makeDebugSuff(string name, vector<string> args) {
 	return name;
 }
 
-vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pugi::xml_node& pipeline, const u16string& pipename) {
+vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pugi::xml_node& pipeline, const u16string& pipename, bool trace) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	vector<std::pair<string, string>> cmds = {};
 	for (const pugi::xml_node& cmd: pipeline.children()) {
@@ -523,6 +523,9 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pug
 		}
 		else if(name == "cg") {
 			prog = "vislcg3 -g";
+			if(trace) {
+				prog += " --trace";
+			}
 		}
 		else if(name == "cgspell") {
 			prog = "divvun-cgspell";
@@ -565,7 +568,7 @@ void writePipeSpecSh(const string& specfile, const u16string& pipename, std::ost
 	realpath(specfile.c_str(), specabspath);
 	const auto dir = dirname(string(specabspath));
 	const auto& pipeline = spec->pnodes.at(pipename);
-	const auto cmds = toPipeSpecShVector(dir, pipeline, pipename);
+	const auto cmds = toPipeSpecShVector(dir, pipeline, pipename, false);
 	bool first = true;
 	os << "#!/bin/sh" << std::endl << std::endl;
 	for (const auto& cmd: cmds) {
@@ -613,8 +616,13 @@ void writePipeSpecShDir(const string& specfile, const string& modesdir) {
 	realpath(specfile.c_str(), specabspath);
 	const auto dir = dirname(string(specabspath));
 	for(const auto& p : spec->pnodes) {
-		const auto cmds = toPipeSpecShVector(dir, p.second, p.first);
-		writePipeSpecShDirOne(cmds, utf16conv.to_bytes(p.first), modesdir);
+		const auto& pipename = utf16conv.to_bytes(p.first);
+		writePipeSpecShDirOne(toPipeSpecShVector(dir, p.second, p.first, false),
+				      pipename,
+				      modesdir);
+		writePipeSpecShDirOne(toPipeSpecShVector(dir, p.second, p.first, true),
+				      "trace-" + pipename,
+				      modesdir);
 	}
 }
 
