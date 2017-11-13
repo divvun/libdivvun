@@ -31,9 +31,6 @@
 #include "util.hpp"
 // hfst:
 #include <ZHfstOspeller.h>
-// zhfstospeller.h conflicts with these:
-// #include <hfst/HfstInputStream.h>
-// #include <hfst/HfstTransducer.h>
 // variants:
 #include "mapbox/variant.hpp"
 
