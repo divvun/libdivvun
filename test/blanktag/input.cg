@@ -1,0 +1,18 @@
+: 
+"<)>"
+	")" RPAREN @EOP
+	")" RPAREN @EMO
+"<.>"
+	"." PUNCT
+:\n
+:\n
+"<Twas>"
+	"be" V Pret "<was>"
+		"it" Prn 3Sg Neut "<T>"
+: 
+"<bryllyg>"
+	"bryllyg" A
+:  
+"<and>"
+	"and" CC
+: 

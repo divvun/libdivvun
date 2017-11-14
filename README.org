@@ -31,6 +31,13 @@ The =divvun-cgspell= program spells unknown word forms from Constraint
 Grammar format readings, adding them as new readings.
 
 
+The =divvun-blanktag= program takes an FST as argument, reads CG input
+and uses the FST to add readings to cohorts that match on the wordform
+surrounded by the preceding and following blanks. Use cases include
+adding error tags that are dependent on spaces before/after, or
+tagging the first word after a linebreak or certain formatting.
+
+
 There are also some helper programs for validating XML
 (=divvun-validate-suggest=, =divvun-validate-pipespec=,
 =divvun-gen-xmlschemas=) and for generating shell scripts from
@@ -316,7 +323,7 @@ https://github.com/hfst/hfst/issues/366. A workaround is to edit
 =@GLIB_CFLAGS@=.
 
 
-* Progress [40/45]
+* Progress [42/48]
 
 =divvun-suggest= should:
 
@@ -372,6 +379,14 @@ https://github.com/hfst/hfst/issues/366. A workaround is to edit
 - [X] do NUL-flushing, outputting <STREAMCMD:FLUSH>
 - [X] have a timeout on generating suggestions (shouldn't use more than 0.5s per sentence?)
 
+=divvun-blanktag= should:
+
+- [X] load an hfst bin
+- [X] Read CG input and analyse sequences of blank-wordform-blank
+- [ ] Put output tag of matches on each reading under the matched wf
+- [ ] Be usable from checker, checker-lib, apy etc., like suggest and cgspell
+
+
 ** TODO alternative suggestions on the same word
 
 When we might have different error types, put the error tag on the
@@ -417,3 +432,5 @@ suggestion "grøn ost". Since a different suggestion was covered by
 that underline, we have to expand the underline for that word as well
 (giving "grøne osten"), since UI's can't typically handle overlapping
 underlines.
+
+

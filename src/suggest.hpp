@@ -30,6 +30,7 @@
 
 // divvun-gramcheck:
 #include "util.hpp"
+#include "hfst_util.hpp"
 #include "json.hpp"
 #include "checkertypes.hpp"
 // xml:
@@ -107,16 +108,13 @@ class Suggest {
 	public:
 		Suggest (const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose);
 		Suggest (const string& gen_path, const string& msg_path, bool verbose);
+		Suggest (const string& gen_path, bool verbose);
 		~Suggest() = default;
 
 		void run(std::istream& is, std::ostream& os, bool json);
 
 		vector<Err> run_errs(std::istream& is);
 		void setIgnores(const std::set<err_id>& ignores);
-
-		static const hfst::HfstTransducer *readTransducer(const string& file);
-		static const hfst::HfstTransducer *readTransducer(const char* buff, const size_t size);
-		static const hfst::HfstTransducer *readTransducer(std::istream& is);
 
 		static const msgmap readMessages(const string& file);
 		static const msgmap readMessages(const char* buff, const size_t size);

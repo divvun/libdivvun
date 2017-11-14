@@ -1,7 +1,7 @@
 datadir = $(prefix)/share/divvun-gramcheck
 
 # divvun-suggest binary:
-divvun_suggest_SOURCES  = main_suggest.cpp util.hpp json.hpp suggest.cpp suggest.hpp cxxopts.hpp
+divvun_suggest_SOURCES  = main_suggest.cpp util.hpp hfst_util.hpp json.hpp suggest.cpp suggest.hpp cxxopts.hpp
 divvun_suggest_LDADD    = $(HFST_LIBS)   $(PUGIXML_LIBS)
 divvun_suggest_CXXFLAGS = $(HFST_CFLAGS) $(PUGIXML_CFLAGS)
 bin_PROGRAMS            = divvun-suggest
@@ -12,6 +12,12 @@ divvun_suggestdir   = $(datadir)
 divvun_suggest_DATA = errors.dtd errors.rnc pipespec.dtd pipespec.rnc
 EXTRA_DIST          = errors.dtd errors.rnc pipespec.dtd pipespec.rnc
 # We make pipespec-stuff even if --disable-checker; it doesn't add to dependencies
+
+# divvun-blanktag binary:
+divvun_blanktag_SOURCES  = main_blanktag.cpp blanktag.cpp blanktag.hpp cxxopts.hpp
+divvun_blanktag_LDADD    = $(HFST_LIBS)
+divvun_blanktag_CXXFLAGS = $(HFST_CFLAGS)
+bin_PROGRAMS            += divvun-blanktag
 
 if WANT_CGSPELL
 # divvun-cgspell binary:

@@ -19,23 +19,17 @@
 #  include <config.h>
 #endif
 
-#include "suggest.hpp"
+#include "blanktag.hpp"
 #include "cxxopts.hpp"
 
 int main(int argc, char ** argv)
 {
 	try
 	{
-		cxxopts::Options options(argv[0], "BIN - generate grammar checker suggestions from a CG stream");
+		cxxopts::Options options(argv[0], "BIN - generate spelling suggestions from a CG stream");
 
 		options.add_options()
-			("j,json", "Use JSON output format (default: CG)")
-			("g,generator", "Generator (HFSTOL format)", cxxopts::value<std::string>(), "BIN")
-#ifdef HAVE_LIBPUGIXML
-			("m,messages", "ERROR messages (XML format)", cxxopts::value<std::string>(), "FILE")
-#else
-			("m,messages", "ERROR messages not supported (recompile with pugixml to use those)", cxxopts::value<std::string>(), "FILE")
-#endif
+			("a,analyser", "FST for tagging spaces", cxxopts::value<std::string>(), "BIN")
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
 			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 if --json).")
@@ -44,10 +38,7 @@ int main(int argc, char ** argv)
 			;
 
 		std::vector<std::string> pos = {
-			"generator",
-#ifdef HAVE_LIBPUGIXML
-			"messages"
-#endif
+			"analyser",
 			//"input"
 			//"output"
 		};
@@ -65,51 +56,18 @@ int main(int argc, char ** argv)
 			std::cout << options.help({""}) << std::endl;
 			return(EXIT_SUCCESS);
 		}
-		if (!options.count("generator"))
+
+		if (!options.count("analyser"))
 		{
 			std::cout << options.help({""}) << std::endl;
-			std::cerr << "ERROR: expected generator.hfstol as argument." << std::endl;
+			std::cerr << "ERROR: expected --analyser option." << std::endl;
 			return(EXIT_FAILURE);
 		}
+		const auto& analyser = options["analyser"].as<std::string>();
+		const auto& verbose = options.count("verbose");
 
-		const auto& genfile = options["generator"].as<std::string>();
-		bool json = options.count("j");
-		bool verbose = options.count("v");
-
-		if(verbose) {
-			std::cerr << "Reading transducer " << genfile << std::endl;
-		}
-		const hfst::HfstTransducer* t(divvun::readTransducer(genfile));
-		if (!t) {
-			std::cerr << "ERROR: Couldn't read transducer "<< genfile << std::endl;
-			return(EXIT_FAILURE);
-		}
-
-		divvun::msgmap m;
-#ifdef HAVE_LIBPUGIXML
-		if(options.count("messages")) {
-			const auto& msgfile = options["messages"].as<std::string>();
-			if(verbose) {
-				std::cerr << "Reading messages xml " << msgfile << std::endl;
-			}
-			m = divvun::Suggest::readMessages(msgfile);
-			if (m.empty()) {
-				std::cerr << "ERROR: Couldn't read messages xml "<< msgfile << std::endl;
-				return(EXIT_FAILURE);
-			}
-		}
-		else {
-			std::cerr << "WARNING: no errors.xml argument; tags used as error messages." << std::endl;
-		}
-#else
-		if(options.count("messages")) {
-			std::cerr << "ERROR: Please clean-recompile with pugixml to use -m/--messages xml" << std::endl;
-			return(EXIT_FAILURE);
-		}
-#endif
-
-		divvun::Suggest s(t, m, verbose);
-		s.run(std::cin, std::cout, json);
+		auto blanktagger = divvun::Blanktagger(analyser, verbose);
+		blanktagger.run(std::cin, std::cout);
 	}
 	catch (const cxxopts::OptionException& e)
 	{

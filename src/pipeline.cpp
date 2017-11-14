@@ -307,7 +307,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 			ArEntryHandler<const hfst::HfstTransducer*> procGen = [] (const string& ar_path, const void* buff, const size_t size) {
 				OneShotReadBuf osrb((char*)buff, size);
 				std::istream is(&osrb);
-				return Suggest::readTransducer(is);
+				return readTransducer(is);
 			};
 			ArEntryHandler<divvun::msgmap> procMsgs = [] (const string& ar_path, const void* buff, const size_t size) {
 				return Suggest::readMessages((char*)buff, size);

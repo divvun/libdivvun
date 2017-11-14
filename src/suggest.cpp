@@ -166,81 +166,6 @@ const msgmap Suggest::readMessages(const string& file) {
 
 
 
-const hfst::HfstTransducer *Suggest::readTransducer(std::istream& is) {
-	hfst::HfstInputStream *in = nullptr;
-	try
-	{
-		in = new hfst::HfstInputStream(is);
-	}
-	catch (StreamNotReadableException& e)
-	{
-		std::cerr << "ERROR: Stream not readable." << std::endl;
-		return nullptr;
-	}
-	catch (HfstException& e) {
-		std::cerr << "ERROR: HfstException." << std::endl;
-		return nullptr;
-	}
-
-	hfst::HfstTransducer* t = nullptr;
-	while (not in->is_eof())
-	{
-		if (in->is_bad())
-		{
-			std::cerr << "ERROR: Stream cannot be read." << std::endl;
-			return nullptr;
-		}
-		t = new hfst::HfstTransducer(*in);
-		if(not in->is_eof()) {
-			std::cerr << "WARNING: >1 transducers in stream! Only using the first." << std::endl;
-		}
-		break;
-	}
-	in->close();
-	delete in;
-	if(t == nullptr) {
-		std::cerr << "WARNING: Could not read any transducers!" << std::endl;
-	}
-	return t;
-}
-
-const hfst::HfstTransducer *Suggest::readTransducer(const string& file) {
-	hfst::HfstInputStream *in = nullptr;
-	try
-	{
-		in = new hfst::HfstInputStream(file);
-	}
-	catch (StreamNotReadableException& e)
-	{
-		std::cerr << "ERROR: File does not exist." << std::endl;
-		return nullptr;
-	}
-	catch (HfstException& e) {
-		std::cerr << "ERROR: HfstException." << std::endl;
-		return nullptr;
-	}
-
-	hfst::HfstTransducer* t = nullptr;
-	while (not in->is_eof())
-	{
-		if (in->is_bad())
-		{
-			std::cerr << "ERROR: Stream cannot be read." << std::endl;
-			return nullptr;
-		}
-		t = new hfst::HfstTransducer(*in);
-		if(not in->is_eof()) {
-			std::cerr << "WARNING: >1 transducers in stream! Only using the first." << std::endl;
-		}
-		break;
-	}
-	in->close();
-	delete in;
-	if(t == nullptr) {
-		std::cerr << "WARNING: Could not read any transducers!" << std::endl;
-	}
-	return t;
-}
 
 // return <suggen, errtype, gentags, id, wf>
 // where suggen is true if we want to suggest based on this
@@ -363,16 +288,14 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const string& line) {
 	// }
 	if(r.suggest) {
 		const auto& paths = t.lookup_fd({ r.ana }, -1, 10.0);
-		if(paths->size() > 0) {
-			for(auto& p : *paths) {
-				stringstream form;
-				for(auto& symbol : p.second) {
-					if(!hfst::FdOperation::is_diacritic(symbol)) {
-						form << symbol;
-					}
+		for(auto& p : *paths) {
+			stringstream form;
+			for(auto& symbol : p.second) {
+				if(!hfst::FdOperation::is_diacritic(symbol)) {
+					form << symbol;
 				}
-				r.sforms.emplace_back(utf16conv.from_bytes(form.str()));
 			}
+			r.sforms.emplace_back(utf16conv.from_bytes(form.str()));
 		}
 	}
 	return r;
@@ -896,6 +819,10 @@ Suggest::Suggest (const hfst::HfstTransducer* generator_, divvun::msgmap msgs_, 
 Suggest::Suggest (const string& gen_path, const string& msg_path, bool verbose)
 	: msgs(readMessages(msg_path))
 	, generator(readTransducer(gen_path))
+{
+}
+Suggest::Suggest (const string& gen_path, bool verbose)
+	: generator(readTransducer(gen_path))
 {
 }
 

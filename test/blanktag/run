@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e -u
+
+cd "$(dirname "$0")"
+
+../../src/divvun-blanktag blanktagger.hfst < input.cg > output.cg
+
+diff output.cg expected.cg

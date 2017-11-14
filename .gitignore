@@ -104,3 +104,11 @@ old/
 /examples/using-checker-lib-from-cpp/src/Makefile.in
 /examples/using-checker-lib-from-cpp/src/using-checker
 /examples/using-checker-lib-from-cpp/src/using_checker-using-checker.o
+
+/src/divvun-blanktag
+/test/blanktag/run.log
+/test/blanktag/run.trs
+/test/blanktag/test-suite.log
+/test/blanktag/blanktagger.hfst
+/test/blanktag/blanktagger.hfst.tmp
+/test/blanktag/output.cg

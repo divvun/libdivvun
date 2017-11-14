@@ -120,6 +120,7 @@ AC_OUTPUT(Makefile
           src/Makefile
           test/suggest/Makefile
           test/checker/Makefile
+          test/blanktag/Makefile
           test/cgspell/Makefile)
 
 cat <<EOF

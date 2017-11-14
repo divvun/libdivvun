@@ -1,4 +1,4 @@
-SUBDIRS = src test/suggest
+SUBDIRS = src test/suggest test/blanktag
 
 if WANT_CGSPELL
 SUBDIRS += test/cgspell
