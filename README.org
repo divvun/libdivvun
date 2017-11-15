@@ -9,16 +9,16 @@
 
 * Description
 
-This repository contains three main programs:
+This repository contains four main programs:
 
-The =divvun-gramcheck= program, opens a grammar checker pipeline XML
+=divvun-gramcheck=: This program opens a grammar checker pipeline XML
 specification and lets you run grammar checking on strings. It can
 also open zip files containing the XML and all required language data.
 There is a C++ library =libdivvun= (=divvun/checker.hpp=) which allows
 for the same features.
 
 
-The =divvun-suggest= program does FST lookup on forms specified as
+=divvun-suggest=: This program does FST lookup on forms specified as
 Constraint Grammar format readings, and looks up error-tags in an XML
 file with human-readable messages. It is meant to be used as a late
 stage of a grammar checker pipeline.
@@ -27,15 +27,15 @@ The main output format of =divvun-suggest= is JSON, although it can
 also simply annotate readings in CG stream format.
 
 
-The =divvun-cgspell= program spells unknown word forms from Constraint
-Grammar format readings, adding them as new readings.
+=divvun-cgspell=: This program spells unknown word forms from
+Constraint Grammar format readings, adding them as new readings.
 
 
-The =divvun-blanktag= program takes an FST as argument, reads CG input
-and uses the FST to add readings to cohorts that match on the wordform
-surrounded by the preceding and following blanks. Use cases include
-adding error tags that are dependent on spaces before/after, or
-tagging the first word after a linebreak or certain formatting.
+=divvun-blanktag=: This program takes an FST as argument, reads CG
+input and uses the FST to add readings to cohorts that match on the
+wordform surrounded by the preceding and following blanks. Use cases
+include adding error tags that are dependent on spaces before/after,
+or tagging the first word after a linebreak or certain formatting.
 
 
 There are also some helper programs for validating XML
@@ -56,7 +56,7 @@ dependencies. It assumes you've got =xmllint= installed.
 
 * Prerequisites
 
-** For just =divvun-suggest=
+** For just =divvun-suggest= and =divvun-blanktag=
 
 - gcc >=5.0.0 with libstdc++-5-dev (or similarly recent version of
   clang, with full C++11 support)
@@ -73,7 +73,7 @@ directory, build that (with cmake) and configure this program to use
 that library. Alternatively, you can run ./configure with
 =--disable-xml= if you don't care about human-readable error messages.
 
-** For both =divvun-suggest= and =divvun-gramcheck=
+** If you also want =divvun-gramcheck=
 
 - gcc >=5.0.0 with libstdc++-5-dev (or similarly recent version of
   clang, with full C++11 support)
@@ -142,6 +142,30 @@ echo words go here | hfst-tokenise --giella-cg tokeniser.pmhfst | … | vislcg3 
   | divvun-suggest --json generator-gt-norm.hfstol errors.xml
 #+END_SRC
 
+
+** =divvun-blanktag=
+
+=divvun-blanktag= takes one argument: an FST (in HFST
+optimised lookup format), with input/output as stdin and
+stdout:
+
+#+BEGIN_SRC sh
+src/divvun-blanktag analyser.hfstol < input > output
+#+END_SRC
+
+
+More typically, it'll be in a pipeline after =cg-mwesplit=:
+
+#+BEGIN_SRC sh
+echo words go here | hfst-tokenise … | … | cg-mwesplit \
+  | src/divvun-blanktag analyser.hfstol < input > output
+#+END_SRC
+
+See the file [[file:test/blanktag/blanktagger.xfst][test/blanktag/blanktagger.xfst]] for an example blank
+tagging FST (the other files in [[file:test/blanktag][test/blanktag]] show test input and
+expected output, as well as how to compile the FST).
+
+
 ** =divvun-cgspell=
 
 =divvun-cgspell= takes one file argument: a zhfst speller archive as
@@ -165,6 +189,7 @@ You can also use it with unzipped, plain analyser and error model, e.g.
 #+BEGIN_SRC sh
 src/divvun-cgspell --limit 5 -l analyser.hfstol -m errmodel.hfst < input > output
 #+END_SRC
+
 
 ** =divvun-checker=
 
