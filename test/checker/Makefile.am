@@ -1,4 +1,4 @@
-sme.zcheck: pipespec.xml tokeniser.pmhfst valency.cg3 mwe-dis.cg3 disambiguator.cg3 grammarchecker.cg3 generator.hfstol errors.xml acceptor.hfstol errmodel.hfst
+sme.zcheck: pipespec.xml tokeniser.pmhfst valency.cg3 mwe-dis.cg3 disambiguator.cg3 grammarchecker.cg3 generator.hfstol errors.xml acceptor.hfstol errmodel.hfst blanktagger.hfst
 	rm -f $@
 	zip $@ $^
 
@@ -23,7 +23,12 @@ errors.xml: ../suggest/errors.xml
 errmodel.hfst: ../cgspell/errmodel.hfst
 	cp $< $@
 
-check_DATA = sme.zcheck tokeniser.pmhfst generator.hfstol errors.xml
+blanktagger.hfst: blanktagger.xfst
+	hfst-regexp2fst --disjunct -i $< -o $@.tmp
+	hfst-fst2fst -O -i $@.tmp -o $@
+	rm $@.tmp
+
+check_DATA = sme.zcheck tokeniser.pmhfst generator.hfstol errors.xml blanktagger.hfst
 TESTS = ./run.xml.sh ./run.archive.sh ./run.spell.sh ./run-lib
 
 CLEANFILES = $(check_DATA) analyser.hfst generator.hfstol errors.xml acceptor.hfstol errmodel.hfst

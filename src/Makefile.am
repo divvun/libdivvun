@@ -31,7 +31,7 @@ if WANT_CHECKER
 lib_LTLIBRARIES       = libdivvun.la
 divvunincludedir      = $(includedir)/divvun
 divvuninclude_HEADERS = checker.hpp checkertypes.hpp
-libdivvun_la_SOURCES  = checker.cpp pipeline.cpp suggest.cpp cgspell.cpp
+libdivvun_la_SOURCES  = checker.cpp pipeline.cpp suggest.cpp cgspell.cpp blanktag.cpp
 # would've liked to put -lstdc++fs in LIBADD for <experimental/filesystem>, but macos
 libdivvun_la_LIBADD   =              $(CG3_LIBS)   $(LIBARCHIVE_LIBS)   $(divvun_suggest_LDADD)    $(divvun_cgspell_LDADD)
 libdivvun_CXXFLAGS    =              $(CG3_CFLAGS) $(LIBARCHIVE_CFLAGS) $(divvun_suggest_CXXFLAGS) $(divvun_cgspell_CXXFLAGS)

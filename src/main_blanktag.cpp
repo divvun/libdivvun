@@ -66,7 +66,7 @@ int main(int argc, char ** argv)
 		const auto& analyser = options["analyser"].as<std::string>();
 		const auto& verbose = options.count("verbose");
 
-		auto blanktagger = divvun::Blanktagger(analyser, verbose);
+		auto blanktagger = divvun::Blanktag(analyser, verbose);
 		blanktagger.run(std::cin, std::cout);
 	}
 	catch (const cxxopts::OptionException& e)

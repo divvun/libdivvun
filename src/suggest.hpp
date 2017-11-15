@@ -106,9 +106,9 @@ struct Sentence {
 
 class Suggest {
 	public:
-		Suggest (const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose);
-		Suggest (const string& gen_path, const string& msg_path, bool verbose);
-		Suggest (const string& gen_path, bool verbose);
+		Suggest(const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose);
+		Suggest(const string& gen_path, const string& msg_path, bool verbose);
+		Suggest(const string& gen_path, bool verbose);
 		~Suggest() = default;
 
 		void run(std::istream& is, std::ostream& os, bool json);

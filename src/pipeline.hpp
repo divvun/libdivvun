@@ -32,6 +32,7 @@
 // divvun-gramcheck:
 #include "suggest.hpp"
 #include "cgspell.hpp"
+#include "blanktag.hpp"
 // xml:
 #include <pugixml.hpp>
 // cg3:
@@ -217,6 +218,17 @@ class CGSpellCmd: public PipeCmd {
 		static constexpr float time_cutoff = 0.0;
 	private:
 		unique_ptr<Speller> speller;
+};
+
+
+class BlanktagCmd: public PipeCmd {
+	public:
+		BlanktagCmd (const hfst::HfstTransducer* analyser, bool verbose);
+		BlanktagCmd (const string& ana_path, bool verbose);
+		void run(stringstream& input, stringstream& output) const override;
+		~BlanktagCmd() override = default;
+	private:
+		unique_ptr<Blanktag> blanktag;
 };
 
 

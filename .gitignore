@@ -32,6 +32,8 @@ old/
 /src/divvun-gen-xmlschemas
 /src/pipeline.lo
 /src/#*#
+/src/blanktag.lo
+/src/divvun-blanktag
 
 /test-driver
 /test-suite.log
@@ -73,6 +75,8 @@ old/
 /test/checker/run.spell.sh.trs
 /test/checker/run.xml.sh.log
 /test/checker/run.xml.sh.trs
+/test/checker/.tern-port
+/test/checker/blanktagger.hfst
 
 /test/cgspell/analyser.hfst
 /test/cgspell/analyser.hfstol
@@ -82,6 +86,13 @@ old/
 /test/cgspell/run.*.trs
 /test/cgspell/test-suite.log
 /test/cgspell/.dir-locals.elc
+
+/test/blanktag/run.log
+/test/blanktag/run.trs
+/test/blanktag/test-suite.log
+/test/blanktag/blanktagger.hfst
+/test/blanktag/blanktagger.hfst.tmp
+/test/blanktag/output.cg
 
 /examples/using-checker-lib-from-cpp/INSTALL
 /examples/using-checker-lib-from-cpp/Makefile
@@ -104,11 +115,3 @@ old/
 /examples/using-checker-lib-from-cpp/src/Makefile.in
 /examples/using-checker-lib-from-cpp/src/using-checker
 /examples/using-checker-lib-from-cpp/src/using_checker-using-checker.o
-
-/src/divvun-blanktag
-/test/blanktag/run.log
-/test/blanktag/run.trs
-/test/blanktag/test-suite.log
-/test/blanktag/blanktagger.hfst
-/test/blanktag/blanktagger.hfst.tmp
-/test/blanktag/output.cg

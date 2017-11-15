@@ -43,9 +43,10 @@ using std::string;
 using std::vector;
 using std::unique_ptr;
 
-class Blanktagger {
+class Blanktag {
 	public:
-		Blanktagger(const string& analyser, bool verbose);
+		Blanktag(const hfst::HfstTransducer* analyser, bool verbose);
+		Blanktag(const string& analyser, bool verbose);
 		const void run(std::istream& is, std::ostream& os);
 	private:
 		unique_ptr<const hfst::HfstTransducer> analyser;

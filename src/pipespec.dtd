@@ -34,7 +34,7 @@
   depversions: versions of sub-modules used by the pipeline, e.g. hfst
  -->
 
-<!ELEMENT pipeline (prefs?, (sh|cg|cgspell|tokenize|tokenise|mwesplit|suggest)+)>
+<!ELEMENT pipeline (prefs?, (sh|cg|cgspell|tokenize|tokenise|mwesplit|blanktag|suggest)+)>
 <!ATTLIST pipeline
           name ID #REQUIRED
           language CDATA #IMPLIED
@@ -82,6 +82,7 @@
 <!ELEMENT tokenize (arg)>     <!-- arg: tokeniser.pmhfst -->
 <!ELEMENT tokenise (arg)>     <!-- en_GB alias of the above -->
 <!ELEMENT mwesplit EMPTY>     <!-- takes no arguments -->
+<!ELEMENT blanktag (arg)>     <!-- takes no arguments -->
 <!ELEMENT suggest (arg, arg)> <!-- arg1: generator.hfstol, arg2: error_messages.xml -->
 
 

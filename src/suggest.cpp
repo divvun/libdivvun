@@ -77,13 +77,6 @@ const std::basic_regex<char> CG_TAG_TYPE (
 	").*"
 	);
 
-const std::basic_regex<char> CG_LINE ("^"
-				      "(\"<(.*)>\".*" // wordform, group 2
-				      "|(\t+)(\"[^\"]*\"\\S*)(\\s+\\S+)*" // reading, group 3, 4, 5
-				      "|:(.*)" // blank, group 6
-				      "|(<STREAMCMD:FLUSH>)" // flush, group 7
-				      ")");
-
 const std::basic_regex<char> MSG_TEMPLATE_REL ("^[$][0-9]+$");
 const std::basic_regex<char> LEFT_REL ("^LEFT$"); // cohort added to the left
 const std::basic_regex<char> RIGHT_REL ("^RIGHT"); // cohort added to the right

@@ -42,7 +42,14 @@ pipeline =
   element pipeline {
     attlist.pipeline,
     prefs?,
-    (sh | cg | cgspell | tokenize | tokenise | mwesplit | suggest)+
+    (sh
+     | cg
+     | cgspell
+     | tokenize
+     | tokenise
+     | mwesplit
+     | blanktag
+     | suggest)+
   }
 attlist.pipeline &=
 
@@ -93,6 +100,10 @@ attlist.tokenise &= empty
 # en_GB alias of the above
 mwesplit = element mwesplit { attlist.mwesplit, empty }
 attlist.mwesplit &= empty
+
+# takes no arguments
+blanktag = element blanktag { attlist.blanktag, arg }
+attlist.blanktag &= empty
 
 # takes no arguments
 suggest = element suggest { attlist.suggest, arg, arg }

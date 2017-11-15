@@ -19,47 +19,19 @@
 
 namespace divvun {
 
-const std::basic_regex<char> CG_LINE ("^"
-				      "(\"<(.*)>\".*" // wordform, group 2
-				      "|(\t+)(\"[^\"]*\"\\S*)(\\s+\\S+)*" // reading, group 3, 4, 5
-				      "|:(.*)" // blank, group 6
-				      "|(<STREAMCMD:FLUSH>)" // flush, group 7
-				      ")");
+Blanktag::Blanktag(const hfst::HfstTransducer* analyser_, bool verbose)
+	: analyser(analyser_)
+{
 
-/**
- * Return the size in bytes of the first complete UTF-8 codepoint in c,
- * or 0 if invalid.
- */
-size_t u8_first_codepoint_size(const unsigned char* c) {
-    if (*c <= 127) {
-        return 1;
-    }
-    else if ( (*c & (128 + 64 + 32 + 16)) == (128 + 64 + 32 + 16) ) {
-        return 4;
-    }
-    else if ( (*c & (128 + 64 + 32 )) == (128 + 64 + 32) ) {
-        return 3;
-    }
-    else if ( (*c & (128 + 64 )) == (128 + 64)) {
-        return 2;
-    }
-    else {
-        return 0;
-    }
 }
 
-bool is_cg_tag(const string & str) {
-    // Note: invalid codepoints are also treated as tags;  ¯\_(ツ)_/¯
-    return str.size() > u8_first_codepoint_size((const unsigned char*)str.c_str());
-}
-
-Blanktagger::Blanktagger(const string& analyser_, bool verbose)
+Blanktag::Blanktag(const string& analyser_, bool verbose)
 	: analyser(readTransducer(analyser_))
 {
 
 }
 
-const string Blanktagger::proc(const vector<string>& preblank, const string& wf, const vector<string>& postblank, const vector<string>& readings) {
+const string Blanktag::proc(const vector<string>& preblank, const string& wf, const vector<string>& postblank, const vector<string>& readings) {
 	string ret;
 	for(const auto& b : preblank) {
 		ret += ":" + b + "\n";
@@ -86,7 +58,7 @@ const string Blanktagger::proc(const vector<string>& preblank, const string& wf,
 	return ret;
 }
 
-const void Blanktagger::run(std::istream& is, std::ostream& os)
+const void Blanktag::run(std::istream& is, std::ostream& os)
 {
 	vector<string> preblank;
 	vector<string> postblank;

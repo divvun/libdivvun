@@ -1,0 +1,4 @@
+[ { }                {"<)>"}      ?*  ]:[%<spaceBeforeParenEnd%>]
+[ ?*                 {"<(>"}      { } ]:[%<spaceAfterParenBeg%>]
+[ {  }               {"<} ?* {>"} ?*  ]:[%<doubleSpaceBefore%>]
+[ ?* {\n} ?* {\n} ?* {"<} ?* {>"} ?*  ]:[%<firstWordOfParagraph%>]

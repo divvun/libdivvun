@@ -11934,7 +11934,8 @@ ADD (&typo &SUGGESTWF) (<spelled>);
 	## Márjá dadjá : –Leat go nu buorre, ahte guottát mu rastá eanu?
 	# have a look Duommá. Yeah!
 
-	
+ADD (&space-after-paren-beg) (<spaceAfterParenBeg>);
+
 
 # Local Variables:
 # cg-pre-pipe: "sh modes/smegram-disam.mode"
