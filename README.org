@@ -323,7 +323,7 @@ https://github.com/hfst/hfst/issues/366. A workaround is to edit
 =@GLIB_CFLAGS@=.
 
 
-* Progress [42/48]
+* Progress [43/49]
 
 =divvun-suggest= should:
 
@@ -383,7 +383,7 @@ https://github.com/hfst/hfst/issues/366. A workaround is to edit
 
 - [X] load an hfst bin
 - [X] Read CG input and analyse sequences of blank-wordform-blank
-- [ ] Put output tag of matches on each reading under the matched wf
+- [X] Put output tag of matches on each reading under the matched wf
 - [ ] Be usable from checker, checker-lib, apy etc., like suggest and cgspell
 
 
