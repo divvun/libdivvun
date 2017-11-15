@@ -28,11 +28,15 @@ int main(int argc, char ** argv)
 {
 	try
 	{
-		cxxopts::Options options(argv[0], "BIN - generate spelling suggestions from a CG stream");
-
+		cxxopts::Options options(argv[0], " [BIN]... - generate spelling suggestions from a CG stream\n"
+					 "Language data may be given as non-option arguments. A single argument\n"
+					 "is used as --archive; if given two arguments, the first is used as\n"
+					 "--lexicon and the second as --errmodel."
+			);
+		std::vector<std::string> positional;
 		options.add_options()
 			("a,archive", "zhfst format archive", cxxopts::value<std::string>(), "BIN")
-			("l,lexicon", "Use this lexicon (must also give erro model as option)", cxxopts::value<std::string>(), "BIN")
+			("l,lexicon", "Use this lexicon (must also give error model as option)", cxxopts::value<std::string>(), "BIN")
 			("m,errmodel", "Use this error model (must also give lexicon as option)", cxxopts::value<std::string>(), "BIN")
 			("n,limit", "Suggest at most N different word forms (though each may have several analyses)", cxxopts::value<unsigned long>(), "N")
 			("t,time-cutoff", "Stop trying to find better corrections after T seconds (T is a float)", cxxopts::value<float>(), "T")
@@ -46,19 +50,43 @@ int main(int argc, char ** argv)
 			("v,verbose", "Be verbose")
 			("h,help", "Print help")
 			;
+		options.add_options("Positional") // don't show in help
+			("positional", "Positional parameters", cxxopts::value<std::vector<std::string>>(positional))
+			;
 
-		std::vector<std::string> pos = {
-			"archive",
-			//"input"
-			//"output"
-		};
-		options.parse_positional(pos);
+		options.parse_positional("positional");
 		options.parse(argc, argv);
 
-		if(argc > 1) {
+		if(positional.size() > 2) {
 			std::cout << options.help({""}) << std::endl;
-			std::cerr << "ERROR: got " << argc-1+pos.size() <<" arguments; expected only " << pos.size() << std::endl;
+			std::cerr << argv[0] << " ERROR: got " << positional.size() <<" arguments; expected at most 2" << std::endl;
 			return(EXIT_SUCCESS);
+		}
+		else if(positional.size() > 0 && (options.count("archive") || options.count("lexicon") || options.count("errmodel"))) {
+			std::cerr << argv[0] << " ERROR: please use either all --option or non-options to pass language data files." << std::endl;
+			return(EXIT_SUCCESS);
+		}
+		else if(positional.size() == 0) {
+			if ((options.count("archive") && (options.count("lexicon") || options.count("errmodel")))
+			    ||
+			    !(options.count("archive") || (options.count("lexicon") && options.count("errmodel"))))
+			{
+				std::cout << options.help({""}) << std::endl;
+				std::cerr << argv[0] << " ERROR: expected either --archive or both --lexicon and --errmodel options." << std::endl;
+				return(EXIT_FAILURE);
+			}
+			else if(options.count("archive")) {
+				positional.push_back(options["archive"].as<std::string>());
+			}
+			else if(options.count("lexicon") && options.count("errmodel")) {
+				positional.push_back(options["lexicon"].as<std::string>());
+				positional.push_back(options["errmodel"].as<std::string>());
+			}
+			else {
+				std::cout << options.help({""}) << std::endl;
+				std::cerr << argv[0] << " ERROR: expected either --archive or both --lexicon and --errmodel options." << std::endl;
+				return(EXIT_FAILURE);
+			}
 		}
 
 		if (options.count("help"))
@@ -75,42 +103,27 @@ int main(int argc, char ** argv)
 		const auto& beam = options.count("beam") ? options["beam"].as<Weight>() : -1.0;
 		const auto& time_cutoff = options.count("time-cutoff") ? options["time-cutoff"].as<float>() : 0.0;
 
-		if ((options.count("archive") && (options.count("lexicon") || options.count("errmodel")))
-		    ||
-		    !(options.count("archive") || (options.count("lexicon") && options.count("errmodel"))))
-		{
-			std::cout << options.help({""}) << std::endl;
-			std::cerr << "ERROR: expected either --archive or both --lexicon and --errmodel options." << std::endl;
-			return(EXIT_FAILURE);
-		}
-
-		if (options.count("archive")) {
-			if (options.count("lexicon") || options.count("errmodel")) {
-				std::cout << options.help({""}) << std::endl;
-				std::cerr << "ERROR: expected either --archive or both --lexicon and --errmodel options." << std::endl;
-				return(EXIT_FAILURE);
-			}
-			const auto& zhfstfile = options["archive"].as<std::string>();
+		if (positional.size() == 1) {
+			const auto& zhfstfile = positional[0];
 			auto speller = divvun::Speller(zhfstfile, verbose,
 						       max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff);
 			divvun::run_cgspell(std::cin, std::cout, speller);
 		}
-		else if (options.count("lexicon") || options.count("errmodel")) {
-			if  (options.count("archive")) {
-				std::cout << options.help({""}) << std::endl;
-				std::cerr << "ERROR: expected either both --lexicon and --errmodel or --archive options." << std::endl;
-				return(EXIT_FAILURE);
-			}
-			const auto& errfile = options["errmodel"].as<std::string>();
-			const auto& lexfile = options["lexicon"].as<std::string>();
+		else if (positional.size() == 2) {
+			const auto& lexfile = positional[0];
+			const auto& errfile = positional[1];
 			auto speller = divvun::Speller(errfile, lexfile, verbose,
 						       max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff);
 			divvun::run_cgspell(std::cin, std::cout, speller);
 		}
+		else {
+			std::cerr << argv[0] << " ERROR: Unexpected error in argument parsing" << std::endl;
+			return(EXIT_FAILURE);
+		}
 	}
 	catch (const cxxopts::OptionException& e)
 	{
-		std::cerr << "ERROR: couldn't parse options: " << e.what() << std::endl;
+		std::cerr << argv[0] << " ERROR: couldn't parse options: " << e.what() << std::endl;
 		return(EXIT_FAILURE);
 	}
 }
