@@ -33,6 +33,7 @@ int main(int argc, char ** argv)
 			("s,spec"   , "Pipeline XML specification"          , cxxopts::value<std::string>(), "FILE")
 			("n,variant", "Name of the pipeline variant"        , cxxopts::value<std::string>(), "NAME")
 			("d,dir"    , "Write all pipelines to directory DIR", cxxopts::value<std::string>(), "DIR")
+			("j,json"   , "Make pipelines output JSON instead of CG format")
 			("v,verbose", "Be verbose")
 			("h,help"   , "Print help")
 			;
@@ -56,6 +57,7 @@ int main(int argc, char ** argv)
 			return EXIT_SUCCESS;
 		}
 		bool verbose = options.count("v");
+		bool json = options.count("j");
 
 		if(options.count("spec")) {
 			const auto& specfile = options["spec"].as<std::string>();
@@ -64,12 +66,12 @@ int main(int argc, char ** argv)
 			}
 			if(options.count("variant")) {
 				const auto& pipename = utf16conv.from_bytes(options["variant"].as<std::string>());
-				divvun::writePipeSpecSh(specfile, pipename, std::cout);
+				divvun::writePipeSpecSh(specfile, pipename, json, std::cout);
 				return EXIT_SUCCESS;
 			}
 			else if(options.count("dir")) {
 				const auto& modesdir = options["dir"].as<std::string>();
-				divvun::writePipeSpecShDir(specfile, modesdir);
+				divvun::writePipeSpecShDir(specfile, json, modesdir);
 				return EXIT_SUCCESS;
 			}
 			else {

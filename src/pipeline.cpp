@@ -541,7 +541,29 @@ string makeDebugSuff(string name, vector<string> args) {
 	return name;
 }
 
-vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pugi::xml_node& pipeline, const u16string& pipename, bool trace) {
+std::string abspath(const std::string path) {
+	// TODO: would love to use <experimental/filesystem> here, but doesn't exist on Mac :(
+	// return std::experimental::filesystem::absolute(specfile).remove_filename();
+        char abspath[PATH_MAX];
+	realpath(path.c_str(), abspath);
+	return abspath;
+}
+
+std::string pathconcat(const std::string path1, const std::string path2) {
+	// TODO: would love to use <experimental/filesystem> here, but doesn't exist on Mac :(
+	// return path1 / path2;
+	if(path2.length() > 0 && path2[0] == '/') {
+		return path2;
+	}
+	if(path1.length() > 0 && path1[path1.length() - 1] == '/') {
+		return path1 + path2;
+	}
+	else {
+		return path1 + "/" + path2;
+	}
+}
+
+vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pugi::xml_node& pipeline, const u16string& pipename, bool trace, bool json) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	vector<std::pair<string, string>> cmds = {};
 	for (const pugi::xml_node& cmd: pipeline.children()) {
@@ -554,12 +576,19 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pug
 		}
 		if(name == "tokenise" || name == "tokenize") {
 			prog = "hfst-tokenise -g";
+			if(json) {
+				prog += " -S";
+			}
 		}
 		else if(name == "cg") {
-			prog = "vislcg3 -g";
+			prog = "vislcg3";
 			if(trace) {
 				prog += " --trace";
 			}
+			if(json) {
+				prog += " --quiet";
+			}
+			prog += " -g";
 		}
 		else if(name == "cgspell") {
 			prog = "divvun-cgspell";
@@ -572,6 +601,9 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pug
 		}
 		else if(name == "suggest") {
 			prog = "divvun-suggest";
+			if(json) {
+				prog += " --json";
+			}
 		}
 		else if(name == "sh") {
 			prog = cmd.attribute("prog").value();
@@ -588,8 +620,7 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pug
 			for(auto& a : args) {
 				// Wrap the whole thing in single-quotes, but put existing single-quotes in double-quotes
 				replaceAll(a, "'", "'\"'\"'");
-				// os << " '" << (dir / a).string() << "'"; // <experimental/filesystem>
-				part << " '" << dir << a << "'";
+				part << " '" << pathconcat(dir, a) << "'";
 			}
 			cmds.push_back(std::make_pair(part.str(),
 						      makeDebugSuff(name, args)));
@@ -598,14 +629,11 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pug
 	return cmds;
 }
 
-void writePipeSpecSh(const string& specfile, const u16string& pipename, std::ostream& os) {
+void writePipeSpecSh(const string& specfile, const u16string& pipename, bool json, std::ostream& os) {
 	const auto spec = readPipeSpec(specfile);
-	// const auto dir = std::experimental::filesystem::absolute(specfile).remove_filename(); // <experimental/filesystem>
-        char specabspath[PATH_MAX];
-	realpath(specfile.c_str(), specabspath);
-	const auto dir = dirname(string(specabspath));
+	const auto dir = dirname(abspath(specfile));
 	const auto& pipeline = spec->pnodes.at(pipename);
-	const auto cmds = toPipeSpecShVector(dir, pipeline, pipename, false);
+	const auto cmds = toPipeSpecShVector(dir, pipeline, pipename, false, json);
 	bool first = true;
 	os << "#!/bin/sh" << std::endl << std::endl;
 	for (const auto& cmd: cmds) {
@@ -645,19 +673,16 @@ void writePipeSpecShDirOne(const vector<std::pair<string, string>> cmds, const s
 	}
 }
 
-void writePipeSpecShDir(const string& specfile, const string& modesdir) {
+void writePipeSpecShDir(const string& specfile, bool json, const string& modesdir) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	const auto spec = readPipeSpec(specfile);
-	// const auto dir = std::experimental::filesystem::absolute(specfile).remove_filename(); // <experimental/filesystem>
-        char specabspath[PATH_MAX];
-	realpath(specfile.c_str(), specabspath);
-	const auto dir = dirname(string(specabspath));
+	const auto dir = dirname(abspath(specfile));
 	for(const auto& p : spec->pnodes) {
 		const auto& pipename = utf16conv.to_bytes(p.first);
-		writePipeSpecShDirOne(toPipeSpecShVector(dir, p.second, p.first, false),
+		writePipeSpecShDirOne(toPipeSpecShVector(dir, p.second, p.first, false, json),
 				      pipename,
 				      modesdir);
-		writePipeSpecShDirOne(toPipeSpecShVector(dir, p.second, p.first, true),
+		writePipeSpecShDirOne(toPipeSpecShVector(dir, p.second, p.first, true, json),
 				      "trace-" + pipename,
 				      modesdir);
 	}
