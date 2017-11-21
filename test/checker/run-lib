@@ -19,7 +19,6 @@ if [[ ! -n "${prefix}" ]]; then
     echo "Couldn't get prefix from config.log – not configured correctly?"
     exit 1
 fi
-export prefix
 (
     cd ../..
     make --quiet install DESTDIR="${destdir}" &>>"${log}"
@@ -38,6 +37,11 @@ export LDFLAGS="-L${destdir}/${prefix}/lib -lcg3 -lhfst -larchive ${LDFLAGS:-}" 
        DYLD_LIBRARY_PATH="${destdir}/${prefix}/lib:${DYLD_LIBRARY_PATH:-}"
 DYLD_FALLBACK_LIBRARY_PATH="${destdir}/${prefix}/lib:${DYLD_FALLBACK_LIBRARY_PATH:-}"
 LD_LIBRARY_PATH="${destdir}/${prefix}/lib:${destdir}/${prefix}/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+
+# Without the following, Fedora fails if older versions are installed in ${prefix}:
+# No one knows why: https://stackoverflow.com/q/30939710/69663
+export LDFLAGS="-Wl,-rpath,${destdir}/${prefix}/lib ${LDFLAGS:-}"
+
 
 ./autogen.sh &>>"${log}"
 if ! ./configure  &>>"${log}"; then
