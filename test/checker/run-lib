@@ -25,10 +25,10 @@ export prefix
     make --quiet install DESTDIR="${destdir}" &>>"${log}"
 )
 
-ls "${destdir}/${prefix}"/include/divvun/checker.hpp >/dev/null
+ls "${destdir}/${prefix}"/include/divvun/checker.hpp &>>"${log}"
 
 git --work-tree="${destdir}" checkout HEAD -- examples
-cp ../checker/sme.zcheck "${destdir}"/examples/using-checker-lib-from-cpp/
+cp sme.zcheck "${destdir}"/examples/using-checker-lib-from-cpp/
 
 cd "${destdir}"/examples/using-checker-lib-from-cpp/
 
