@@ -11,6 +11,8 @@ destdir=$(mktemp -d -t divvun-suggest-test-lib.XXXXXXXXXX)
 trap 'echo "${log}:"; cat "${log}"' ERR
 trap 'rm -rf "${destdir}"' EXIT
 
+echo "Testing checker as lib ..." &>"${log}"
+
 prefconf="$(grep '^prefix=' ../../config.log)"
 eval "${prefconf}"
 if [[ ! -n "${prefix}" ]]; then
@@ -20,7 +22,7 @@ fi
 export prefix
 (
     cd ../..
-    make --quiet install DESTDIR="${destdir}" &>"${log}"
+    make --quiet install DESTDIR="${destdir}" &>>"${log}"
 )
 
 ls "${destdir}/${prefix}"/include/divvun/checker.hpp >/dev/null
@@ -37,12 +39,12 @@ export LDFLAGS="-L${destdir}/${prefix}/lib -lcg3 -lhfst -larchive ${LDFLAGS:-}" 
 DYLD_FALLBACK_LIBRARY_PATH="${destdir}/${prefix}/lib:${DYLD_FALLBACK_LIBRARY_PATH:-}"
 LD_LIBRARY_PATH="${destdir}/${prefix}/lib:${destdir}/${prefix}/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
 
-./autogen.sh &>"${log}"
-if ! ./configure  &>"${log}"; then
+./autogen.sh &>>"${log}"
+if ! ./configure  &>>"${log}"; then
     cat config.log
     exit 1
 fi
-make -j3     &>"${log}"
+make -j3     &>>"${log}"
 
 input="seammas ballat ođđa dieđuiguin"
 expected='{"errs":[["dieđuiguin",20,30,"msyn-valency-loc-com","msyn thingy",["diehtukorrekt"]]],"text":"seammas ballat ođđa dieđuiguin"}
