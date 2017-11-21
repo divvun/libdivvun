@@ -34,6 +34,7 @@ int main(int argc, char ** argv)
 			("n,variant", "Name of the pipeline variant"        , cxxopts::value<std::string>(), "NAME")
 			("d,dir"    , "Write all pipelines to directory DIR", cxxopts::value<std::string>(), "DIR")
 			("j,json"   , "Make pipelines output JSON instead of CG format")
+			("g,nodebug", "With -d/--dir, don't output debug / trace modes.")
 			("v,verbose", "Be verbose")
 			("h,help"   , "Print help")
 			;
@@ -65,17 +66,25 @@ int main(int argc, char ** argv)
 				std::cerr << "Reading specfile " << specfile << std::endl;
 			}
 			if(options.count("variant")) {
+				if(options.count("dir")) {
+					std::cerr << argv[0] << " ERROR: Specify either --variant or --dir, not both!" << std::endl;
+					return EXIT_FAILURE;
+				}
 				const auto& pipename = utf16conv.from_bytes(options["variant"].as<std::string>());
 				divvun::writePipeSpecSh(specfile, pipename, json, std::cout);
 				return EXIT_SUCCESS;
 			}
 			else if(options.count("dir")) {
+				if(options.count("variant")) {
+					std::cerr << argv[0] << " ERROR: Specify either --variant or --dir, not both!" << std::endl;
+					return EXIT_FAILURE;
+				}
 				const auto& modesdir = options["dir"].as<std::string>();
-				divvun::writePipeSpecShDir(specfile, json, modesdir);
+				divvun::writePipeSpecShDir(specfile, json, modesdir, options.count("nodebug"));
 				return EXIT_SUCCESS;
 			}
 			else {
-				std::cerr << "ERROR: Please specify a variant (try divvun-checker to list variants)" << std::endl;
+				std::cerr << "ERROR: Please specify a variant (try divvun-checker to list variants) or --dir" << std::endl;
 				return EXIT_FAILURE;
 			}
 		}

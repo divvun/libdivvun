@@ -645,10 +645,14 @@ void writePipeSpecSh(const string& specfile, const u16string& pipename, bool jso
 	}
 }
 
-void writePipeSpecShDirOne(const vector<std::pair<string, string>> cmds, const string& pipename, const string& modesdir) {
+void writePipeSpecShDirOne(const vector<std::pair<string, string>> cmds, const string& pipename, const string& modesdir, bool nodebug) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	// TODO: (modesdir / …) when we get <experimental/filesystem>
-	for (size_t i = 0; i < cmds.size(); ++i) {
+	size_t i = 0;
+	if(nodebug) {
+		i = cmds.size() - 1;
+	}
+	for (; i < cmds.size(); ++i) {
 		string debug_suff = "";
 		if(i < cmds.size() - 1) {
 			debug_suff = std::to_string(i) + "-" + cmds[i].second;
@@ -673,7 +677,7 @@ void writePipeSpecShDirOne(const vector<std::pair<string, string>> cmds, const s
 	}
 }
 
-void writePipeSpecShDir(const string& specfile, bool json, const string& modesdir) {
+void writePipeSpecShDir(const string& specfile, bool json, const string& modesdir, bool nodebug) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	const auto spec = readPipeSpec(specfile);
 	const auto dir = dirname(abspath(specfile));
@@ -681,10 +685,14 @@ void writePipeSpecShDir(const string& specfile, bool json, const string& modesdi
 		const auto& pipename = utf16conv.to_bytes(p.first);
 		writePipeSpecShDirOne(toPipeSpecShVector(dir, p.second, p.first, false, json),
 				      pipename,
-				      modesdir);
-		writePipeSpecShDirOne(toPipeSpecShVector(dir, p.second, p.first, true, json),
-				      "trace-" + pipename,
-				      modesdir);
+				      modesdir,
+				      nodebug);
+		if(!nodebug) {
+			writePipeSpecShDirOne(toPipeSpecShVector(dir, p.second, p.first, true, json),
+					      "trace-" + pipename,
+					      modesdir,
+					      nodebug);
+		}
 	}
 }
 
