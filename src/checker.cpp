@@ -25,10 +25,10 @@ namespace divvun {
 // CheckerSpec
 CheckerSpec::CheckerSpec(const std::string& file) : pImpl( readPipeSpec(file) )
 {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	for(const auto& k : pImpl->pnodes) {
-		std::cerr << "init " << utf16conv.to_bytes(k.first.c_str()) <<std::endl;
-	}
+	// std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	// for(const auto& k : pImpl->pnodes) {
+		// std::cerr << "init " << utf16conv.to_bytes(k.first.c_str()) <<std::endl;
+	// }
 }
 CheckerSpec::~CheckerSpec()
 {
