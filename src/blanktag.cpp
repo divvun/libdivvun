@@ -80,10 +80,11 @@ const void Blanktag::run(std::istream& is, std::ostream& os)
 		else if (!result.empty() && result[3].length() != 0) {
 			readings.push_back(line);
 		}
-		else if(!result.empty() && result[7].length() != 0) {
+		else if(!result.empty() && result[7].length() != 0) { // flush
 			// TODO: Can we ever get a flush in the middle of readings?
 			os << proc(preblank, wf, postblank, readings);
 			os.flush();
+			os << line << std::endl;
 			preblank.swap(postblank);
 			wf = "";
 			readings = {};
