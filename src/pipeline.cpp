@@ -152,6 +152,7 @@ const size_t AR_BLOCK_SIZE = 10240;
 template<typename Ret>
 using ArEntryHandler = std::function<Ret(const string& ar_path, const void* buff, const size_t size)>;
 
+#ifdef HAVE_LIBARCHIVE
 template<typename Ret>
 Ret archiveExtract(const string& ar_path,
 		   archive *ar,
@@ -232,6 +233,15 @@ Ret readArchiveExtract(const string& ar_path,
 #endif // USE_LIBARCHIVE_2
 	return ret;
 }
+#else
+template<typename Ret>
+Ret readArchiveExtract(const string& ar_path,
+		       const string& entry_pathname,
+		       ArEntryHandler<Ret>procFile)
+{
+	throw std::runtime_error("ERROR: Can't extract zipped archives -- this library has been compiled without libarchive support. Please ensure libarchive is installed, and recompile divvun-gramcheck with --enable-checker.");
+}
+#endif	// HAVE_LIBARCHIVE
 
 Pipeline::Pipeline(LocalisedPrefs prefs_,
 		   vector<unique_ptr<PipeCmd>> cmds_,

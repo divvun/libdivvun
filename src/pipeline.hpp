@@ -41,9 +41,10 @@
 #include <hfst/implementations/optimized-lookup/pmatch.h>
 #include <hfst/implementations/optimized-lookup/pmatch_tokenize.h>
 // zips:
+#ifdef HAVE_LIBARCHIVE
 #include <archive.h>
 #include <archive_entry.h>
-
+#endif	// HAVE_LIBARCHIVE
 
 namespace divvun {
 
@@ -63,6 +64,7 @@ using cg3_status = enum {
 };
 
 
+#ifdef HAVE_LIBARCHIVE
 // From archive.h, to make it usable with libarchive<3.2.2:
 /* Get appropriate definitions of 64-bit integer */
 #if !defined(__LA_INT64_T_DEFINED)
@@ -82,6 +84,7 @@ typedef int64_t la_int64_t;
 #  endif
 # endif
 #endif
+#endif	// HAVE_LIBARCHIVE
 
 
 class PipeSpec {

@@ -38,20 +38,20 @@ libdivvun_CXXFLAGS    =              $(CG3_CFLAGS) $(LIBARCHIVE_CFLAGS) $(divvun
 libdivvun_la_LDFLAGS  = -no-undefined
 # TODO something like -version-info 49:0:0
 
-bin_PROGRAMS         += divvun-checker divvun-gen-sh
+bin_PROGRAMS         += divvun-checker
 
 # divvun-checker binary:
 divvun_checker_SOURCES  = main_checker.cpp pipeline.cpp cxxopts.hpp
 divvun_checker_LDADD    = libdivvun.la $(libdivvun_la_LIBADD)
 divvun_checker_CXXFLAGS =              $(libdivvun_CXXFLAGS)
 divvun_checkerdir       = $(datadir)
-
-# divvun-gen-sh binary:
-divvun_gen_sh_SOURCES  = main_gen_sh.cpp pipeline.cpp cxxopts.hpp
-divvun_gen_sh_LDADD    = libdivvun.la $(libdivvun_la_LIBADD)
-divvun_gen_sh_CXXFLAGS =              $(libdivvun_CXXFLAGS)
 endif
 
+# divvun-gen-sh binary – TODO: pipeline parsing shouldn't depend on all these other things:
+divvun_gen_sh_SOURCES  = main_gen_sh.cpp pipeline.cpp suggest.cpp cgspell.cpp blanktag.cpp cxxopts.hpp
+divvun_gen_sh_LDADD    =              $(CG3_LIBS)   $(LIBARCHIVE_LIBS)   $(divvun_suggest_LDADD)    $(divvun_cgspell_LDADD)
+divvun_gen_sh_CXXFLAGS =              $(CG3_CFLAGS) $(LIBARCHIVE_CFLAGS) $(divvun_suggest_CXXFLAGS) $(divvun_cgspell_CXXFLAGS)
+bin_PROGRAMS          += divvun-gen-sh
 
 # Only needed for development; we keep rnc's in version control:
 if HAVE_TRANG
