@@ -19,14 +19,14 @@
 #ifndef fe64e9a18486d375_SUGGEST_H
 #define fe64e9a18486d375_SUGGEST_H
 
-#include <locale>
-#include <codecvt>
-#include <vector>
-#include <string>
 #include <algorithm>
-#include <regex>
-#include <unordered_map>
+#include <codecvt>
 #include <exception>
+#include <locale>
+#include <regex>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 // divvun-gramcheck:
 #include "util.hpp"

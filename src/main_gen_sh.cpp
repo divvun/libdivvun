@@ -19,7 +19,7 @@
 #  include <config.h>
 #endif
 
-#include "pipeline.hpp"
+#include "pipespec.hpp"
 #include "cxxopts.hpp"
 
 int main(int argc, char ** argv)

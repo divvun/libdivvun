@@ -22,14 +22,11 @@
 #  include <config.h>
 #endif
 
-// Would like to
-// #include <experimental/filesystem>
-// but need to support macos
-
 #include <cstring>
 #include <errno.h>
 
 // divvun-gramcheck:
+#include "pipespec.hpp"
 #include "suggest.hpp"
 #include "cgspell.hpp"
 #include "blanktag.hpp"
@@ -40,11 +37,6 @@
 // hfst:
 #include <hfst/implementations/optimized-lookup/pmatch.h>
 #include <hfst/implementations/optimized-lookup/pmatch_tokenize.h>
-// zips:
-#ifdef HAVE_LIBARCHIVE
-#include <archive.h>
-#include <archive_entry.h>
-#endif	// HAVE_LIBARCHIVE
 
 namespace divvun {
 
@@ -87,24 +79,6 @@ typedef int64_t la_int64_t;
 #endif	// HAVE_LIBARCHIVE
 
 
-class PipeSpec {
-	public:
-		PipeSpec() = default;
-		PipeSpec(PipeSpec const &) = delete;
-		PipeSpec &operator=(PipeSpec const &) = delete;
-		// PipeSpec(const pugi::xml_document& doc, const std::unordered_map<u16string, pugi::xml_node>& pipespec)
-		// {
-		// 	throw std::runtime_error("PipeSpec can't be copied ");
-		// }
-		pugi::xml_document doc; // needs to be alive for as long as we're referring to nodes in it
-		std::unordered_map<u16string, pugi::xml_node> pnodes;
-};
-
-unique_ptr<PipeSpec> readPipeSpec(const string& file);
-
-void writePipeSpecSh(const string& specfile, const u16string& pipename, bool json, std::ostream& os);
-void writePipeSpecShDir(const string& specfile, bool json, const string& modesdir, bool nodebug);
-
 // https://stackoverflow.com/a/1449527/69663
 struct OneShotReadBuf : public std::streambuf
 {
@@ -113,24 +87,6 @@ struct OneShotReadBuf : public std::streambuf
         setg(s, s, s + n);
     }
 };
-
-class ArPipeSpec {
-	public:
-		explicit ArPipeSpec(const string& ar_path_)
-			: ar_path(ar_path_)
-			, spec(new PipeSpec) {}
-		ArPipeSpec(ArPipeSpec const &) = delete;
-		ArPipeSpec &operator=(ArPipeSpec const &) = delete;
-		// ArPipeSpec(const unique_ptr<PipeSpec> spec, const string& ar_path)
-		// {
-		// 	throw std::runtime_error("ArPipeSpec can't be copied ");
-		// }
-		const string ar_path;
-		unique_ptr<PipeSpec> spec;
-};
-
-unique_ptr<ArPipeSpec> readArPipeSpec(const string& ar_path);
-
 
 class PipeCmd {
 	public:
