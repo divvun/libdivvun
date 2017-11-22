@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -e -u
+
+log=/tmp/divvun-gramcheck-build.log
+: > "${log}"
+trap 'printf "\n\033[1;31muh-oh something went wrong 😦\033[0m\n\nLog is in %s -- uploading ... " "${log}"; nc termbin.com 9999 <"${log}"' ERR
+exec &> >(tee -a "${log}")
+
+workdir=$(mktemp -d -t divvun-gramcheck.XXXXXXXXXX)
+trap 'rm -rf "${workdir}"' EXIT
+cd "${workdir}"
+
+
+printf "\033c\033[0;33mInstalling Tino's OSX nightly packages\n\nThis will first download some stuff, then ask for sudo password.\n\n\033[0m"
+curl -Ss https://apertium.projectjj.com/osx/install-nightly.sh > install-nightly.sh
+bash install-nightly.sh
+
+printf "\033c\033[0;33mInstalling divvun-gramcheck\n\nThis will first download and compile some stuff, then ask for sudo password.\n\n\033[0m"
+git clone https://github.com/divvun/divvun-gramcheck
+cd divvun-gramcheck
+scripts/get-pugixml-and-build
+
+printf "\n\n\033[1;35mYou may have to enter your password now to install divvun-gramcheck:\033[0m\n"
+sudo make install
+
+printf "\n\033[0;33mTesting if we have installed some files:\033[0m\n"
+ls /usr/local/bin/divvun-gen-sh
+printf "\n\033[0;33mTesting if files are in PATH:\033[0m\n"
+divvun-gen-sh --help
+
+printf "\n\033[1;32m🌟\033[1;33m🌟\033[1;35m🌟 SUCCESS \033[1;35m🌟\033[1;33m🌟\033[1;32m🌟\033[0m\n"
+
