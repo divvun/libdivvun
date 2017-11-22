@@ -20,12 +20,13 @@ printf "\033c\033[0;33mInstalling divvun-gramcheck\n\nThis will first download a
 git clone https://github.com/divvun/divvun-gramcheck
 cd divvun-gramcheck
 
-export PATH="/usr/local/bin:$PATH"
-export CXXFLAGS="-I/usr/local/include ${CXXFLAGS}"
-export PKG_CONFIG_PATH="/usr/local/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH"
-export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
-export LD_LIBRARY_PATH="/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
-export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+export PATH="/usr/local/bin:${PATH:-}"
+export CXXFLAGS="-I/usr/local/include ${CXXFLAGS:-}"
+export ACLOCAL_PATH="/usr/local/share/aclocal:${ACLOCAL_PATH:-}"
+export PKG_CONFIG_PATH="/usr/local/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH:-}"
+export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+export LD_LIBRARY_PATH="/usr/local/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+export LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH:-}"
 export LDFLAGS="${LDFLAGS:-} -Wl,-rpath,/usr/local/lib/x86_64-linux-gnu"
 export LDFLAGS="${LDFLAGS:-} -Wl,-rpath,/usr/local/lib"
 scripts/get-pugixml-and-build
