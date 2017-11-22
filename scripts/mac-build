@@ -19,6 +19,15 @@ bash install-nightly.sh
 printf "\033c\033[0;33mInstalling divvun-gramcheck\n\nThis will first download and compile some stuff, then ask for sudo password.\n\n\033[0m"
 git clone https://github.com/divvun/divvun-gramcheck
 cd divvun-gramcheck
+
+export PATH="/usr/local/bin:$PATH"
+export CXXFLAGS="-I/usr/local/include ${CXXFLAGS}"
+export PKG_CONFIG_PATH="/usr/local/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH"
+export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
+export LD_LIBRARY_PATH="/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+export LDFLAGS="${LDFLAGS:-} -Wl,-rpath,/usr/local/lib/x86_64-linux-gnu"
+export LDFLAGS="${LDFLAGS:-} -Wl,-rpath,/usr/local/lib"
 scripts/get-pugixml-and-build
 
 printf "\n\n\033[1;35mYou may have to enter your password now to install divvun-gramcheck:\033[0m\n"
