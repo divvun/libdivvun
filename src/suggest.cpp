@@ -339,6 +339,11 @@ void rel_on_match(const relations& rels,
 	}
 }
 
+/*
+ * Return possibly altered beg/end indices for the Err coverage
+ * (underline), along with a replacement suggestion (or Nothing() if
+ * given bad data).
+ */
 variant<Nothing, pair<pair<size_t, size_t>, u16string>>
 proc_LEFT_RIGHT(const err_id& err_id,
 		const size_t src_id,
@@ -350,7 +355,7 @@ proc_LEFT_RIGHT(const err_id& err_id,
 		const size_t i_t,
 		const Cohort& trg) {
 	if(sentence.ids_cohorts.find(src_id) == sentence.ids_cohorts.end()) {
-		std::cerr << "WARNING: Saw &LEFT on cohort with id 0" << std::endl;
+		std::cerr << "WARNING: Saw &LEFT/&RIGHT on cohort with id 0" << std::endl;
 		return Nothing();
 	}
 	const auto& i_c = sentence.ids_cohorts.at(src_id);
@@ -359,6 +364,7 @@ proc_LEFT_RIGHT(const err_id& err_id,
 		return Nothing();
 	}
 	std::map<size_t, u16string> add; // position in text:cohort id in Sentence
+	// Loop from the leftmost to the rightmost of source and target cohorts:
 	size_t left  = i_c < i_t ? i_c + 1 : i_t;
 	size_t right = i_c < i_t ? i_t + 1 : i_c;
 	for(size_t i = left; i < right; ++i) {
