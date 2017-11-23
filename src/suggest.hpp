@@ -49,6 +49,7 @@ using mapbox::util::variant;
 using std::string;
 using std::stringstream;
 using std::u16string;
+using std::pair;
 using std::vector;
 
 using UStringVector = vector<u16string>;
