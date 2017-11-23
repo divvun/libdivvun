@@ -1,0 +1,18 @@
+: 
+"<)>"
+	")" RPAREN @EOP <spaceBeforeParenEnd>
+	")" RPAREN @EMO <spaceBeforeParenEnd>
+"<.>"
+	"." PUNCT
+:\n
+:\n
+"<Twas>"
+	"be" V Pret "<was>" <firstWordOfParagraph>
+		"it" Prn 3Sg Neut "<T>" <firstWordOfParagraph>
+: 
+"<bryllyg>"
+	"bryllyg" A
+:  
+"<and>"
+	"and" CC <doubleSpaceBefore>
+: 

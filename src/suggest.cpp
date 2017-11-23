@@ -340,6 +340,116 @@ void rel_on_match(const relations& rels,
 	}
 }
 
+variant<Nothing, std::pair<size_t, u16string>> proc_LEFT(const err_id& err_id,
+							 const size_t src_id,
+							 const Sentence& sentence,
+							 const u16string& text,
+							 size_t beg, // mut: We may return an altered version of beg
+							 const size_t end,
+							 const string& relname,
+							 const size_t i_t,
+							 const Cohort& trg) {
+	if(sentence.ids_cohorts.find(src_id) == sentence.ids_cohorts.end()) {
+		std::cerr << "WARNING: Saw &LEFT on cohort with id 0" << std::endl;
+		return Nothing();
+	}
+	const auto& i_c = sentence.ids_cohorts.at(src_id);
+	if(i_c >= sentence.cohorts.size()) {
+		std::cerr << "WARNING: Internal error (unexpected i_c" << i_c << " >= sentence.cohorts.size())" << std::endl;
+		return Nothing();
+	}
+	if(i_c <= i_t) {
+		std::cerr << "WARNING: Saw &LEFT on cohort number " << i_c << "(id=" << src_id << ") <= target " << i_t << " (id=" << trg.id << ")" << std::endl;
+		return Nothing();
+	}
+	std::map<size_t, u16string> add; // position in text:cohort id in Sentence
+	for(size_t i = i_t; i < i_c; ++i) {
+		const auto& trg = sentence.cohorts[i];
+		for(const auto& tr: trg.readings) {
+			if(tr.added == AddedAfterBlank && tr.errtype == err_id) {
+				size_t addstart = trg.pos;
+				add[addstart] = trg.form;
+				beg = std::min(beg, addstart);
+			}
+			else if(tr.added == AddedBeforeBlank && tr.errtype == err_id) {
+				if(i == 0) {
+					std::cerr << "WARNING: Saw &ADDED-BEFORE-BLANK on initial word, ignoring" << std::endl;
+					continue;
+				}
+				const auto& pretrg = sentence.cohorts[i-1];
+				size_t addstart = pretrg.pos + pretrg.form.size();
+				add[addstart] = trg.form;
+				beg = std::min(beg, addstart);
+			}
+		}
+	}
+	u16string repform = text.substr(beg, end - beg); // mut
+	for(auto it = add.rbegin(); it != add.rend(); ++it) {
+		size_t at = it->first - beg;
+		if(at >= repform.size()) {
+			std::cerr << "WARNING: Internal error (trying to splice into pos " << at << " of repform)" << std::endl;
+			continue;
+		}
+		repform = repform.substr(0, at) + it->second + repform.substr(at);
+	}
+	return std::make_pair(beg, repform);
+}
+
+variant<Nothing, std::pair<size_t, u16string>> proc_RIGHT(const err_id& err_id,
+							  const size_t src_id,
+							  const Sentence& sentence,
+							  const u16string& text,
+							  const size_t beg,
+							  size_t end, // mut: We may return an altered version of beg
+							  const string& relname,
+							  const size_t i_t,
+							  const Cohort& trg) {
+	if(sentence.ids_cohorts.find(src_id) == sentence.ids_cohorts.end()) {
+		std::cerr << "WARNING: Saw &RIGHT on cohort with id 0" << std::endl;
+		return Nothing();
+	}
+	const auto& i_c = sentence.ids_cohorts.at(src_id);
+	if(i_c >= sentence.cohorts.size()) {
+		std::cerr << "WARNING: Internal error (unexpected i_c" << i_c << " >= sentence.cohorts.size())" << std::endl;
+		return Nothing();
+	}
+	if(i_c >= i_t) {
+		std::cerr << "WARNING: Saw &RIGHT on cohort number " << i_c << "(id=" << src_id << ") >= target " << i_t << " (id=" << trg.id << ")" << std::endl;
+		return Nothing();
+	}
+	std::map<size_t, u16string> add; // position in text:cohort id in Sentence
+	for(size_t i = i_c + 1; i <= i_t + 1; ++i) {
+		const auto& trg = sentence.cohorts[i];
+		for(const auto& tr: trg.readings) {
+			if(tr.added == AddedAfterBlank && tr.errtype == err_id) {
+				size_t addstart = trg.pos;
+				add[addstart] = trg.form;
+				end = std::max(end, addstart + trg.form.size());
+			}
+			else if(tr.added == AddedBeforeBlank && tr.errtype == err_id) {
+				if(i == 0) {
+					std::cerr << "WARNING: Saw &ADDED-BEFORE-BLANK on initial word, ignoring" << std::endl;
+					continue;
+				}
+				const auto& pretrg = sentence.cohorts[i-1];
+				size_t addstart = pretrg.pos + pretrg.form.size();
+				add[addstart] = trg.form;
+				end = std::max(end, addstart + trg.form.size());
+			}
+		}
+	}
+	u16string repform = text.substr(beg, end - beg); // mut
+	for(auto it = add.rbegin(); it != add.rend(); ++it) {
+		size_t at = it->first - beg;
+		if(at >= repform.size()) {
+			std::cerr << "WARNING: Internal error (trying to splice into pos " << at << " of repform)" << std::endl;
+			continue;
+		}
+		repform = repform.substr(0, at) + it->second + repform.substr(at);
+	}
+	return std::make_pair(end, repform);
+}
+
 variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 					   const Cohort& c,
 					   const Sentence& sentence,
@@ -407,55 +517,21 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 		// TODO: Allow words in between?
 		rel_on_match(r.rels, LEFT_REL, sentence,
 			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
-				     if(sentence.ids_cohorts.find(c.id) == sentence.ids_cohorts.end()) {
-					     std::cerr << "WARNING: Saw &LEFT on cohort with id 0" << std::endl;
-					     return;
-				     }
-				     const auto& i_c = sentence.ids_cohorts.at(c.id);
-				     if(i_c >= sentence.cohorts.size()) {
-					     std::cerr << "WARNING: Internal error (unexpected i_c" << i_c << " >= sentence.cohorts.size())" << std::endl;
-					     return;
-				     }
-				     if(i_c <= i_t) {
-					     std::cerr << "WARNING: Saw &LEFT on cohort number " << i_c << "(id=" << c.id << ") <= target " << i_t << " (id=" << trg.id << ")" << std::endl;
-					     return;
-				     }
-				     std::map<size_t, u16string> add; // position in text:cohort id in Sentence
-				     for(size_t i = i_t; i < i_c; ++i) {
-					     const auto& trg = sentence.cohorts[i];
-					     for(const auto& tr: trg.readings) {
-						     if(tr.added == AddedAfterBlank && tr.errtype == r.errtype) {
-							     add[trg.pos] = trg.form;
-						     }
-						     else if(tr.added == AddedBeforeBlank && tr.errtype == r.errtype) {
-							     if(i == 0) {
-								     std::cerr << "WARNING: Saw &ADDED-BEFORE-BLANK on initial word, ignoring" << std::endl;
-								     continue;
-							     }
-							     const auto& pretrg = sentence.cohorts[i-1];
-							     size_t addstart = pretrg.pos + pretrg.form.size();
-							     add[addstart] = trg.form;
-							     beg = std::min(beg, addstart);
-						     }
-					     }
-				     }
-				     u16string repform = text.substr(beg, end - beg);
-				     for(auto it = add.rbegin(); it != add.rend(); ++it) {
-					     size_t at = it->first - beg;
-					     if(at >= repform.size()) {
-						     std::cerr << "WARNING: Internal error (trying to splice into pos " << at << " of repform)" << std::endl;
-					     }
-					     repform = repform.substr(0, at) + it->second + repform.substr(at);
-				     }
-				     rep.push_back(repform);
+				     proc_LEFT(err_id, c.id, sentence, text, beg, end, relname, i_t, trg).match(
+					     []  (Nothing) {},
+					     [&] (std::pair<size_t, u16string> p)   {
+						     beg = p.first;
+						     rep.push_back(p.second);
+					     });
 			     });
 		rel_on_match(r.rels, RIGHT_REL, sentence,
 			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
-				     for(const auto& tr: trg.readings) {
-					     if(tr.added && tr.errtype == r.errtype) {
-						     rep.push_back(c.form + trg.form);
-					     }
-				     }
+				     proc_RIGHT(err_id, c.id, sentence, text, beg, end, relname, i_t, trg).match(
+					     []  (Nothing) {},
+					     [&] (std::pair<size_t, u16string> p)   {
+						     end = p.first;
+						     rep.push_back(p.second);
+					     });
 			     });
 		std::map<size_t, size_t> deleted;
 		rel_on_match(r.rels, DELETE_REL, sentence,

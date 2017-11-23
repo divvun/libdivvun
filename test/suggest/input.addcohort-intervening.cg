@@ -1,0 +1,27 @@
+"<Otne>"
+	"otne" Adv <W:0.0000000000>
+: 
+"<leat>"
+	"leat" <aux> V <copula> IV Ind Prs Pl3 <W:0.0000000000> @+FAUXV
+: 
+"<sihke>"
+	"sihke" Adv <W:0.0000000000> @>CC
+: 
+"<neahtta-bálvalusat>"
+	"bálvalus" N Sem/Act Pl Nom <W:10.0000000000> @<SUBJ
+		"neahtis" A Sem/Hum Attr Cmp/Cit Cmp/Hyph Cmp <W:10.0000000000>
+: 
+"<,>"
+	"," CLB &punct-rihkku &ADDED-BEFORE-BLANK ID:5
+"<vel>"
+	"vel" IJ
+: 
+"<ja>"
+	"ja" CC <W:0.0000000000> @CVP &punct-rihkku ID:6 R:LEFT:5
+: 
+"<mobiila>"
+	"mobiila" A Sem/Dummytag Attr <W:0.0000000000> @>N
+: 
+"<atnuprográmmat>"
+	"atnuprográmma" N G3 Sem/Dummytag Pl Nom <W:0.0000000000> @SUBJ>
+: 
