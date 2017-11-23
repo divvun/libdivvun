@@ -46,10 +46,14 @@ pipeline specifications (=divvun-gen-sh=).
 * Simple build from git on Mac
 
 There is a script that will download prerequisites and compile and
-install for Mac; just run:
+install for Mac.
+
+You don't even need to checkout this repository; just run:
 #+BEGIN_SRC sh
 curl https://raw.githubusercontent.com/divvun/divvun-gramcheck/master/scripts/mac-build | bash
 #+END_SRC
+
+and enter your =sudo= password when it asks you to.
 
 It does not (yet) enable =divvun-checker=, since that has yet more
 dependencies. It assumes you've got =xmllint= installed.
