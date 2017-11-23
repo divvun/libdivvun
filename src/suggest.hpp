@@ -72,6 +72,8 @@ enum RunState {
 using rel_id = size_t;
 using relations = std::unordered_map<string, rel_id>;
 
+enum Added { NotAdded, AddedAfterBlank, AddedBeforeBlank };
+
 struct Reading {
 	bool suggest = false;
 	string ana;
@@ -81,7 +83,7 @@ struct Reading {
 	rel_id id = 0;
 	string wf;
 	bool suggestwf = false;
-	bool added = false;
+	Added added = NotAdded;
 };
 
 struct Cohort {
@@ -90,7 +92,7 @@ struct Cohort {
 	rel_id id;
 	vector<Reading> readings;
 	u16string default_errtype;
-	bool added;
+	Added added;
 };
 
 using CohortMap = std::unordered_map<rel_id, size_t>;

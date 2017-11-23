@@ -19,10 +19,6 @@
 
 namespace divvun {
 
-const string CG_SUGGEST_TAG = "&SUGGEST";
-const string CG_SUGGESTWF_TAG = "&SUGGESTWF";
-const string CG_ADDED_TAG = "&ADDED";
-
 const std::basic_regex<char> DELIMITERS ("^[.!?]$");
 
 const std::basic_regex<char> CG_TAGS_RE ("\"[^\"]*\"|[^ ]+");
@@ -165,7 +161,7 @@ const msgmap Suggest::readMessages(const string& file) {
 // errtype is the error tag (without leading ampersand)
 // gentags are the tags we generate with
 // id is 0 if unset, otherwise the relation id of this word
-const std::tuple<bool, string, StringVec, rel_id, relations, string, bool, bool> proc_tags(const string& tags) {
+const std::tuple<bool, string, StringVec, rel_id, relations, string, bool, Added> proc_tags(const string& tags) {
 	bool suggest = false;
 	string errtype;
 	StringVec gentags;
@@ -173,7 +169,7 @@ const std::tuple<bool, string, StringVec, rel_id, relations, string, bool, bool>
 	relations rels;
 	string wf;
 	bool suggestwf = false;
-	bool added = false;
+	Added added = NotAdded;
 	for(auto& tag : allmatches(tags, CG_TAGS_RE)) {
 		std::match_results<const char*> result;
 		std::regex_match(tag.c_str(), result, CG_TAG_TYPE);
@@ -183,14 +179,17 @@ const std::tuple<bool, string, StringVec, rel_id, relations, string, bool, bool>
 		}
 		else if(result[2].length() != 0) {
 			// std::cerr << "\033[1;35msugtag=\t" << result[2] << "\033[0m" << std::endl;
-			if(tag == CG_SUGGEST_TAG) {
+			if(tag == "&SUGGEST") {
 				suggest = true;
 			}
-			else if(tag == CG_SUGGESTWF_TAG) {
+			else if(tag == "&SUGGESTWF") {
 				suggestwf = true;
 			}
-			else if(tag == CG_ADDED_TAG) {
-				added = true;
+			else if(tag == "&ADDED" || tag == "&ADDED-AFTER-BLANK") {
+				added = AddedAfterBlank;
+			}
+			else if(tag == "&ADDED-BEFORE-BLANK") {
+				added = AddedBeforeBlank;
 			}
 			else {
 				errtype = result[2];
@@ -271,7 +270,7 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const string& line) {
 		r.id = (r.id == 0 ? sub.id : r.id);
 		r.suggest = r.suggest || sub.suggest;
 		r.suggestwf = r.suggestwf || sub.suggestwf;
-		r.added = r.added || sub.added;
+		r.added = r.added == NotAdded ? sub.added : r.added;
 		r.sforms.insert(r.sforms.end(), sub.sforms.begin(), sub.sforms.end());
 		r.wf = r.wf.empty() ? sub.wf : r.wf;
 	}
@@ -299,7 +298,7 @@ bool cohort_empty(const Cohort& c) {
 }
 
 const Cohort DEFAULT_COHORT = {
-	{}, 0, 0, {}, u"", false
+	{}, 0, 0, {}, u"", NotAdded
 };
 
 // https://stackoverflow.com/a/1464684/69663
@@ -318,7 +317,7 @@ Iterator Dedupe(Iterator first, Iterator last)
 void rel_on_match(const relations& rels,
 		  const std::basic_regex<char>& name,
 		  const Sentence& sentence,
-		  const std::function<void(const string& relname, const Cohort& trg)>& fn) {
+		  const std::function<void(const string& relname, size_t i_t, const Cohort& trg)>& fn) {
 	for(const auto& rel: rels) {
 		std::match_results<const char*> result;
 		std::regex_match(rel.first.c_str(), result, name);
@@ -330,13 +329,14 @@ void rel_on_match(const relations& rels,
 			std::cerr << "WARNING: Couldn't find relation target for " << rel.first << ":" << rel.second << std::endl;
 			continue;
 		}
-		const auto& i_c = sentence.ids_cohorts.at(target_id);
-		if(i_c >= sentence.cohorts.size()) {
+		const auto& i_t = sentence.ids_cohorts.at(target_id);
+		if(i_t >= sentence.cohorts.size()) {
 			std::cerr << "WARNING: Couldn't find relation target for " << rel.first << ":" << rel.second << std::endl;
 			continue;
 		}
 		fn(rel.first,
-		   sentence.cohorts.at(i_c));
+		   i_t,
+		   sentence.cohorts.at(i_t));
 	}
 }
 
@@ -387,7 +387,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 				continue;
 			}
 			rel_on_match(r.rels, MSG_TEMPLATE_REL, sentence,
-				     [&] (const string& relname, const Cohort& trg) {
+				     [&] (const string& relname, size_t i_t, const Cohort& trg) {
 					     replaceAll(msg, utf16conv.from_bytes(relname.c_str()), trg.form);
 				     });
 		}
@@ -406,24 +406,60 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 		// TODO: What about our current suggestions of the same error tag? Currently just using wordform
 		// TODO: Allow words in between?
 		rel_on_match(r.rels, LEFT_REL, sentence,
-			     [&] (const string& relname, const Cohort& trg) {
-				     for(const auto& tr: trg.readings) {
-					     if(tr.added && tr.errtype == r.errtype) {
-						     rep.push_back(trg.form + u" " + c.form);
+			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
+				     if(sentence.ids_cohorts.find(c.id) == sentence.ids_cohorts.end()) {
+					     std::cerr << "WARNING: Saw &LEFT on cohort with id 0" << std::endl;
+					     return;
+				     }
+				     const auto& i_c = sentence.ids_cohorts.at(c.id);
+				     if(i_c >= sentence.cohorts.size()) {
+					     std::cerr << "WARNING: Internal error (unexpected i_c" << i_c << " >= sentence.cohorts.size())" << std::endl;
+					     return;
+				     }
+				     if(i_c <= i_t) {
+					     std::cerr << "WARNING: Saw &LEFT on cohort number " << i_c << "(id=" << c.id << ") <= target " << i_t << " (id=" << trg.id << ")" << std::endl;
+					     return;
+				     }
+				     std::map<size_t, u16string> add; // position in text:cohort id in Sentence
+				     for(size_t i = i_t; i < i_c; ++i) {
+					     const auto& trg = sentence.cohorts[i];
+					     for(const auto& tr: trg.readings) {
+						     if(tr.added == AddedAfterBlank && tr.errtype == r.errtype) {
+							     add[trg.pos] = trg.form;
+						     }
+						     else if(tr.added == AddedBeforeBlank && tr.errtype == r.errtype) {
+							     if(i == 0) {
+								     std::cerr << "WARNING: Saw &ADDED-BEFORE-BLANK on initial word, ignoring" << std::endl;
+								     continue;
+							     }
+							     const auto& pretrg = sentence.cohorts[i-1];
+							     size_t addstart = pretrg.pos + pretrg.form.size();
+							     add[addstart] = trg.form;
+							     beg = std::min(beg, addstart);
+						     }
 					     }
 				     }
+				     u16string repform = text.substr(beg, end - beg);
+				     for(auto it = add.rbegin(); it != add.rend(); ++it) {
+					     size_t at = it->first - beg;
+					     if(at >= repform.size()) {
+						     std::cerr << "WARNING: Internal error (trying to splice into pos " << at << " of repform)" << std::endl;
+					     }
+					     repform = repform.substr(0, at) + it->second + repform.substr(at);
+				     }
+				     rep.push_back(repform);
 			     });
 		rel_on_match(r.rels, RIGHT_REL, sentence,
-			     [&] (const string& relname, const Cohort& trg) {
+			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
 				     for(const auto& tr: trg.readings) {
 					     if(tr.added && tr.errtype == r.errtype) {
-						     rep.push_back(c.form + u" " + trg.form);
+						     rep.push_back(c.form + trg.form);
 					     }
 				     }
 			     });
 		std::map<size_t, size_t> deleted;
 		rel_on_match(r.rels, DELETE_REL, sentence,
-			     [&] (const string& relname, const Cohort& trg) {
+			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
 				     size_t del_beg = trg.pos;
 				     size_t del_end = del_beg + trg.form.size();
 				     // Expand (unless we've already expanded more in that direction):
@@ -530,7 +566,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 			if(reading.id != 0) {
 				c.id = reading.id;
 			}
-			c.added = reading.added || c.added;
+			c.added = reading.added == NotAdded ? c.added : reading.added;
 			c.readings.push_back(reading);
 		}
 
@@ -579,7 +615,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 		if(reading.id != 0) {
 			c.id = reading.id;
 		}
-		c.added = reading.added || c.added;
+		c.added = reading.added == NotAdded ? c.added : reading.added;
 		c.readings.push_back(reading);
 	}
 
