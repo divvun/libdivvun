@@ -1,0 +1,60 @@
+#!/bin/bash
+
+set -u
+
+if ! command -V timeout >/dev/null 2>/dev/null; then
+    # require /usr/bin/timeout, since it could hang if there's a bug
+    exit 77
+fi
+
+tmpd=$(mktemp -d -t divvun-blanktag-test.XXXXXXXX)
+to="${tmpd}/to"
+from="${tmpd}/from"
+mkfifo "${to}" "${from}"
+
+cd "$(dirname "$0")" || exit 1
+
+# Server:
+../../src/divvun-blanktag -z blanktagger.hfst <"${to}" >"${from}" 2>"${tmpd}/err" &
+pid=$!
+trap 'kill $pid; rm -rf "${tmpd}"' EXIT
+
+
+declare -i success=0
+
+# Client:
+exec 3>"${to}"
+exec 4<"${from}"
+for i in {1..10}; do
+    input="input.cg"
+    output="output-flushing.cg"
+    expected="expected.cg"
+    timeout 1 awk '{print $0} END{print "<STREAMCMD:FLUSH>"}' "${input}" >&3
+    case $? in
+        0) : ;;
+        124) echo "divvun-blanktag flushing write timed out"
+             exit 1
+             ;;
+        *) echo "divvun-blanktag flushing write failed with $?"
+           exit 1
+           ;;
+    esac
+    timeout 1 awk 'BEGIN{RS="<STREAMCMD:FLUSH>\n"}{printf "%s", $0;exit}' <&4 >"${output}"
+    case $? in
+        0) : ;;
+        124) echo "divvun-blanktag flushing read timed out"
+             exit 1
+             ;;
+        *) echo "divvun-blanktag flushing read failed with $?, output is:"
+           cat "${output}"
+           exit 1
+           ;;
+    esac
+    if ! diff -U10 "${expected}" "${output}"; then
+        echo "stdout differs (flushing) on run $i"
+        exit 1
+    fi
+    (( ++success ))
+done
+
+echo "Daemon successfully handled ${success} requests."

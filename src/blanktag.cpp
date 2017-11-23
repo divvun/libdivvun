@@ -88,8 +88,9 @@ const void Blanktag::run(std::istream& is, std::ostream& os)
 			readings = {};
 			postblank = {};
 			os << proc(preblank, wf, postblank, readings);
-			os.flush();
+			preblank = {};
 			os << line << std::endl;
+			os.flush();
 		}
 		else if(!result.empty() && result[6].length() != 0) {
 			postblank.push_back(result[6]);

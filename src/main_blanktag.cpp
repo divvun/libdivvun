@@ -32,7 +32,7 @@ int main(int argc, char ** argv)
 			("a,analyser", "FST for tagging spaces", cxxopts::value<std::string>(), "BIN")
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
-			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 if --json).")
+			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>)")
 			("v,verbose", "Be verbose")
 			("h,help", "Print help")
 			;
