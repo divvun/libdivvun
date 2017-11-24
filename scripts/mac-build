@@ -2,7 +2,7 @@
 
 set -e -u
 
-log=/tmp/divvun-gramcheck-build.log
+log=$(mktemp -t divvun-gramcheck-log.XXXXXXXXXX)
 : > "${log}"
 trap 'printf "\n\033[1;31muh-oh something went wrong 😦\033[0m\n\nLog is in %s -- uploading ... " "${log}"; nc termbin.com 9999 <"${log}"' ERR
 exec &> >(tee -a "${log}")
