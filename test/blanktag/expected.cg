@@ -16,3 +16,10 @@
 "<and>"
 	"and" CC <doubleSpaceBefore>
 : 
+"<the>"
+	"the" D
+: 
+"<slithy>"
+	"slithy" A
+;	"slithy" V Inf
+: 

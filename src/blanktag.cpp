@@ -53,7 +53,12 @@ const string Blanktag::proc(const vector<string>& preblank, const string& wf, co
 	}
 	ret += wf + "\n";
 	for(const auto& r: readings) {
-		ret += r + tags + "\n";
+		if(r.substr(0, 1) == ";") { // traced reading, don't touch
+			ret += r + "\n";
+		}
+		else {
+			ret += r + tags + "\n";
+		}
 	}
 	return ret;
 }
@@ -77,7 +82,7 @@ const void Blanktag::run(std::istream& is, std::ostream& os)
 			readings = {};
 			postblank = {};
 		}
-		else if (!result.empty() && result[3].length() != 0) {
+		else if (!result.empty() && (result[3].length() != 0 || result[8].length() != 0)) {
 			readings.push_back(line);
 		}
 		else if(!result.empty() && result[7].length() != 0) { // flush

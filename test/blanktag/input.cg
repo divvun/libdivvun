@@ -16,3 +16,10 @@
 "<and>"
 	"and" CC
 : 
+"<the>"
+	"the" D
+: 
+"<slithy>"
+	"slithy" A
+;	"slithy" V Inf
+: 

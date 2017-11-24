@@ -42,6 +42,7 @@ const std::basic_regex<char> CG_LINE ("^"
 				      "|(\t+)(\"[^\"]*\"\\S*)(\\s+\\S+)*" // reading, group 3, 4, 5
 				      "|:(.*)" // blank, group 6
 				      "|(<STREAMCMD:FLUSH>)" // flush, group 7
+				      "|(;\t+.*)" // traced reading, group 8
 				      ")");
 
 using StringVec = std::vector<std::string>;
