@@ -13,9 +13,9 @@ This repository contains four main programs:
 
 =divvun-gramcheck=: This program opens a grammar checker pipeline XML
 specification and lets you run grammar checking on strings. It can
-also open zip files containing the XML and all required language data.
-There is a C++ library =libdivvun= (=src/checker.hpp=) which allows
-for the same features.
+also open zip files containing the XML and all required language
+data. There is a C++ library =libdivvun= (headers installed to
+=$PREFIX/include/divvun/*.hpp=) which allows for the same features.
 
 
 =divvun-suggest=: This program does FST lookup on forms specified as
