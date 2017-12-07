@@ -77,13 +77,14 @@ enum Added { NotAdded, AddedAfterBlank, AddedBeforeBlank };
 
 struct Reading {
 	bool suggest = false;
-	string ana;
-	u16string errtype;
+	string ana;	   // for generating suggestions from this reading
+	u16string errtype; // the error tag (without leading ampersand)
 	UStringVector sforms;
 	relations rels;	// rels[relname] = target.id
-	rel_id id = 0;
+	rel_id id = 0; // id is 0 if unset, otherwise the relation id of this word
 	string wf;
 	bool suggestwf = false;
+	bool link = false; // cohorts that are not the "core" of the underline never become Err's; message template offsets refer to the cohort of the Err
 	Added added = NotAdded;
 };
 
@@ -92,7 +93,7 @@ struct Cohort {
 	size_t pos;
 	rel_id id;
 	vector<Reading> readings;
-	u16string default_errtype;
+	std::set<u16string> errtypes;
 	Added added;
 };
 

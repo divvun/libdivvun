@@ -153,79 +153,6 @@ const msgmap Suggest::readMessages(const string& file) {
 }
 
 
-
-
-// return <suggen, errtype, gentags, id, wf>
-// where suggen is true if we want to suggest based on this
-// errtype is the error tag (without leading ampersand)
-// gentags are the tags we generate with
-// id is 0 if unset, otherwise the relation id of this word
-const std::tuple<bool, string, StringVec, rel_id, relations, string, bool, Added> proc_tags(const string& tags) {
-	bool suggest = false;
-	string errtype;
-	StringVec gentags;
-	rel_id id = 0; // CG-3 id's start at 1, should be safe. Want sum types :-/
-	relations rels;
-	string wf;
-	bool suggestwf = false;
-	Added added = NotAdded;
-	for(auto& tag : allmatches(tags, CG_TAGS_RE)) {
-		std::match_results<const char*> result;
-		std::regex_match(tag.c_str(), result, CG_TAG_TYPE);
-		if (result.empty()) {
-			gentags.push_back(tag);
-			// std::cerr << "\033[1;35mgentag=\t" << tag << "\033[0m" << std::endl;
-		}
-		else if(result[2].length() != 0) {
-			// std::cerr << "\033[1;35msugtag=\t" << result[2] << "\033[0m" << std::endl;
-			if(tag == "&SUGGEST") {
-				suggest = true;
-			}
-			else if(tag == "&SUGGESTWF") {
-				suggestwf = true;
-			}
-			else if(tag == "&ADDED" || tag == "&ADDED-AFTER-BLANK") {
-				added = AddedAfterBlank;
-			}
-			else if(tag == "&ADDED-BEFORE-BLANK") {
-				added = AddedBeforeBlank;
-			}
-			else {
-				errtype = result[2];
-			}
-		}
-		else if(result[3].length() != 0 && result[4].length() != 0) {
-			// std::cerr << "\033[1;35mresult[3] (name)=\t" << result[3] << "\033[0m" << std::endl;
-			// std::cerr << "\033[1;35mresult[4] (ID)=\t" << result[4] << "\033[0m" << std::endl;
-			try {
-				rel_id target = stoi(result[4]);
-				auto rel_name = result[3];
-				rels[rel_name] = target;
-			}
-			catch(...) {
-				std::cerr << "WARNING: Couldn't parse relation target integer" << std::endl;
-			}
-		}
-		else if(result[5].length() != 0) {
-			try {
-				id = stoi(result[5]);
-			}
-			catch(...) {
-				std::cerr << "WARNING: Couldn't parse ID integer" << std::endl;
-			}
-			// std::cerr << "\033[1;35mresult[5] (ID)=\t" << result[5] << "\033[0m" << std::endl;
-		}
-		else if(result[6].length() != 0) {
-			wf = result[6];
-		}
-		// else {
-		// 	std::cerr << "\033[1;35mresult.length()=\t" << result[0] << "\033[0m" << std::endl;
-		// }
-
-	}
-	return std::make_tuple(suggest, errtype, gentags, id, rels, wf, suggestwf, added);
-}
-
 const Reading proc_subreading(const string& line) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	Reading r;
@@ -233,17 +160,64 @@ const Reading proc_subreading(const string& line) {
 	const auto& lemma_end = line.find("\" ", lemma_beg);
 	const auto& lemma = line.substr(lemma_beg + 1, lemma_end-lemma_beg-1);
 	const auto& tags = line.substr(lemma_end+2);
-	const auto& suggen = proc_tags(tags);
-	r.suggest = std::get<0>(suggen);
-	r.errtype = utf16conv.from_bytes(std::get<1>(suggen));
-	const auto& gentags = std::get<2>(suggen);
-	r.id = std::get<3>(suggen);
-	r.rels = std::get<4>(suggen);
+	StringVec gentags;	// tags we generate with
+	r.id = 0; // CG-3 id's start at 1, should be safe. Want sum types :-/
+	r.wf = "";
+	r.suggest = false;
+	r.suggestwf = false;
+	r.added = NotAdded;
+	r.link = false;
+	for(auto& tag : allmatches(tags, CG_TAGS_RE)) { // proc_tags
+		std::match_results<const char*> result;
+		std::regex_match(tag.c_str(), result, CG_TAG_TYPE);
+		if (result.empty()) {
+			gentags.push_back(tag);
+		}
+		else if(result[2].length() != 0) {
+			if(tag == "&SUGGEST") {
+				r.suggest = true;
+			}
+			else if(tag == "&SUGGESTWF") {
+				r.suggestwf = true;
+			}
+			else if(tag == "&ADDED" || tag == "&ADDED-AFTER-BLANK") {
+				r.added = AddedAfterBlank;
+			}
+			else if(tag == "&ADDED-BEFORE-BLANK") {
+				r.added = AddedBeforeBlank;
+			}
+			else if(tag == "&LINK") {
+				r.link = true;
+			}
+			else {
+				r.errtype = utf16conv.from_bytes(result[2]);
+			}
+		}
+		else if(result[3].length() != 0 && result[4].length() != 0) {
+			try {
+				rel_id target = stoi(result[4]);
+				auto rel_name = result[3];
+				r.rels[rel_name] = target;
+			}
+			catch(...) {
+				std::cerr << "WARNING: Couldn't parse relation target integer" << std::endl;
+			}
+		}
+		else if(result[5].length() != 0) {
+			try {
+				r.id = stoi(result[5]);
+			}
+			catch(...) {
+				std::cerr << "WARNING: Couldn't parse ID integer" << std::endl;
+			}
+		}
+		else if(result[6].length() != 0) {
+			r.wf = result[6];
+		}
+
+	}
 	const auto& tagsplus = join(gentags, "+");
 	r.ana = lemma+"+"+tagsplus;
-	r.wf = std::get<5>(suggen);
-	r.suggestwf = std::get<6>(suggen);
-	r.added = std::get<7>(suggen);
 	if(r.suggestwf) {
 		r.sforms.emplace_back(utf16conv.from_bytes(r.wf));
 	}
@@ -269,14 +243,11 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const string& line) {
 		r.id = (r.id == 0 ? sub.id : r.id);
 		r.suggest = r.suggest || sub.suggest;
 		r.suggestwf = r.suggestwf || sub.suggestwf;
+		r.link = r.link || sub.link;
 		r.added = r.added == NotAdded ? sub.added : r.added;
 		r.sforms.insert(r.sforms.end(), sub.sforms.begin(), sub.sforms.end());
 		r.wf = r.wf.empty() ? sub.wf : r.wf;
 	}
-	// for(const auto& s : r.rels) {
-	// 	std::cerr << "\033[1;35ms=\t" << s.first << "\033[0m\t";
-	// 	std::cerr << "\033[1;35ms=\t" << s.second << "\033[0m" << std::endl;
-	// }
 	if(r.suggest) {
 		const auto& paths = t.lookup_fd({ r.ana }, -1, 10.0);
 		for(auto& p : *paths) {
@@ -297,7 +268,7 @@ bool cohort_empty(const Cohort& c) {
 }
 
 const Cohort DEFAULT_COHORT = {
-	{}, 0, 0, {}, u"", NotAdded
+	{}, 0, 0, {}, {}, NotAdded
 };
 
 // https://stackoverflow.com/a/1464684/69663
@@ -476,6 +447,15 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 		std::map<size_t, size_t> deleted;
 		rel_on_match(r.rels, DELETE_REL, sentence,
 			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
+				     if(c.errtypes.size() > 1) {
+					     // Only treat delete relations into targets that have a reading with the same error type
+					     // (Unfortunately, CG3 can't do relations from reading to reading, but requiring the same error type lets us work around that)
+					     auto found = std::find_if(trg.readings.begin(), trg.readings.end(),
+								       [&](const Reading& r) -> bool { return r.errtype == err_id; });
+					     if(found == trg.readings.end()) {
+						     return;
+					     }
+				     }
 				     size_t del_beg = trg.pos;
 				     size_t del_end = del_beg + trg.form.size();
 				     // Expand (unless we've already expanded more in that direction):
@@ -577,7 +557,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 			const auto& reading = proc_reading(t, readinglines);
 			readinglines = "";
 			if(!reading.errtype.empty()) {
-				c.default_errtype = reading.errtype;
+				c.errtypes.insert(reading.errtype);
 			}
 			if(reading.id != 0) {
 				c.id = reading.id;
@@ -626,7 +606,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msg
 		const auto& reading = proc_reading(t, readinglines);
 		readinglines = "";
 		if(!reading.errtype.empty()) {
-			c.default_errtype = reading.errtype;
+			c.errtypes.insert(reading.errtype);
 		}
 		if(reading.id != 0) {
 			c.id = reading.id;
@@ -733,7 +713,11 @@ vector<Err> Suggest::mk_errs(const Sentence &sentence) {
 	for(const auto& c : sentence.cohorts) {
 		std::map<err_id, vector<size_t>> c_errs;
 		for(size_t i = 0; i < c.readings.size(); ++i) {
-			c_errs[c.readings[i].errtype].push_back(i);
+			const auto& r = c.readings[i];
+			if(r.link) {
+				continue;
+			}
+			c_errs[r.errtype].push_back(i);
 		}
 		for(const auto& e : c_errs) {
 			if(e.first.empty()) {
