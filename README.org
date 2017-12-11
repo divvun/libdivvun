@@ -570,21 +570,18 @@ such readings first.
 
 - =&SUGGEST= on a reading means that =divvun-suggest= should try to
   generate this reading into a form for suggestions, using the
-  generator FST. See [[README.org::*Simple grammarchecker.cg3 rules][Simple grammarchecker.cg3 rules]].
+  generator FST. See [[*Simple grammarchecker.cg3 rules][Simple grammarchecker.cg3 rules]].
 - =&SUGGESTWF= on a reading means that =divvun-suggest= should use the
   reading's wordform-tag (e.g. a tag like ="<Cupertino>"= on a
   /reading/, not as the first line of a cohort) as a suggestion.
-  See [[README.org::*Including spelling
-   errors][Including spelling errors]].
+  See [[*Including spelling errors][Including spelling errors]].
 - =<spelled>= is added by =divvun-cgspell= to any suggestions it
-  makes. See [[README.org::*Including spelling
-   errors][Including spelling errors]].
-- =&LINK= makes a cohort non-central in that error, see [[README.org::*Deleting words][Deleting
-  words]].
+  makes. See [[*Including spelling errors][Including spelling errors]].
+- =&LINK= makes a cohort non-central in that error, see [[*Deleting words][Deleting words]].
 - =&ADDED= means this cohort was added (typically with =ADDCOHORT=)
   and should be a part of the suggestion for the error. It will appear
   after the blank of the preceding cohort, and will not be the central
-  cohort of the error. See [[README.org::*Adding words][Adding words]].
+  cohort of the error. See [[*Adding words][Adding words]].
 - =&ADDED-BEFORE-BLANK= is like =&ADDED=, except that it appears
   before the blank of the preceding cohort.
 - Any other tag starting with =&= is an error type tag,
@@ -596,15 +593,13 @@ such readings first.
 *** Relations
 
 - =LEFT= and =RIGHT= are used to extend the underline to added
-  cohorts; see [[README.org::*Adding words][Adding words]].
+  cohorts; see [[*Adding words][Adding words]].
 - =DELETE1= (and =DELETE2= etc.) are used to say that a word in the
-  context of this error should be deleted in the suggestion. See [[README.org::*Deleting
-   words][Deleting words]].
+  context of this error should be deleted in the suggestion. See [[*Deleting words][Deleting words]].
 - =$2= (and =$3= etc.) are used to make wordforms in the context
   available to human-readable error messages in =errors.xml=. Note
   that =$1= is always the wordform of the /central/ cohort of the
-  error (so don't add =$1= as a relation). See [[README.org::*Simple grammarchecker.cg3
-   rules][Simple grammarchecker.cg3 rules]].
+  error (so don't add =$1= as a relation). See [[*Simple grammarchecker.cg3 rules][Simple grammarchecker.cg3 rules]].
 
 * Troubleshooting
 
@@ -616,7 +611,7 @@ or
 :  #include <codecvt>
 :                    ^
 : compilation terminated.
-then your C++ compiler is too old. See [[./README.org::*Prerequisites][Prerequisites]].
+then your C++ compiler is too old. See [[*Prerequisites][Prerequisites]].
 
 
 If you get
@@ -645,7 +640,7 @@ https://github.com/hfst/hfst/issues/366. A workaround is to edit
 - [X] deal with subreadings: http://giellatekno.uit.no/bugzilla/show_bug.cgi?id=2317#c5
 - [X] input format needs to show where we have (and don't have) blanks
 - [X] deal with the new blank format given by hfst-tokenise (and remove old blank hacks)
-- [X] handle [[*sketch for alternative suggestions on the same word][alternative suggestions on the same word]]
+- [X] handle alternative/overlapping suggestions on the same word
 - [X] handle &DELETE nicely (UI also: sihko sáni = slett ordet)
 
 =divvun-checker= should:
