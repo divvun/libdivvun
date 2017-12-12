@@ -13,3 +13,6 @@ all: libdivvun.py _libdivvun.so
 
 _%.so: %_wrap.o
 	g++ -shared -Wl,-soname,$@ -o $@ ../src/.libs/libdivvun.so $<
+
+clean:
+	rm libdivvun.py _libdivvun.so libdivvun_wrap.o libdivvun_wrap.cxx

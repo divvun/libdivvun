@@ -119,3 +119,4 @@ old/
 /python/libdivvun.py
 /python/libdivvun_wrap.c
 /python/libdivvun_wrap.cxx
+/python/__pycache__/
