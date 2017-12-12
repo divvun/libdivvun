@@ -172,9 +172,12 @@ expected output, as well as how to compile the FST).
 
 ** =divvun-cgspell=
 
-=divvun-cgspell= takes one file argument: a zhfst speller archive as
-used by [[https://github.com/hfst/hfst-ospell/][hfst-ospell]]. There are some options for limiting suggestions
-too, see =--help=. You'll probably want to use =--limit=.
+=divvun-cgspell= takes options similar to [[https://github.com/hfst/hfst-ospell/][hfst-ospell]]. You can give it
+a single zhfst speller archive with the =-a= option, or specify
+unzipped error model and lexicon with =-m= and =-l= options.
+
+There are some options for limiting suggestions too, see
+=--help=. You'll probably want to use =--limit= at least.
 
 #+BEGIN_SRC sh
 src/divvun-cgspell --limit 5 se.zhfst < input > output
@@ -354,32 +357,56 @@ There are often other modules in here too, e.g. for adding spelling
 suggestions, annotating valency, disambiguation and splitting
 multiwords, or annotating surrounding whitespace.
 
-Here is the current pipeline definition (=pipespec.xml=) for Northern
-Saami:
+Below we go through some of the different parts of the checker, using
+the Giellatekno/Divvun Northern Saami package (from
+https://victorio.uit.no/langtech/trunk/langs/sme/) as an example.
+
+** XML pipeline specification
+
+Each grammar checker needs a pipeline specification with all the
+different modules and their data files in order. This is written in a
+file =pipespec.xml=, which should follow the [[src/pipespec.dtd][pipespec.dtd]]. Each such
+file may have several =<pipeline>= elements (in case there are
+alternative pipeline variants in your grammar checker package), with a
+name and some metadata.
+
+Here is the =pipespec.xml= for Northern Saami:
 
 #+begin_src xml
-  <pipeline name="smegram"
-            language="se"
-            type="Grammar error">
-    <tokenize><arg n="tokeniser-gramcheck-gt-desc.pmhfst"/></tokenize>
-    <cg><arg n="valency.bin"/></cg>
-    <cg><arg n="mwe-dis.bin"/></cg>
-    <mwesplit/>
-    <blanktag>
-      <arg n="analyser-gt-whitespace.hfst"/>
-    </blanktag>
-    <cgspell>
-      <arg n="errmodel.default.hfst"/>
-      <arg n="acceptor.default.hfst"/>
-    </cgspell>
-    <cg><arg n="disambiguator.bin"/></cg>
-    <cg><arg n="grammarchecker.bin"/></cg>
-    <suggest>
-      <arg n="generator-gt-norm.hfstol"/>
-      <arg n="errors.xml"/>
-    </suggest>
-  </pipeline>
+  <pipespec language="se"
+            developer="Divvun"
+            copyright="…"
+            version="0.42"
+            contact="Divvun divvun@uit.no">
+
+    <pipeline name="smegram"
+              language="se"
+              type="Grammar error">
+      <tokenize><arg n="tokeniser-gramcheck-gt-desc.pmhfst"/></tokenize>
+      <cg><arg n="valency.bin"/></cg>
+      <cg><arg n="mwe-dis.bin"/></cg>
+      <mwesplit/>
+      <blanktag>
+        <arg n="analyser-gt-whitespace.hfst"/>
+      </blanktag>
+      <cgspell>
+        <arg n="errmodel.default.hfst"/>
+        <arg n="acceptor.default.hfst"/>
+      </cgspell>
+      <cg><arg n="disambiguator.bin"/></cg>
+      <cg><arg n="grammarchecker.bin"/></cg>
+      <suggest>
+        <arg n="generator-gt-norm.hfstol"/>
+        <arg n="errors.xml"/>
+      </suggest>
+    </pipeline>
+
+    <!-- other variants ommitted -->
+
+  </pipespec>
 #+end_src
+
+This is what happens when text is sent through the =smegram= pipeline:
 
 - First, =<tokenize>= turns plain text into morphologically analysed
   tokens, using an FST compiled with =hfst-pmatch2fst=. These tokens
@@ -408,6 +435,50 @@ Saami:
   module. These are used to output errors with suggestions, as well as
   readable error messages and the correct indices for underlines.
 
+The program =divvun-gen-sh= in this package creates shell scripts from
+the specification that you can use to test your grammar checker. In
+the Northern Saami checker, these should appear in
+=tools/grammarcheckers/modes= when you type =make=, but you can also
+create a single script for the above pipeline manually. If we do
+=divvun-gen-sh -s pipespec.xml -n smegram > test.sh= with the above
+XML, =test.sh= will contain something like
+
+#+begin_src sh
+#!/bin/sh
+
+hfst-tokenise -g '/home/me/gtsvn/langs/sme/tools/grammarcheckers/tokeniser-gramcheck-gt-desc.pmhfst' \
+ | vislcg3 -g '/home/me/gtsvn/langs/sme/tools/grammarcheckers/valency.bin' \
+ | vislcg3 -g '/home/me/gtsvn/langs/sme/tools/grammarcheckers/mwe-dis.bin' \
+ | cg-mwesplit \
+ | divvun-blanktag '/home/me/gtsvn/langs/sme/tools/grammarcheckers/analyser-gt-whitespace.hfst' \
+ | divvun-cgspell '/home/me/gtsvn/langs/sme/tools/grammarcheckers/errmodel.default.hfst' '/home/me/gtsvn/langs/sme/tools/grammarcheckers/acceptor.default.hfst' \
+ | vislcg3 -g '/home/me/gtsvn/langs/sme/tools/grammarcheckers/disambiguator.bin' \
+ | vislcg3 -g '/home/me/gtsvn/langs/sme/tools/grammarcheckers/grammarchecker.bin' \
+ | divvun-suggest '/home/me/gtsvn/langs/sme/tools/grammarcheckers/generator-gt-norm.hfstol' '/home/me/gtsvn/langs/sme/tools/grammarcheckers/errors.xml'
+#+end_src
+
+We can send words through this pipeline with =echo "words here" | sh
+test.sh=.
+
+Using =divvun-gen-sh= manually like this is good for checking if
+you've written your XML correctly, but if you're working within the
+Giellatekno projects, you'll typically just type =make= and use the
+scripts that end up in =modes=.
+
+Do
+#+begin_src sh
+$ ls modes
+#+end_src
+in =tools/grammarcheckers= to list all the scripts. These contain not
+just the full pipeline (for every =<pipeline>= in the XML), but also
+"debug" versions that are chopped off at various points (with numbers
+to show how far they go), as well as versions with CG rule tracing
+turned on. So if you'd like to check up until disambiguation, before
+the =grammarchecker= CG, you'd do something like
+
+#+begin_src sh
+echo "words go here" | sh modes/trace-smegram6-disam.mode
+#+end_src
 
 ** Simple grammarchecker.cg3 rules
 
@@ -554,9 +625,17 @@ preceding cohort; then we use the tag =&ADDED-BEFORE-BLANK=, and
 will give a suggestion that covers the space before the infinitive.
 
 ** Including spelling errors
-The =divvun-cgspell= module adds the tag =<spelled>= to any
-suggestions. To turn these into error underlines and actually show the
-suggestions, add a rule
+
+To use the =divvun-cgspell= module, you need a spelling acceptor
+(dictionary) FST and error model FST. These are the same format as
+the files used by [[https://github.com/hfst/hfst-ospell/][hfst-ospell]].
+
+The =divvun-cgspell= module should go before disambiguation in the
+pipeline, so the disambiguator can pick the best suggestion in
+context.
+
+The module adds the tag =<spelled>= to any suggestions. To turn these
+into error underlines and actually show the suggestions, add a rule
 
 #+begin_src cg
   ADD (&typo &SUGGESTWF) (<spelled>) ;
