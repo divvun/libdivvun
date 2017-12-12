@@ -53,9 +53,6 @@
 %include "std_unique_ptr.i"
 
 wrap_unique_ptr(CheckerUniquePtr,    divvun::Checker);
-wrap_unique_ptr(PipeSpecUniquePtr,   divvun::PipeSpec);
-wrap_unique_ptr(ArPipeSpecUniquePtr, divvun::ArPipeSpec);
-wrap_unique_ptr(PipelineUniquePtr,   divvun::Pipeline);
 
 namespace std {
 
