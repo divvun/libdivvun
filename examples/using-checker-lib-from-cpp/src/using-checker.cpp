@@ -30,11 +30,11 @@
 int runXml(const std::string& specpath, const std::u16string& pipename, bool verbose) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
         const auto& spec = std::unique_ptr<divvun::CheckerSpec>(new divvun::CheckerSpec(specpath));
-	if(!spec->hasPipe(pipename)) {
+	if(!spec->hasPipe(utf16conv.to_bytes(pipename))) {
 		std::cerr << "ERROR: Couldn't find pipe " << utf16conv.to_bytes(pipename) << " in " << specpath << std::endl;
 		return EXIT_FAILURE;
 	}
-        const auto& pipeline = spec->getChecker(pipename, verbose);
+        const auto& pipeline = spec->getChecker(utf16conv.to_bytes(pipename), verbose);
 	for (std::string line; std::getline(std::cin, line);) {
 		std::stringstream pipe_in(line);
 		std::stringstream pipe_out;
@@ -47,11 +47,9 @@ int runXml(const std::string& specpath, const std::u16string& pipename, bool ver
 
 int printNamesXml(const std::string& path, bool verbose) {
 	const auto& spec = divvun::CheckerSpec(path);
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::cout << "Please specify a pipeline variant with the -n/--variant option. Available variants in pipespec:" << std::endl;
 	for(const auto& p : spec.pipeNames()) {
-		const auto& name = utf16conv.to_bytes(p.c_str());
-		std::cout << name << std::endl;
+		std::cout << p.c_str() << std::endl;
 	}
 	return EXIT_SUCCESS;
 }
@@ -59,7 +57,7 @@ int printNamesXml(const std::string& path, bool verbose) {
 int runAr(const std::string& path, const std::u16string& pipename, bool verbose) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
         const auto& ar_spec = std::unique_ptr<divvun::ArCheckerSpec>(new divvun::ArCheckerSpec(path));
-        const auto& ar_pipeline = ar_spec->getChecker(pipename, verbose);
+        const auto& ar_pipeline = ar_spec->getChecker(utf16conv.to_bytes(pipename), verbose);
 	for (std::string line; std::getline(std::cin, line);) {
 		std::stringstream pipe_in(line);
 		std::stringstream pipe_out;
@@ -84,10 +82,9 @@ int runAr(const std::string& path, const std::u16string& pipename, bool verbose)
 
 int printNamesAr(const std::string& path, bool verbose) {
 	const auto& ar_spec = divvun::ArCheckerSpec(path);
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::cout << "Please specify a pipeline variant with the -n/--variant option. Available variants in archive:" << std::endl;
 	for(const auto& p : ar_spec.pipeNames()) {
-		const auto& name = utf16conv.to_bytes(p.c_str());
+		const auto& name = p.c_str();
 		std::cout << name << std::endl;
 	}
 	return EXIT_SUCCESS;
