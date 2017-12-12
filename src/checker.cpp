@@ -22,6 +22,11 @@
 namespace divvun {
 
 
+const std::u16string from_bytes(const std::string& s) {
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	return utf16conv.from_bytes(s);
+}
+
 // CheckerSpec
 CheckerSpec::CheckerSpec(const std::string& file) : pImpl( readPipeSpec(file) )
 {
@@ -33,19 +38,20 @@ CheckerSpec::CheckerSpec(const std::string& file) : pImpl( readPipeSpec(file) )
 CheckerSpec::~CheckerSpec()
 {
 }
-const std::set<std::u16string> CheckerSpec::pipeNames() const
+const std::set<std::string> CheckerSpec::pipeNames() const
 {
-	std::set<std::u16string> keys;
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	std::set<std::string> keys;
 	for(const auto& it : pImpl->pnodes) {
-		keys.insert(it.first);
+		keys.insert(utf16conv.to_bytes(it.first));
 	}
 	return keys;
 }
-bool CheckerSpec::hasPipe(const std::u16string& pipename)
+bool CheckerSpec::hasPipe(const std::string& pipename)
 {
-	return pImpl->pnodes.find(pipename) != pImpl->pnodes.end();
+	return pImpl->pnodes.find(from_bytes(pipename)) != pImpl->pnodes.end();
 }
-std::unique_ptr<Checker> CheckerSpec::getChecker(const std::u16string& pipename, bool verbose) {
+std::unique_ptr<Checker> CheckerSpec::getChecker(const std::string& pipename, bool verbose) {
 	return std::unique_ptr<Checker>(new Checker(pImpl, pipename, verbose));
 }
 
@@ -54,40 +60,39 @@ std::unique_ptr<Checker> CheckerSpec::getChecker(const std::u16string& pipename,
 // ArCheckerSpec
 ArCheckerSpec::ArCheckerSpec(const std::string& file) : pImpl( readArPipeSpec(file) )
 {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	for(const auto& k : pImpl->spec->pnodes) {
-		std::cerr << "init " << utf16conv.to_bytes(k.first.c_str()) <<std::endl;
-	}
+	// std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	// for(const auto& k : pImpl->spec->pnodes) {
+	// 	std::cerr << "init " << utf16conv.to_bytes(k.first.c_str()) <<std::endl;
+	// }
 }
 ArCheckerSpec::~ArCheckerSpec()
 {
 }
-const std::set<std::u16string> ArCheckerSpec::pipeNames() const
+const std::set<std::string> ArCheckerSpec::pipeNames() const
 {
-	std::set<std::u16string> keys;
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	std::set<std::string> keys;
 	for(const auto& it : pImpl->spec->pnodes) {
-		keys.insert(it.first);
+		keys.insert(utf16conv.to_bytes(it.first));
 	}
 	return keys;
 }
-bool ArCheckerSpec::hasPipe(const std::u16string& pipename)
+bool ArCheckerSpec::hasPipe(const std::string& pipename)
 {
-	return pImpl->spec->pnodes.find(pipename) != pImpl->spec->pnodes.end();
+	return pImpl->spec->pnodes.find(from_bytes(pipename)) != pImpl->spec->pnodes.end();
 }
-std::unique_ptr<Checker> ArCheckerSpec::getChecker(const std::u16string& pipename, bool verbose) {
+std::unique_ptr<Checker> ArCheckerSpec::getChecker(const std::string& pipename, bool verbose) {
 	return std::unique_ptr<Checker>(new Checker(pImpl, pipename, verbose));
 }
 
-
-
 // Checker
-Checker::Checker(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool verbose)
-	: pImpl(new Pipeline(spec, pipename, verbose))
+Checker::Checker(const std::unique_ptr<PipeSpec>& spec, const std::string& pipename, bool verbose)
+	: pImpl(new Pipeline(spec, from_bytes(pipename), verbose))
 {
 };
 
-Checker::Checker(const std::unique_ptr<ArPipeSpec>& spec, const std::u16string& pipename, bool verbose)
-	: pImpl(new Pipeline(spec, pipename, verbose))
+Checker::Checker(const std::unique_ptr<ArPipeSpec>& spec, const std::string& pipename, bool verbose)
+	: pImpl(new Pipeline(spec, from_bytes(pipename), verbose))
 {
 };
 
@@ -101,6 +106,27 @@ void Checker::proc(std::stringstream& input, std::stringstream& output) {
 
 std::vector<Err> Checker::proc_errs(std::stringstream& input) {
 	return pImpl->proc_errs(input);
+};
+
+std::vector<ErrBytes> Checker::proc_errs_bytes(std::stringstream& input) {
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	const auto& errs = proc_errs(input);
+	std::vector<ErrBytes> errs_bytes;
+	for(const auto& e : errs) {
+		std::vector<std::string> rep;
+		for(const auto& r : e.rep) {
+			rep.push_back(utf16conv.to_bytes(r));
+		}
+		errs_bytes.push_back({
+			utf16conv.to_bytes(e.form),
+			e.beg,
+			e.end,
+			utf16conv.to_bytes(e.err),
+			utf16conv.to_bytes(e.msg),
+			rep
+		});
+	}
+	return errs_bytes;
 };
 
 const LocalisedPrefs& Checker::prefs() const {

@@ -33,24 +33,34 @@ namespace divvun {
  * Public types for divvun-gramcheck library
  */
 
-using lang = std::string;
-using msg = std::u16string;
-using err_id = std::u16string;
-using err_re = std::basic_regex<char>;
+typedef std::string lang;
+typedef std::u16string msg_t;
+typedef std::u16string err_id;
+typedef std::basic_regex<char> err_re;
 
 struct Err {
 		std::u16string form;
 		size_t beg;
 		size_t end;
 		err_id err;
-		std::u16string msg;
+		msg_t msg;
 		std::vector<std::u16string> rep;
+};
+
+// Workaround for lack of u16string in swig
+struct ErrBytes {
+		std::string form;
+		size_t beg;
+		size_t end;
+		std::string err;
+		std::string msg;
+		std::vector<std::string> rep;
 };
 
 struct Option {
 		std::string type;
 		std::string name;
-		std::unordered_map<err_id, msg> choices;      // choices[errtype] = msg;
+		std::unordered_map<err_id, msg_t> choices;      // choices[errtype] = msg;
 };
 struct OptionCompare {
     bool operator() (const Option& a, const Option& b) const {
@@ -61,20 +71,20 @@ struct OptionCompare {
 /**
  * Radio-button choices (e.g. Oxford comma vs no-Oxford comma)
  */
-using OptionSet = std::set<Option, OptionCompare>;
+typedef std::set<Option, OptionCompare> OptionSet;
 
 /**
  * Checkbox choices, ie. hiding certain error types
  */
-using ToggleIds = std::unordered_map<err_id, msg>;      // toggleIds[errtype] = msg;
-using ToggleRes = std::vector<std::pair<err_re, msg> >; // toggleRes = [(errtype_regex, msg), …];
+typedef std::unordered_map<err_id, msg_t> ToggleIds;      // toggleIds[errtype] = msg;
+typedef std::vector<std::pair<err_re, msg_t> > ToggleRes; // toggleRes = [(errtype_regex, msg), …];
 
 struct Prefs {
 		ToggleIds toggleIds;
 		ToggleRes toggleRes;
 		OptionSet options;
 };
-using LocalisedPrefs = std::unordered_map<lang, Prefs>;
+typedef std::unordered_map<lang, Prefs> LocalisedPrefs;
 
 } // namespace divvun
 

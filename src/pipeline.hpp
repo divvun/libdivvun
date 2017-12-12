@@ -211,7 +211,7 @@ inline void parsePrefs(LocalisedPrefs& prefs, const pugi::xml_node& cmd) {
 	for (const pugi::xml_node& pref: cmd.children()) {
 		const auto type = pref.attribute("type").value();
 		const auto name = pref.attribute("name").value();
-		std::unordered_map<lang, std::unordered_map<err_id, msg>> lems;
+		std::unordered_map<lang, std::unordered_map<err_id, msg_t>> lems;
 		for (const pugi::xml_node& option: pref.children()) {
 			const auto errId = utf16conv.from_bytes(option.attribute("err-id").value());
 			for (const pugi::xml_node& label: option.children()) {

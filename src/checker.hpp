@@ -44,9 +44,9 @@ class CheckerSpec {
 	public:
  		explicit CheckerSpec(const std::string& file);
 		~CheckerSpec();
-		bool hasPipe(const std::u16string& pipename);
-		const std::set<std::u16string> pipeNames() const;
-		std::unique_ptr<Checker> getChecker(const std::u16string& pipename, bool verbose);
+		bool hasPipe(const std::string& pipename);
+		const std::set<std::string> pipeNames() const;
+		std::unique_ptr<Checker> getChecker(const std::string& pipename, bool verbose);
 	private:
 		const std::unique_ptr<PipeSpec> pImpl;
 };
@@ -55,9 +55,9 @@ class ArCheckerSpec {
 	public:
  		explicit ArCheckerSpec(const std::string& file);
 		~ArCheckerSpec();
-		bool hasPipe(const std::u16string& pipename);
-		const std::set<std::u16string> pipeNames() const;
-		std::unique_ptr<Checker> getChecker(const std::u16string& pipename, bool verbose);
+		bool hasPipe(const std::string& pipename);
+		const std::set<std::string> pipeNames() const;
+		std::unique_ptr<Checker> getChecker(const std::string& pipename, bool verbose);
 	private:
 		const std::unique_ptr<ArPipeSpec> pImpl;
 };
@@ -66,11 +66,12 @@ class Pipeline;
 
 class Checker {
 	public:
-		Checker(const std::unique_ptr<PipeSpec>& spec, const std::u16string& pipename, bool verbose);
-		Checker(const std::unique_ptr<ArPipeSpec>& spec, const std::u16string& pipename, bool verbose);
+		Checker(const std::unique_ptr<PipeSpec>& spec, const std::string& pipename, bool verbose);
+		Checker(const std::unique_ptr<ArPipeSpec>& spec, const std::string& pipename, bool verbose);
 		~Checker();
                 void proc(std::stringstream& input, std::stringstream& output);
 		std::vector<Err> proc_errs(std::stringstream& input);
+		std::vector<ErrBytes> proc_errs_bytes(std::stringstream& input);
 		const LocalisedPrefs& prefs() const;
 		void setIgnores(const std::set<err_id>& ignores);
 	private:
