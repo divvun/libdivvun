@@ -52,7 +52,7 @@
 
 %include "std_unique_ptr.i"
 
-wrap_unique_ptr(CheckerUniquePtr,    divvun::Checker);
+wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 
 namespace std {
 
