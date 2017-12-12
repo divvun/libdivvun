@@ -1,4 +1,7 @@
-all: libdivvun.py _libdivvun.so
+all:
+	python3 setup.py build_ext --inplace --local-divvun
+
+manual: libdivvun.py _libdivvun.so
 	@echo
 	@echo … done
 	python3 -c 'import libdivvun'
@@ -12,7 +15,7 @@ all: libdivvun.py _libdivvun.so
 	g++ -c -fPIC libdivvun_wrap.cxx -I/usr/include/python3.6m
 
 _%.so: %_wrap.o
-	g++ -shared -Wl,-soname,$@ -o $@ ../src/.libs/libdivvun.so $<
+	g++ -shared -Wl,-soname,$@ -o $@ "$(HOME)/PREFIX/gtd-gc/lib/libdivvun.so" $<
 
 clean:
-	rm libdivvun.py _libdivvun.so libdivvun_wrap.o libdivvun_wrap.cxx
+	rm -f libdivvun.py _libdivvun.so libdivvun_wrap.o libdivvun_wrap.cxx
