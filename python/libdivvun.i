@@ -23,9 +23,6 @@
 /* %include "std_wstring.i" */
 /* %apply std::wstring { std::u16string }; */
 
-/* %include "std_wstring.i" */
-/* %apply std::wstring { std::u16string }; */
-
 // %feature("autodoc", "3");
 
 %init %{
@@ -54,26 +51,13 @@
 
 wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 
-namespace std {
-
-%template(StringVector) vector<string>;
-%template(StringPair) pair<string, string>;
-%template(StringPairVector) vector<pair<string, string > >;
-%template(StringSet) set<string>;
-%template(StringPairSet) set<pair<string, string> >;
-}
-
-
-/* %include "docstrings.i" */
-
 %include "../src/checkertypes.hpp"
-%include "../src/checker.hpp"
-
-// ****************************************************** //
-// ********** WHAT IS MADE AVAILABLE ON PYTHON ********** //
-// ****************************************************** //
+%template(StringVector) std::vector<std::string>;
+%template(ErrBytesVector) std::vector<divvun::ErrBytes>;
 
 namespace divvun {
+typedef std::vector<std::string> StringVector;
+typedef std::vector<divvun::ErrBytes> ErrBytesVector;
 }
 
-
+%include "../src/checker.hpp"

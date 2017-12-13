@@ -1,6 +1,9 @@
 all:
 	python3 setup.py build_ext --inplace --local-divvun
 
+check:
+	python3 -c 'import libdivvun; smegram = libdivvun.ArCheckerSpec("../test/checker/sme.zcheck").getChecker("smegram", True); print(smegram.proc_errs_bytes("seammas ballat ođđa dieđuiguin")[0].end);'
+
 manual: libdivvun.py _libdivvun.so
 	@echo
 	@echo … done
@@ -18,4 +21,4 @@ _%.so: %_wrap.o
 	g++ -shared -Wl,-soname,$@ -o $@ "$(HOME)/PREFIX/gtd-gc/lib/libdivvun.so" $<
 
 clean:
-	rm -f libdivvun.py _libdivvun.so libdivvun_wrap.o libdivvun_wrap.cxx
+	rm -rf libdivvun.py _libdivvun.so libdivvun_wrap.o libdivvun_wrap.cxx build _libdivvun.cpython-36m-x86_64-linux-gnu.so libdivvun_wrap.cpp
