@@ -60,6 +60,12 @@ dependencies. It assumes you've got =xmllint= installed.
 
 * Prerequisites
 
+/Note: Mac users probably just want to follow the steps in [[*Simple build from git on Mac][Simple
+build from git on Mac]]./
+
+This section lists the prerequisites for building the various tools in
+this package.
+
 ** For just =divvun-suggest= and =divvun-blanktag=
 
 - gcc >=5.0.0 with libstdc++-5-dev (or similarly recent version of
@@ -131,7 +137,7 @@ make install # with sudo if you didn't specify a --prefix to ./configure
 
 =divvun-suggest= takes two arguments: a generator FST (in HFST
 optimised lookup format), and an error message XML file (see [[https://gtsvn.uit.no/langtech/trunk/langs/sme/tools/grammarcheckers/errors.xml][the one
-for Northern Saami]] for an example), with input/output as stdin and
+for North Saami]] for an example), with input/output as stdin and
 stdout:
 
 #+BEGIN_SRC sh
@@ -358,7 +364,7 @@ suggestions, annotating valency, disambiguation and splitting
 multiwords, or annotating surrounding whitespace.
 
 Below we go through some of the different parts of the checker, using
-the Giellatekno/Divvun Northern Saami package (from
+the Giellatekno/Divvun North Saami package (from
 https://victorio.uit.no/langtech/trunk/langs/sme/) as an example.
 
 ** XML pipeline specification
@@ -370,7 +376,7 @@ file may have several =<pipeline>= elements (in case there are
 alternative pipeline variants in your grammar checker package), with a
 name and some metadata.
 
-Here is the =pipespec.xml= for Northern Saami:
+Here is the =pipespec.xml= for North Saami:
 
 #+begin_src xml
   <pipespec language="se"
@@ -437,7 +443,7 @@ This is what happens when text is sent through the =smegram= pipeline:
 
 The program =divvun-gen-sh= in this package creates shell scripts from
 the specification that you can use to test your grammar checker. In
-the Northern Saami checker, these should appear in
+the North Saami checker, these should appear in
 =tools/grammarcheckers/modes= when you type =make=, but you can also
 create a single script for the above pipeline manually. If we do
 =divvun-gen-sh -s pipespec.xml -n smegram > test.sh= with the above
@@ -482,7 +488,7 @@ echo "words go here" | sh modes/trace-smegram6-disam.mode
 
 ** Simple grammarchecker.cg3 rules
 
-In our Northern Saami checker, the
+In our North Saami checker, the
 #+begin_src xml
 <cg><arg n="grammarchecker.bin"></cg>
 #+end_src
@@ -587,7 +593,7 @@ Similarly, the =&SUGGEST= reading for the =&other-error= retains the
 =&other-error= tag, which avoids generating that suggestion for the
 =&one-word-too-many= error.
 
-A real example of this in the Northern Saami checker is the error
+A real example of this in the North Saami checker is the error
 =dego lávvomuorran=, which has the suggestions =lávvomuorran= or =dego
 lávvomuorra= – one error type alters just the form, and one removes
 just the preceding word.
