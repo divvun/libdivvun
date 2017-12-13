@@ -71,9 +71,6 @@ class Checker {
 		~Checker();
                 void proc(std::stringstream& input, std::stringstream& output);
 		std::vector<Err> proc_errs(std::stringstream& input);
-		std::vector<ErrBytes> proc_errs_bytes(const std::string& input);
-		std::vector<std::string> foo(const std::string& input);
-		ErrBytes foobar(const std::string& input);
 		const LocalisedPrefs& prefs() const;
 		void setIgnores(const std::set<err_id>& ignores);
 	private:

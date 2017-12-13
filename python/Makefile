@@ -1,5 +1,8 @@
-all:
+all: _libdivvun.cpython-36m-x86_64-linux-gnu.so libdivvun.py build/temp.linux-x86_64-3.6/libdivvun_wrap.o
+
+_%.cpython-36m-x86_64-linux-gnu.so %.py build/temp.linux-x86_64-3.6/%_wrap.o: %.i ../src/.libs/%.so.0.0.0
 	python3 setup.py build_ext --inplace --local-divvun
+
 
 check:
 	python3 -c 'import libdivvun; smegram = libdivvun.ArCheckerSpec("../test/checker/sme.zcheck").getChecker("smegram", True); print(smegram.proc_errs_bytes("seammas ballat ođđa dieđuiguin")[0].end);'

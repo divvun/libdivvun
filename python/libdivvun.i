@@ -7,9 +7,9 @@
 // See the file COPYING included with this distribution for more
 // information.
 
-// This is a swig interface file that is used to create python bindings for divvun-gramcheck.
-// Everything will be visible under module 'libdivvun', but will be wrapped under
-// package 'divvun'.
+// This is a swig interface file that is used to create python
+// bindings for divvun-gramcheck. Everything will be visible under
+// module 'libdivvun', but will be wrapped under package 'divvun'.
 
 %module libdivvun
 // Needed for type conversions between C++ and python.
@@ -25,10 +25,11 @@
 
 // %feature("autodoc", "3");
 
+%naturalvar;
+
 %init %{
 %}
 
-// Make swig aware of what Divvun offers.
 %{
 #include "../src/checkertypes.hpp"
 #include "../src/checker.hpp"
@@ -51,13 +52,59 @@
 
 wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 
+// We make our own ErrBytes instead, to work around lack of u16string support in SWIG
+%ignore divvun::Err;
+
 %include "../src/checkertypes.hpp"
-%template(StringVector) std::vector<std::string>;
-%template(ErrBytesVector) std::vector<divvun::ErrBytes>;
-
-namespace divvun {
-typedef std::vector<std::string> StringVector;
-typedef std::vector<divvun::ErrBytes> ErrBytesVector;
-}
-
 %include "../src/checker.hpp"
+
+%template(StringVector) std::vector<std::string>;
+
+%inline %{
+#include <locale>
+#include <codecvt>
+	typedef std::vector<std::string> StringVector;
+	struct ErrBytes {
+			std::string form;
+			size_t beg;
+			size_t end;
+			std::string err;
+			std::string msg;
+			StringVector rep;
+	};
+%}
+
+%template(ErrBytesVector) std::vector<ErrBytes>;
+
+%inline %{
+	typedef std::vector<ErrBytes> ErrBytesVector;
+
+	const ErrBytesVector proc_errs_bytes(std::unique_ptr<divvun::Checker>& checker, const std::string& input) {
+		std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+		auto ss = std::stringstream(input);
+		const auto& errs = checker->proc_errs(ss);
+		ErrBytesVector errs_bytes;
+		for(const divvun::Err& e : errs) {
+			std::vector<std::string> rep;
+			for(const std::u16string& r : e.rep) {
+				std::cerr << "\033[1;35mutf16conv.to_bytes(r)=\t" << utf16conv.to_bytes(r) << "\033[0m" << std::endl;
+				rep.push_back(utf16conv.to_bytes(r));
+			}
+			errs_bytes.push_back({
+					utf16conv.to_bytes(e.form),
+						e.beg,
+						e.end,
+						utf16conv.to_bytes(e.err),
+						utf16conv.to_bytes(e.msg),
+						rep
+						});
+		}
+		if(errs_bytes.size() > 0 && errs_bytes[0].rep.size() > 0) {
+			std::cerr << "\033[1;35merrs_bytes[0].rep[0]=\t" << errs_bytes[0].rep[0] << "\033[0m" << std::endl;
+		}
+		std::cerr << "returning from proc_errs_bytes" << std::endl;
+		return errs_bytes;
+	};
+
+%}
+

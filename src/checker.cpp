@@ -108,41 +108,6 @@ std::vector<Err> Checker::proc_errs(std::stringstream& input) {
 	return pImpl->proc_errs(input);
 };
 
-std::vector<ErrBytes> Checker::proc_errs_bytes(const std::string& input) {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	auto ss = std::stringstream(input);
-	const auto& errs = proc_errs(ss);
-	std::vector<ErrBytes> errs_bytes;
-	for(const auto& e : errs) {
-		std::vector<std::string> rep;
-		for(const auto& r : e.rep) {
-			std::cerr << "\033[1;35mutf16conv.to_bytes(r)=\t" << utf16conv.to_bytes(r) << "\033[0m" << std::endl;
-			rep.push_back(utf16conv.to_bytes(r));
-		}
-		errs_bytes.push_back({
-			utf16conv.to_bytes(e.form),
-			e.beg,
-			e.end,
-			utf16conv.to_bytes(e.err),
-			utf16conv.to_bytes(e.msg),
-			rep
-		});
-	}
-	std::cerr << "\033[1;35merrs_bytes[0].rep[0]=\t" << errs_bytes[0].rep[0] << "\033[0m returning from proc_errs_bytes" << std::endl;
-
-	return errs_bytes;
-};
-
-std::vector<std::string> Checker::foo(const std::string& input) {
-	std::cerr << "\033[1;35minput=\t" << input << "\033[0m" << std::endl;
-	return proc_errs_bytes(input)[0].rep;
-}
-
-ErrBytes Checker::foobar(const std::string& input) {
-	std::cerr << "\033[1;35minput=\t" << input << "\033[0m" << std::endl;
-	return proc_errs_bytes(input)[0];
-}
-
 const LocalisedPrefs& Checker::prefs() const {
 	return pImpl->prefs;
 };

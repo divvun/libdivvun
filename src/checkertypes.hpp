@@ -47,16 +47,6 @@ struct Err {
 		std::vector<std::u16string> rep;
 };
 
-// Workaround for lack of u16string in swig
-struct ErrBytes {
-		std::string form;
-		size_t beg;
-		size_t end;
-		std::string err;
-		std::string msg;
-		std::vector<std::string> rep;
-};
-
 struct Option {
 		std::string type;
 		std::string name;
