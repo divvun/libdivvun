@@ -120,3 +120,7 @@ old/
 /python/libdivvun_wrap.c
 /python/libdivvun_wrap.cxx
 /python/__pycache__/
+/python/libdivvun_wrap.cpp
+/python/build/
+/python/_libdivvun.cpython-36m-x86_64-linux-gnu.so
+/python/.mypy_cache/
