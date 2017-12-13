@@ -87,7 +87,6 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 		for(const divvun::Err& e : errs) {
 			std::vector<std::string> rep;
 			for(const std::u16string& r : e.rep) {
-				std::cerr << "\033[1;35mutf16conv.to_bytes(r)=\t" << utf16conv.to_bytes(r) << "\033[0m" << std::endl;
 				rep.push_back(utf16conv.to_bytes(r));
 			}
 			errs_bytes.push_back({
@@ -99,10 +98,6 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 						rep
 						});
 		}
-		if(errs_bytes.size() > 0 && errs_bytes[0].rep.size() > 0) {
-			std::cerr << "\033[1;35merrs_bytes[0].rep[0]=\t" << errs_bytes[0].rep[0] << "\033[0m" << std::endl;
-		}
-		std::cerr << "returning from proc_errs_bytes" << std::endl;
 		return errs_bytes;
 	};
 
