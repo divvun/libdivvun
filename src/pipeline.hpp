@@ -198,7 +198,7 @@ class SuggestCmd: public PipeCmd {
 		void run(stringstream& input, stringstream& output) const override;
 		vector<Err> run_errs(stringstream& input) const;
 		~SuggestCmd() override = default;
-		void setIgnores(const std::set<err_id>& ignores);
+		void setIgnores(const std::set<ErrId>& ignores);
 		const msgmap& getMsgs();
 	private:
 		unique_ptr<Suggest> suggest;
@@ -211,7 +211,7 @@ inline void parsePrefs(LocalisedPrefs& prefs, const pugi::xml_node& cmd) {
 	for (const pugi::xml_node& pref: cmd.children()) {
 		const auto type = pref.attribute("type").value();
 		const auto name = pref.attribute("name").value();
-		std::unordered_map<lang, std::unordered_map<err_id, msg_t>> lems;
+		std::unordered_map<Lang, std::unordered_map<ErrId, Msg>> lems;
 		for (const pugi::xml_node& option: pref.children()) {
 			const auto errId = utf16conv.from_bytes(option.attribute("err-id").value());
 			for (const pugi::xml_node& label: option.children()) {
@@ -221,7 +221,7 @@ inline void parsePrefs(LocalisedPrefs& prefs, const pugi::xml_node& cmd) {
 			}
 		}
 		for(const auto& lem : lems) {
-			const lang& lang = lem.first;
+			const Lang& lang = lem.first;
 			Option o;
 			o.type = type;
 			o.name = name;
@@ -235,7 +235,7 @@ inline void parsePrefs(LocalisedPrefs& prefs, const pugi::xml_node& cmd) {
 
 inline void mergePrefsFromMsgs(LocalisedPrefs& prefs, const msgmap& msgs) {
 	for(const auto& lm : msgs) {
-		const lang& lang = lm.first;
+		const Lang& lang = lm.first;
 		const ToggleIds& tids = lm.second.first;
 		const ToggleRes& tres = lm.second.second;
 		prefs[lang].toggleIds.insert(tids.begin(), tids.end());
@@ -257,7 +257,7 @@ class Pipeline {
 		vector<Err> proc_errs(stringstream& input);
 		const bool verbose;
 		// Preferences:
-		void setIgnores(const std::set<err_id>& ignores);
+		void setIgnores(const std::set<ErrId>& ignores);
 		const LocalisedPrefs prefs;
 	private:
 		vector<unique_ptr<PipeCmd>> cmds;

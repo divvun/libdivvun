@@ -112,7 +112,7 @@ const LocalisedPrefs& Checker::prefs() const {
 	return pImpl->prefs;
 };
 
-void Checker::setIgnores(const std::set<err_id>& ignores) {
+void Checker::setIgnores(const std::set<ErrId>& ignores) {
 	return pImpl->setIgnores(ignores);
 };
 

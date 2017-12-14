@@ -72,7 +72,7 @@ class Checker {
                 void proc(std::stringstream& input, std::stringstream& output);
 		std::vector<Err> proc_errs(std::stringstream& input);
 		const LocalisedPrefs& prefs() const;
-		void setIgnores(const std::set<err_id>& ignores);
+		void setIgnores(const std::set<ErrId>& ignores);
 	private:
 		const std::unique_ptr<Pipeline> pImpl;
 };

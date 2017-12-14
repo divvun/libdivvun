@@ -33,24 +33,24 @@ namespace divvun {
  * Public types for divvun-gramcheck library
  */
 
-typedef std::string lang;
-typedef std::u16string msg_t;
-typedef std::u16string err_id;
-typedef std::basic_regex<char> err_re;
+typedef std::string Lang;
+typedef std::u16string Msg;
+typedef std::u16string ErrId;
+typedef std::basic_regex<char> ErrRe;
 
 struct Err {
 		std::u16string form;
 		size_t beg;
 		size_t end;
-		err_id err;
-		msg_t msg;
+		ErrId err;
+		Msg msg;
 		std::vector<std::u16string> rep;
 };
 
 struct Option {
 		std::string type;
 		std::string name;
-		std::unordered_map<err_id, msg_t> choices;      // choices[errtype] = msg;
+		std::unordered_map<ErrId, Msg> choices;      // choices[errtype] = msg;
 };
 struct OptionCompare {
     bool operator() (const Option& a, const Option& b) const {
@@ -66,15 +66,15 @@ typedef std::set<Option, OptionCompare> OptionSet;
 /**
  * Checkbox choices, ie. hiding certain error types
  */
-typedef std::unordered_map<err_id, msg_t> ToggleIds;      // toggleIds[errtype] = msg;
-typedef std::vector<std::pair<err_re, msg_t> > ToggleRes; // toggleRes = [(errtype_regex, msg), …];
+typedef std::unordered_map<ErrId, Msg> ToggleIds;      // toggleIds[errtype] = msg;
+typedef std::vector<std::pair<ErrRe, Msg> > ToggleRes; // toggleRes = [(errtype_regex, msg), …];
 
 struct Prefs {
 		ToggleIds toggleIds;
 		ToggleRes toggleRes;
 		OptionSet options;
 };
-typedef std::unordered_map<lang, Prefs> LocalisedPrefs;
+typedef std::unordered_map<Lang, Prefs> LocalisedPrefs;
 
 } // namespace divvun
 

@@ -316,7 +316,7 @@ void rel_on_match(const relations& rels,
  * given bad data).
  */
 variant<Nothing, pair<pair<size_t, size_t>, u16string>>
-proc_LEFT_RIGHT(const err_id& err_id,
+proc_LEFT_RIGHT(const ErrId& err_id,
 		const size_t src_id,
 		const Sentence& sentence,
 		const u16string& text,
@@ -370,7 +370,7 @@ proc_LEFT_RIGHT(const err_id& err_id,
 	return std::make_pair(std::make_pair(beg, end), repform);
 }
 
-variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
+variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 					   const Cohort& c,
 					   const Sentence& sentence,
 					   const u16string& text)
@@ -711,7 +711,7 @@ vector<Err> Suggest::mk_errs(const Sentence &sentence) {
 	const auto& text = utf16conv.from_bytes(sentence.text.str());
 	vector<Err> errs;
 	for(const auto& c : sentence.cohorts) {
-		std::map<err_id, vector<size_t>> c_errs;
+		std::map<ErrId, vector<size_t>> c_errs;
 		for(size_t i = 0; i < c.readings.size(); ++i) {
 			const auto& r = c.readings[i];
 			if(r.link) {
@@ -855,7 +855,7 @@ Suggest::Suggest (const string& gen_path, bool verbose)
 {
 }
 
-void Suggest::setIgnores(const std::set<err_id>& ignores_)
+void Suggest::setIgnores(const std::set<ErrId>& ignores_)
 {
 	ignores = ignores_;
 }

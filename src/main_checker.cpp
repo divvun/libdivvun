@@ -83,7 +83,7 @@ void printPrefs(const Pipeline& pipeline) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::cout << "== Available preferences ==" << std::endl;
 	for(const auto& lp : pipeline.prefs) {
-		const lang& lang = lp.first;
+		const Lang& lang = lp.first;
 		std::cout << std::endl << "=== with messages localised for '" << lang << "' ===" << std::endl;
 		const Prefs& prefs = lp.second;
 		std::cout << "==== Toggles: ====" << std::endl;
@@ -146,7 +146,7 @@ int main(int argc, char ** argv)
 		}
 		bool verbose = options.count("v");
 
-		auto ignores = std::set<divvun::err_id>();
+		auto ignores = std::set<divvun::ErrId>();
 		if(options.count("ignore")) {
 			std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 			for(const auto& ignore : divvun::split(options["ignore"].as<std::string>(), ',')) {

@@ -54,7 +54,7 @@ using std::vector;
 
 using UStringVector = vector<u16string>;
 
-using msgmap = std::unordered_map<lang, std::pair<ToggleIds, ToggleRes> >;	// msgs[lang] = make_pair(ToggleIds, ToggleRes)
+using msgmap = std::unordered_map<Lang, std::pair<ToggleIds, ToggleRes> >;	// msgs[lang] = make_pair(ToggleIds, ToggleRes)
 
 inline string xml_raw_cdata(const pugi::xml_node& label) {
 	std::ostringstream os;
@@ -118,7 +118,7 @@ class Suggest {
 		void run(std::istream& is, std::ostream& os, bool json);
 
 		vector<Err> run_errs(std::istream& is);
-		void setIgnores(const std::set<err_id>& ignores);
+		void setIgnores(const std::set<ErrId>& ignores);
 
 		static const msgmap readMessages(const string& file);
 		static const msgmap readMessages(const char* buff, const size_t size);
@@ -127,8 +127,8 @@ class Suggest {
 	private:
 		RunState run_json(std::istream& is, std::ostream& os);
 		std::unique_ptr<const hfst::HfstTransducer> generator;
-		std::set<err_id> ignores;
-		variant<Nothing, Err> cohort_errs(const err_id& err_id, const Cohort& c, const Sentence& sentence, const u16string& text);
+		std::set<ErrId> ignores;
+		variant<Nothing, Err> cohort_errs(const ErrId& ErrId, const Cohort& c, const Sentence& sentence, const u16string& text);
 		vector<Err> mk_errs(const Sentence &sentence);
 };
 

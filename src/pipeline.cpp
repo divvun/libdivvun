@@ -135,7 +135,7 @@ vector<Err> SuggestCmd::run_errs(stringstream& input) const
 {
 	return suggest->run_errs(input);
 }
-void SuggestCmd::setIgnores(const std::set<err_id>& ignores)
+void SuggestCmd::setIgnores(const std::set<ErrId>& ignores)
 {
 	suggest->setIgnores(ignores);
 }
@@ -374,7 +374,7 @@ vector<Err> Pipeline::proc_errs(stringstream& input) {
 	cur_in.swap(cur_out);
 	return suggestcmd->run_errs(cur_in);
 }
-void Pipeline::setIgnores(const std::set<err_id>& ignores) {
+void Pipeline::setIgnores(const std::set<ErrId>& ignores) {
 	if(suggestcmd != nullptr) {
 		suggestcmd->setIgnores(ignores);
 	}
