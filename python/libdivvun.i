@@ -7,11 +7,12 @@
 // See the file COPYING included with this distribution for more
 // information.
 
-// This is a swig interface file that is used to create python
-// bindings for divvun-gramcheck. Everything will be visible under
-// module 'libdivvun', but will be wrapped under package 'divvun'.
+// This is a SWIG interface file that is used to create Python
+// bindings for divvun-gramcheck. The/ Python module will be named
+// 'libdivvun'.
 
 %module libdivvun
+
 // Needed for type conversions between C++ and python.
 %include "std_string.i"
 %include "std_vector.i"
@@ -19,16 +20,13 @@
 %include "std_set.i"
 %include "std_map.i"
 %include "exception.i"
-
+// TODO: Investigate if we can use u16string's via the wstring typemap
 /* %include "std_wstring.i" */
 /* %apply std::wstring { std::u16string }; */
 
-// %feature("autodoc", "3");
+%feature("autodoc", "3");
 
 %naturalvar;
-
-%init %{
-%}
 
 %{
 #include "../src/checkertypes.hpp"
@@ -49,17 +47,23 @@
 %include "typemaps.i"
 
 %include "std_unique_ptr.i"
-
 wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 
-// We make our own ErrBytes instead, to work around lack of u16string support in SWIG
+// We make our own ErrBytes instead of using the one from
+// checkertypes.hpp, to work around lack of u16string support in SWIG:
 %ignore divvun::Err;
+%ignore divvun::Checker::proc_errs;
+%ignore divvun::CheckerUniquePtr::proc_errs;
 
 %include "../src/checkertypes.hpp"
 %include "../src/checker.hpp"
 
 %template(StringVector) std::vector<std::string>;
 
+// TODO: Would it be possible to have ErrBytes defined in
+// checkertypes.hpp? Seems like SWIG no longer understands the
+// StringVector rep (seems like it gives the pointer instead of value
+// on trying to access err.rep[0])
 %inline %{
 #include <locale>
 #include <codecvt>
