@@ -434,7 +434,10 @@ This is what happens when text is sent through the =smegram= pipeline:
   through more errors.
 - The main =<cg>= grammar checker module can now add error tags to
   readings, as well as new readings for generating suggestions, or
-  special tags for deleting words or expanding underlines.
+  special tags for deleting words or expanding underlines (and, as in
+  the other =<cg>= modules, we can use the full range of CG features
+  to add information that may be helpful in these tasks, such as
+  dependency annotation and semantic role analysis)
 - Finally, =<suggest>= uses a generator FST to turn suggestion
   readings into forms, and an XML file of error descriptions to look
   up error messages from the tags added by the =<cg>= grammar checker
