@@ -122,7 +122,7 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pug
 			prog += " -g";
 		}
 		else if(name == "cgspell") {
-			prog = "divvun-cgspell";
+			prog = "divvun-cgspell -n 25";
 		}
 		else if(name == "mwesplit") {
 			prog = "cg-mwesplit";
