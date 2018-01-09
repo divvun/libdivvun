@@ -137,16 +137,18 @@ void Speller::spell(const string& inform, std::ostream& os)
 {
 	bool do_suggest = real_word || !speller->spell(inform);
 	if(!do_suggest) {
-		// This would happen if a correct inform is in the
-		// speller, but not in whatever analyser you used to
-		// create the input to cgspell
-		auto aq = speller->analyseSymbols(inform);
-		while(!aq.empty()) {
-			const auto ana = aq.top().first;
-			const Weight& w = aq.top().second;
-			// No max_weight for regular words
-			print_readings(ana, inform, os, w, Nothing(), CGSPELL_CORRECT_TAG);
-			aq.pop();
+		if(analyse_when_correct) {
+			// This would happen if a correct inform is in the
+			// speller, but not in whatever analyser you used to
+			// create the input to cgspell
+			auto aq = speller->analyseSymbols(inform);
+			while(!aq.empty()) {
+				const auto ana = aq.top().first;
+				const Weight& w = aq.top().second;
+				// No max_weight for regular words
+				print_readings(ana, inform, os, w, Nothing(), CGSPELL_CORRECT_TAG);
+				aq.pop();
+			}
 		}
 	}
 	else {
