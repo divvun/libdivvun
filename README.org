@@ -636,22 +636,76 @@ will give a suggestion that covers the space before the infinitive.
 ** Including spelling errors
 
 To use the =divvun-cgspell= module, you need a spelling acceptor
-(dictionary) FST and error model FST. These are the same format as
-the files used by [[https://github.com/hfst/hfst-ospell/][hfst-ospell]].
+(dictionary) FST and error model FST. These are the same format as the
+files used by [[https://github.com/hfst/hfst-ospell/][hfst-ospell]]. The speller isn't yet used to handle
+real-word errors, just adding suggestions to unknowns.
 
 The =divvun-cgspell= module should go before disambiguation in the
 pipeline, so the disambiguator can pick the best suggestion in
 context.
 
-The module adds the tag =<spelled>= to any suggestions. To turn these
-into error underlines and actually show the suggestions, add a rule
+The module adds the tag =<spelled>= to any suggestions. The speller
+module itself doesn't take any context into account, that's for later
+steps to handle. As an example, you might have this unknown word as
+input to the speller module:
+
+#+begin_src cg
+"<coffe>"
+	"coffe" ?
+#+end_src
+
+To which the output from the speller might be
+
+#+begin_src cg
+"<coffes>"
+	"coffes" ?
+	"coffee" N Sg <W:37.3018> <WA:17.3018> <spelled> "<coffee>"
+	"coffee" N Pl <W:37.3018> <WA:17.3018> <spelled> "<coffees>"
+	"coffer" N Pl <W:39.1010> <WA:17.3018> <spelled> "<coffers>"
+	"Coffey" N Prop <W:40.0000> <WA:18.1800> <spelled> "<Coffey>"
+#+end_src
+
+The /form/ to be suggested is included as a "wordform-tag" at the very
+end of each reading from the speller.
+
+Now the later CG stages can use the context of this cohort to pick
+more relevant suggestions (e.g. if the word to the left was "a", we
+might want to =REMOVE= the plurals or even =SELECT= the singulars). We
+could also =ADD/MAP= some relevant tags or relations.
+
+Note that the readings added by the speller don't include any error
+tags (tags with =&= in front). To turn these readings into error
+underlines and actually show the suggestions, add a rule like
 
 #+begin_src cg
   ADD (&typo &SUGGESTWF) (<spelled>) ;
 #+end_src
 
-to the grammar checker CG. You may of course also =REMOVE= or =SELECT=
-such readings first.
+to the grammar checker CG. The reason we add =&SUGGESTWF= and not
+=&SUGGEST= is that we're using the wordform-tag directly as the
+suggestion, and not sending each analysis through the generator (as
+=&SUGGEST= would do). So if, after disambiguation and grammarchecker
+CG's, we had
+
+#+begin_src cg
+"<coffes>"
+	"coffee" N Pl <W:37.3018> <WA:17.3018> <spelled> "<coffees>" &typo &SUGGESTWF
+	"coffer" N Pl <W:39.1010> <WA:17.3018> <spelled> "<coffers>" &typo &SUGGESTWF
+#+end_src
+
+then the final =divvun-suggest= step would simply use the contents of
+the tags
+#+begin_src cg
+"<coffers>"
+"<coffees>"
+#+end_src
+to create the suggestion-list, without bothering with generating from
+#+begin_src cg
+"coffee" N Pl
+"coffer" N Pl
+#+end_src
+This makes the system more robust in case the speller lexicon differs
+from the regular suggestion generator, and saves some duplicate work.
 
 ** Summary of special tags and relations
 *** Tags
