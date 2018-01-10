@@ -48,7 +48,7 @@ AC_ARG_ENABLE([xml],
 AS_IF([test "x$enable_xml" != xno],
       [AC_CHECK_HEADERS([pugixml.hpp])
        AS_IF([test x"$ac_cv_header_pugixml_hpp" = "xyes"],
-             [AC_CHECK_LIB([pugixml], [main])],
+             [AC_CHECK_LIB([pugixml], [main])], dnl TODO: fail if this test fails (no libpugixml.so)
              [AC_MSG_ERROR([cannot find pugixml library (use --disable-xml if you don't want to parse error.xml messages and don't need --enable-checker)])])
        PUGIXML_LIBS="-lpugixml"
        AC_SUBST(PUGIXML_LIBS)
