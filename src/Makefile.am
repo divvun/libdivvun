@@ -57,7 +57,7 @@ endif
 if HAVE_TRANG
 %.rnc: %.dtd
 	test -f $(TRANG) && java -jar $(TRANG) -I dtd -O rnc $< /dev/stdout >$@.tmp
-	@awk '{print}/^attlist/{print ""}' <$@.tmp >$@
+	@awk 'BEGIN{print "# THIS IS A GENERATED FILE, DO NOT EDIT!"}{print}/^attlist/{print ""}' <$@.tmp >$@
 	@rm -f $@.tmp
 else
 %.rnc: %.dtd

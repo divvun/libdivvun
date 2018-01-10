@@ -181,68 +181,50 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	for (const pugi::xml_node& cmd: spec->pnodes.at(pipename).children()) {
 		const auto& name = utf16conv.from_bytes(cmd.name());
-		vector<string> args;
-		for (const pugi::xml_node& arg: cmd.children("arg")) {
-			const auto& argn = arg.attribute("n").value();
-			args.emplace_back(argn);
+		std::unordered_map<string, string> args;
+		for (const pugi::xml_node& arg: cmd.children()) {
+			args[arg.name()] = arg.attribute("n").value();
 		}
+		validatePipespecCmd(cmd, args);
 		if(name == u"tokenise" || name == u"tokenize") {
-			if(args.size() != 1) {
-				throw std::runtime_error("Wrong number of arguments to <tokenize> command (expected 1), at byte offset " + std::to_string(cmd.offset_debug()));
-			}
 			ArEntryHandler<TokenizeCmd*> f = [verbose] (const string& ar_path, const void* buff, const size_t size) {
 				OneShotReadBuf osrb((char*)buff, size);
 				std::istream is(&osrb);
 				return new TokenizeCmd(is, verbose);
 			};
-			TokenizeCmd* s = readArchiveExtract(ar_spec->ar_path, args[0], f);
+			TokenizeCmd* s = readArchiveExtract(ar_spec->ar_path, args["tokenizer"], f);
 			cmds.emplace_back(s);
 		}
 		else if(name == u"cg") {
-			if(args.size() != 1) {
-				throw std::runtime_error("Wrong number of arguments to <cg> command (expected 1), at byte offset " + std::to_string(cmd.offset_debug()));
-			}
 			ArEntryHandler<CGCmd*> f = [verbose] (const string& ar_path, const void* buff, const size_t size) {
 				return new CGCmd((char*)buff, size, verbose);
 			};
-			CGCmd* s = readArchiveExtract(ar_spec->ar_path, args[0], f);
+			CGCmd* s = readArchiveExtract(ar_spec->ar_path, args["grammar"], f);
 			cmds.emplace_back(s);
 		}
 		else if(name == u"cgspell") {
-			if(args.size() != 2) {
-				throw std::runtime_error("Wrong number of arguments to <cg> command (expected 2), at byte offset " + std::to_string(cmd.offset_debug()));
-			}
 			ArEntryHandler<hfst_ospell::Transducer*> f = [] (const string& ar_path, const void* buff, const size_t size) {
 				return new hfst_ospell::Transducer((char*)buff);
 			};
-			auto* s = new CGSpellCmd(readArchiveExtract(ar_spec->ar_path, args[0], f),
-						 readArchiveExtract(ar_spec->ar_path, args[1], f),
+			auto* s = new CGSpellCmd(readArchiveExtract(ar_spec->ar_path, args["errmodel"], f),
+						 readArchiveExtract(ar_spec->ar_path, args["lexicon"], f),
 						 verbose);
 			cmds.emplace_back(s);
 		}
 		else if(name == u"mwesplit") {
-			if(args.size() != 0) {
-				throw std::runtime_error("Wrong number of arguments to <mwesplit> command (expected 0), at byte offset " + std::to_string(cmd.offset_debug()));
-			}
 			cmds.emplace_back(new MweSplitCmd(verbose));
 		}
 		else if(name == u"blanktag") {
-			if(args.size() != 1) {
-				throw std::runtime_error("Wrong number of arguments to <blanktag> command (expected 1), at byte offset " + std::to_string(cmd.offset_debug()));
-			}
 			ArEntryHandler<const hfst::HfstTransducer*> f = [] (const string& ar_path, const void* buff, const size_t size) {
 				OneShotReadBuf osrb((char*)buff, size);
 				std::istream is(&osrb);
 				return readTransducer(is);
 			};
-			auto* s = new BlanktagCmd(readArchiveExtract(ar_spec->ar_path, args[0], f),
+			auto* s = new BlanktagCmd(readArchiveExtract(ar_spec->ar_path, args["blanktagger"], f),
 						  verbose);
 			cmds.emplace_back(s);
 		}
 		else if(name == u"suggest") {
-			if(args.size() != 2) {
-				throw std::runtime_error("Wrong number of arguments to <suggest> command (expected 2), at byte offset " + std::to_string(cmd.offset_debug()));
-			}
 			ArEntryHandler<const hfst::HfstTransducer*> procGen = [] (const string& ar_path, const void* buff, const size_t size) {
 				OneShotReadBuf osrb((char*)buff, size);
 				std::istream is(&osrb);
@@ -251,23 +233,19 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 			ArEntryHandler<divvun::msgmap> procMsgs = [] (const string& ar_path, const void* buff, const size_t size) {
 				return Suggest::readMessages((char*)buff, size);
 			};
-			auto* s = new SuggestCmd(readArchiveExtract(ar_spec->ar_path, args[0], procGen),
-						 readArchiveExtract(ar_spec->ar_path, args[1], procMsgs),
+			auto* s = new SuggestCmd(readArchiveExtract(ar_spec->ar_path, args["generator"], procGen),
+						 readArchiveExtract(ar_spec->ar_path, args["messages"], procMsgs),
 						 verbose);
 			cmds.emplace_back(s);
 			mergePrefsFromMsgs(prefs, s->getMsgs());
 			suggestcmd = s;
 		}
 		else if(name == u"sh") {
-			throw std::runtime_error("<sh> command not implemented yet!");
 			// const auto& prog = utf16conv.from_bytes(cmd.attribute("prog").value());
 			// cmds.emplace_back(new ShCmd(prog, args, verbose));
 		}
 		else if(name == u"prefs") {
 			parsePrefs(prefs, cmd);
-		}
-		else {
-			throw std::runtime_error("Unknown command '" + utf16conv.to_bytes(name) + "'");
 		}
 	}
 	return Pipeline(std::move(prefs), std::move(cmds), suggestcmd, verbose);
@@ -285,60 +263,42 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	for (const pugi::xml_node& cmd: spec->pnodes.at(pipename).children()) {
 		const auto& name = utf16conv.from_bytes(cmd.name());
-		vector<string> args;
-		for (const pugi::xml_node& arg: cmd.children("arg")) {
-			const auto& argn = arg.attribute("n").value();
-			args.emplace_back(argn);
+		std::unordered_map<string, string> args;
+		for (const pugi::xml_node& arg: cmd.children()) {
+			args[arg.name()] = arg.attribute("n").value();
 		}
+		validatePipespecCmd(cmd, args);
 		if(name == u"tokenise" || name == u"tokenize") {
-			if(args.size() != 1) {
-				throw std::runtime_error("Wrong number of arguments to <tokenize> command (expected 1), at byte offset " + std::to_string(cmd.offset_debug()));
-			}
-			cmds.emplace_back(new TokenizeCmd(args[0], verbose));
+			cmds.emplace_back(new TokenizeCmd(args["tokenizer"], verbose));
 		}
 		else if(name == u"cg") {
-			if(args.size() != 1) {
-				throw std::runtime_error("Wrong number of arguments to <cg> command (expected 1), at byte offset " + std::to_string(cmd.offset_debug()));
-			}
-			cmds.emplace_back(new CGCmd(args[0], verbose));
+			cmds.emplace_back(new CGCmd(args["grammar"], verbose));
 		}
 		else if(name == u"cgspell") {
-			if(args.size() != 2) {
-				throw std::runtime_error("Wrong number of arguments to <cgspell> command (expected 2), at byte offset " + std::to_string(cmd.offset_debug()));
-			}
-			cmds.emplace_back(new CGSpellCmd(args[0], args[1], verbose));
+			cmds.emplace_back(new CGSpellCmd(args["errmodel"],
+							 args["lexicon"],
+							 verbose));
 		}
 		else if(name == u"mwesplit") {
-			if(args.size() != 0) {
-				throw std::runtime_error("Wrong number of arguments to <mwesplit> command (expected 0), at byte offset " + std::to_string(cmd.offset_debug()));
-			}
 			cmds.emplace_back(new MweSplitCmd(verbose));
 		}
 		else if(name == u"blanktag") {
-			if(args.size() != 1) {
-				throw std::runtime_error("Wrong number of arguments to <mwesplit> command (expected 1), at byte offset " + std::to_string(cmd.offset_debug()));
-			}
-			cmds.emplace_back(new BlanktagCmd(args[0], verbose));
+			cmds.emplace_back(new BlanktagCmd(args["blanktagger"], verbose));
 		}
 		else if(name == u"suggest") {
-			if(args.size() != 2) {
-				throw std::runtime_error("Wrong number of arguments to <suggest> command (expected 2), at byte offset " + std::to_string(cmd.offset_debug()));
-			}
-			auto *s = new SuggestCmd(args[0], args[1], verbose);
+			auto *s = new SuggestCmd(args["generator"],
+						 args["messages"],
+						 verbose);
 			cmds.emplace_back(s);
 			mergePrefsFromMsgs(prefs, s->getMsgs());
 			suggestcmd = s;
 		}
 		else if(name == u"sh") {
-			throw std::runtime_error("<sh> command not implemented yet!");
 			// const auto& prog = utf16conv.from_bytes(cmd.attribute("prog").value());
 			// cmds.emplace_back(new ShCmd(prog, args, verbose));
 		}
 		else if(name == u"prefs") {
 			parsePrefs(prefs, cmd);
-		}
-		else {
-			throw std::runtime_error("Unknown command '" + utf16conv.to_bytes(name) + "'");
 		}
 	}
 	return Pipeline(std::move(prefs), std::move(cmds), suggestcmd, verbose);

@@ -39,18 +39,63 @@ unique_ptr<PipeSpec> readPipeSpec(const string& file) {
 	return spec;
 }
 
-string makeDebugSuff(string name, vector<string> args) {
-	if(name == "cg" && args.size() > 0) {
-		if(args[0].substr(0, 14) == "grammarchecker") {
+// TODO: return optional string message instead?
+void validatePipespecCmd(const pugi::xml_node& cmd, const std::unordered_map<string, string>& args) {
+	const string& name = cmd.name();
+	if(name == "tokenise" || name == "tokenize") {
+		if(args.size() != 1 || args.find("tokenizer") == args.end()) {
+			throw std::runtime_error("Wrong arguments to <tokenize> command (expected <tokenizer>), at byte offset " + std::to_string(cmd.offset_debug()));
+		}
+	}
+	else if(name == "cg") {
+		if(args.size() != 1 || args.find("grammar") == args.end()) {
+			throw std::runtime_error("Wrong arguments to <cg> command (expected <grammar>), at byte offset " + std::to_string(cmd.offset_debug()));
+		}
+	}
+	else if(name == "cgspell") {
+		if(args.size() != 2 || args.find("lexicon") == args.end() || args.find("errmodel") == args.end()) {
+			throw std::runtime_error("Wrong arguments to <cgspell> command (expected <lexicon> and <errmodel>), at byte offset " + std::to_string(cmd.offset_debug()));
+		}
+	}
+	else if(name == "mwesplit") {
+		if(args.size() != 0) {
+			throw std::runtime_error("Wrong arguments to <mwesplit> command (expected none), at byte offset " + std::to_string(cmd.offset_debug()));
+		}
+	}
+	else if(name == "blanktag") {
+		if(args.size() != 1 || args.find("blanktagger") == args.end()) {
+			throw std::runtime_error("Wrong arguments to <blanktag> command (expected <blanktagger>), at byte offset " + std::to_string(cmd.offset_debug()));
+		}
+	}
+	else if(name == "suggest") {
+		if(args.size() != 2 || args.find("generator") == args.end() || args.find("messages") == args.end()) {
+			throw std::runtime_error("Wrong arguments to <suggest> command (expected <generator> and <messages>), at byte offset " + std::to_string(cmd.offset_debug()));
+		}
+	}
+	else if(name == "sh") {
+		throw std::runtime_error("<sh> command not implemented yet!");
+		// const auto& prog = utf16conv.from_bytes(cmd.attribute("prog").value());
+	}
+	else if(name == "prefs") {
+		// pass
+	}
+	else {
+		throw std::runtime_error("Unknown command '" + name + "'");
+	}
+}
+
+string makeDebugSuff(string name, std::unordered_map<string, string> args) {
+	if(name == "cg" && args.find("grammar") != args.end()) {
+		if(args["grammar"].substr(0, 14) == "grammarchecker") {
 			return "gc";
 		}
-		if(args[0].substr(0, 7) == "mwe-dis") {
+		if(args["grammar"].substr(0, 7) == "mwe-dis") {
 			return "mwe-dis";
 		}
-		if(args[0].substr(0, 7) == "valency") {
+		if(args["grammar"].substr(0, 7) == "valency") {
 			return "val";
 		}
-		if(args[0].substr(0, 13) == "disambiguator") {
+		if(args["grammar"].substr(0, 13) == "disambiguator") {
 			return "disam";
 		}
 	}
@@ -72,7 +117,7 @@ string makeDebugSuff(string name, vector<string> args) {
 	return name;
 }
 
-std::string abspath(const std::string path) {
+string abspath(const string& path) {
 	// TODO: would love to use <experimental/filesystem> here, but doesn't exist on Mac :(
 	// return std::experimental::filesystem::absolute(specfile).remove_filename();
         char abspath[PATH_MAX];
@@ -80,7 +125,7 @@ std::string abspath(const std::string path) {
 	return abspath;
 }
 
-std::string pathconcat(const std::string path1, const std::string path2) {
+string pathconcat(const string& path1, const string& path2) {
 	// TODO: would love to use <experimental/filesystem> here, but doesn't exist on Mac :(
 	// return path1 / path2;
 	if(path2.length() > 0 && path2[0] == '/') {
@@ -94,22 +139,29 @@ std::string pathconcat(const std::string path1, const std::string path2) {
 	}
 }
 
+string argprepare(const string& dir, string file) {
+	// Wrap the whole thing in single-quotes, but put existing single-quotes in double-quotes
+	replaceAll(file, "'", "'\"'\"'");
+	return " '" + pathconcat(dir, file) + "'";
+}
+
 vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pugi::xml_node& pipeline, const u16string& pipename, bool trace, bool json) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	vector<std::pair<string, string>> cmds = {};
 	for (const pugi::xml_node& cmd: pipeline.children()) {
-		const auto& name = std::string(cmd.name());
+		const auto& name = string(cmd.name());
 		string prog;
-		vector<string> args;
-		for (const pugi::xml_node& arg: cmd.children("arg")) {
-			const auto& argn = arg.attribute("n").value();
-			args.emplace_back(argn);
+		std::unordered_map<string, string> args;
+		for (const pugi::xml_node& arg: cmd.children()) {
+			args[arg.name()] = arg.attribute("n").value();
 		}
+		validatePipespecCmd(cmd, args);
 		if(name == "tokenise" || name == "tokenize") {
 			prog = "hfst-tokenise -g";
 			if(json) {
 				prog += " -S";
 			}
+			prog += argprepare(dir, args["tokenizer"]);
 		}
 		else if(name == "cg") {
 			prog = "vislcg3";
@@ -119,25 +171,32 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pug
 			if(json) {
 				prog += " --quiet";
 			}
-			prog += " -g";
+			prog += " -g" + argprepare(dir, args["grammar"]);
 		}
 		else if(name == "cgspell") {
 			prog = "divvun-cgspell -n 25";
+			prog += " -l" + argprepare(dir, args["lexicon"]);
+			prog += " -m" +  argprepare(dir, args["errmodel"]);
 		}
 		else if(name == "mwesplit") {
 			prog = "cg-mwesplit";
 		}
 		else if(name == "blanktag") {
-			prog = "divvun-blanktag";
+			prog = "divvun-blanktag" + argprepare(dir, args["blanktagger"]);
 		}
 		else if(name == "suggest") {
 			prog = "divvun-suggest";
 			if(json) {
 				prog += " --json";
 			}
+			prog += " -g" + argprepare(dir, args["generator"]);
+			prog += " -m" + argprepare(dir, args["messages"]);
 		}
 		else if(name == "sh") {
 			prog = cmd.attribute("prog").value();
+			for(auto& a : args) {
+				prog += argprepare(dir, a.second);
+			}
 		}
 		else if(name == "prefs") {
 			// TODO: Do prefs make sense here?
@@ -146,14 +205,7 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pug
 			throw std::runtime_error("Unknown command '" + name + "'");
 		}
 		if(!prog.empty()) {
-			std::ostringstream part;
-			part << prog;
-			for(auto& a : args) {
-				// Wrap the whole thing in single-quotes, but put existing single-quotes in double-quotes
-				replaceAll(a, "'", "'\"'\"'");
-				part << " '" << pathconcat(dir, a) << "'";
-			}
-			cmds.push_back(std::make_pair(part.str(),
+			cmds.push_back(std::make_pair(prog,
 						      makeDebugSuff(name, args)));
 		}
 	}

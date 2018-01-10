@@ -212,6 +212,9 @@ unique_ptr<ArPipeSpec> readArPipeSpec(const string& ar_path) {
 void writePipeSpecSh(const string& specfile, const u16string& pipename, bool json, std::ostream& os);
 void writePipeSpecShDir(const string& specfile, bool json, const string& modesdir, bool nodebug);
 
+/* Run this first to feel safe in indexing into args. */
+void validatePipespecCmd(const pugi::xml_node& cmd, const std::unordered_map<string, string>& args);
+
 }
 
 #endif
