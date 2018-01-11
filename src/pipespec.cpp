@@ -251,6 +251,13 @@ void writePipeSpecSh(const string& specfile, const u16string& pipename, bool jso
 	}
 }
 
+void chmod777(const string& path) {
+	mode_t mode = S_IRWXU|S_IRWXG|S_IRWXO;
+	if (chmod(path.c_str(), mode) < 0) {
+		throw std::runtime_error("ERROR: failed to chmod 777 " + path + std::strerror(errno));
+	}
+}
+
 void writePipeSpecShDirOne(const vector<std::pair<string, string>> cmds, const string& pipename, const string& modesdir, bool nodebug) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	// TODO: (modesdir / …) when we get <experimental/filesystem>
@@ -280,6 +287,8 @@ void writePipeSpecShDirOne(const vector<std::pair<string, string>> cmds, const s
 			first = false;
 			ofs << cmd.first;
 		}
+		ofs.close();
+		chmod777(path);
 	}
 }
 

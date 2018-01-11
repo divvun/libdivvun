@@ -40,6 +40,7 @@
 #include <fstream>
 #include <regex>
 #include <vector>
+#include <sys/stat.h>
 
 // divvun-gramcheck:
 #include "util.hpp"
