@@ -26,6 +26,9 @@ PipeSpec::PipeSpec(const string& file) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	if (result) {
 		language = doc.child("pipespec").attribute("language").value();
+		if(language == "") {
+			language = "se"; // reasonable default
+		}
 		for (pugi::xml_node pipeline: doc.child("pipespec").children("pipeline")) {
 			const u16string& pipename = utf16conv.from_bytes(pipeline.attribute("name").value());
 			auto pr = std::make_pair(pipename, pipeline);
@@ -44,6 +47,9 @@ PipeSpec::PipeSpec(pugi::char_t* buff, size_t size) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	if (result) {
 		language = doc.child("pipespec").attribute("language").value();
+		if(language == "") {
+			language = "se"; // reasonable default
+		}
 		for (pugi::xml_node pipeline: doc.child("pipespec").children("pipeline")) {
 			const u16string& pipename = utf16conv.from_bytes(pipeline.attribute("name").value());
 			auto pr = std::make_pair(pipename, pipeline);
@@ -162,10 +168,10 @@ string argprepare(const string& dir, string file) {
 	return " '" + pathconcat(dir, file) + "'";
 }
 
-vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pugi::xml_node& pipeline, const u16string& pipename, bool trace, bool json) {
+vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const PipeSpec& spec, const u16string& pipename, bool trace, bool json) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	vector<std::pair<string, string>> cmds = {};
-	for (const pugi::xml_node& cmd: pipeline.children()) {
+	for (const pugi::xml_node& cmd: spec.pnodes.at(pipename).children()) {
 		const auto& name = string(cmd.name());
 		string prog;
 		std::unordered_map<string, string> args;
@@ -208,6 +214,7 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pug
 			}
 			prog += " -g" + argprepare(dir, args["generator"]);
 			prog += " -m" + argprepare(dir, args["messages"]);
+			prog += " -l " + spec.language;
 		}
 		else if(name == "sh") {
 			prog = cmd.attribute("prog").value();
@@ -232,8 +239,7 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pug
 void writePipeSpecSh(const string& specfile, const u16string& pipename, bool json, std::ostream& os) {
 	const std::unique_ptr<PipeSpec> spec(new PipeSpec(specfile));
 	const auto dir = dirname(abspath(specfile));
-	const auto& pipeline = spec->pnodes.at(pipename);
-	const auto cmds = toPipeSpecShVector(dir, pipeline, pipename, false, json);
+	const auto cmds = toPipeSpecShVector(dir, *spec, pipename, false, json);
 	bool first = true;
 	os << "#!/bin/sh" << std::endl << std::endl;
 	for (const auto& cmd: cmds) {
@@ -283,12 +289,12 @@ void writePipeSpecShDir(const string& specfile, bool json, const string& modesdi
 	const auto dir = dirname(abspath(specfile));
 	for(const auto& p : spec->pnodes) {
 		const auto& pipename = utf16conv.to_bytes(p.first);
-		writePipeSpecShDirOne(toPipeSpecShVector(dir, p.second, p.first, false, json),
+		writePipeSpecShDirOne(toPipeSpecShVector(dir, *spec, p.first, false, json),
 				      pipename,
 				      modesdir,
 				      nodebug);
 		if(!nodebug) {
-			writePipeSpecShDirOne(toPipeSpecShVector(dir, p.second, p.first, true, json),
+			writePipeSpecShDirOne(toPipeSpecShVector(dir, *spec, p.first, true, json),
 					      "trace-" + pipename,
 					      modesdir,
 					      nodebug);
