@@ -21,22 +21,39 @@
 
 namespace divvun {
 
-unique_ptr<PipeSpec> readPipeSpec(const string& file) {
-	unique_ptr<PipeSpec> spec = unique_ptr<PipeSpec>(new PipeSpec);
-	pugi::xml_parse_result result = spec->doc.load_file(file.c_str());
+PipeSpec::PipeSpec(const string& file) {
+	pugi::xml_parse_result result = doc.load_file(file.c_str());
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	if (result) {
-		for (pugi::xml_node pipeline: spec->doc.child("pipespec").children("pipeline")) {
+		language = doc.child("pipespec").attribute("language").value();
+		for (pugi::xml_node pipeline: doc.child("pipespec").children("pipeline")) {
 			const u16string& pipename = utf16conv.from_bytes(pipeline.attribute("name").value());
 			auto pr = std::make_pair(pipename, pipeline);
-			spec->pnodes[pipename] = pipeline;
+			pnodes[pipename] = pipeline;
 		}
 	}
 	else {
 		std::cerr << file << ":" << result.offset << " ERROR: " << result.description() << "\n";
 		throw std::runtime_error("ERROR: Couldn't load the pipespec xml \"" + file + "\"");
 	}
-	return spec;
+}
+
+
+PipeSpec::PipeSpec(pugi::char_t* buff, size_t size) {
+	pugi::xml_parse_result result = doc.load_buffer(buff, size);
+	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	if (result) {
+		language = doc.child("pipespec").attribute("language").value();
+		for (pugi::xml_node pipeline: doc.child("pipespec").children("pipeline")) {
+			const u16string& pipename = utf16conv.from_bytes(pipeline.attribute("name").value());
+			auto pr = std::make_pair(pipename, pipeline);
+			pnodes[pipename] = pipeline;
+		}
+	}
+	else {
+		std::cerr << "pipespec.xml:" << result.offset << " ERROR: " << result.description() << "\n";
+		throw std::runtime_error("ERROR: Couldn't load the pipespec.xml from archive");
+	}
 }
 
 // TODO: return optional string message instead?
@@ -213,7 +230,7 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const pug
 }
 
 void writePipeSpecSh(const string& specfile, const u16string& pipename, bool json, std::ostream& os) {
-	const auto spec = readPipeSpec(specfile);
+	const std::unique_ptr<PipeSpec> spec(new PipeSpec(specfile));
 	const auto dir = dirname(abspath(specfile));
 	const auto& pipeline = spec->pnodes.at(pipename);
 	const auto cmds = toPipeSpecShVector(dir, pipeline, pipename, false, json);
@@ -262,7 +279,7 @@ void writePipeSpecShDirOne(const vector<std::pair<string, string>> cmds, const s
 
 void writePipeSpecShDir(const string& specfile, bool json, const string& modesdir, bool nodebug) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	const auto spec = readPipeSpec(specfile);
+	const std::unique_ptr<PipeSpec> spec(new PipeSpec(specfile));
 	const auto dir = dirname(abspath(specfile));
 	for(const auto& p : spec->pnodes) {
 		const auto& pipename = utf16conv.to_bytes(p.first);

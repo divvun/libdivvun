@@ -119,12 +119,12 @@ void BlanktagCmd::run(stringstream& input, stringstream& output) const
 	blanktag->run(input, output);
 }
 
-SuggestCmd::SuggestCmd (const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose)
-	: suggest(new Suggest(generator, msgs, verbose))
+SuggestCmd::SuggestCmd (const hfst::HfstTransducer* generator, divvun::msgmap msgs, const string& locale, bool verbose)
+	: suggest(new Suggest(generator, msgs, locale, verbose))
 {
 }
-SuggestCmd::SuggestCmd (const string& gen_path, const string& msg_path, bool verbose)
-	: suggest(new Suggest(gen_path, msg_path, verbose))
+SuggestCmd::SuggestCmd (const string& gen_path, const string& msg_path, const string& locale, bool verbose)
+	: suggest(new Suggest(gen_path, msg_path, locale, verbose))
 {
 }
 void SuggestCmd::run(stringstream& input, stringstream& output) const
@@ -179,6 +179,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 		throw std::runtime_error("ERROR: Couldn't initialise ICU for vislcg3!");
 	}
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	string locale = spec->language;
 	for (const pugi::xml_node& cmd: spec->pnodes.at(pipename).children()) {
 		const auto& name = utf16conv.from_bytes(cmd.name());
 		std::unordered_map<string, string> args;
@@ -235,6 +236,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 			};
 			auto* s = new SuggestCmd(readArchiveExtract(ar_spec->ar_path, args["generator"], procGen),
 						 readArchiveExtract(ar_spec->ar_path, args["messages"], procMsgs),
+						 locale,
 						 verbose);
 			cmds.emplace_back(s);
 			mergePrefsFromMsgs(prefs, s->getMsgs());
@@ -261,6 +263,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 		throw std::runtime_error("ERROR: Couldn't initialise ICU for vislcg3!");
 	}
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+	string locale = spec->language;
 	for (const pugi::xml_node& cmd: spec->pnodes.at(pipename).children()) {
 		const auto& name = utf16conv.from_bytes(cmd.name());
 		std::unordered_map<string, string> args;
@@ -288,6 +291,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 		else if(name == u"suggest") {
 			auto *s = new SuggestCmd(args["generator"],
 						 args["messages"],
+						 locale,
 						 verbose);
 			cmds.emplace_back(s);
 			mergePrefsFromMsgs(prefs, s->getMsgs());

@@ -110,9 +110,9 @@ struct Sentence {
 
 class Suggest {
 	public:
-		Suggest(const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose);
-		Suggest(const string& gen_path, const string& msg_path, bool verbose);
-		Suggest(const string& gen_path, bool verbose);
+		Suggest(const hfst::HfstTransducer* generator, divvun::msgmap msgs, const string& locale, bool verbose);
+		Suggest(const string& gen_path, const string& msg_path, const string& locale, bool verbose);
+		Suggest(const string& gen_path, const string& locale, bool verbose);
 		~Suggest() = default;
 
 		void run(std::istream& is, std::ostream& os, bool json);
@@ -124,6 +124,7 @@ class Suggest {
 		static const msgmap readMessages(const char* buff, const size_t size);
 
 		const msgmap msgs;
+		const string locale;
 	private:
 		RunState run_json(std::istream& is, std::ostream& os);
 		std::unique_ptr<const hfst::HfstTransducer> generator;

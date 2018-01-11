@@ -193,8 +193,8 @@ class BlanktagCmd: public PipeCmd {
 
 class SuggestCmd: public PipeCmd {
 	public:
-		SuggestCmd (const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose);
-		SuggestCmd (const string& gen_path, const string& msg_path, bool verbose);
+		SuggestCmd (const hfst::HfstTransducer* generator, divvun::msgmap msgs, const string& locale, bool verbose);
+		SuggestCmd (const string& gen_path, const string& msg_path, const string& locale, bool verbose);
 		void run(stringstream& input, stringstream& output) const override;
 		vector<Err> run_errs(stringstream& input) const;
 		~SuggestCmd() override = default;

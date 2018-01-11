@@ -380,10 +380,8 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 	}
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	u16string msg;
-	// TODO: locale, how? One process per locale (command-line-arg) or print all messages?
-	string locale = "se";
 	if(msgs.count(locale) == 0) {
-		std::cerr << "WARNING: No message at all for " << locale << std::endl;
+		std::cerr << "WARNING: No message at all for xml:lang '" << locale << "'" << std::endl;
 	}
 	else {
 		const auto& lmsgs = msgs.at(locale);
@@ -407,7 +405,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const err_id& err_id,
 			}
 		}
 		if(msg.empty()) {
-			std::cerr << "WARNING: No message for " << json::str(err_id) << std::endl;
+			std::cerr << "WARNING: No message for " << json::str(err_id) << " in xml:lang '" << locale << "'" << std::endl;
 			msg = err_id;
 		}
 		// TODO: Make suitable structure on creating msgmap instead?
@@ -840,18 +838,21 @@ void Suggest::run(std::istream& is, std::ostream& os, bool json)
 	}
 }
 
-Suggest::Suggest (const hfst::HfstTransducer* generator_, divvun::msgmap msgs_, bool verbose)
+Suggest::Suggest (const hfst::HfstTransducer* generator_, divvun::msgmap msgs_, const string& locale_, bool verbose)
 	: msgs(msgs_)
+	, locale(locale_)
 	, generator(generator_)
 {
 }
-Suggest::Suggest (const string& gen_path, const string& msg_path, bool verbose)
+Suggest::Suggest (const string& gen_path, const string& msg_path, const string& locale_, bool verbose)
 	: msgs(readMessages(msg_path))
+	, locale(locale_)
 	, generator(readTransducer(gen_path))
 {
 }
-Suggest::Suggest (const string& gen_path, bool verbose)
-	: generator(readTransducer(gen_path))
+Suggest::Suggest (const string& gen_path, const string& locale_, bool verbose)
+	: locale(locale_)
+	, generator(readTransducer(gen_path))
 {
 }
 
