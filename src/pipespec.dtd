@@ -78,7 +78,7 @@
 <!-- Library-based commands – no IPC/process open() required since
      these just use linked libraries: -->
 <!ELEMENT cg (grammar)>           <!-- arg: grammar.cg3 -->
-<!ELEMENT cgspell ((lexicon, errmodel)|(lexicon, errmodel))> <!-- arg1: acceptor.hfstol, arg2: errmodel.hfst -->
+<!ELEMENT cgspell ((lexicon, errmodel)|(errmodel, lexicon))> <!-- arg1: acceptor.hfstol, arg2: errmodel.hfst -->
 <!ELEMENT tokenize (tokenizer)>     <!-- arg: tokeniser.pmhfst -->
 <!ELEMENT tokenise (tokenizer)>     <!-- en_GB alias of the above -->
 <!ELEMENT mwesplit EMPTY>     <!-- takes no arguments -->

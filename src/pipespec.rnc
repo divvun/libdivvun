@@ -91,7 +91,7 @@ attlist.cg &= empty
 cgspell =
   element cgspell {
     attlist.cgspell,
-    ((lexicon, errmodel) | (lexicon, errmodel))
+    ((lexicon, errmodel) | (errmodel, lexicon))
   }
 attlist.cgspell &= empty
 
