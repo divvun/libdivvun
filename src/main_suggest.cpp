@@ -88,7 +88,7 @@ int main(int argc, char ** argv)
 			return(EXIT_FAILURE);
 		}
 
-		divvun::msgmap m;
+		divvun::MsgMap m;
 #ifdef HAVE_LIBPUGIXML
 		if(options.count("messages")) {
 			const auto& msgfile = options["messages"].as<std::string>();

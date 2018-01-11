@@ -119,7 +119,7 @@ void BlanktagCmd::run(stringstream& input, stringstream& output) const
 	blanktag->run(input, output);
 }
 
-SuggestCmd::SuggestCmd (const hfst::HfstTransducer* generator, divvun::msgmap msgs, const string& locale, bool verbose)
+SuggestCmd::SuggestCmd (const hfst::HfstTransducer* generator, divvun::MsgMap msgs, const string& locale, bool verbose)
 	: suggest(new Suggest(generator, msgs, locale, verbose))
 {
 }
@@ -139,7 +139,7 @@ void SuggestCmd::setIgnores(const std::set<err_id>& ignores)
 {
 	suggest->setIgnores(ignores);
 }
-const msgmap& SuggestCmd::getMsgs()
+const MsgMap& SuggestCmd::getMsgs()
 {
 	return suggest->msgs;
 }
@@ -231,7 +231,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 				std::istream is(&osrb);
 				return readTransducer(is);
 			};
-			ArEntryHandler<divvun::msgmap> procMsgs = [] (const string& ar_path, const void* buff, const size_t size) {
+			ArEntryHandler<divvun::MsgMap> procMsgs = [] (const string& ar_path, const void* buff, const size_t size) {
 				return Suggest::readMessages((char*)buff, size);
 			};
 			auto* s = new SuggestCmd(readArchiveExtract(ar_spec->ar_path, args["generator"], procGen),
