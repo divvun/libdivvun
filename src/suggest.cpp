@@ -84,9 +84,9 @@ enum LineType {
 
 
 #ifdef HAVE_LIBPUGIXML
-const msgmap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& result)
+const MsgMap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& result)
 {
-	msgmap msgs;
+	MsgMap msgs;
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 
 	if (result) {
@@ -130,24 +130,24 @@ const msgmap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& re
 }
 #endif
 
-const msgmap Suggest::readMessages(const char* buff, const size_t size) {
+const MsgMap Suggest::readMessages(const char* buff, const size_t size) {
 #ifdef HAVE_LIBPUGIXML
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_buffer(buff, size);
 	return readMessagesXml(doc, result);
 #else
-	msgmap msgs;
+	MsgMap msgs;
 	return msgs;
 #endif
 }
 
-const msgmap Suggest::readMessages(const string& file) {
+const MsgMap Suggest::readMessages(const string& file) {
 #ifdef HAVE_LIBPUGIXML
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(file.c_str());
 	return readMessagesXml(doc, result);
 #else
-	msgmap msgs;
+	MsgMap msgs;
 	return msgs;
 #endif
 }
@@ -380,13 +380,11 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 	}
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	u16string msg;
-	// TODO: locale, how? One process per locale (command-line-arg) or print all messages?
-	string locale = "se";
-	if(msgs.count(locale) == 0) {
-		std::cerr << "WARNING: No message at all for " << locale << std::endl;
-	}
-	else {
-		const auto& lmsgs = msgs.at(locale);
+	for(const auto& mlang : sortedmsglangs) {
+		if(msg.empty() && mlang != locale) {
+			std::cerr << "WARNING: No message for " << json::str(err_id) << " in xml:lang '" << locale << "', trying '" << mlang << "'" << std::endl;
+		}
+		const auto& lmsgs = msgs.at(mlang);
 		if(lmsgs.first.count(err_id) != 0) {
 			msg = lmsgs.first.at(err_id);
 		}
@@ -403,25 +401,27 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 					// TODO: cache results? but then no more constness:
 					// lmsgs.first.at(errId) = p.second;
 				}
-
 			}
 		}
-		if(msg.empty()) {
-			std::cerr << "WARNING: No message for " << json::str(err_id) << std::endl;
-			msg = err_id;
+		if(!msg.empty()) {
+			break;
 		}
-		// TODO: Make suitable structure on creating msgmap instead?
-		replaceAll(msg, u"$1", c.form);
-		for(const auto& r: c.readings) {
-			if((!r.errtype.empty()) && err_id != r.errtype) {
-				continue;
-			}
-			rel_on_match(r.rels, MSG_TEMPLATE_REL, sentence,
-				     [&] (const string& relname, size_t i_t, const Cohort& trg) {
-					     replaceAll(msg, utf16conv.from_bytes(relname.c_str()), trg.form);
-				     });
+	}
+	if(msg.empty()) {
+		std::cerr << "WARNING: No message for " << json::str(err_id) << " in any xml:lang" << std::endl;
+		msg = err_id;
+	}
+	// TODO: Make suitable structure on creating MsgMap instead?
+	replaceAll(msg, u"$1", c.form);
+	for(const auto& r: c.readings) {
+		if((!r.errtype.empty()) && err_id != r.errtype) {
+			continue;
 		}
-	} // msgs
+		rel_on_match(r.rels, MSG_TEMPLATE_REL, sentence,
+			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
+				     replaceAll(msg, utf16conv.from_bytes(relname.c_str()), trg.form);
+			     });
+	}
 	auto beg = c.pos;
 	auto end = c.pos + c.form.size();
 	UStringVector rep;
@@ -536,7 +536,7 @@ const string clean_blank(const string& raw)
 }
 
 
-Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const msgmap& msgs) {
+Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const MsgMap& msgs) {
 	size_t pos = 0;
 	Cohort c = DEFAULT_COHORT;
 	Sentence sentence;
@@ -840,18 +840,36 @@ void Suggest::run(std::istream& is, std::ostream& os, bool json)
 	}
 }
 
-Suggest::Suggest (const hfst::HfstTransducer* generator_, divvun::msgmap msgs_, bool verbose)
+SortedMsgLangs sortMessageLangs(const MsgMap& msgs, const string& prefer) {
+	SortedMsgLangs s;
+	if(msgs.count(prefer) != 0) {
+		s.push_back(prefer);
+	}
+	for(const auto& lm : msgs) {
+		if(lm.first != prefer) {
+			s.push_back(lm.first);
+		}
+	}
+	return s;
+}
+
+Suggest::Suggest (const hfst::HfstTransducer* generator_, divvun::MsgMap msgs_, const string& locale_, bool verbose)
 	: msgs(msgs_)
+	, locale(locale_)
+	, sortedmsglangs(sortMessageLangs(msgs, locale))
 	, generator(generator_)
 {
 }
-Suggest::Suggest (const string& gen_path, const string& msg_path, bool verbose)
+Suggest::Suggest (const string& gen_path, const string& msg_path, const string& locale_, bool verbose)
 	: msgs(readMessages(msg_path))
+	, locale(locale_)
+	, sortedmsglangs(sortMessageLangs(msgs, locale))
 	, generator(readTransducer(gen_path))
 {
 }
-Suggest::Suggest (const string& gen_path, bool verbose)
-	: generator(readTransducer(gen_path))
+Suggest::Suggest (const string& gen_path, const string& locale_, bool verbose)
+	: locale(locale_)
+	, generator(readTransducer(gen_path))
 {
 }
 

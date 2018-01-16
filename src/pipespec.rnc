@@ -1,3 +1,4 @@
+# THIS IS A GENERATED FILE, DO NOT EDIT!
 # Copyright (C) 2017, Kevin Brubeck Unhammer <unhammer@fsfe.org>
 
 # This program is free software: you can redistribute it and/or modify
@@ -78,23 +79,28 @@ attlist.label &= attribute xml:lang { text }
 # General "system" command – pipelines with this can only be used
 # in settings where we can open processes:
 sh = element sh { attlist.sh, arg* }
+# NOT IMPLEMENTED YET
 attlist.sh &= attribute prog { text }
 
 # Library-based commands – no IPC/process open() required since
 # these just use linked libraries:
-cg = element cg { attlist.cg, arg }
+cg = element cg { attlist.cg, \grammar }
 attlist.cg &= empty
 
 # arg: grammar.cg3
-cgspell = element cgspell { attlist.cgspell, arg, arg }
+cgspell =
+  element cgspell {
+    attlist.cgspell,
+    ((lexicon, errmodel) | (errmodel, lexicon))
+  }
 attlist.cgspell &= empty
 
 # arg1: acceptor.hfstol, arg2: errmodel.hfst
-tokenize = element tokenize { attlist.tokenize, arg }
+tokenize = element tokenize { attlist.tokenize, tokenizer }
 attlist.tokenize &= empty
 
 # arg: tokeniser.pmhfst
-tokenise = element tokenise { attlist.tokenise, arg }
+tokenise = element tokenise { attlist.tokenise, tokenizer }
 attlist.tokenise &= empty
 
 # en_GB alias of the above
@@ -102,16 +108,43 @@ mwesplit = element mwesplit { attlist.mwesplit, empty }
 attlist.mwesplit &= empty
 
 # takes no arguments
-blanktag = element blanktag { attlist.blanktag, arg }
+blanktag = element blanktag { attlist.blanktag, blanktagger }
 attlist.blanktag &= empty
 
-# takes no arguments
-suggest = element suggest { attlist.suggest, arg, arg }
+# arg: blanktagger.hfst
+suggest =
+  element suggest {
+    attlist.suggest,
+    ((generator, messages) | (messages, generator))
+  }
 attlist.suggest &= empty
 
 # arg1: generator.hfstol, arg2: error_messages.xml
+
+# Is there a way to generalize over these apart from shifting to <arg key=… val=…>?
 arg = element arg { attlist.arg, empty }
 attlist.arg &= attribute n { text }
+
+\grammar = element grammar { attlist.grammar, empty }
+attlist.grammar &= attribute n { text }
+
+lexicon = element lexicon { attlist.lexicon, empty }
+attlist.lexicon &= attribute n { text }
+
+errmodel = element errmodel { attlist.errmodel, empty }
+attlist.errmodel &= attribute n { text }
+
+tokenizer = element tokenizer { attlist.tokenizer, empty }
+attlist.tokenizer &= attribute n { text }
+
+blanktagger = element blanktagger { attlist.blanktagger, empty }
+attlist.blanktagger &= attribute n { text }
+
+generator = element generator { attlist.generator, empty }
+attlist.generator &= attribute n { text }
+
+messages = element messages { attlist.messages, empty }
+attlist.messages &= attribute n { text }
 
 em |= notAllowed
 start = pipespec

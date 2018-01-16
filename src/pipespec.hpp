@@ -40,6 +40,7 @@
 #include <fstream>
 #include <regex>
 #include <vector>
+#include <sys/stat.h>
 
 // divvun-gramcheck:
 #include "util.hpp"
@@ -61,24 +62,25 @@ using std::vector;
 
 class PipeSpec {
 	public:
-		PipeSpec() = default;
+		explicit PipeSpec(const string& file);
+		explicit PipeSpec(pugi::char_t* buff, size_t size);
 		PipeSpec(PipeSpec const &) = delete;
 		PipeSpec &operator=(PipeSpec const &) = delete;
 		// PipeSpec(const pugi::xml_document& doc, const std::unordered_map<u16string, pugi::xml_node>& pipespec)
 		// {
 		// 	throw std::runtime_error("PipeSpec can't be copied ");
 		// }
-		pugi::xml_document doc; // needs to be alive for as long as we're referring to nodes in it
 		std::unordered_map<u16string, pugi::xml_node> pnodes;
+		string language;
+	private:
+		pugi::xml_document doc; // needs to be alive for as long as we're referring to nodes in it
 };
-
-unique_ptr<PipeSpec> readPipeSpec(const string& file);
 
 class ArPipeSpec {
 	public:
-		explicit ArPipeSpec(const string& ar_path_)
+		explicit ArPipeSpec(const string& ar_path_, pugi::char_t* buff, size_t size)
 			: ar_path(ar_path_)
-			, spec(new PipeSpec) {}
+			, spec(new PipeSpec(buff, size)) {}
 		ArPipeSpec(ArPipeSpec const &) = delete;
 		ArPipeSpec &operator=(ArPipeSpec const &) = delete;
 		// ArPipeSpec(const unique_ptr<PipeSpec> spec, const string& ar_path)
@@ -189,20 +191,7 @@ Ret readArchiveExtract(const string& ar_path,
 inline
 unique_ptr<ArPipeSpec> readArPipeSpec(const string& ar_path) {
 	ArEntryHandler<unique_ptr<ArPipeSpec>> f = [] (const string& ar_path, const void* buff, const size_t size) {
-		unique_ptr<ArPipeSpec> ar_spec = unique_ptr<ArPipeSpec>(new ArPipeSpec(ar_path));
-		pugi::xml_parse_result result = ar_spec->spec->doc.load_buffer((pugi::char_t*)buff, size);
-		std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-		if (result) {
-			for (pugi::xml_node pipeline: ar_spec->spec->doc.child("pipespec").children("pipeline")) {
-				const u16string& pipename = utf16conv.from_bytes(pipeline.attribute("name").value());
-				auto pr = std::make_pair(pipename, pipeline);
-				ar_spec->spec->pnodes[pipename] = pipeline;
-			}
-		}
-		else {
-			std::cerr << "pipespec.xml:" << result.offset << " ERROR: " << result.description() << "\n";
-			throw std::runtime_error("ERROR: Couldn't load the pipespec.xml");
-		}
+		unique_ptr<ArPipeSpec> ar_spec = unique_ptr<ArPipeSpec>(new ArPipeSpec(ar_path, (pugi::char_t*)buff, size));
 		return ar_spec;
 	};
 	return readArchiveExtract(ar_path, "pipespec.xml", f);
@@ -211,6 +200,9 @@ unique_ptr<ArPipeSpec> readArPipeSpec(const string& ar_path) {
 
 void writePipeSpecSh(const string& specfile, const u16string& pipename, bool json, std::ostream& os);
 void writePipeSpecShDir(const string& specfile, bool json, const string& modesdir, bool nodebug);
+
+/* Run this first to feel safe in indexing into args. */
+void validatePipespecCmd(const pugi::xml_node& cmd, const std::unordered_map<string, string>& args);
 
 }
 

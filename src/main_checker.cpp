@@ -28,7 +28,7 @@ using divvun::Pipeline;
 
 variant<int, Pipeline> getPipelineXml(const std::string& path, const std::u16string& pipename, bool verbose) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	const auto& spec = divvun::readPipeSpec(path);
+	const std::unique_ptr<divvun::PipeSpec> spec(new divvun::PipeSpec(path));
 	if(spec->pnodes.find(pipename) == spec->pnodes.end()) {
 		std::cerr << "ERROR: Couldn't find pipe " << utf16conv.to_bytes(pipename) << " in " << path << std::endl;
 		return EXIT_FAILURE;
@@ -47,7 +47,7 @@ variant<int, Pipeline> getPipelineAr(const std::string& path, const std::u16stri
 }
 
 int printNamesXml(const std::string& path, bool verbose) {
-	const auto& spec = divvun::readPipeSpec(path);
+	const std::unique_ptr<divvun::PipeSpec> spec(new divvun::PipeSpec(path));
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::cout << "Please specify a pipeline variant with the -n/--variant option. Available variants in pipespec:" << std::endl;
 	for(const auto& p : spec->pnodes) {

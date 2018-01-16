@@ -54,7 +54,8 @@ using std::vector;
 
 using UStringVector = vector<u16string>;
 
-using msgmap = std::unordered_map<Lang, std::pair<ToggleIds, ToggleRes> >;	// msgs[lang] = make_pair(ToggleIds, ToggleRes)
+using MsgMap = std::unordered_map<Lang, pair<ToggleIds, ToggleRes> >;	// msgs[Lang] = make_pair(ToggleIds, ToggleRes)
+using SortedMsgLangs = vector<Lang>; // sorted with preferred language first
 
 inline string xml_raw_cdata(const pugi::xml_node& label) {
 	std::ostringstream os;
@@ -110,9 +111,9 @@ struct Sentence {
 
 class Suggest {
 	public:
-		Suggest(const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose);
-		Suggest(const string& gen_path, const string& msg_path, bool verbose);
-		Suggest(const string& gen_path, bool verbose);
+		Suggest(const hfst::HfstTransducer* generator, divvun::MsgMap msgs, const string& locale, bool verbose);
+		Suggest(const string& gen_path, const string& msg_path, const string& locale, bool verbose);
+		Suggest(const string& gen_path, const string& locale, bool verbose);
 		~Suggest() = default;
 
 		void run(std::istream& is, std::ostream& os, bool json);
@@ -120,11 +121,13 @@ class Suggest {
 		vector<Err> run_errs(std::istream& is);
 		void setIgnores(const std::set<ErrId>& ignores);
 
-		static const msgmap readMessages(const string& file);
-		static const msgmap readMessages(const char* buff, const size_t size);
+		static const MsgMap readMessages(const string& file);
+		static const MsgMap readMessages(const char* buff, const size_t size);
 
-		const msgmap msgs;
+		const MsgMap msgs;
+		const string locale;
 	private:
+		const SortedMsgLangs sortedmsglangs; // invariant: contains all and only the keys of msgs
 		RunState run_json(std::istream& is, std::ostream& os);
 		std::unique_ptr<const hfst::HfstTransducer> generator;
 		std::set<ErrId> ignores;

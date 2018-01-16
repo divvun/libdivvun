@@ -70,23 +70,27 @@
 
 <!-- General "system" command – pipelines with this can only be used
      in settings where we can open processes: -->
-<!ELEMENT sh (arg*)>
+<!ELEMENT sh (arg*)> <!-- NOT IMPLEMENTED YET -->
 <!ATTLIST sh
           prog CDATA #REQUIRED
 >
 
 <!-- Library-based commands – no IPC/process open() required since
      these just use linked libraries: -->
-<!ELEMENT cg (arg)>           <!-- arg: grammar.cg3 -->
-<!ELEMENT cgspell (arg, arg)> <!-- arg1: acceptor.hfstol, arg2: errmodel.hfst -->
-<!ELEMENT tokenize (arg)>     <!-- arg: tokeniser.pmhfst -->
-<!ELEMENT tokenise (arg)>     <!-- en_GB alias of the above -->
+<!ELEMENT cg (grammar)>           <!-- arg: grammar.cg3 -->
+<!ELEMENT cgspell ((lexicon, errmodel)|(errmodel, lexicon))> <!-- arg1: acceptor.hfstol, arg2: errmodel.hfst -->
+<!ELEMENT tokenize (tokenizer)>     <!-- arg: tokeniser.pmhfst -->
+<!ELEMENT tokenise (tokenizer)>     <!-- en_GB alias of the above -->
 <!ELEMENT mwesplit EMPTY>     <!-- takes no arguments -->
-<!ELEMENT blanktag (arg)>     <!-- takes no arguments -->
-<!ELEMENT suggest (arg, arg)> <!-- arg1: generator.hfstol, arg2: error_messages.xml -->
+<!ELEMENT blanktag (blanktagger)> <!-- arg: blanktagger.hfst -->
+<!ELEMENT suggest ((generator, messages)|(messages, generator))> <!-- arg1: generator.hfstol, arg2: error_messages.xml -->
 
-
-<!ELEMENT arg EMPTY>
-<!ATTLIST arg
-          n CDATA #REQUIRED
->
+<!-- Is there a way to generalize over these apart from shifting to <arg key=… val=…>? -->
+<!ELEMENT arg EMPTY>         <!ATTLIST arg n CDATA #REQUIRED>
+<!ELEMENT grammar EMPTY>     <!ATTLIST grammar n CDATA #REQUIRED>
+<!ELEMENT lexicon EMPTY>     <!ATTLIST lexicon n CDATA #REQUIRED>
+<!ELEMENT errmodel EMPTY>    <!ATTLIST errmodel n CDATA #REQUIRED>
+<!ELEMENT tokenizer EMPTY>   <!ATTLIST tokenizer n CDATA #REQUIRED>
+<!ELEMENT blanktagger EMPTY> <!ATTLIST blanktagger n CDATA #REQUIRED>
+<!ELEMENT generator EMPTY>   <!ATTLIST generator n CDATA #REQUIRED>
+<!ELEMENT messages EMPTY>    <!ATTLIST messages n CDATA #REQUIRED>

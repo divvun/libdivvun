@@ -28,7 +28,7 @@ const std::u16string from_bytes(const std::string& s) {
 }
 
 // CheckerSpec
-CheckerSpec::CheckerSpec(const std::string& file) : pImpl( readPipeSpec(file) )
+CheckerSpec::CheckerSpec(const std::string& file) : pImpl( new PipeSpec(file) )
 {
 	// std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	// for(const auto& k : pImpl->pnodes) {

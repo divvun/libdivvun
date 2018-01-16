@@ -135,6 +135,7 @@ class Speller {
 		const bool real_word;
 		const unsigned long limit;
 		void spell(const string& form, std::ostream& os);
+		bool analyse_when_correct = false; // Look up the analysis for forms that had an analysis in lex already.
 	private:
 		// const void print_readings(const vector<string>& ana,
 		// 			  const string& form,

@@ -193,13 +193,13 @@ class BlanktagCmd: public PipeCmd {
 
 class SuggestCmd: public PipeCmd {
 	public:
-		SuggestCmd (const hfst::HfstTransducer* generator, divvun::msgmap msgs, bool verbose);
-		SuggestCmd (const string& gen_path, const string& msg_path, bool verbose);
+		SuggestCmd (const hfst::HfstTransducer* generator, divvun::MsgMap msgs, const string& locale, bool verbose);
+		SuggestCmd (const string& gen_path, const string& msg_path, const string& locale, bool verbose);
 		void run(stringstream& input, stringstream& output) const override;
 		vector<Err> run_errs(stringstream& input) const;
 		~SuggestCmd() override = default;
 		void setIgnores(const std::set<ErrId>& ignores);
-		const msgmap& getMsgs();
+		const MsgMap& getMsgs();
 	private:
 		unique_ptr<Suggest> suggest;
 };
@@ -233,7 +233,7 @@ inline void parsePrefs(LocalisedPrefs& prefs, const pugi::xml_node& cmd) {
 	}
 };
 
-inline void mergePrefsFromMsgs(LocalisedPrefs& prefs, const msgmap& msgs) {
+inline void mergePrefsFromMsgs(LocalisedPrefs& prefs, const MsgMap& msgs) {
 	for(const auto& lm : msgs) {
 		const Lang& lang = lm.first;
 		const ToggleIds& tids = lm.second.first;

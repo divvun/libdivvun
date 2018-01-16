@@ -36,6 +36,7 @@ int main(int argc, char ** argv)
 #else
 			("m,messages", "ERROR messages not supported (recompile with pugixml to use those)", cxxopts::value<std::string>(), "FILE")
 #endif
+			("l,lang", "Locale / xml:lang to use for messages", cxxopts::value<std::string>(), "LANG")
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
 			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 if --json).")
@@ -76,6 +77,8 @@ int main(int argc, char ** argv)
 		bool json = options.count("j");
 		bool verbose = options.count("v");
 
+		const auto& locale = options.count("lang") ? options["lang"].as<std::string>() : "se";
+
 		if(verbose) {
 			std::cerr << "Reading transducer " << genfile << std::endl;
 		}
@@ -85,7 +88,7 @@ int main(int argc, char ** argv)
 			return(EXIT_FAILURE);
 		}
 
-		divvun::msgmap m;
+		divvun::MsgMap m;
 #ifdef HAVE_LIBPUGIXML
 		if(options.count("messages")) {
 			const auto& msgfile = options["messages"].as<std::string>();
@@ -108,7 +111,7 @@ int main(int argc, char ** argv)
 		}
 #endif
 
-		divvun::Suggest s(t, m, verbose);
+		divvun::Suggest s(t, m, locale, verbose);
 		s.run(std::cin, std::cout, json);
 	}
 	catch (const cxxopts::OptionException& e)
