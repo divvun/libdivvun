@@ -64,15 +64,15 @@ int runAr(const std::string& path, const std::u16string& pipename, bool verbose)
 		ar_pipeline->proc(pipe_in, pipe_out);
 		std::cout << pipe_out.str() << std::endl;
 		std::stringstream pipe_in2(line);
-		const auto& errs = ar_pipeline->proc_errs_bytes(pipe_in2);
+		const auto& errs = ar_pipeline->proc_errs(pipe_in2);
 		for(const auto& e : errs) {
-			std::cout << "form=" << e.form
+			std::cout << "form=" << utf16conv.to_bytes(e.form)
 				  << " beg=" << e.beg
 				  << " end=" << e.end
-				  << " err=" << e.err
-				  << " msg=" << e.msg;
+				  << " err=" << utf16conv.to_bytes(e.err)
+				  << " msg=" << utf16conv.to_bytes(e.msg);
 			for(const auto& r : e.rep) {
-				std::cout << " rep=" << r;
+				std::cout << " rep=" << utf16conv.to_bytes(r);
 			}
 			std::cout  << std::endl;
 		}
