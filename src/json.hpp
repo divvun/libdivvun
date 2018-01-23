@@ -103,7 +103,7 @@ inline void sanity_test() {
 	std::string want = "\"e\\u0009r\\\"r\\\\s\\nfoo\":";
 	if(got != want){
 		std::cerr << "Error in json::key\n GOT: "<< got << "\nWANT: " << want << std::endl;
-		std::exit(EXIT_FAILURE);
+		throw std::runtime_error("JSON sanity check failed, major regression!");
 	}
 }
 
