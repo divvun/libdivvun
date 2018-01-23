@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if ! command -V git >/dev/null 2>/dev/null; then
+    # We use git to make pristine copy of ./examples; skip if we don't have git (e.g. package builders)
+    echo "No git, skipping run-lib test"
+    exit 77
+fi
+
 set -u
 
 set -e
