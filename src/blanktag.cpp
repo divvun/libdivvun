@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2015-2017, Kevin Brubeck Unhammer <unhammer@fsfe.org>
+* Copyright (C) 2015-2018, Kevin Brubeck Unhammer <unhammer@fsfe.org>
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
