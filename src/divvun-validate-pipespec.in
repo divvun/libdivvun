@@ -1,8 +1,26 @@
 #!/bin/sh
 
-if [ "$#" != 1 ]; then
-    echo "USAGE: divvun-validate-pipespec FILE"
-    exit 1
+usage () {
+    cat <<EOF
+Usage:
+  divvun-validate-pipespec FILE - error if FILE is not valid pipespec xml
+EOF
+}
+
+if [ "$#" != 0 ]; then
+    case "$1" in
+        -V|--version)
+            echo "$0 - @PACKAGE_NAME@ version @PACKAGE_VERSION@"
+            exit
+            ;;
+        -h|--help)
+            usage
+            exit
+            ;;
+        *) usage
+           exit 1
+           ;;
+    esac
 fi
 
 file="$1"

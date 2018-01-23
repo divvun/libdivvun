@@ -20,6 +20,7 @@
 #endif
 
 #include "suggest.hpp"
+#include "version.hpp"
 #include "cxxopts.hpp"
 
 int main(int argc, char ** argv)
@@ -41,6 +42,7 @@ int main(int argc, char ** argv)
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
 			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 if --json).")
 			("v,verbose", "Be verbose")
+			("V,version", "Version information")
 			("h,help", "Print help")
 			;
 
@@ -66,6 +68,13 @@ int main(int argc, char ** argv)
 			std::cout << options.help({""}) << std::endl;
 			return(EXIT_SUCCESS);
 		}
+
+		if (options.count("version"))
+		{
+			divvun::print_version(argv[0]);
+			return(EXIT_SUCCESS);
+		}
+
 		if (!options.count("generator"))
 		{
 			std::cout << options.help({""}) << std::endl;

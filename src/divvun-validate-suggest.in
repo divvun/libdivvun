@@ -1,8 +1,26 @@
 #!/bin/sh
 
-if [ "$#" != 1 ]; then
-    echo "USAGE: divvun-validate-suggest FILE"
-    exit 1
+usage () {
+    cat <<EOF
+Usage:
+  divvun-validate-suggest FILE - error if FILE is not valid error messages xml for divvun-suggest
+EOF
+}
+
+if [ "$#" != 0 ]; then
+    case "$1" in
+        -V|--version)
+            echo "$0 - @PACKAGE_NAME@ version @PACKAGE_VERSION@"
+            exit
+            ;;
+        -h|--help)
+            usage
+            exit
+            ;;
+        *) usage
+           exit 1
+           ;;
+    esac
 fi
 
 file="$1"

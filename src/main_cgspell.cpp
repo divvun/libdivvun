@@ -20,6 +20,7 @@
 #endif
 
 #include "cgspell.hpp"
+#include "version.hpp"
 #include "cxxopts.hpp"
 
 using hfst_ospell::Weight;
@@ -48,6 +49,7 @@ int main(int argc, char ** argv)
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
 			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 if --json).")
 			("v,verbose", "Be verbose")
+			("V,version", "Version information")
 			("h,help", "Print help")
 			;
 		options.add_options("Positional") // don't show in help
@@ -56,6 +58,18 @@ int main(int argc, char ** argv)
 
 		options.parse_positional("positional");
 		options.parse(argc, argv);
+
+		if (options.count("help"))
+		{
+			std::cout << options.help({""}) << std::endl;
+			return(EXIT_SUCCESS);
+		}
+
+		if (options.count("version"))
+		{
+			divvun::print_version(argv[0]);
+			return(EXIT_SUCCESS);
+		}
 
 		if(positional.size() > 2) {
 			std::cout << options.help({""}) << std::endl;
@@ -87,12 +101,6 @@ int main(int argc, char ** argv)
 				std::cerr << argv[0] << " ERROR: expected either --archive or both --lexicon and --errmodel options." << std::endl;
 				return(EXIT_FAILURE);
 			}
-		}
-
-		if (options.count("help"))
-		{
-			std::cout << options.help({""}) << std::endl;
-			return(EXIT_SUCCESS);
 		}
 
 		const auto& verbose = options.count("verbose");

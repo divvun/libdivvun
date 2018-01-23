@@ -1,13 +1,28 @@
 #!/bin/sh
 
-if [ "$#" != 0 ]; then
+usage () {
     cat <<EOF
 USAGE: divvun-gen-xmlschemas >schemas.xml
 
 If schemas.xml is in the same directory as errors.xml or pipespec.xml,
 Emacs will give on-the-fly validation using the DTD's.
 EOF
-    exit 1
+}
+
+if [ "$#" != 0 ]; then
+    case "$1" in
+        -V|--version)
+            echo "$0 - @PACKAGE_NAME@ version @PACKAGE_VERSION@"
+            exit
+            ;;
+        -h|--help)
+            usage
+            exit
+            ;;
+        *) usage
+           exit 1
+           ;;
+    esac
 fi
 
 # If it looks like we're not installed, use the errors.dtd of the same

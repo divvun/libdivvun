@@ -20,6 +20,7 @@
 #endif
 
 #include "pipespec.hpp"
+#include "version.hpp"
 #include "cxxopts.hpp"
 
 int main(int argc, char ** argv)
@@ -36,6 +37,7 @@ int main(int argc, char ** argv)
 			("j,json"   , "Make pipelines output JSON instead of CG format")
 			("g,nodebug", "With -d/--dir, don't output debug / trace modes.")
 			("v,verbose", "Be verbose")
+			("V,version", "Version information")
 			("h,help"   , "Print help")
 			;
 
@@ -57,6 +59,13 @@ int main(int argc, char ** argv)
 			std::cout << options.help({""}) << std::endl;
 			return EXIT_SUCCESS;
 		}
+
+		if (options.count("version"))
+		{
+			divvun::print_version(argv[0]);
+			return(EXIT_SUCCESS);
+		}
+
 		bool verbose = options.count("v");
 		bool json = options.count("j");
 

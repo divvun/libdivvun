@@ -183,6 +183,7 @@ dnl ===========================
 
 AC_OUTPUT(Makefile
           src/Makefile
+          src/version.hpp
           python/Makefile
 	  python/setup.py
           test/suggest/Makefile

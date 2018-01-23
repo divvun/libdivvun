@@ -6,6 +6,9 @@ BUILT_SOURCES = libdivvun_wrap.cpp libdivvun.py
 CLEANFILES = $(BUILT_SOURCES)
 
 all-local: $(BUILT_SOURCES)
+
+%_wrap.cpp %.py: %.i setup.py std_unique_ptr.i
+	$(SWIG) -c++ -python -I$(top_srcdir)/src/lib -o $*_wrap.cpp -outdir . $(srcdir)/$*.i
 	CPPFLAGS="$(CPPFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" $(PYTHON) setup.py build_ext
 
 install-exec-local:
@@ -20,5 +23,3 @@ uninstall-local:
 clean-local:
 	rm -rf build __pycache__
 
-libdivvun_wrap.cpp libdivvun.py: $(SWIG_INTERFACE)
-	$(SWIG) -c++ -python -I$(top_srcdir)/src/lib -o libdivvun_wrap.cpp -outdir . $(srcdir)/$(SWIG_INTERFACE)

@@ -20,6 +20,7 @@
 #endif
 
 #include "pipeline.hpp"
+#include "version.hpp"
 #include "cxxopts.hpp"
 
 using divvun::variant;
@@ -120,6 +121,7 @@ int main(int argc, char ** argv)
 			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 if --json).")
 			("p,preferences", "Print the preferences defined by the given pipeline")
 			("v,verbose", "Be verbose")
+			("V,version", "Version information")
 			("h,help", "Print help")
 			;
 
@@ -144,6 +146,13 @@ int main(int argc, char ** argv)
 			std::cout << options.help({""}) << std::endl;
 			return EXIT_SUCCESS;
 		}
+
+		if (options.count("version"))
+		{
+			divvun::print_version(argv[0]);
+			return(EXIT_SUCCESS);
+		}
+
 		bool verbose = options.count("v");
 
 		auto ignores = std::set<divvun::ErrId>();

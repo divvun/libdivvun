@@ -15,6 +15,9 @@ build () {
     ./configure --prefix="$HOME"/PREFIX/gtd-gc --with-trang="$HOME"/.jedit/jars/trang.jar --enable-checker
     make -j3
     make -j3 install
+    for prog in "$HOME"/PREFIX/gtd-gc/bin/divvun*; do
+        ( cd "$HOME"/PREFIX/gtd-gc/bin/ && help2man -N -S divvun-gramcheck "${prog##*/}" ) > src/"${prog##*/}".1
+    done
     make -j3 check
     git ls-files src | grep pp$ | grep -ve mapbox -e cxxopts | xargs -I{} clang-tidy --checks='-*,modernize-*,-modernize-make-unique,-modernize-pass-by-value,-modernize-raw-string-literal' {} -- -Isrc -std=c++11
 }
