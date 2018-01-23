@@ -2,6 +2,9 @@
 
 set -u
 
+# TODO: This fails with mawk – can we make it work with both, or
+# perhaps use plain bash?
+
 if ! command -V timeout >/dev/null 2>/dev/null; then
     # require /usr/bin/timeout, since it could hang if there's a bug
     exit 77

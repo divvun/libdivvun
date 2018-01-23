@@ -2,6 +2,8 @@ AC_INIT([Divvun gramcheck], [0.2.0], [unhammer+apertium@mm.st], [divvun-gramchec
 AC_CONFIG_SRCDIR([src])
 AM_INIT_AUTOMAKE
 
+dnl TODO: tests require zip and gawk (not mawk)
+
 # AC_PROG_LIBTOOL deprecated in favour of LT_INIT
 LT_INIT
 
@@ -20,6 +22,20 @@ CXXFLAGS="$CXXFLAGS $CG3_CFLAGS"
 AC_PROG_CXX
 
 dnl check for C++11 support:
+
+# TODO: Checks for highest supported C++ standard, and fail if none of these work
+dnl AC_LANG(C++)
+dnl AX_CHECK_COMPILE_FLAG([-std=c++17], [CXXFLAGS="$CXXFLAGS -std=c++17"], [
+ dnl AX_CHECK_COMPILE_FLAG([-std=c++1z], [CXXFLAGS="$CXXFLAGS -std=c++1z"], [
+  dnl AX_CHECK_COMPILE_FLAG([-std=c++14], [CXXFLAGS="$CXXFLAGS -std=c++14"], [
+   dnl AX_CHECK_COMPILE_FLAG([-std=c++1y], [CXXFLAGS="$CXXFLAGS -std=c++1y"], [
+    dnl AX_CHECK_COMPILE_FLAG([-std=c++11], [CXXFLAGS="$CXXFLAGS -std=c++11"], [])
+   dnl ])
+  dnl ])
+ dnl ])
+dnl ])
+
+dnl TODO: AC_LANG, not AC_LANG_PUSH? https://www.gnu.org/software/autoconf/manual/autoconf-2.63/html_node/Language-Choice.html
 AC_LANG_PUSH([C++])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE(
   [[template <typename T>
@@ -77,7 +93,7 @@ AC_ARG_ENABLE([checker],
               [enable_checker=$enableval],
               [enable_checker=check])
 AS_IF([test "x$enable_checker" != xno],
-      [AS_IF([test x"$enable_checker" = xyes], dnl Explicitly enabled -- fail if missing xml/cgspell
+      [AS_IF([test x"$enable_checker" = xyes], dnl Explicitly enabled -- fail if missing deps
               AS_IF([test x"$enable_xml" = xno],
                     [AC_MSG_ERROR([you need --enable-xml if you want --enable-checker
 
@@ -99,7 +115,7 @@ AS_IF([test "x$enable_checker" != xno],
                                      [AC_MSG_ERROR([checker support requires either libarchive or libarchive2 for opening zipped pipespec archives])
                                       enable_checker=no],
                                      [enable_checker=no])])])])
-AM_CONDITIONAL([WANT_CHECKER], [test x$enable_checker != xno])
+AM_CONDITIONAL([WANT_CHECKER], [test "x$enable_checker" != xno])
 
 
 AC_CONFIG_FILES([src/divvun-gen-xmlschemas],    [chmod +x src/divvun-gen-xmlschemas])
@@ -116,8 +132,59 @@ AC_ARG_VAR([TRANG], [Path to trang.jar (dev dependency for updating DTD)])
 AC_ARG_WITH([trang], [AS_HELP_STRING([--with-trang],[Path to trang.jar (dev dependency for updating DTD)])], [TRANG=$withval], [TRANG=])
 AM_CONDITIONAL([HAVE_TRANG], [test x"$TRANG" != x])
 
+
+dnl ===============
+dnl Checks for SWIG
+dnl ===============
+AC_PATH_PROG([SWIG], [swig])
+AS_IF([test ! "$SWIG"],
+      [AC_PATH_PROG([SWIG], [swig3.0])])
+AM_CONDITIONAL([HAVE_SWIG], [test "$SWIG"])
+AS_IF([test ! "$SWIG"],
+      [AC_MSG_WARN([SWIG not found. SWIG is required to build divvun-gramcheck python bindings.])])
+
+
+dnl =================
+dnl Checks for Python
+dnl =================
+AM_PATH_PYTHON([3.0],
+               [],
+               [AC_MSG_WARN([Python not found. Python is required to build divvun-gramcheck python bindings.])])
+AS_IF([test "$PYTHON" != :],
+      [python_include_path=`$PYTHON -c "import distutils.sysconfig; print(distutils.sysconfig.get_python_inc());"`
+       AC_CHECK_HEADERS([${python_include_path}/Python.h],
+                        [have_python_header=true],
+                        [AC_MSG_WARN([Python.h header file not found. Python development files are required to build the divvun-gramcheck python bindings.])],
+                        [])])
+AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != : -a "x$have_python_header" = xtrue])
+
+AC_ARG_ENABLE([python-bindings],
+              AS_HELP_STRING([--disable-python-bindings],
+                             [build python bindings (default=enabled)]),
+              [enable_python_bindings=$enableval],
+              [enable_python_bindings=check])
+AS_IF([test "x$enable_python_bindings" != xno],
+      [AS_IF([test x"$enable_python_bindings" = xyes], dnl Explicitly enabled -- fail if missing deps
+             [AS_IF([test "$PYTHON" = : -o "x$have_python_header" != xtrue],
+                    [AC_MSG_ERROR([cannot find python/python headers (use --disable-python-bindings if you don't need the bindings)])])
+              AS_IF([test ! "$SWIG"],
+                    [AC_MSG_ERROR([cannot find SWIG (use --disable-python-bindings if you don't need the bindings)])])
+             ],
+             dnl Not explicitly enabled, enable if we have deps:
+             AS_IF([test "$SWIG" -a "$PYTHON" != : -a "x$have_python_header" = xtrue],
+                   [enable_python_bindings=yes],
+                   [enable_python_bindings=no]))
+      ])
+AM_CONDITIONAL([WANT_PYTHON_BINDINGS], [test "x$enable_python_bindings" != xno])
+
+dnl ===========================
+dnl Create the files from .in's
+dnl ===========================
+
 AC_OUTPUT(Makefile
           src/Makefile
+          python/Makefile
+	  python/setup.py
           test/suggest/Makefile
           test/checker/Makefile
           test/blanktag/Makefile
@@ -128,5 +195,8 @@ cat <<EOF
     * checker support: $enable_checker
     * cgspell support: $enable_cgspell
     * xml support: $enable_xml
+    * python/swig bindings: $enable_python_bindings
     * trang: $TRANG
+    * python: $PYTHON
+    * swig: $SWIG
 EOF

@@ -1,0 +1,47 @@
+#!/usr/bin/python
+
+"""
+Setup for SWIG Python bindings for libdivvun
+"""
+
+from distutils.core import setup, Extension
+
+# TODO: Can we get static linking automatically through configure @options@?
+# To link statically, we should use:
+# library_dirs = []
+# libraries = []
+# extra_objects = absolute_libdivvun_src_path + "/.libs/libdivvun.a"
+
+
+def getenv_list(var_name):
+    from os import getenv
+    var = getenv(var_name)
+    if var:
+        return var.split()
+    else:
+        return []
+
+
+libdivvun_module = Extension(
+        '_libdivvun',
+        ['libdivvun_wrap.cpp'],
+        include_dirs=['@top_srcdir@/src'],
+        library_dirs=['@top_srcdir@/src/.libs'],
+        libraries=['divvun'],
+        extra_compile_args=getenv_list('CPPFLAGS') + getenv_list('CXXFLAGS'),
+        extra_link_args=getenv_list('LDFLAGS'))
+
+
+setup(name='python-@PACKAGE@',
+      version='@PACKAGE_VERSION@',
+      description='SWIG interface to @PACKAGE_NAME@',
+      long_description="SWIG interface to @PACKAGE_NAME@ for use in"
+      + "libreoffice-divvun. See http://divvun.no for more information",
+      author='Kevin Brubeck Unhammer',
+      author_email='@PACKAGE_BUGREPORT@',
+      license='GPL-3.0',
+      maintainer='Kevin Brubeck Unhammer',
+      maintainer_email='@PACKAGE_BUGREPORT@',
+      url='http://divvun.no',
+      py_modules=['libdivvun'],
+      ext_modules=[libdivvun_module])

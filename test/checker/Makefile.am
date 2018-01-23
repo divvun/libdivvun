@@ -29,7 +29,13 @@ blanktagger.hfst: blanktagger.xfst
 	rm $@.tmp
 
 check_DATA = sme.zcheck tokeniser.pmhfst generator.hfstol errors.xml blanktagger.hfst
-TESTS = ./run.xml.sh ./run.archive.sh ./run.spell.sh ./run-lib
+
+TESTS = ./run.xml ./run.archive ./run.spell
+if WANT_PYTHON_BINDINGS
+TESTS += ./run-python-bindings
+endif
+# Keep the slowest one last:
+TESTS += ./run-lib
 
 CLEANFILES = $(check_DATA) analyser.hfst generator.hfstol errors.xml acceptor.hfstol errmodel.hfst
 

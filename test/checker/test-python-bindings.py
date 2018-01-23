@@ -2,7 +2,7 @@
 
 import libdivvun
 
-spec = libdivvun.ArCheckerSpec("../test/checker/sme.zcheck")
+spec = libdivvun.ArCheckerSpec("sme.zcheck")
 smegram = spec.getChecker("smegram", True)
 
 
