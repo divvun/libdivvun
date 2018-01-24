@@ -7,21 +7,19 @@ Usage:
 EOF
 }
 
-if [ "$#" != 0 ]; then
-    case "$1" in
-        -V|--version)
-            echo "$0 - @PACKAGE_NAME@ version @PACKAGE_VERSION@"
-            exit
-            ;;
-        -h|--help)
-            usage
-            exit
-            ;;
-        *) usage
-           exit 1
-           ;;
-    esac
-fi
+case "$1" in
+    -V|--version)
+        echo "$0 - @PACKAGE_NAME@ version @PACKAGE_VERSION@"
+        exit
+        ;;
+    -h|--help)
+        usage
+        exit
+        ;;
+    "") usage
+        exit 1
+        ;;
+esac
 
 file="$1"
 
