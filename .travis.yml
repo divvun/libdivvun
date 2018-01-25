@@ -22,7 +22,7 @@ addons:
       version: $TRAVIS_COMMIT
       description: "Build submitted via Travis CI"
     notification_email: unhammer+dill@mm.st
-    build_command_prepend: "./autogen.sh && ./configure --enable-checker && make clean"
+    build_command_prepend: "./autogen.sh && ./configure --enable-checker --enable-python-bindings && make clean"
     build_command:   "make -j4"
     branch_pattern: coverity_scan
 
@@ -36,7 +36,7 @@ matrix:
     - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "Running coverity_scan on this configuration …"; echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt; fi
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
-    - sudo apt-get -f install -y libhfst-dev libcg3-dev hfst-ospell-dev
+    - sudo apt-get -f install -y libhfst-dev libcg3-dev hfst-ospell-dev swig3.0 libpython3-dev
     # - ./autogen.sh
     script:
     - scripts/travis-build
@@ -52,7 +52,7 @@ matrix:
     - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "We only coverity_scan for one square of the matrix, exiting"; exit 0; fi
     before_script:
     - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
-    - sudo apt-get -f install -y libhfst-dev libcg3-dev hfst-ospell-dev
+    - sudo apt-get -f install -y libhfst-dev libcg3-dev hfst-ospell-dev swig3.0 libpython3-dev
     # - ./autogen.sh
     script:
     - scripts/travis-build
@@ -69,6 +69,8 @@ matrix:
     - travis_retry brew update
     - brew ls --versions pugixml    || travis_retry brew install pugixml
     - brew ls --versions libarchive || travis_retry brew install libarchive
+    - brew ls --versions swig       || travis_retry brew install swig
+    - brew ls --versions python3    || travis_retry brew install python3
     script:
     - scripts/travis-build
 
@@ -82,6 +84,8 @@ matrix:
     - travis_retry brew update
     - brew ls --versions pugixml    || travis_retry brew install pugixml
     - brew ls --versions libarchive || travis_retry brew install libarchive
+    - brew ls --versions swig       || travis_retry brew install swig
+    - brew ls --versions python3    || travis_retry brew install python3
     script:
     - scripts/travis-build
 
