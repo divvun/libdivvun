@@ -34,6 +34,7 @@ old/
 /src/#*#
 /src/blanktag.lo
 /src/divvun-blanktag
+/src/version.hpp
 
 /test-driver
 /test-suite.log
@@ -69,14 +70,16 @@ old/
 /test/checker/output.archive.json
 /test/checker/output.spell.json
 /test/checker/output.xml.json
-/test/checker/run.archive.sh.log
-/test/checker/run.archive.sh.trs
-/test/checker/run.spell.sh.log
-/test/checker/run.spell.sh.trs
-/test/checker/run.xml.sh.log
-/test/checker/run.xml.sh.trs
 /test/checker/.tern-port
 /test/checker/blanktagger.hfst
+/test/checker/run-python-bindings.log
+/test/checker/run-python-bindings.trs
+/test/checker/run.archive.log
+/test/checker/run.xml.trs
+/test/checker/run.xml.log
+/test/checker/run.spell.trs
+/test/checker/run.spell.log
+/test/checker/run.archive.trs
 
 /test/cgspell/analyser.hfst
 /test/cgspell/analyser.hfstol
@@ -124,3 +127,4 @@ old/
 /python/build/
 /python/_libdivvun.cpython-36m-x86_64-linux-gnu.so
 /python/.mypy_cache/
+/python/setup.py
