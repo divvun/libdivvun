@@ -175,39 +175,73 @@ void Speller::spell(const string& inform, std::ostream& os)
 	}
 }
 
+
+void proc_sent(const SpellSent& sent, std::ostream& os, Speller& s) {
+	bool do_spell = (sent.cohorts.size() < s.min_sent_max_unknown)
+		|| (sent.n_unknowns <= s.max_sent_unknown_rate * sent.cohorts.size());
+	for(const auto& r : sent.cohorts) {
+		for(const auto& line : r.lines) {
+			os << line << std::endl;
+		}
+		if (!r.wf.empty() && (s.real_word || r.unknown))
+		{
+			if(do_spell) {
+				s.spell(r.wf, os);
+			}
+			else {
+				os << "\t\"" << r.wf << "\" ? <spellskip>" << std::endl;
+			}
+		}
+		for(const auto& postblank : r.postblank) {
+			os << postblank << std::endl;
+		}
+	}
+}
+
 void run_cgspell(std::istream& is,
 		 std::ostream& os,
 		 Speller& s)
 {
-	string wf;
-	bool cohort_spelled = false;
+	SpellSent sent = { {}, 0 };
+	SpellCohort c = { "", {}, {}, false };
 	for (string line; std::getline(is, line);) {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
-
 		if (!result.empty() && result[2].length() != 0) {
-			os << line << std::endl;
-			wf = result[2];
-			cohort_spelled = false;
+			sent.cohorts.push_back(c);
+			// Was the previous cohort a sent delimiter?
+			std::match_results<const char*> del_res;
+			std::regex_match(c.wf.c_str(), del_res, s.sent_delimiters);
+			if(!del_res.empty() && del_res[0].length() != 0) {
+				proc_sent(sent, os, s);
+				sent = { {}, 0 };
+			}
+			c = SpellCohort({ result[2], {}, {}, false});
+			c.lines.push_back(line);
 		}
-		else if (!result.empty()
-			 && result[5].length() != 0
-			 && !cohort_spelled
-			 && (s.real_word || result[5] == unknown_analysis))
+		else if (!result.empty() && result[5].length() != 0)
 		{
-			os << line << std::endl;
-			s.spell(wf, os);
-			cohort_spelled = true;
+			c.unknown = (result[5] == unknown_analysis);
+			if(c.unknown) {
+				sent.n_unknowns += 1;
+			}
+			c.lines.push_back(line);
 		}
 		else if(!result.empty() && result[7].length() != 0) {
 			// TODO: Can we ever get a flush in the middle of readings?
+			c.lines.push_back(line);
+			sent.cohorts.push_back(c);
+			proc_sent(sent, os, s);
+			sent = { {}, 0 };
+			SpellCohort c = { "", {}, {}, false };
 			os.flush();
-			os << line << std::endl;
 		}
 		else {
-			os << line << std::endl;
+			c.postblank.push_back(line);
 		}
 	}
+	sent.cohorts.push_back(c);
+	proc_sent(sent, os, s);
 }
 
 }

@@ -39,7 +39,19 @@ namespace divvun {
 using mapbox::util::variant;
 using std::string;
 using std::vector;
+using std::pair;
 using hfst_ospell::Weight;
+
+struct SpellCohort {
+	string wf;
+	vector<string> lines;
+	vector<string> postblank;
+	bool unknown;
+};
+struct SpellSent {
+	vector<SpellCohort> cohorts;
+	int n_unknowns;
+};
 
 class Speller {
 	public:
@@ -134,6 +146,10 @@ class Speller {
 		const Weight max_weight;
 		const bool real_word;
 		const unsigned long limit;
+		// TODO: Make max_sent_unknown_rate and sent_delimiters configurable in cli?
+		float max_sent_unknown_rate = 0.4; // Don't spell if >= 40 % of the sentence is unknown.
+		float min_sent_max_unknown = 7; // For sentences of < 7 cohorts, spell even if most of it is unknown.
+		std::basic_regex<char> sent_delimiters = std::basic_regex<char> ("^[.!?]$");
 		void spell(const string& form, std::ostream& os);
 		bool analyse_when_correct = false; // Look up the analysis for forms that had an analysis in lex already.
 	private:
