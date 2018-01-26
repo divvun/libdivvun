@@ -70,7 +70,7 @@ CGCmd::CGCmd (const char* buff, const size_t size, bool verbose)
 	, applicator(cg3_applicator_create(grammar.get()))
 {
 	if(!grammar){
-		throw std::runtime_error("ERROR: Couldn't load CG grammar");
+		throw std::runtime_error("libdivvun: ERROR: Couldn't load CG grammar");
 	}
 }
 CGCmd::CGCmd (const string& path, bool verbose)
@@ -78,7 +78,7 @@ CGCmd::CGCmd (const string& path, bool verbose)
 	, applicator(cg3_applicator_create(grammar.get()))
 {
 	if(!grammar){
-		throw std::runtime_error(("ERROR: Couldn't load CG grammar " + path).c_str());
+		throw std::runtime_error(("libdivvun: ERROR: Couldn't load CG grammar " + path).c_str());
 	}
 }
 void CGCmd::run(stringstream& input, stringstream& output) const
@@ -91,10 +91,10 @@ CGSpellCmd::CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transduc
 	: speller(new Speller(errmodel, acceptor, verbose, max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff))
 {
 	if (!acceptor) {
-		throw std::runtime_error("ERROR: CGSpell command couldn't read acceptor");
+		throw std::runtime_error("libdivvun: ERROR: CGSpell command couldn't read acceptor");
 	}
 	if (!errmodel) {
-		throw std::runtime_error("ERROR: CGSpell command couldn't read errmodel");
+		throw std::runtime_error("libdivvun: ERROR: CGSpell command couldn't read errmodel");
 	}
 }
 CGSpellCmd::CGSpellCmd (const string& err_path, const string& lex_path, bool verbose)
@@ -176,7 +176,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 	auto& spec = ar_spec->spec;
 	if (!cg3_init(stdin, stdout, stderr)) {
 		// TODO: Move into a lib-general init function? Or can I call this safely once per CGCmd?
-		throw std::runtime_error("ERROR: Couldn't initialise ICU for vislcg3!");
+		throw std::runtime_error("libdivvun: ERROR: Couldn't initialise ICU for vislcg3!");
 	}
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	string locale = spec->language;
@@ -260,7 +260,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 	SuggestCmd* suggestcmd = nullptr;
 	if (!cg3_init(stdin, stdout, stderr)) {
 		// TODO: Move into a lib-general init function? Or can I call this safely once per CGCmd?
-		throw std::runtime_error("ERROR: Couldn't initialise ICU for vislcg3!");
+		throw std::runtime_error("libdivvun: ERROR: Couldn't initialise ICU for vislcg3!");
 	}
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	string locale = spec->language;
@@ -343,7 +343,7 @@ void Pipeline::setIgnores(const std::set<ErrId>& ignores) {
 		suggestcmd->setIgnores(ignores);
 	}
 	else if(!ignores.empty()) {
-		throw std::runtime_error("ERROR: Can't set ignores when last command of pipeline is not a SuggestCmd");
+		throw std::runtime_error("libdivvun: ERROR: Can't set ignores when last command of pipeline is not a SuggestCmd");
 	}
 }
 

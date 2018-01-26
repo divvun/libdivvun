@@ -37,7 +37,7 @@ PipeSpec::PipeSpec(const string& file) {
 	}
 	else {
 		std::cerr << file << ":" << result.offset << " ERROR: " << result.description() << "\n";
-		throw std::runtime_error("ERROR: Couldn't load the pipespec xml \"" + file + "\"");
+		throw std::runtime_error("libdivvun: ERROR: Couldn't load the pipespec xml \"" + file + "\"");
 	}
 }
 
@@ -58,7 +58,7 @@ PipeSpec::PipeSpec(pugi::char_t* buff, size_t size) {
 	}
 	else {
 		std::cerr << "pipespec.xml:" << result.offset << " ERROR: " << result.description() << "\n";
-		throw std::runtime_error("ERROR: Couldn't load the pipespec.xml from archive");
+		throw std::runtime_error("libdivvun: ERROR: Couldn't load the pipespec.xml from archive");
 	}
 }
 
@@ -143,9 +143,11 @@ string makeDebugSuff(string name, std::unordered_map<string, string> args) {
 string abspath(const string& path) {
 	// TODO: would love to use <experimental/filesystem> here, but doesn't exist on Mac :(
 	// return std::experimental::filesystem::absolute(specfile).remove_filename();
-        char abspath[PATH_MAX];
-	realpath(path.c_str(), abspath);
-	return abspath;
+        char resolved_path[PATH_MAX];
+	if(realpath(path.c_str(), resolved_path) == NULL) {
+		throw std::runtime_error("libdivvun: ERROR: realpath(3) failed to resolve '" + path + "', got: " + std::strerror(errno));
+	}
+	return resolved_path;
 }
 
 string pathconcat(const string& path1, const string& path2) {
@@ -254,7 +256,7 @@ void writePipeSpecSh(const string& specfile, const u16string& pipename, bool jso
 void chmod777(const string& path) {
 	mode_t mode = S_IRWXU|S_IRWXG|S_IRWXO;
 	if (chmod(path.c_str(), mode) < 0) {
-		throw std::runtime_error("ERROR: failed to chmod 777 " + path + std::strerror(errno));
+		throw std::runtime_error("libdivvun: ERROR: failed to chmod 777 " + path + std::strerror(errno));
 	}
 }
 
@@ -275,7 +277,7 @@ void writePipeSpecShDirOne(const vector<std::pair<string, string>> cmds, const s
 		std::ofstream ofs;
 		ofs.open(path, std::ofstream::out | std::ofstream::trunc);
 		if(!ofs) {
-			throw std::runtime_error("ERROR: Couldn't open " + path + " for writing! " + std::strerror(errno));
+			throw std::runtime_error("libdivvun: ERROR: Couldn't open " + path + " for writing! " + std::strerror(errno));
 		}
 		bool first = true;
 		ofs << "#!/bin/sh" << std::endl << std::endl;

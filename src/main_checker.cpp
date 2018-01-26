@@ -31,7 +31,7 @@ variant<int, Pipeline> getPipelineXml(const std::string& path, const std::u16str
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	const std::unique_ptr<divvun::PipeSpec> spec(new divvun::PipeSpec(path));
 	if(spec->pnodes.find(pipename) == spec->pnodes.end()) {
-		std::cerr << "ERROR: Couldn't find pipe " << utf16conv.to_bytes(pipename) << " in " << path << std::endl;
+		std::cerr << "divvun-checker: ERROR: Couldn't find pipe " << utf16conv.to_bytes(pipename) << " in " << path << std::endl;
 		return EXIT_FAILURE;
 	}
 	return Pipeline(spec, pipename, verbose);
@@ -41,7 +41,7 @@ variant<int, Pipeline> getPipelineAr(const std::string& path, const std::u16stri
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	const auto& ar_spec = divvun::readArPipeSpec(path);
 	if(ar_spec->spec->pnodes.find(pipename) == ar_spec->spec->pnodes.end()) {
-		std::cerr << "ERROR: Couldn't find pipe " << utf16conv.to_bytes(pipename) << " in " << path << std::endl;
+		std::cerr << "divvun-checker: ERROR: Couldn't find pipe " << utf16conv.to_bytes(pipename) << " in " << path << std::endl;
 		return EXIT_FAILURE;
 	}
 	return Pipeline(ar_spec, pipename, verbose);
@@ -137,7 +137,7 @@ int main(int argc, char ** argv)
 
 		if(argc > 1) {
 			std::cout << options.help({""}) << std::endl;
-			std::cerr << "ERROR: got " << argc-1+pos.size() <<" arguments; expected only " << pos.size() << std::endl;
+			std::cerr << argv[0] << " ERROR: got " << argc-1+pos.size() <<" arguments; expected only " << pos.size() << std::endl;
 			return EXIT_SUCCESS;
 		}
 
@@ -212,13 +212,13 @@ int main(int argc, char ** argv)
 			}
 		}
 		else {
-			std::cerr << "ERROR: Pipespec file required" << std::endl;
+			std::cerr << argv[0] << " ERROR: Pipespec file required" << std::endl;
 			return EXIT_FAILURE;
 		}
 	}
 	catch (const cxxopts::OptionException& e)
 	{
-		std::cerr << "ERROR: couldn't parse options: " << e.what() << std::endl;
+		std::cerr << argv[0] << " ERROR: couldn't parse options: " << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
 	catch (const std::runtime_error& e)

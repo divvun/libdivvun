@@ -119,7 +119,7 @@ Ret archiveExtract(const string& ar_path,
 			size_t buffsize = st->st_size;
 			if (buffsize == 0) {
 				std::cerr << archive_error_string(ar) << std::endl;
-				throw std::runtime_error("ERROR: Got a zero length archive entry for " + filename);
+				throw std::runtime_error("libdivvun: ERROR: Got a zero length archive entry for " + filename);
 			}
 			string buff(buffsize, 0);
 			for (;;) {
@@ -131,10 +131,10 @@ Ret archiveExtract(const string& ar_path,
 					continue;
 				}
 				else if (ARCHIVE_FAILED == curr) {
-					throw std::runtime_error("ERROR: Archive broken (ARCHIVE_FAILED)");
+					throw std::runtime_error("libdivvun: ERROR: Archive broken (ARCHIVE_FAILED)");
 				}
 				else if (curr < 0) {
-					throw std::runtime_error("ERROR: Archive broken " + std::to_string(curr));
+					throw std::runtime_error("libdivvun: ERROR: Archive broken " + std::to_string(curr));
 				}
 				else {
 					fullsize += curr;
@@ -143,7 +143,7 @@ Ret archiveExtract(const string& ar_path,
 			return procFile(ar_path, buff.c_str(), fullsize);
 		}
 	} // while r != ARCHIVE_EOF
-	throw std::runtime_error("ERROR: Couldn't find " + entry_pathname + " in archive");
+	throw std::runtime_error("libdivvun: ERROR: Couldn't find " + entry_pathname + " in archive");
 }
 
 template<typename Ret>
@@ -183,7 +183,7 @@ Ret readArchiveExtract(const string& ar_path,
 		       const string& entry_pathname,
 		       ArEntryHandler<Ret>procFile)
 {
-	throw std::runtime_error("ERROR: Can't extract zipped archives -- this library has been compiled without libarchive support. Please ensure libarchive is installed, and recompile divvun-gramcheck with --enable-checker.");
+	throw std::runtime_error("libdivvun: ERROR: Can't extract zipped archives -- this library has been compiled without libarchive support. Please ensure libarchive is installed, and recompile divvun-gramcheck with --enable-checker.");
 }
 #endif	// HAVE_LIBARCHIVE
 

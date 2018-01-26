@@ -59,7 +59,7 @@ int main(int argc, char ** argv)
 
 		if(argc > 1) {
 			std::cout << options.help({""}) << std::endl;
-			std::cerr << "ERROR: got " << argc-1+pos.size() <<" arguments; expected only " << pos.size() << std::endl;
+			std::cerr << argv[0] << " ERROR: got " << argc-1+pos.size() <<" arguments; expected only " << pos.size() << std::endl;
 			return(EXIT_SUCCESS);
 		}
 
@@ -78,7 +78,7 @@ int main(int argc, char ** argv)
 		if (!options.count("generator"))
 		{
 			std::cout << options.help({""}) << std::endl;
-			std::cerr << "ERROR: expected generator.hfstol as argument." << std::endl;
+			std::cerr << argv[0] << " ERROR: expected generator.hfstol as argument." << std::endl;
 			return(EXIT_FAILURE);
 		}
 
@@ -93,7 +93,7 @@ int main(int argc, char ** argv)
 		}
 		const hfst::HfstTransducer* t(divvun::readTransducer(genfile));
 		if (!t) {
-			std::cerr << "ERROR: Couldn't read transducer "<< genfile << std::endl;
+			std::cerr << argv[0] << " ERROR: Couldn't read transducer "<< genfile << std::endl;
 			return(EXIT_FAILURE);
 		}
 
@@ -106,16 +106,16 @@ int main(int argc, char ** argv)
 			}
 			m = divvun::Suggest::readMessages(msgfile);
 			if (m.empty()) {
-				std::cerr << "ERROR: Couldn't read messages xml "<< msgfile << std::endl;
+				std::cerr << argv[0] << " ERROR: Couldn't read messages xml "<< msgfile << std::endl;
 				return(EXIT_FAILURE);
 			}
 		}
 		else {
-			std::cerr << "WARNING: no errors.xml argument; tags used as error messages." << std::endl;
+			std::cerr << argv[0] << " WARNING: no errors.xml argument; tags used as error messages." << std::endl;
 		}
 #else
 		if(options.count("messages")) {
-			std::cerr << "ERROR: Please clean-recompile with pugixml to use -m/--messages xml" << std::endl;
+			std::cerr << argv[0] << " ERROR: Please clean-recompile with pugixml to use -m/--messages xml" << std::endl;
 			return(EXIT_FAILURE);
 		}
 #endif
@@ -125,7 +125,7 @@ int main(int argc, char ** argv)
 	}
 	catch (const cxxopts::OptionException& e)
 	{
-		std::cerr << "ERROR: couldn't parse options: " << e.what() << std::endl;
+		std::cerr << argv[0] << " ERROR: couldn't parse options: " << e.what() << std::endl;
 		return(EXIT_FAILURE);
 	}
 	catch (const std::runtime_error& e)

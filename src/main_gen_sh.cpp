@@ -50,7 +50,7 @@ int main(int argc, char ** argv)
 
 		if(argc > 2) {
 			std::cout << options.help({""}) << std::endl;
-			std::cerr << "ERROR: got " << argc-1+pos.size() <<" arguments; expected only " << pos.size() << std::endl;
+			std::cerr << argv[0] << " ERROR: got " << argc-1+pos.size() <<" arguments; expected only " << pos.size() << std::endl;
 			return EXIT_SUCCESS;
 		}
 
@@ -93,19 +93,19 @@ int main(int argc, char ** argv)
 				return EXIT_SUCCESS;
 			}
 			else {
-				std::cerr << "ERROR: Please specify a variant (try divvun-checker to list variants) or --dir" << std::endl;
+				std::cerr << argv[0] << " ERROR: Please specify a variant (try divvun-checker to list variants) or --dir" << std::endl;
 				return EXIT_FAILURE;
 			}
 		}
 		else {
-			std::cerr << "ERROR: Pipespec file required" << std::endl;
+			std::cerr << argv[0] << " ERROR: Pipespec file required" << std::endl;
 			return EXIT_FAILURE;
 		}
 
 	}
 	catch (const cxxopts::OptionException& e)
 	{
-		std::cerr << "ERROR: couldn't parse options: " << e.what() << std::endl;
+		std::cerr << argv[0] << " ERROR: couldn't parse options: " << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
 	catch (const std::runtime_error& e)

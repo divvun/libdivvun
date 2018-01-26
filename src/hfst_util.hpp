@@ -33,11 +33,11 @@ inline const hfst::HfstTransducer* readTransducer(std::istream& is) {
 	}
 	catch (StreamNotReadableException& e)
 	{
-		std::cerr << "ERROR: Stream not readable." << std::endl;
+		std::cerr << "libdivvun: ERROR: Stream not readable." << std::endl;
 		return nullptr;
 	}
 	catch (HfstException& e) {
-		std::cerr << "ERROR: HfstException." << std::endl;
+		std::cerr << "libdivvun: ERROR: HfstException." << std::endl;
 		return nullptr;
 	}
 
@@ -46,19 +46,19 @@ inline const hfst::HfstTransducer* readTransducer(std::istream& is) {
 	{
 		if (in->is_bad())
 		{
-			std::cerr << "ERROR: Stream cannot be read." << std::endl;
+			std::cerr << "libdivvun: ERROR: Stream cannot be read." << std::endl;
 			return nullptr;
 		}
 		t = new hfst::HfstTransducer(*in);
 		if(not in->is_eof()) {
-			std::cerr << "WARNING: >1 transducers in stream! Only using the first." << std::endl;
+			std::cerr << "libdivvun: WARNING: >1 transducers in stream! Only using the first." << std::endl;
 		}
 		break;
 	}
 	in->close();
 	delete in;
 	if(t == nullptr) {
-		std::cerr << "WARNING: Could not read any transducers!" << std::endl;
+		std::cerr << "libdivvun: WARNING: Could not read any transducers!" << std::endl;
 	}
 	return t;
 }
@@ -72,11 +72,11 @@ inline const hfst::HfstTransducer* readTransducer(const string& file) {
 	}
 	catch (StreamNotReadableException& e)
 	{
-		std::cerr << "ERROR: File does not exist." << std::endl;
+		std::cerr << "libdivvun: ERROR: File does not exist." << std::endl;
 		return nullptr;
 	}
 	catch (HfstException& e) {
-		std::cerr << "ERROR: HfstException." << std::endl;
+		std::cerr << "libdivvun: ERROR: HfstException." << std::endl;
 		return nullptr;
 	}
 
@@ -85,19 +85,19 @@ inline const hfst::HfstTransducer* readTransducer(const string& file) {
 	{
 		if (in->is_bad())
 		{
-			std::cerr << "ERROR: Stream cannot be read." << std::endl;
+			std::cerr << "libdivvun: ERROR: Stream cannot be read." << std::endl;
 			return nullptr;
 		}
 		t = new hfst::HfstTransducer(*in);
 		if(not in->is_eof()) {
-			std::cerr << "WARNING: >1 transducers in stream! Only using the first." << std::endl;
+			std::cerr << "libdivvun: WARNING: >1 transducers in stream! Only using the first." << std::endl;
 		}
 		break;
 	}
 	in->close();
 	delete in;
 	if(t == nullptr) {
-		std::cerr << "WARNING: Could not read any transducers!" << std::endl;
+		std::cerr << "libdivvun: WARNING: Could not read any transducers!" << std::endl;
 	}
 	return t;
 }

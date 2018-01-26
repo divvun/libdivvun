@@ -100,7 +100,7 @@ const MsgMap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& re
 					const auto& errtype = utf16conv.from_bytes(e.attribute("id").value());
 					// std::cerr << utf16conv.to_bytes(errtype) << std::endl;
 					if(msgs[lang].first.count(errtype) != 0) {
-						std::cerr << "WARNING: Duplicate titles for " << e.attribute("id").value() << std::endl;
+						std::cerr << "divvun-suggest: WARNING: Duplicate titles for " << e.attribute("id").value() << std::endl;
 					}
 					msgs[lang].first[errtype] = msg;
 				}
@@ -117,7 +117,7 @@ const MsgMap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& re
 				const auto& msg = utf16conv.from_bytes(xml_raw_cdata(child));
 				const auto& lang = child.attribute("xml:lang").value();
 				if(msgs[lang].first.count(errtype) != 0) {
-					std::cerr << "WARNING: Duplicate titles for " << error.attribute("id").value() << std::endl;
+					std::cerr << "divvun-suggest: WARNING: Duplicate titles for " << error.attribute("id").value() << std::endl;
 				}
 				msgs[lang].first[errtype] = msg;
 			}
@@ -200,7 +200,7 @@ const Reading proc_subreading(const string& line) {
 				r.rels[rel_name] = target;
 			}
 			catch(...) {
-				std::cerr << "WARNING: Couldn't parse relation target integer" << std::endl;
+				std::cerr << "divvun-suggest: WARNING: Couldn't parse relation target integer" << std::endl;
 			}
 		}
 		else if(result[5].length() != 0) {
@@ -208,7 +208,7 @@ const Reading proc_subreading(const string& line) {
 				r.id = stoi(result[5]);
 			}
 			catch(...) {
-				std::cerr << "WARNING: Couldn't parse ID integer" << std::endl;
+				std::cerr << "divvun-suggest: WARNING: Couldn't parse ID integer" << std::endl;
 			}
 		}
 		else if(result[6].length() != 0) {
@@ -296,12 +296,12 @@ void rel_on_match(const relations& rels,
 		}
 		const auto& target_id = rel.second;
 		if(sentence.ids_cohorts.find(target_id) == sentence.ids_cohorts.end()) {
-			std::cerr << "WARNING: Couldn't find relation target for " << rel.first << ":" << rel.second << std::endl;
+			std::cerr << "divvun-suggest: WARNING: Couldn't find relation target for " << rel.first << ":" << rel.second << std::endl;
 			continue;
 		}
 		const auto& i_t = sentence.ids_cohorts.at(target_id);
 		if(i_t >= sentence.cohorts.size()) {
-			std::cerr << "WARNING: Couldn't find relation target for " << rel.first << ":" << rel.second << std::endl;
+			std::cerr << "divvun-suggest: WARNING: Couldn't find relation target for " << rel.first << ":" << rel.second << std::endl;
 			continue;
 		}
 		fn(rel.first,
@@ -326,12 +326,12 @@ proc_LEFT_RIGHT(const ErrId& err_id,
 		const size_t i_t,
 		const Cohort& trg) {
 	if(sentence.ids_cohorts.find(src_id) == sentence.ids_cohorts.end()) {
-		std::cerr << "WARNING: Saw &LEFT/&RIGHT on cohort with id 0" << std::endl;
+		std::cerr << "divvun-suggest: WARNING: Saw &LEFT/&RIGHT on cohort with id 0" << std::endl;
 		return Nothing();
 	}
 	const auto& i_c = sentence.ids_cohorts.at(src_id);
 	if(i_c >= sentence.cohorts.size()) {
-		std::cerr << "WARNING: Internal error (unexpected i_c" << i_c << " >= sentence.cohorts.size())" << std::endl;
+		std::cerr << "divvun-suggest: WARNING: Internal error (unexpected i_c" << i_c << " >= sentence.cohorts.size())" << std::endl;
 		return Nothing();
 	}
 	std::map<size_t, u16string> add; // position in text:cohort id in Sentence
@@ -347,7 +347,7 @@ proc_LEFT_RIGHT(const ErrId& err_id,
 			size_t addstart = trg.pos;
 			if(tr.added == AddedBeforeBlank) {
 				if(i == 0) {
-					std::cerr << "WARNING: Saw &ADDED-BEFORE-BLANK on initial word, ignoring" << std::endl;
+					std::cerr << "divvun-suggest: WARNING: Saw &ADDED-BEFORE-BLANK on initial word, ignoring" << std::endl;
 					continue;
 				}
 				const auto& pretrg = sentence.cohorts[i-1];
@@ -362,7 +362,7 @@ proc_LEFT_RIGHT(const ErrId& err_id,
 	for(auto it = add.rbegin(); it != add.rend(); ++it) {
 		size_t at = it->first - beg;
 		if(at >= repform.size()) {
-			std::cerr << "WARNING: Internal error (trying to splice into pos " << at << " of repform)" << std::endl;
+			std::cerr << "divvun-suggest: WARNING: Internal error (trying to splice into pos " << at << " of repform)" << std::endl;
 			continue;
 		}
 		repform = repform.substr(0, at) + it->second + repform.substr(at);
@@ -382,7 +382,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 	u16string msg;
 	for(const auto& mlang : sortedmsglangs) {
 		if(msg.empty() && mlang != locale) {
-			std::cerr << "WARNING: No message for " << json::str(err_id) << " in xml:lang '" << locale << "', trying '" << mlang << "'" << std::endl;
+			std::cerr << "divvun-suggest: WARNING: No message for " << json::str(err_id) << " in xml:lang '" << locale << "', trying '" << mlang << "'" << std::endl;
 		}
 		const auto& lmsgs = msgs.at(mlang);
 		if(lmsgs.first.count(err_id) != 0) {
@@ -408,7 +408,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 		}
 	}
 	if(msg.empty()) {
-		std::cerr << "WARNING: No message for " << json::str(err_id) << " in any xml:lang" << std::endl;
+		std::cerr << "divvun-suggest: WARNING: No message for " << json::str(err_id) << " in any xml:lang" << std::endl;
 		msg = err_id;
 	}
 	// TODO: Make suitable structure on creating MsgMap instead?

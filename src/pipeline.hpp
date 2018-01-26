@@ -250,7 +250,7 @@ class Pipeline {
 		// ~Pipeline() {
 		// TODO: gives /usr/include/c++/6/bits/stl_construct.h:75:7: error: use of deleted function ‘unique_ptr<_Tp, _Dp>::unique_ptr(const unique_ptr<_Tp, _Dp>&) [with _Tp = divvun::PipeCmd; _Dp = std::default_delete<divvun::PipeCmd>]’
 		// 	if (!cg3_cleanup()) {
-		// 		std::cerr << "WARNING: Couldn't cleanup from CG3" << std::endl;
+		// 		std::cerr << "libdivvun: WARNING: Couldn't cleanup from CG3" << std::endl;
 		// 	}
 		// }
 		void proc(stringstream& input, stringstream& output);

@@ -71,7 +71,7 @@ class Speller {
 		{
 			speller->read_zhfst(zhfstpath);
 			if (!speller) {
-				throw std::runtime_error("ERROR: Couldn't read zhfst archive " + zhfstpath);
+				throw std::runtime_error("libdivvun: ERROR: Couldn't read zhfst archive " + zhfstpath);
 			}
 			else {
 				speller->set_beam(beam);
@@ -103,7 +103,7 @@ class Speller {
 			auto lmspeller = new hfst_ospell::Speller(&*err, &*lex);
 			speller->inject_speller(lmspeller);
 			if (!speller) {
-				throw std::runtime_error("ERROR: Couldn't read lexicon " + lexpath+ " / errmodel " + errpath);
+				throw std::runtime_error("libdivvun: ERROR: Couldn't read lexicon " + lexpath+ " / errmodel " + errpath);
 			}
 			else {
 				speller->set_beam(beam);
@@ -133,7 +133,7 @@ class Speller {
 			auto lmspeller = new hfst_ospell::Speller(&*err, &*lex);
 			speller->inject_speller(lmspeller);
 			if (!speller) {
-				throw std::runtime_error("ERROR: Couldn't read lexicon / errmodel");
+				throw std::runtime_error("libdivvun: ERROR: Couldn't read lexicon / errmodel");
 			}
 			else {
 				speller->set_beam(beam);

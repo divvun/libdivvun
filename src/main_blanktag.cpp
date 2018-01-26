@@ -49,7 +49,7 @@ int main(int argc, char ** argv)
 
 		if(argc > 1) {
 			std::cout << options.help({""}) << std::endl;
-			std::cerr << "ERROR: got " << argc-1+pos.size() <<" arguments; expected only " << pos.size() << std::endl;
+			std::cerr << argv[0] << " ERROR: got " << argc-1+pos.size() <<" arguments; expected only " << pos.size() << std::endl;
 			return(EXIT_SUCCESS);
 		}
 
@@ -68,7 +68,7 @@ int main(int argc, char ** argv)
 		if (!options.count("analyser"))
 		{
 			std::cout << options.help({""}) << std::endl;
-			std::cerr << "ERROR: expected --analyser option." << std::endl;
+			std::cerr << argv[0] << " ERROR: expected --analyser option." << std::endl;
 			return(EXIT_FAILURE);
 		}
 		const auto& analyser = options["analyser"].as<std::string>();
@@ -79,7 +79,7 @@ int main(int argc, char ** argv)
 	}
 	catch (const cxxopts::OptionException& e)
 	{
-		std::cerr << "ERROR: couldn't parse options: " << e.what() << std::endl;
+		std::cerr << argv[0] << " ERROR: couldn't parse options: " << e.what() << std::endl;
 		return(EXIT_FAILURE);
 	}
 }
