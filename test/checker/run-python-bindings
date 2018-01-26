@@ -5,6 +5,7 @@ set -e
 cd "$(dirname "$0")"
 
 # Install the python lib in a subdir here:
+set +x
 export base=$PWD/python-build
 (
     cd ../../python
