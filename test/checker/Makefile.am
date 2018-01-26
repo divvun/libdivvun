@@ -38,5 +38,7 @@ endif
 TESTS += ./run-lib
 
 CLEANFILES = $(check_DATA) analyser.hfst generator.hfstol errors.xml acceptor.hfstol errmodel.hfst
+clean-local:
+	rm -rf python-build
 
 test: check

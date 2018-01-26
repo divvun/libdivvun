@@ -4,7 +4,14 @@ set -e
 
 cd "$(dirname "$0")"
 
-export PYTHONPATH="../../python/build/lib.linux-x86_64-3.6:$PYTHONPATH"
+# Install the python lib in a subdir here:
+export base=$PWD/python-build
+(
+    cd ../../python
+    python3 setup.py install -f --install-base="$base" --install-purelib="$base" --install-platlib="$base" --install-scripts="$base" --install-data="$base" --install-headers="$base"
+)
+
+export PYTHONPATH="$base:$PYTHONPATH"
 export LD_LIBRARY_PATH="../../src/.libs:$LD_LIBRARY_PATH"
 
 python3 test-python-bindings.py
