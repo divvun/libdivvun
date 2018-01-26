@@ -163,15 +163,17 @@ dnl ===========================
 dnl Create the files from .in's
 dnl ===========================
 
-AC_OUTPUT(Makefile
-          src/Makefile
-          src/version.hpp
-          python/Makefile
-	  python/setup.py
-          test/suggest/Makefile
-          test/checker/Makefile
-          test/blanktag/Makefile
-          test/cgspell/Makefile)
+AC_OUTPUT([Makefile
+           src/Makefile
+           src/version.hpp
+           python/Makefile
+	   python/setup.py
+           test/suggest/Makefile
+           test/checker/Makefile
+           test/checker/run-python-bindings
+           test/blanktag/Makefile
+           test/cgspell/Makefile],
+          [chmod +x test/checker/run-python-bindings])
 
 cat <<EOF
 -- Building $PACKAGE_STRING

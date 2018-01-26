@@ -9,10 +9,10 @@ set +x
 export base=$PWD/python-build
 (
     cd ../../python
-    python3 setup.py install -f --install-base="$base" --install-purelib="$base" --install-platlib="$base" --install-scripts="$base" --install-data="$base" --install-headers="$base"
+    "@PYTHON@" setup.py install -f --install-base="$base" --install-purelib="$base" --install-platlib="$base" --install-scripts="$base" --install-data="$base" --install-headers="$base"
 )
 
 export PYTHONPATH="$base:$PYTHONPATH"
 export LD_LIBRARY_PATH="../../src/.libs:$LD_LIBRARY_PATH"
 
-python3 test-python-bindings.py
+"@PYTHON@" test-python-bindings.py
