@@ -67,6 +67,7 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 %inline %{
 #include <locale>
 #include <codecvt>
+#include <sstream>
 	typedef std::vector<std::string> StringVector;
 	struct ErrBytes {
 			std::string form;
