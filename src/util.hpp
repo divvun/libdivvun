@@ -26,6 +26,7 @@
 
 #include <sstream>
 #include <iterator>
+#include <regex>
 
 #include <vector>
 #include <set>

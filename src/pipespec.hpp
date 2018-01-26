@@ -28,10 +28,10 @@
 
 #include <codecvt>
 #include <cstring>
-#include <errno.h>
+#include <cerrno>
 #include <functional>
 #include <iostream>
-#include <limits.h>
+#include <climits>
 #include <libgen.h>
 #include <locale>
 #include <memory>
