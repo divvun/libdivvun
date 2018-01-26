@@ -85,7 +85,7 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 
 	const ErrBytesVector proc_errs_bytes(std::unique_ptr<divvun::Checker>& checker, const std::string& input) {
 		std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-		auto ss = std::stringstream(input);
+		std::stringstream ss = std::stringstream(input);
 		const auto& errs = checker->proc_errs(ss);
 		ErrBytesVector errs_bytes;
 		for(const divvun::Err& e : errs) {
