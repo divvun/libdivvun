@@ -145,13 +145,15 @@ AC_ARG_ENABLE([python-bindings],
               [enable_python_bindings=check])
 AS_IF([test "x$enable_python_bindings" != xno],
       [AS_IF([test x"$enable_python_bindings" = xyes], dnl Explicitly enabled -- fail if missing deps
-             [AS_IF([test "$PYTHON" = : -o "x$have_python_header" != xtrue],
+             [AS_IF([test "x$enable_checker" != xyes],
+                    [AC_MSG_ERROR([cannot build python bindings without building checker library (--enable-checker)])])
+              AS_IF([test "$PYTHON" = : -o "x$have_python_header" != xtrue],
                     [AC_MSG_ERROR([cannot find python/python headers (use --disable-python-bindings if you don't need the bindings)])])
               AS_IF([test ! "$SWIG"],
                     [AC_MSG_ERROR([cannot find SWIG (use --disable-python-bindings if you don't need the bindings)])])
              ],
              dnl Not explicitly enabled, enable if we have deps:
-             AS_IF([test "$SWIG" -a "$PYTHON" != : -a "x$have_python_header" = xtrue],
+             AS_IF([test "$SWIG" -a "$PYTHON" != : -a "x$have_python_header" = xtrue -a "x$enable_checker" = xyes],
                    [enable_python_bindings=yes],
                    [enable_python_bindings=no]))
       ])
