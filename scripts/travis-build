@@ -60,13 +60,13 @@ if [[ $TRAVIS_OS_NAME = osx ]]; then
 fi
 
 ./autogen.sh
-./configure --enable-checker --enable-python-bindings
+./configure --disable-checker
 make -j3
 make check VERBOSE=true
 
 make distclean
 
 ./autogen.sh
-./configure --disable-checker
+./configure --enable-checker --enable-python-bindings
 make -j3
 make check VERBOSE=true
