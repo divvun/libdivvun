@@ -229,11 +229,11 @@ void run_cgspell(std::istream& is,
 		}
 		else if(!result.empty() && result[7].length() != 0) {
 			// TODO: Can we ever get a flush in the middle of readings?
-			c.lines.push_back(line);
 			sent.cohorts.push_back(c);
 			proc_sent(sent, os, s);
 			sent = { {}, 0 };
-			SpellCohort c = { "", {}, {}, false };
+			c = SpellCohort({ "", {}, {}, false });
+			std::cout << line << std::endl;
 			os.flush();
 		}
 		else {
