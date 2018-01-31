@@ -96,6 +96,8 @@ old/
 /test/blanktag/blanktagger.hfst
 /test/blanktag/blanktagger.hfst.tmp
 /test/blanktag/output.cg
+/test/checker/run-python-bindings
+/test/checker/python-build/
 
 /examples/using-checker-lib-from-cpp/INSTALL
 /examples/using-checker-lib-from-cpp/Makefile
@@ -128,3 +130,9 @@ old/
 /python/_libdivvun.cpython-36m-x86_64-linux-gnu.so
 /python/.mypy_cache/
 /python/setup.py
+
+/m4/libtool.m4
+/m4/ltoptions.m4
+/m4/ltsugar.m4
+/m4/ltversion.m4
+/m4/lt~obsolete.m4
