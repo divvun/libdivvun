@@ -165,6 +165,8 @@ class Speller {
 		// Only used when initialised with errpath/lexpath:
 		std::unique_ptr<hfst_ospell::Transducer> err;
 		std::unique_ptr<hfst_ospell::Transducer> lex;
+		size_t cache_max = 10000;
+		std::unordered_map<string, string> cache; // cache of *misspelt* words, with suggestions
 };
 
 void run_cgspell(std::istream& is,

@@ -90,11 +90,11 @@ void print_cg_subreading(size_t indent,
 }
 
 const void print_readings(const vector<string>& ana,
-				   const string& form,
-				   std::ostream& os,
-				   Weight w,
-				   variant<Nothing, Weight> w_a,
-				   const std::string& errtag)
+			  const string& form,
+			  std::ostream& os,
+			  Weight w,
+			  variant<Nothing, Weight> w_a,
+			  const std::string& errtag)
 {
 	size_t indent = 1;
 	auto beg = ana.begin(), end = ana.end();
@@ -135,6 +135,10 @@ const void print_readings(const vector<string>& ana,
 
 void Speller::spell(const string& inform, std::ostream& os)
 {
+	if (cache.find(inform) != cache.end()) {
+		os << cache[inform];
+		return;
+	}
 	bool do_suggest = real_word || !speller->spell(inform);
 	if(!do_suggest) {
 		if(analyse_when_correct) {
@@ -154,6 +158,7 @@ void Speller::spell(const string& inform, std::ostream& os)
 	else {
 		auto cq = speller->suggest(inform);
 		auto slimit = limit;
+		std::ostringstream result;
 		while(!cq.empty() && (slimit--) > 0) {
 			const auto& corrform = cq.top().first;
 			const Weight& w = cq.top().second;
@@ -167,11 +172,16 @@ void Speller::spell(const string& inform, std::ostream& os)
 				if(max_analysis_weight > 0.0 && w_a >= max_analysis_weight) {
 					break;
 				}
-				print_readings(ana, corrform, os, w, w_a, CGSPELL_TAG);
+				print_readings(ana, corrform, result, w, w_a, CGSPELL_TAG);
 				aq.pop();
 			}
 			cq.pop();
 		}
+		if(cache.size() > cache_max) {
+			std::unordered_map<string, string>().swap(cache);
+		}
+		cache[inform] = result.str();
+		os << result.str();
 	}
 }
 
