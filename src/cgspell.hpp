@@ -20,7 +20,6 @@
 #define a1e13de0fc0e1f37_CGSPELL_H
 
 #include <locale>
-#include <codecvt>
 #include <vector>
 #include <string>
 #include <regex>

@@ -31,6 +31,7 @@
 %{
 #include "../src/checkertypes.hpp"
 #include "../src/checker.hpp"
+#include "../src/utf8.h"
 %}
 
 #ifdef _MSC_VER
@@ -57,6 +58,7 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 
 %include "../src/checkertypes.hpp"
 %include "../src/checker.hpp"
+%include "../src/utf8.h"
 
 %template(StringVector) std::vector<std::string>;
 
@@ -66,7 +68,6 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 // on trying to access err.rep[0])
 %inline %{
 #include <locale>
-#include <codecvt>
 #include <sstream>
 	typedef std::vector<std::string> StringVector;
 	struct ErrBytes {
@@ -84,24 +85,35 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 %inline %{
 	typedef std::vector<ErrBytes> ErrBytesVector;
 
+	const std::string toUtf8(const std::u16string& from) {
+		std::string to;
+        	utf8::utf16to8(from.begin(), from.end(), std::back_inserter(to));
+		return to;
+	}
+
 	const ErrBytesVector proc_errs_bytes(std::unique_ptr<divvun::Checker>& checker, const std::string& input) {
-		std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 		std::stringstream ss = std::stringstream(input);
 		const auto& errs = checker->proc_errs(ss);
 		ErrBytesVector errs_bytes;
 		for(const divvun::Err& e : errs) {
 			std::vector<std::string> rep;
 			for(const std::u16string& r : e.rep) {
-				rep.push_back(utf16conv.to_bytes(r));
+				std::string r8;
+				utf8::utf16to8(r.begin(), r.end(), std::back_inserter(r8));
+				rep.push_back(r8);
 			}
+			std::string form8, err8, msg8;
+			utf8::utf16to8(e.form.begin(), e.form.end(), std::back_inserter(form8));
+			utf8::utf16to8(e.err.begin(), e.err.end(), std::back_inserter(err8));
+			utf8::utf16to8(e.msg.begin(), e.msg.end(), std::back_inserter(msg8));
 			errs_bytes.push_back({
-					utf16conv.to_bytes(e.form),
-						e.beg,
-						e.end,
-						utf16conv.to_bytes(e.err),
-						utf16conv.to_bytes(e.msg),
-						rep
-						});
+				form8,
+				e.beg,
+				e.end,
+				err8,
+				msg8,
+				rep
+			});
 		}
 		return errs_bytes;
 	};

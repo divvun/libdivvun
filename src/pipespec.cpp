@@ -23,7 +23,6 @@ namespace divvun {
 
 PipeSpec::PipeSpec(const string& file) {
 	pugi::xml_parse_result result = doc.load_file(file.c_str());
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	if (result) {
 		language = doc.child("pipespec").attribute("language").value();
 		if(language == "") {
@@ -44,7 +43,6 @@ PipeSpec::PipeSpec(const string& file) {
 
 PipeSpec::PipeSpec(pugi::char_t* buff, size_t size) {
 	pugi::xml_parse_result result = doc.load_buffer(buff, size);
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	if (result) {
 		language = doc.child("pipespec").attribute("language").value();
 		if(language == "") {
@@ -171,7 +169,6 @@ string argprepare(const string& dir, string file) {
 }
 
 vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const PipeSpec& spec, const u16string& pipename, bool trace, bool json) {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	vector<std::pair<string, string>> cmds = {};
 	for (const pugi::xml_node& cmd: spec.pnodes.at(pipename).children()) {
 		const auto& name = string(cmd.name());
@@ -261,7 +258,6 @@ void chmod777(const string& path) {
 }
 
 void writePipeSpecShDirOne(const vector<std::pair<string, string>> cmds, const string& pipename, const string& modesdir, bool nodebug) {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	// TODO: (modesdir / …) when we get <experimental/filesystem>
 	size_t i = 0;
 	if(nodebug) {
@@ -295,7 +291,6 @@ void writePipeSpecShDirOne(const vector<std::pair<string, string>> cmds, const s
 }
 
 void writePipeSpecShDir(const string& specfile, bool json, const string& modesdir, bool nodebug) {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	const std::unique_ptr<PipeSpec> spec(new PipeSpec(specfile));
 	const auto dir = dirname(abspath(specfile));
 	for(const auto& p : spec->pnodes) {

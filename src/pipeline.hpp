@@ -207,7 +207,6 @@ class SuggestCmd: public PipeCmd {
 
 
 inline void parsePrefs(LocalisedPrefs& prefs, const pugi::xml_node& cmd) {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	for (const pugi::xml_node& pref: cmd.children()) {
 		const auto type = pref.attribute("type").value();
 		const auto name = pref.attribute("name").value();

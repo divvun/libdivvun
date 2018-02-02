@@ -748,11 +748,6 @@ from the regular suggestion generator, and saves some duplicate work.
 If you get
 : terminate called after throwing an instance of 'std::regex_error'
 :   what():  regex_error
-or
-: util.hpp:36:19: fatal error: codecvt: No such file or directory
-:  #include <codecvt>
-:                    ^
-: compilation terminated.
 then your C++ compiler is too old. See [[*Prerequisites][Prerequisites]].
 
 
