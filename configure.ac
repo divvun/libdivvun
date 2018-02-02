@@ -19,8 +19,15 @@ CXXFLAGS="$CXXFLAGS -Wall"
 PKG_CHECK_MODULES([HFST], [hfst >= 3.12.2])
 CXXFLAGS="$CXXFLAGS $HFST_CFLAGS"
 
+AS_CASE([$HFST_CFLAGS],
+        [*@GLIB_CFLAGS@*],
+        [x=$(pkg-config --debug 2>&1|grep -o "in file .*hfst\.pc.*")
+         AC_MSG_ERROR([buggy hfst.pc, please remove the string @GLIB_CFLAGS@ from the Cflags line $x])])
+
 PKG_CHECK_MODULES([CG3], [cg3 >= 1.1.2.12361])
 CXXFLAGS="$CXXFLAGS $CG3_CFLAGS"
+
+AX_CHECK_COMPILE_FLAG([-Wall], [], AC_MSG_ERROR([compiler doesn't accept -Wall - check config.log]))
 
 AX_CHECK_COMPILE_FLAG([-fstack-protector-strong], [CXXFLAGS="$CXXFLAGS -fstack-protector-strong"])
 
@@ -29,7 +36,8 @@ AX_CHECK_COMPILE_FLAG([-std=c++17], [CXXFLAGS="$CXXFLAGS -std=c++17"], [
  AX_CHECK_COMPILE_FLAG([-std=c++1z], [CXXFLAGS="$CXXFLAGS -std=c++1z"], [
   AX_CHECK_COMPILE_FLAG([-std=c++14], [CXXFLAGS="$CXXFLAGS -std=c++14"], [
    AX_CHECK_COMPILE_FLAG([-std=c++1y], [CXXFLAGS="$CXXFLAGS -std=c++1y"], [
-    AX_CHECK_COMPILE_FLAG([-std=c++11], [CXXFLAGS="$CXXFLAGS -std=c++11"], [])
+    AX_CHECK_COMPILE_FLAG([-std=c++11], [CXXFLAGS="$CXXFLAGS -std=c++11"], [
+     AC_MSG_ERROR([compiler doesn't accept any -std=c++11, please upgrade your compiler])])
    ])
   ])
  ])
