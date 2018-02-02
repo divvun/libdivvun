@@ -30,7 +30,7 @@ PipeSpec::PipeSpec(const string& file) {
 			language = "se"; // reasonable default
 		}
 		for (pugi::xml_node pipeline: doc.child("pipespec").children("pipeline")) {
-			const u16string& pipename = utf16conv.from_bytes(pipeline.attribute("name").value());
+			const u16string& pipename = fromUtf8(pipeline.attribute("name").value());
 			auto pr = std::make_pair(pipename, pipeline);
 			pnodes[pipename] = pipeline;
 		}
@@ -51,7 +51,7 @@ PipeSpec::PipeSpec(pugi::char_t* buff, size_t size) {
 			language = "se"; // reasonable default
 		}
 		for (pugi::xml_node pipeline: doc.child("pipespec").children("pipeline")) {
-			const u16string& pipename = utf16conv.from_bytes(pipeline.attribute("name").value());
+			const u16string& pipename = fromUtf8(pipeline.attribute("name").value());
 			auto pr = std::make_pair(pipename, pipeline);
 			pnodes[pipename] = pipeline;
 		}
@@ -97,7 +97,7 @@ void validatePipespecCmd(const pugi::xml_node& cmd, const std::unordered_map<str
 	}
 	else if(name == "sh") {
 		throw std::runtime_error("<sh> command not implemented yet!");
-		// const auto& prog = utf16conv.from_bytes(cmd.attribute("prog").value());
+		// const auto& prog = fromUtf8(cmd.attribute("prog").value());
 	}
 	else if(name == "prefs") {
 		// pass
@@ -299,7 +299,7 @@ void writePipeSpecShDir(const string& specfile, bool json, const string& modesdi
 	const std::unique_ptr<PipeSpec> spec(new PipeSpec(specfile));
 	const auto dir = dirname(abspath(specfile));
 	for(const auto& p : spec->pnodes) {
-		const auto& pipename = utf16conv.to_bytes(p.first);
+		const auto& pipename = toUtf8(p.first);
 		writePipeSpecShDirOne(toPipeSpecShVector(dir, *spec, p.first, false, json),
 				      pipename,
 				      modesdir,

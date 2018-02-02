@@ -25,23 +25,23 @@
 
 using divvun::variant;
 using divvun::Pipeline;
+using divvun::toUtf8;
+using divvun::fromUtf8;
 
 
 variant<int, Pipeline> getPipelineXml(const std::string& path, const std::u16string& pipename, bool verbose) {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	const std::unique_ptr<divvun::PipeSpec> spec(new divvun::PipeSpec(path));
 	if(spec->pnodes.find(pipename) == spec->pnodes.end()) {
-		std::cerr << "divvun-checker: ERROR: Couldn't find pipe " << utf16conv.to_bytes(pipename) << " in " << path << std::endl;
+		std::cerr << "divvun-checker: ERROR: Couldn't find pipe " << toUtf8(pipename) << " in " << path << std::endl;
 		return EXIT_FAILURE;
 	}
 	return Pipeline(spec, pipename, verbose);
 }
 
 variant<int, Pipeline> getPipelineAr(const std::string& path, const std::u16string& pipename, bool verbose) {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	const auto& ar_spec = divvun::readArPipeSpec(path);
 	if(ar_spec->spec->pnodes.find(pipename) == ar_spec->spec->pnodes.end()) {
-		std::cerr << "divvun-checker: ERROR: Couldn't find pipe " << utf16conv.to_bytes(pipename) << " in " << path << std::endl;
+		std::cerr << "divvun-checker: ERROR: Couldn't find pipe " << toUtf8(pipename) << " in " << path << std::endl;
 		return EXIT_FAILURE;
 	}
 	return Pipeline(ar_spec, pipename, verbose);
@@ -49,10 +49,9 @@ variant<int, Pipeline> getPipelineAr(const std::string& path, const std::u16stri
 
 int printNamesXml(const std::string& path, bool verbose) {
 	const std::unique_ptr<divvun::PipeSpec> spec(new divvun::PipeSpec(path));
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::cout << "Please specify a pipeline variant with the -n/--variant option. Available variants in pipespec:" << std::endl;
 	for(const auto& p : spec->pnodes) {
-		const auto& name = utf16conv.to_bytes(p.first.c_str());
+		const auto& name = toUtf8(p.first.c_str());
 		std::cout << name << std::endl;
 	}
 	return EXIT_SUCCESS;
@@ -60,10 +59,9 @@ int printNamesXml(const std::string& path, bool verbose) {
 
 int printNamesAr(const std::string& path, bool verbose) {
 	const auto& ar_spec = divvun::readArPipeSpec(path);
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::cout << "Please specify a pipeline variant with the -n/--variant option. Available variants in archive:" << std::endl;
 	for(const auto& p : ar_spec->spec->pnodes) {
-		const auto& name = utf16conv.to_bytes(p.first.c_str());
+		const auto& name = toUtf8(p.first.c_str());
 		std::cout << name << std::endl;
 	}
 	return EXIT_SUCCESS;
@@ -81,7 +79,6 @@ int run(Pipeline& pipeline) {
 
 void printPrefs(const Pipeline& pipeline) {
 	using namespace divvun;
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::cout << "== Available preferences ==" << std::endl;
 	for(const auto& lp : pipeline.prefs) {
 		const Lang& lang = lp.first;
@@ -89,16 +86,16 @@ void printPrefs(const Pipeline& pipeline) {
 		const Prefs& prefs = lp.second;
 		std::cout << "==== Toggles: ====" << std::endl;
 		for(const auto& id : prefs.toggleIds) {
-			std::cout << "- [ ] " << utf16conv.to_bytes(id.first) << " \t" << utf16conv.to_bytes(id.second) << std::endl;
+			std::cout << "- [ ] " << toUtf8(id.first) << " \t" << toUtf8(id.second) << std::endl;
 		}
 		for(const auto& re : prefs.toggleRes) {
-			std::cout << "- [ ] [regex] \t" << utf16conv.to_bytes(re.second) << std::endl;
+			std::cout << "- [ ] [regex] \t" << toUtf8(re.second) << std::endl;
 		}
 		std::cout << "==== Options: ====" << std::endl;
 		for(const Option& o : prefs.options) {
 			std::cout << "- " << o.name << " (" << o.type << "):" << std::endl;
 			for(const auto& c : o.choices) {
-				std::cout << "- ( ) " << utf16conv.to_bytes(c.first) << " \t" << utf16conv.to_bytes(c.second) << std::endl;
+				std::cout << "- ( ) " << toUtf8(c.first) << " \t" << toUtf8(c.second) << std::endl;
 			}
 		}
 	}
@@ -108,7 +105,6 @@ int main(int argc, char ** argv)
 {
 	try
 	{
-		std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 		cxxopts::Options options(argv[0], " - generate grammar checker suggestions from a CG stream");
 
 		options.add_options()
@@ -157,9 +153,8 @@ int main(int argc, char ** argv)
 
 		auto ignores = std::set<divvun::ErrId>();
 		if(options.count("ignore")) {
-			std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 			for(const auto& ignore : divvun::split(options["ignore"].as<std::string>(), ',')) {
-				ignores.insert(utf16conv.from_bytes(ignore));
+				ignores.insert(fromUtf8(ignore));
 			}
 		}
 
@@ -172,7 +167,7 @@ int main(int argc, char ** argv)
 				return printNamesXml(specfile, verbose);
 			}
 			else {
-				const auto& pipename = utf16conv.from_bytes(options["variant"].as<std::string>());
+				const auto& pipename = fromUtf8(options["variant"].as<std::string>());
 				return getPipelineXml(specfile, pipename, verbose).match(
 					[]       (int r) { return r; },
 					[&](Pipeline& p) {
@@ -196,7 +191,7 @@ int main(int argc, char ** argv)
 				return printNamesAr(archive, verbose);
 			}
 			else {
-				const auto& pipename = utf16conv.from_bytes(options["variant"].as<std::string>());
+				const auto& pipename = fromUtf8(options["variant"].as<std::string>());
 				return getPipelineAr(archive, pipename, verbose).match(
 					[]       (int r) { return r; },
 					[&](Pipeline& p) {

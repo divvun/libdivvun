@@ -27,7 +27,6 @@ int main(int argc, char ** argv)
 {
 	try
 	{
-		std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 		cxxopts::Options options(argv[0], "BIN - generate shell script to run checker pipeline from XML pipespec");
 
 		options.add_options()
@@ -79,7 +78,7 @@ int main(int argc, char ** argv)
 					std::cerr << argv[0] << " ERROR: Specify either --variant or --dir, not both!" << std::endl;
 					return EXIT_FAILURE;
 				}
-				const auto& pipename = utf16conv.from_bytes(options["variant"].as<std::string>());
+				const auto& pipename = divvun::fromUtf8(options["variant"].as<std::string>());
 				divvun::writePipeSpecSh(specfile, pipename, json, std::cout);
 				return EXIT_SUCCESS;
 			}

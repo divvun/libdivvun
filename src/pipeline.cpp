@@ -178,10 +178,9 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 		// TODO: Move into a lib-general init function? Or can I call this safely once per CGCmd?
 		throw std::runtime_error("libdivvun: ERROR: Couldn't initialise ICU for vislcg3!");
 	}
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	string locale = spec->language;
 	for (const pugi::xml_node& cmd: spec->pnodes.at(pipename).children()) {
-		const auto& name = utf16conv.from_bytes(cmd.name());
+		const auto& name = fromUtf8(cmd.name());
 		std::unordered_map<string, string> args;
 		for (const pugi::xml_node& arg: cmd.children()) {
 			args[arg.name()] = arg.attribute("n").value();
@@ -243,7 +242,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 			suggestcmd = s;
 		}
 		else if(name == u"sh") {
-			// const auto& prog = utf16conv.from_bytes(cmd.attribute("prog").value());
+			// const auto& prog = fromUtf8(cmd.attribute("prog").value());
 			// cmds.emplace_back(new ShCmd(prog, args, verbose));
 		}
 		else if(name == u"prefs") {
@@ -262,10 +261,9 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 		// TODO: Move into a lib-general init function? Or can I call this safely once per CGCmd?
 		throw std::runtime_error("libdivvun: ERROR: Couldn't initialise ICU for vislcg3!");
 	}
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	string locale = spec->language;
 	for (const pugi::xml_node& cmd: spec->pnodes.at(pipename).children()) {
-		const auto& name = utf16conv.from_bytes(cmd.name());
+		const auto& name = fromUtf8(cmd.name());
 		std::unordered_map<string, string> args;
 		for (const pugi::xml_node& arg: cmd.children()) {
 			args[arg.name()] = arg.attribute("n").value();
@@ -298,7 +296,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 			suggestcmd = s;
 		}
 		else if(name == u"sh") {
-			// const auto& prog = utf16conv.from_bytes(cmd.attribute("prog").value());
+			// const auto& prog = fromUtf8(cmd.attribute("prog").value());
 			// cmds.emplace_back(new ShCmd(prog, args, verbose));
 		}
 		else if(name == u"prefs") {

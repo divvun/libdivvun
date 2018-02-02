@@ -25,9 +25,9 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
-
 #include <locale>
-#include <codecvt>
+
+#include "util.hpp"
 
 namespace json {
 
@@ -42,7 +42,6 @@ inline const std::string uhex(const int i)
 
 inline const std::string esc(const std::u16string& str) {
 	std::vector<char16_t> os;
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	for (const char16_t& c : str) {
 		switch(c) {
 			case '"':
@@ -74,7 +73,7 @@ inline const std::string esc(const std::u16string& str) {
 				}
 		}
 	}
-	return utf16conv.to_bytes(std::u16string(os.begin(), os.end()));
+	return divvun::toUtf8(std::u16string(os.begin(), os.end()));
 }
 
 inline const std::string str(const std::u16string& s)

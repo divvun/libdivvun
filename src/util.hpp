@@ -34,7 +34,7 @@
 #include <algorithm>
 
 #include <locale>
-#include <codecvt>
+#include "utf8.h"
 
 namespace divvun {
 
@@ -48,6 +48,18 @@ const std::basic_regex<char> CG_LINE ("^"
 
 using StringVec = std::vector<std::string>;
 
+inline const std::string toUtf8(const std::u16string& from) {
+	std::string to;
+        utf8::utf16to8(from.begin(), from.end(), std::back_inserter(to));
+	return to;
+}
+
+inline const std::u16string fromUtf8(const std::string& from) {
+	std::u16string to;
+        utf8::utf8to16(from.begin(), from.end(), std::back_inserter(to));
+	return to;
+}
+
 template<typename Container>
 inline const std::string join_quoted(const Container& ss, const std::string& delim=" ") {
 	std::ostringstream os;
@@ -57,6 +69,7 @@ inline const std::string join_quoted(const Container& ss, const std::string& del
 			  str.size() - delim.size());
 }
 
+/* Join a container of bytestrings by delim */
 template<typename Container>
 inline const std::string join(const Container& ss, const std::string& delim=" ") {
 	std::ostringstream os;
@@ -66,12 +79,12 @@ inline const std::string join(const Container& ss, const std::string& delim=" ")
 			  str.size() - delim.size());
 }
 
+/* Join a container of u16strings by delim */
 template<typename Container>
 inline const std::string u16join(const Container& ss, const std::string& delim=" ") {
 	std::ostringstream os;
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	for(const auto& s : ss) {
-		os << utf16conv.to_bytes(s) << ",";
+		os << toUtf8(s) << ",";
 	}
 	const auto& str = os.str();
 	return str.substr(0,

@@ -213,10 +213,10 @@ inline void parsePrefs(LocalisedPrefs& prefs, const pugi::xml_node& cmd) {
 		const auto name = pref.attribute("name").value();
 		std::unordered_map<Lang, std::unordered_map<ErrId, Msg>> lems;
 		for (const pugi::xml_node& option: pref.children()) {
-			const auto errId = utf16conv.from_bytes(option.attribute("err-id").value());
+			const auto errId = fromUtf8(option.attribute("err-id").value());
 			for (const pugi::xml_node& label: option.children()) {
 				const auto lang = label.attribute("xml:lang").value();
-				const auto msg = utf16conv.from_bytes(label.text().get()); // or xml_raw_cdata(label);
+				const auto msg = fromUtf8(label.text().get()); // or xml_raw_cdata(label);
 				lems[lang][errId] = msg;
 			}
 		}

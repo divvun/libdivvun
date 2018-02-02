@@ -87,18 +87,17 @@ enum LineType {
 const MsgMap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& result)
 {
 	MsgMap msgs;
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 
 	if (result) {
 		for (pugi::xml_node def: doc.child("errors").child("defaults").children("default")) {
 			// std::cerr << "defaults" << std::endl;
 			for (pugi::xml_node child: def.child("header").children("title")) {
-				const auto& msg = utf16conv.from_bytes(xml_raw_cdata(child));
+				const auto& msg = fromUtf8(xml_raw_cdata(child));
 				const auto& lang = child.attribute("xml:lang").value();
 				for (pugi::xml_node e: def.child("ids").children("e")) {
 					// e_value assumes we only ever have one PCDATA element here:
-					const auto& errtype = utf16conv.from_bytes(e.attribute("id").value());
-					// std::cerr << utf16conv.to_bytes(errtype) << std::endl;
+					const auto& errtype = fromUtf8(e.attribute("id").value());
+					// std::cerr << toUtf8(errtype) << std::endl;
 					if(msgs[lang].first.count(errtype) != 0) {
 						std::cerr << "divvun-suggest: WARNING: Duplicate titles for " << e.attribute("id").value() << std::endl;
 					}
@@ -113,8 +112,8 @@ const MsgMap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& re
 		for (pugi::xml_node error: doc.child("errors").children("error")) {
 			for (pugi::xml_node child: error.child("header").children("title")) {
 				// child_value assumes we only ever have one PCDATA element here:
-				const auto& errtype = utf16conv.from_bytes(error.attribute("id").value());
-				const auto& msg = utf16conv.from_bytes(xml_raw_cdata(child));
+				const auto& errtype = fromUtf8(error.attribute("id").value());
+				const auto& msg = fromUtf8(xml_raw_cdata(child));
 				const auto& lang = child.attribute("xml:lang").value();
 				if(msgs[lang].first.count(errtype) != 0) {
 					std::cerr << "divvun-suggest: WARNING: Duplicate titles for " << error.attribute("id").value() << std::endl;
@@ -154,7 +153,6 @@ const MsgMap Suggest::readMessages(const string& file) {
 
 
 const Reading proc_subreading(const string& line) {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	Reading r;
 	const auto& lemma_beg = line.find("\"");
 	const auto& lemma_end = line.find("\" ", lemma_beg);
@@ -190,7 +188,7 @@ const Reading proc_subreading(const string& line) {
 				r.link = true;
 			}
 			else {
-				r.errtype = utf16conv.from_bytes(result[2]);
+				r.errtype = fromUtf8(result[2]);
 			}
 		}
 		else if(result[3].length() != 0 && result[4].length() != 0) {
@@ -219,13 +217,12 @@ const Reading proc_subreading(const string& line) {
 	const auto& tagsplus = join(gentags, "+");
 	r.ana = lemma+"+"+tagsplus;
 	if(r.suggestwf) {
-		r.sforms.emplace_back(utf16conv.from_bytes(r.wf));
+		r.sforms.emplace_back(fromUtf8(r.wf));
 	}
 	return r;
 };
 
 const Reading proc_reading(const hfst::HfstTransducer& t, const string& line) {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	stringstream ss(line);
 	string subline;
 	std::deque<Reading> subs;
@@ -257,7 +254,7 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const string& line) {
 					form << symbol;
 				}
 			}
-			r.sforms.emplace_back(utf16conv.from_bytes(form.str()));
+			r.sforms.emplace_back(fromUtf8(form.str()));
 		}
 	}
 	return r;
@@ -378,7 +375,6 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 	if(cohort_empty(c) || c.added || ignores.find(err_id) != ignores.end()) {
 		return Nothing();
 	}
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	u16string msg;
 	for(const auto& mlang : sortedmsglangs) {
 		if(msg.empty() && mlang != locale) {
@@ -391,7 +387,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 		else {
 			for(const auto& p : lmsgs.second) {
 				std::match_results<const char*> result;
-				const auto& et = utf16conv.to_bytes(err_id.c_str());
+				const auto& et = toUtf8(err_id.c_str());
 				std::regex_match(et.c_str(), result, p.first);
 				if(!result.empty()
 				   && // Only consider full matches:
@@ -419,7 +415,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 		}
 		rel_on_match(r.rels, MSG_TEMPLATE_REL, sentence,
 			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
-				     replaceAll(msg, utf16conv.from_bytes(relname.c_str()), trg.form);
+				     replaceAll(msg, fromUtf8(relname.c_str()), trg.form);
 			     });
 	}
 	auto beg = c.pos;
@@ -542,10 +538,6 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 	Sentence sentence;
 	sentence.runstate = eof;
 
-	// TODO: could use http://utfcpp.sourceforge.net, but it's not in macports;
-	// and ICU seems overkill just for iterating codepoints
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-
 	string line;
 	string readinglines;
 	std::getline(is, line);	// TODO: Why do I need at least one getline before os<< after flushing?
@@ -577,20 +569,20 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 			}
 			if(!c.added) {
 				pos += c.form.size();
-				sentence.text << utf16conv.to_bytes(c.form);
+				sentence.text << toUtf8(c.form);
 			}
 			c = DEFAULT_COHORT;
 		}
 
 		if (!result.empty() && result[2].length() != 0) { // wordform
-			c.form = utf16conv.from_bytes(result[2]);
+			c.form = fromUtf8(result[2]);
 		}
 		else if(!result.empty() && result[3].length() != 0) { // reading
 			readinglines += line + "\n";
 		}
 		else if(!result.empty() && result[6].length() != 0) { // blank
 			const auto blank = clean_blank(result[6]);
-			pos += utf16conv.from_bytes(blank).size();
+			pos += fromUtf8(blank).size();
 			sentence.text << blank;
 		}
 		else if(!result.empty() && result[7].length() != 0) { // flush
@@ -624,7 +616,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 	}
 	if(!c.added) {
 		pos += c.form.size();
-		sentence.text << utf16conv.to_bytes(c.form);
+		sentence.text << toUtf8(c.form);
 	}
 	return sentence;
 }
@@ -707,8 +699,7 @@ void expand_errs(vector<Err>& errs, const u16string& text) {
 }
 
 vector<Err> Suggest::mk_errs(const Sentence &sentence) {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	const auto& text = utf16conv.from_bytes(sentence.text.str());
+	const auto& text = fromUtf8(sentence.text.str());
 	vector<Err> errs;
 	for(const auto& c : sentence.cohorts) {
 		std::map<ErrId, vector<size_t>> c_errs;
@@ -740,7 +731,6 @@ vector<Err> Suggest::run_errs(std::istream& is)
 
 RunState Suggest::run_json(std::istream& is, std::ostream& os)
 {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	json::sanity_test();
 	Sentence sentence = run_sentence(is, *generator, msgs);
 
@@ -764,7 +754,7 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os)
 		wantsep = true;
 	}
 	os << "]"
-	   << "," << json::key(u"text") << json::str(utf16conv.from_bytes(sentence.text.str()))
+	   << "," << json::key(u"text") << json::str(fromUtf8(sentence.text.str()))
 	   << "}";
 	if(sentence.runstate == flushing) {
 		os << '\0';
@@ -775,7 +765,7 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os)
 }
 
 
-void print_cg_reading(const string& readinglines, std::ostream& os, const hfst::HfstTransducer& t, std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>& utf16conv) {
+void print_cg_reading(const string& readinglines, std::ostream& os, const hfst::HfstTransducer& t) {
 	os << readinglines;
 	const auto& reading = proc_reading(t, readinglines);
 	if(reading.suggest) {
@@ -793,7 +783,7 @@ void print_cg_reading(const string& readinglines, std::ostream& os, const hfst::
 	else {
 		const auto& errtype = reading.errtype;
 		if(!errtype.empty()) {
-			os << utf16conv.to_bytes(errtype) << std::endl;
+			os << toUtf8(errtype) << std::endl;
 		}
 	}
 
@@ -801,7 +791,6 @@ void print_cg_reading(const string& readinglines, std::ostream& os, const hfst::
 
 void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	// Simple debug function; only subreading state kept between lines
 	string readinglines;
 	for (string line;std::getline(is, line);) {
@@ -809,7 +798,7 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 		std::regex_match(line.c_str(), result, CG_LINE);
 
 		if(!readinglines.empty() && (result.empty() || result[3].length() <= 1)) {
-			print_cg_reading(readinglines, os, t, utf16conv);
+			print_cg_reading(readinglines, os, t);
 			readinglines = "";
 		}
 
@@ -826,7 +815,7 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 		}
 	}
 	if(!readinglines.empty()) {
-		print_cg_reading(readinglines, os, t, utf16conv);
+		print_cg_reading(readinglines, os, t);
 	}
 }
 

@@ -23,16 +23,14 @@ namespace divvun {
 
 
 const std::u16string from_bytes(const std::string& s) {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-	return utf16conv.from_bytes(s);
+	return fromUtf8(s);
 }
 
 // CheckerSpec
 CheckerSpec::CheckerSpec(const std::string& file) : pImpl( new PipeSpec(file) )
 {
-	// std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	// for(const auto& k : pImpl->pnodes) {
-		// std::cerr << "init " << utf16conv.to_bytes(k.first.c_str()) <<std::endl;
+		// std::cerr << "init " << toUtf8(k.first.c_str()) <<std::endl;
 	// }
 }
 CheckerSpec::~CheckerSpec()
@@ -40,10 +38,9 @@ CheckerSpec::~CheckerSpec()
 }
 const std::set<std::string> CheckerSpec::pipeNames() const
 {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::set<std::string> keys;
 	for(const auto& it : pImpl->pnodes) {
-		keys.insert(utf16conv.to_bytes(it.first));
+		keys.insert(toUtf8(it.first));
 	}
 	return keys;
 }
@@ -60,9 +57,8 @@ std::unique_ptr<Checker> CheckerSpec::getChecker(const std::string& pipename, bo
 // ArCheckerSpec
 ArCheckerSpec::ArCheckerSpec(const std::string& file) : pImpl( readArPipeSpec(file) )
 {
-	// std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	// for(const auto& k : pImpl->spec->pnodes) {
-	// 	std::cerr << "init " << utf16conv.to_bytes(k.first.c_str()) <<std::endl;
+	// 	std::cerr << "init " << toUtf8(k.first.c_str()) <<std::endl;
 	// }
 }
 ArCheckerSpec::~ArCheckerSpec()
@@ -70,10 +66,9 @@ ArCheckerSpec::~ArCheckerSpec()
 }
 const std::set<std::string> ArCheckerSpec::pipeNames() const
 {
-	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
 	std::set<std::string> keys;
 	for(const auto& it : pImpl->spec->pnodes) {
-		keys.insert(utf16conv.to_bytes(it.first));
+		keys.insert(toUtf8(it.first));
 	}
 	return keys;
 }
