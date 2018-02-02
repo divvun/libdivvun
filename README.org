@@ -43,6 +43,30 @@ There are also some helper programs for validating XML
 =divvun-gen-xmlschemas=) and for generating shell scripts from
 pipeline specifications (=divvun-gen-sh=).
 
+* Install from packages
+
+Tino Didriksen has kindly packaged this as both =.deb= and =.rpm=.
+
+For =.deb= (Debian, Ubuntu and derivatives), add the repo and install
+the package with:
+
+#+BEGIN_SRC sh
+wget https://apertium.projectjj.com/apt/install-nightly.sh
+sudo bash install-nightly.sh
+sudo apt install divvun-gramcheck
+#+END_SRC
+
+For =.rpm= (openSUSE, Fedora, CentOS and derivatives), add the repo
+and install the package with:
+
+#+BEGIN_SRC sh
+wget https://apertium.projectjj.com/rpm/install-nightly.sh
+sudo bash install-nightly.sh
+sudo dnf install divvun-gramcheck
+#+END_SRC
+
+(See also the [[https://apertium.projectjj.com/apt/logs/divvun-gramcheck/][deb build logs]] and [[https://build.opensuse.org/package/show/home:TinoDidriksen:nightly/divvun-gramcheck][rpm build status]].)
+
 * Simple build from git on Mac
 
 There is a script that will download prerequisites and compile and
