@@ -16,7 +16,12 @@ build () {
     make -j3
     make -j3 install
     for prog in "$HOME"/PREFIX/gtd-gc/bin/divvun*; do
-        ( cd "$HOME"/PREFIX/gtd-gc/bin/ && PATH=".:$PATH" help2man -N -S divvun-gramcheck "${prog##*/}" ) > src/"${prog##*/}".1
+        PATH="$HOME/PREFIX/gtd-gc/bin/:$PATH"                 \
+            help2man -N                                       \
+            -S 'divvun-gramcheck'                             \
+            -n 'This application is part of divvun-gramcheck' \
+            "${prog##*/}"                                     \
+            > src/"${prog##*/}".1
     done
     make -j3 check
     git ls-files src | grep pp$ | grep -ve mapbox -e cxxopts | xargs -I{} clang-tidy --checks='-*,modernize-*,-modernize-make-unique,-modernize-pass-by-value,-modernize-raw-string-literal' {} -- -Isrc -std=c++11
