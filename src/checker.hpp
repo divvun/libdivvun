@@ -26,10 +26,19 @@
 #include <memory>
 #include <set>
 #include <vector>
+#include <dirent.h>
+#include <pwd.h>
+#include <cerrno>
+#include <cstdlib>
 
 #include "checkertypes.hpp"
 
 namespace divvun {
+
+using std::string;
+using std::vector;
+using std::stringstream;
+using std::unordered_map;
 
 /**
  * Public types and functions for divvun-gramcheck library
@@ -42,22 +51,22 @@ class Checker;
 
 class CheckerSpec {
 	public:
- 		explicit CheckerSpec(const std::string& file);
+		explicit CheckerSpec(const string& file);
 		~CheckerSpec();
-		bool hasPipe(const std::string& pipename);
-		const std::set<std::string> pipeNames() const;
-		std::unique_ptr<Checker> getChecker(const std::string& pipename, bool verbose);
+		bool hasPipe(const string& pipename);
+		const std::set<string> pipeNames() const;
+		std::unique_ptr<Checker> getChecker(const string& pipename, bool verbose);
 	private:
 		const std::unique_ptr<PipeSpec> pImpl;
 };
 
 class ArCheckerSpec {
 	public:
- 		explicit ArCheckerSpec(const std::string& file);
+		explicit ArCheckerSpec(const string& file);
 		~ArCheckerSpec();
-		bool hasPipe(const std::string& pipename);
-		const std::set<std::string> pipeNames() const;
-		std::unique_ptr<Checker> getChecker(const std::string& pipename, bool verbose);
+		bool hasPipe(const string& pipename);
+		const std::set<string> pipeNames() const;
+		std::unique_ptr<Checker> getChecker(const string& pipename, bool verbose);
 	private:
 		const std::unique_ptr<ArPipeSpec> pImpl;
 };
@@ -66,17 +75,19 @@ class Pipeline;
 
 class Checker {
 	public:
-		Checker(const std::unique_ptr<PipeSpec>& spec, const std::string& pipename, bool verbose);
-		Checker(const std::unique_ptr<ArPipeSpec>& spec, const std::string& pipename, bool verbose);
+		Checker(const std::unique_ptr<PipeSpec>& spec, const string& pipename, bool verbose);
+		Checker(const std::unique_ptr<ArPipeSpec>& spec, const string& pipename, bool verbose);
 		~Checker();
-                void proc(std::stringstream& input, std::stringstream& output);
-		std::vector<Err> proc_errs(std::stringstream& input);
+		void proc(stringstream& input, stringstream& output);
+		std::vector<Err> proc_errs(stringstream& input);
 		const LocalisedPrefs& prefs() const;
 		void setIgnores(const std::set<ErrId>& ignores);
 	private:
 		const std::unique_ptr<Pipeline> pImpl;
 };
 
+std::set<string> searchPaths();
+unordered_map<Lang, vector<string>> listLangs();
 
 } // namespace divvun
 

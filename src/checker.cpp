@@ -22,12 +22,12 @@
 namespace divvun {
 
 
-const std::u16string from_bytes(const std::string& s) {
+const std::u16string from_bytes(const string& s) {
 	return fromUtf8(s);
 }
 
 // CheckerSpec
-CheckerSpec::CheckerSpec(const std::string& file) : pImpl( new PipeSpec(file) )
+CheckerSpec::CheckerSpec(const string& file) : pImpl( new PipeSpec(file) )
 {
 	// for(const auto& k : pImpl->pnodes) {
 		// std::cerr << "init " << toUtf8(k.first.c_str()) <<std::endl;
@@ -36,26 +36,26 @@ CheckerSpec::CheckerSpec(const std::string& file) : pImpl( new PipeSpec(file) )
 CheckerSpec::~CheckerSpec()
 {
 }
-const std::set<std::string> CheckerSpec::pipeNames() const
+const std::set<string> CheckerSpec::pipeNames() const
 {
-	std::set<std::string> keys;
+	std::set<string> keys;
 	for(const auto& it : pImpl->pnodes) {
 		keys.insert(toUtf8(it.first));
 	}
 	return keys;
 }
-bool CheckerSpec::hasPipe(const std::string& pipename)
+bool CheckerSpec::hasPipe(const string& pipename)
 {
 	return pImpl->pnodes.find(from_bytes(pipename)) != pImpl->pnodes.end();
 }
-std::unique_ptr<Checker> CheckerSpec::getChecker(const std::string& pipename, bool verbose) {
+std::unique_ptr<Checker> CheckerSpec::getChecker(const string& pipename, bool verbose) {
 	return std::unique_ptr<Checker>(new Checker(pImpl, pipename, verbose));
 }
 
 
 
 // ArCheckerSpec
-ArCheckerSpec::ArCheckerSpec(const std::string& file) : pImpl( readArPipeSpec(file) )
+ArCheckerSpec::ArCheckerSpec(const string& file) : pImpl( readArPipeSpec(file) )
 {
 	// for(const auto& k : pImpl->spec->pnodes) {
 	// 	std::cerr << "init " << toUtf8(k.first.c_str()) <<std::endl;
@@ -64,29 +64,29 @@ ArCheckerSpec::ArCheckerSpec(const std::string& file) : pImpl( readArPipeSpec(fi
 ArCheckerSpec::~ArCheckerSpec()
 {
 }
-const std::set<std::string> ArCheckerSpec::pipeNames() const
+const std::set<string> ArCheckerSpec::pipeNames() const
 {
-	std::set<std::string> keys;
+	std::set<string> keys;
 	for(const auto& it : pImpl->spec->pnodes) {
 		keys.insert(toUtf8(it.first));
 	}
 	return keys;
 }
-bool ArCheckerSpec::hasPipe(const std::string& pipename)
+bool ArCheckerSpec::hasPipe(const string& pipename)
 {
 	return pImpl->spec->pnodes.find(from_bytes(pipename)) != pImpl->spec->pnodes.end();
 }
-std::unique_ptr<Checker> ArCheckerSpec::getChecker(const std::string& pipename, bool verbose) {
+std::unique_ptr<Checker> ArCheckerSpec::getChecker(const string& pipename, bool verbose) {
 	return std::unique_ptr<Checker>(new Checker(pImpl, pipename, verbose));
 }
 
 // Checker
-Checker::Checker(const std::unique_ptr<PipeSpec>& spec, const std::string& pipename, bool verbose)
+Checker::Checker(const std::unique_ptr<PipeSpec>& spec, const string& pipename, bool verbose)
 	: pImpl(new Pipeline(spec, from_bytes(pipename), verbose))
 {
 };
 
-Checker::Checker(const std::unique_ptr<ArPipeSpec>& spec, const std::string& pipename, bool verbose)
+Checker::Checker(const std::unique_ptr<ArPipeSpec>& spec, const string& pipename, bool verbose)
 	: pImpl(new Pipeline(spec, from_bytes(pipename), verbose))
 {
 };
@@ -95,11 +95,11 @@ Checker::~Checker()
 {
 };
 
-void Checker::proc(std::stringstream& input, std::stringstream& output) {
+void Checker::proc(stringstream& input, stringstream& output) {
 	pImpl->proc(input, output);
 };
 
-std::vector<Err> Checker::proc_errs(std::stringstream& input) {
+vector<Err> Checker::proc_errs(stringstream& input) {
 	return pImpl->proc_errs(input);
 };
 
@@ -111,6 +111,75 @@ void Checker::setIgnores(const std::set<ErrId>& ignores) {
 	return pImpl->setIgnores(ignores);
 };
 
+
+/**
+ * Note: This will silently return an empty vector if the directory doesn't exist.
+ * (We don't really care if some directory isn't there.)
+ */
+vector<string> zcheckFilesInDir(const string& path) {
+	const string suffix = ".zcheck";
+	const size_t suflen = suffix.length();
+	vector<string> files;
+	DIR *dir;
+	if ((dir = opendir(path.c_str())) == NULL) {
+		return files;
+	}
+	struct dirent *ent;
+	while ((ent = readdir(dir)) != NULL) {
+		string name = string(ent->d_name);
+		if(name.length() > suflen && name.substr(name.length()-suflen, suflen) == suffix) {
+			// TODO: \\ on Windows
+			files.push_back(path + "/" + name);
+		}
+	}
+	closedir(dir);
+	return files;
+}
+
+variant<Nothing, string> expanduser() {
+	const struct passwd* pwd = getpwuid(getuid());
+	if (pwd)
+	{
+		return pwd->pw_dir;
+	}
+	const string HOME = std::getenv("HOME");
+	if(!HOME.empty())
+	{
+		return HOME;
+	}
+	return Nothing();
+}
+
+std::set<string> searchPaths() {
+	// TODO: prioritise user dir – make it a vector and check if
+	// it's seen already?
+	std::set<string> dirs = {
+		// -DPREFIX is set in Makefile.am; doesn't include DESTDIR
+		string(PREFIX) + "/share/voikko/4",
+		"/usr/share/voikko/4",
+		"/usr/local/share/voikko/4"
+	};
+	expanduser().match(
+		[](Nothing){ },
+		[&](string home) {
+			dirs.insert(home + "/.voikko/4");
+			// TODO: getenv freedesktop stuff
+			dirs.insert(home + "/.config/voikko/4");
+		});
+	return dirs;
+}
+
+unordered_map<Lang, vector<string>> listLangs() {
+	unordered_map<Lang, vector<string>> pipes;
+	for(const auto& d : searchPaths()) {
+		const auto& zpaths = zcheckFilesInDir(d);
+		for(const auto& zpath : zpaths) {
+			const auto& ar_spec = readArPipeSpec(zpath);
+			pipes[ar_spec->spec->language].push_back(zpath);
+		}
+	}
+	return pipes;
+}
 
 
 }

@@ -158,6 +158,7 @@ string pathconcat(const string& path1, const string& path2) {
 		return path1 + path2;
 	}
 	else {
+		// TODO: \\ on Windows
 		return path1 + "/" + path2;
 	}
 }
@@ -268,6 +269,7 @@ void writePipeSpecShDirOne(const vector<std::pair<string, string>> cmds, const s
 		if(i < cmds.size() - 1) {
 			debug_suff = std::to_string(i) + "-" + cmds[i].second;
 		}
+		// TODO: \\ on Windows
 		const auto path = modesdir + "/" + pipename + debug_suff + ".mode";
 		std::cout << path << std::endl;
 		std::ofstream ofs;

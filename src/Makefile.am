@@ -1,4 +1,5 @@
 datadir = $(prefix)/share/divvun-gramcheck
+AM_CPPFLAGS = -DPREFIX="\"$(prefix)\""
 
 # divvun-suggest binary:
 divvun_suggest_SOURCES  = main_suggest.cpp suggest.cpp

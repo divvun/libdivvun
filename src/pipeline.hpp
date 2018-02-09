@@ -23,7 +23,7 @@
 #endif
 
 #include <cstring>
-#include <errno.h>
+#include <cerrno>
 
 // divvun-gramcheck:
 #include "pipespec.hpp"
@@ -44,6 +44,7 @@ using std::string;
 using std::stringstream;
 using std::u16string;
 using std::vector;
+using std::unordered_map;
 using std::unique_ptr;
 
 #ifndef DEBUG
@@ -210,7 +211,7 @@ inline void parsePrefs(LocalisedPrefs& prefs, const pugi::xml_node& cmd) {
 	for (const pugi::xml_node& pref: cmd.children()) {
 		const auto type = pref.attribute("type").value();
 		const auto name = pref.attribute("name").value();
-		std::unordered_map<Lang, std::unordered_map<ErrId, Msg>> lems;
+		unordered_map<Lang, unordered_map<ErrId, Msg>> lems;
 		for (const pugi::xml_node& option: pref.children()) {
 			const auto errId = fromUtf8(option.attribute("err-id").value());
 			for (const pugi::xml_node& label: option.children()) {

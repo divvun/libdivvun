@@ -19,6 +19,7 @@
 #  include <config.h>
 #endif
 
+#include "checker.hpp"
 #include "pipeline.hpp"
 #include "version.hpp"
 #include "cxxopts.hpp"
@@ -110,6 +111,7 @@ int main(int argc, char ** argv)
 		options.add_options()
 			("s,spec", "Pipeline XML specification", cxxopts::value<std::string>(), "FILE")
 			("a,archive", "Zipped pipeline archive of language data", cxxopts::value<std::string>(), "FILE")
+			("l,language", "Language to use (in case no FILE arguments given)", cxxopts::value<std::string>(), "LANG")
 			("n,variant", "Name of the pipeline variant", cxxopts::value<std::string>(), "NAME")
 			("I,ignore", "Comma-separated list of error tags to ignore (see -p for possible values)", cxxopts::value<std::string>(), "TAGS")
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
@@ -159,6 +161,9 @@ int main(int argc, char ** argv)
 		}
 
 		if(options.count("spec")) {
+			if(options.count("archive") + options.count("language")) {
+				std::cerr << argv[0] << " ERROR: only use one of --spec/--archive/--language" << std::endl;
+			}
 			const auto& specfile = options["spec"].as<std::string>();
 			if(verbose) {
 				std::cerr << "Reading specfile " << specfile << std::endl;
@@ -166,23 +171,24 @@ int main(int argc, char ** argv)
 			if(!options.count("variant")) {
 				return printNamesXml(specfile, verbose);
 			}
-			else {
-				const auto& pipename = fromUtf8(options["variant"].as<std::string>());
-				return getPipelineXml(specfile, pipename, verbose).match(
-					[]       (int r) { return r; },
-					[&](Pipeline& p) {
-						p.setIgnores(ignores);
-						if(options.count("preferences")) {
-							printPrefs(p);
-						}
-						else {
-							run(p);
-						}
-						return EXIT_SUCCESS;
-					});
-			}
+			const auto& pipename = fromUtf8(options["variant"].as<std::string>());
+			return getPipelineXml(specfile, pipename, verbose).match(
+				[]       (int r) { return r; },
+				[&](Pipeline& p) {
+					p.setIgnores(ignores);
+					if(options.count("preferences")) {
+						printPrefs(p);
+					}
+					else {
+						run(p);
+					}
+					return EXIT_SUCCESS;
+				});
 		}
 		else if(options.count("archive")) {
+			if(options.count("language")) {
+				std::cerr << argv[0] << " ERROR: only use one of --spec/--archive/--language" << std::endl;
+			}
 			const auto& archive = options["archive"].as<std::string>();
 			if(verbose) {
 				std::cerr << "Reading zipped archive file " << archive << std::endl;
@@ -190,24 +196,53 @@ int main(int argc, char ** argv)
 			if(!options.count("variant")) {
 				return printNamesAr(archive, verbose);
 			}
-			else {
-				const auto& pipename = fromUtf8(options["variant"].as<std::string>());
-				return getPipelineAr(archive, pipename, verbose).match(
-					[]       (int r) { return r; },
-					[&](Pipeline& p) {
-						p.setIgnores(ignores);
-						if(options.count("preferences")) {
-							printPrefs(p);
-						}
-						else {
-							run(p);
-						}
-						return EXIT_SUCCESS;
-					});
+			const auto& pipename = fromUtf8(options["variant"].as<std::string>());
+			return getPipelineAr(archive, pipename, verbose).match(
+				[]       (int r) { return r; },
+				[&](Pipeline& p) {
+					p.setIgnores(ignores);
+					if(options.count("preferences")) {
+						printPrefs(p);
+					}
+					else {
+						run(p);
+					}
+					return EXIT_SUCCESS;
+				});
+		}
+		else if (options.count("language")) {
+			const auto& lang = options["language"].as<std::string>();
+			const auto& langs = divvun::listLangs();
+			if (langs.find(lang) == langs.end() || langs.at(lang).size() < 1) {
+				std::cerr << argv[0] << " ERROR: couldn't find language " << lang << " in any of the search paths:" << std::endl;
+				for(const auto& p : divvun::searchPaths()) {
+					std::cerr << p << std::endl;
+				}
+				return EXIT_FAILURE;
 			}
+			const auto& archive = langs.at(lang)[0]; // TODO: prioritise userdirs
+			if(verbose) {
+				std::cerr << "Reading zipped archive file " << archive << std::endl;
+			}
+			if(!options.count("variant")) {
+				return printNamesAr(archive, verbose);
+			}
+			const auto& pipename = fromUtf8(options["variant"].as<std::string>());
+			return getPipelineAr(archive, pipename, verbose).match(
+				[]       (int r) { return r; },
+				[&](Pipeline& p) {
+					p.setIgnores(ignores);
+					if(options.count("preferences")) {
+						printPrefs(p);
+					}
+					else {
+						run(p);
+					}
+					return EXIT_SUCCESS;
+				});
 		}
 		else {
-			std::cerr << argv[0] << " ERROR: Pipespec file required" << std::endl;
+			std::cerr << argv[0] << " ERROR: expecting one of --spec/--archive/--language (see --help)" << std::endl;
 			return EXIT_FAILURE;
 		}
 	}
