@@ -25,13 +25,17 @@
 #include "cxxopts.hpp"
 
 using divvun::variant;
+using divvun::Nothing;
 using divvun::Pipeline;
 using divvun::toUtf8;
 using divvun::fromUtf8;
 
 
-variant<int, Pipeline> getPipelineXml(const std::string& path, const std::u16string& pipename, bool verbose) {
+variant<int, Pipeline> getPipelineXml(const std::string& path, const variant<Nothing, std::u16string>& mpipename, bool verbose) {
 	const std::unique_ptr<divvun::PipeSpec> spec(new divvun::PipeSpec(path));
+	std::u16string pipename = mpipename.match(
+		[&](Nothing) { return spec->default_pipe; },
+		[](std::u16string s) { return s; });
 	if(spec->pnodes.find(pipename) == spec->pnodes.end()) {
 		std::cerr << "divvun-checker: ERROR: Couldn't find pipe " << toUtf8(pipename) << " in " << path << std::endl;
 		return EXIT_FAILURE;
@@ -39,8 +43,11 @@ variant<int, Pipeline> getPipelineXml(const std::string& path, const std::u16str
 	return Pipeline(spec, pipename, verbose);
 }
 
-variant<int, Pipeline> getPipelineAr(const std::string& path, const std::u16string& pipename, bool verbose) {
+variant<int, Pipeline> getPipelineAr(const std::string& path, const variant<Nothing, std::u16string>& mpipename, bool verbose) {
 	const auto& ar_spec = divvun::readArPipeSpec(path);
+	std::u16string pipename = mpipename.match(
+		[&](Nothing) { return ar_spec->spec->default_pipe; },
+		[](std::u16string s) { return s; });
 	if(ar_spec->spec->pnodes.find(pipename) == ar_spec->spec->pnodes.end()) {
 		std::cerr << "divvun-checker: ERROR: Couldn't find pipe " << toUtf8(pipename) << " in " << path << std::endl;
 		return EXIT_FAILURE;
@@ -168,10 +175,10 @@ int main(int argc, char ** argv)
 			if(verbose) {
 				std::cerr << "Reading specfile " << specfile << std::endl;
 			}
-			if(!options.count("variant")) {
-				return printNamesXml(specfile, verbose);
+			variant<Nothing, std::u16string> pipename = Nothing();
+			if(options.count("variant")) {
+				pipename = fromUtf8(options["variant"].as<std::string>());
 			}
-			const auto& pipename = fromUtf8(options["variant"].as<std::string>());
 			return getPipelineXml(specfile, pipename, verbose).match(
 				[]       (int r) { return r; },
 				[&](Pipeline& p) {
@@ -193,10 +200,10 @@ int main(int argc, char ** argv)
 			if(verbose) {
 				std::cerr << "Reading zipped archive file " << archive << std::endl;
 			}
-			if(!options.count("variant")) {
-				return printNamesAr(archive, verbose);
+			variant<Nothing, std::u16string> pipename = Nothing();
+			if(options.count("variant")) {
+				pipename = fromUtf8(options["variant"].as<std::string>());
 			}
-			const auto& pipename = fromUtf8(options["variant"].as<std::string>());
 			return getPipelineAr(archive, pipename, verbose).match(
 				[]       (int r) { return r; },
 				[&](Pipeline& p) {
@@ -224,10 +231,10 @@ int main(int argc, char ** argv)
 			if(verbose) {
 				std::cerr << "Reading zipped archive file " << archive << std::endl;
 			}
-			if(!options.count("variant")) {
-				return printNamesAr(archive, verbose);
+			variant<Nothing, std::u16string> pipename = Nothing();
+			if(options.count("variant")) {
+				pipename = fromUtf8(options["variant"].as<std::string>());
 			}
-			const auto& pipename = fromUtf8(options["variant"].as<std::string>());
 			return getPipelineAr(archive, pipename, verbose).match(
 				[]       (int r) { return r; },
 				[&](Pipeline& p) {

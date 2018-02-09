@@ -30,6 +30,10 @@ PipeSpec::PipeSpec(const string& file) {
 		}
 		for (pugi::xml_node pipeline: doc.child("pipespec").children("pipeline")) {
 			const u16string& pipename = fromUtf8(pipeline.attribute("name").value());
+			if(default_pipe.empty()) {
+				// The first one is the default:
+				default_pipe = pipename;
+			}
 			auto pr = std::make_pair(pipename, pipeline);
 			pnodes[pipename] = pipeline;
 		}
@@ -50,6 +54,10 @@ PipeSpec::PipeSpec(pugi::char_t* buff, size_t size) {
 		}
 		for (pugi::xml_node pipeline: doc.child("pipespec").children("pipeline")) {
 			const u16string& pipename = fromUtf8(pipeline.attribute("name").value());
+			if(default_pipe.empty()) {
+				// The first one is the default:
+				default_pipe = pipename;
+			}
 			auto pr = std::make_pair(pipename, pipeline);
 			pnodes[pipename] = pipeline;
 		}

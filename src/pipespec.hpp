@@ -51,8 +51,11 @@
 #include <archive_entry.h>
 #endif	// HAVE_LIBARCHIVE
 
+#include "mapbox/variant.hpp"
+
 namespace divvun {
 
+using mapbox::util::variant;
 using std::string;
 using std::stringstream;
 using std::u16string;
@@ -71,6 +74,7 @@ class PipeSpec {
 		// }
 		std::unordered_map<u16string, pugi::xml_node> pnodes;
 		string language;
+		u16string default_pipe;
 	private:
 		pugi::xml_document doc; // needs to be alive for as long as we're referring to nodes in it
 };
