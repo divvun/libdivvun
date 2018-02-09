@@ -61,6 +61,8 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 %include "../src/utf8.h"
 
 %template(StringVector) std::vector<std::string>;
+%template(StringSet) std::set<std::string>;
+%template(StringStringVectorMap) std::map<std::string, std::vector<std::string> >;
 
 // TODO: Would it be possible to have ErrBytes defined in
 // checkertypes.hpp? Seems like SWIG no longer understands the
@@ -69,7 +71,11 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 %inline %{
 #include <locale>
 #include <sstream>
+#include <map>
+#include <set>
 	typedef std::vector<std::string> StringVector;
+	typedef std::set<std::string> StringSet;
+	typedef std::map<std::string, std::vector<std::string> > StringStringVectorMap;
 	struct ErrBytes {
 			std::string form;
 			size_t beg;
