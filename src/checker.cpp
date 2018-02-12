@@ -27,11 +27,9 @@ const std::u16string from_bytes(const string& s) {
 }
 
 // CheckerSpec
-CheckerSpec::CheckerSpec(const string& file) : pImpl( new PipeSpec(file) )
+CheckerSpec::CheckerSpec(const string& file)
+	: pImpl( new PipeSpec(file) )
 {
-	// for(const auto& k : pImpl->pnodes) {
-		// std::cerr << "init " << toUtf8(k.first.c_str()) <<std::endl;
-	// }
 }
 CheckerSpec::~CheckerSpec()
 {
@@ -44,22 +42,24 @@ const std::set<string> CheckerSpec::pipeNames() const
 	}
 	return keys;
 }
-bool CheckerSpec::hasPipe(const string& pipename)
+bool CheckerSpec::hasPipe(const string& pipename) const
 {
 	return pImpl->pnodes.find(from_bytes(pipename)) != pImpl->pnodes.end();
 }
 std::unique_ptr<Checker> CheckerSpec::getChecker(const string& pipename, bool verbose) {
 	return std::unique_ptr<Checker>(new Checker(pImpl, pipename, verbose));
 }
+const string CheckerSpec::defaultPipe() const
+{
+	return toUtf8(pImpl->default_pipe);
+}
 
 
 
 // ArCheckerSpec
-ArCheckerSpec::ArCheckerSpec(const string& file) : pImpl( readArPipeSpec(file) )
+ArCheckerSpec::ArCheckerSpec(const string& file)
+	: pImpl( readArPipeSpec(file) )
 {
-	// for(const auto& k : pImpl->spec->pnodes) {
-	// 	std::cerr << "init " << toUtf8(k.first.c_str()) <<std::endl;
-	// }
 }
 ArCheckerSpec::~ArCheckerSpec()
 {
@@ -72,13 +72,18 @@ const std::set<string> ArCheckerSpec::pipeNames() const
 	}
 	return keys;
 }
-bool ArCheckerSpec::hasPipe(const string& pipename)
+bool ArCheckerSpec::hasPipe(const string& pipename) const
 {
 	return pImpl->spec->pnodes.find(from_bytes(pipename)) != pImpl->spec->pnodes.end();
 }
 std::unique_ptr<Checker> ArCheckerSpec::getChecker(const string& pipename, bool verbose) {
 	return std::unique_ptr<Checker>(new Checker(pImpl, pipename, verbose));
 }
+const string ArCheckerSpec::defaultPipe() const
+{
+	return toUtf8(pImpl->spec->default_pipe);
+}
+
 
 // Checker
 Checker::Checker(const std::unique_ptr<PipeSpec>& spec, const string& pipename, bool verbose)

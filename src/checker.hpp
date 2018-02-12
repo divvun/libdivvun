@@ -49,7 +49,8 @@ class CheckerSpec {
 	public:
 		explicit CheckerSpec(const std::string& file);
 		~CheckerSpec();
-		bool hasPipe(const std::string& pipename);
+		bool hasPipe(const std::string& pipename) const;
+		const std::string defaultPipe() const;
 		const std::set<std::string> pipeNames() const;
 		std::unique_ptr<Checker> getChecker(const std::string& pipename, bool verbose);
 	private:
@@ -60,7 +61,8 @@ class ArCheckerSpec {
 	public:
 		explicit ArCheckerSpec(const std::string& file);
 		~ArCheckerSpec();
-		bool hasPipe(const std::string& pipename);
+		bool hasPipe(const std::string& pipename) const;
+		const std::string defaultPipe() const;
 		const std::set<std::string> pipeNames() const;
 		std::unique_ptr<Checker> getChecker(const std::string& pipename, bool verbose);
 	private:
