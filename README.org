@@ -134,6 +134,19 @@ Now when building, pass =--enable-checker= to configure.
 You can pass =--enable-cgspell= to =./configure= if you would like to
 get an error if any of the =divvun-cgspell= dependencies are missing.
 
+** If you also want the Python library
+
+The Python 3 library is used by the LibreOffice plugin. It will build
+if it finds both of:
+
+- SWIG >=3.0 (install =python-swig= if you're using MacPorts)
+- Python >=3.0
+
+You can pass =--enable-python-bindings= to =./configure= if you would
+like to get an error if any of the =divvun-python-bindings=
+dependencies are missing.
+
+
 * Building
 
 #+BEGIN_SRC sh
