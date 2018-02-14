@@ -27,7 +27,7 @@ int main(int argc, char ** argv)
 {
 	try
 	{
-		cxxopts::Options options(argv[0], "BIN - generate spelling suggestions from a CG stream");
+		cxxopts::Options options(argv[0], "BIN - use an FST to tag CG cohorts based on surrounding blanks");
 
 		options.add_options()
 			("a,analyser", "FST for tagging spaces", cxxopts::value<std::string>(), "BIN")
