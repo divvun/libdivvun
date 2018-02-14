@@ -16,8 +16,8 @@ export PKG_CONFIG_PATH LD_LIBRARY_PATH DYLD_LIBRARY_PATH LDFLAGS CPPFLAGS
 
 if [[ $TRAVIS_OS_NAME = osx ]]; then
     # Stuff from nightly goes in plain /usr/local:
-    PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig"
-    ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal"
+    PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig"
+    ACLOCAL_PATH="${ACLOCAL_PATH:-}:/usr/local/share/aclocal"
     PATH="${PATH}:/usr/local/bin"
 
     travis_retry brew update
@@ -73,6 +73,10 @@ else
     sudo apt-get -f install -y libhfst-dev libcg3-dev hfst-ospell-dev swig3.0 libpython3-dev
 fi
 
+if [[ ${CC} = gcc && ${CXX} = g++ ]]; then
+    export CC=gcc-5
+    export CXX=g++-5
+fi
 
 ./autogen.sh
 if [[ $TRAVIS_OS_NAME = osx ]]; then
