@@ -28,7 +28,7 @@
 // divvun-gramcheck:
 #include "pipespec.hpp"
 #include "suggest.hpp"
-#ifdef WANT_CGSPELL
+#ifdef HAVE_CGSPELL
 #include "cgspell.hpp"
 #endif
 #include "blanktag.hpp"
@@ -163,7 +163,7 @@ class CGCmd: public PipeCmd {
 		// cg3_applicator* applicator;
 };
 
-#ifdef WANT_CGSPELL
+#ifdef HAVE_CGSPELL
 class CGSpellCmd: public PipeCmd {
 	public:
 		CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, bool verbose);

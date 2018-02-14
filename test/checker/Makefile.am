@@ -31,7 +31,7 @@ blanktagger.hfst: blanktagger.xfst
 check_DATA = sme.zcheck tokeniser.pmhfst generator.hfstol errors.xml blanktagger.hfst
 
 TESTS = ./run.xml ./run.archive ./run.spell
-if WANT_PYTHON_BINDINGS
+if HAVE_PYTHON_BINDINGS
 TESTS += ./run-python-bindings
 endif
 # Keep the slowest one last:

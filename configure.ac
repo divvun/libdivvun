@@ -72,8 +72,8 @@ AS_IF([test "x$enable_cgspell" != xno],
                                 [AC_MSG_ERROR([cgspell support requires libhfstospell / hfst-ospell-dev])
                                  enable_cgspell=no],
                                 [enable_cgspell=no])])])
-AM_CONDITIONAL([WANT_CGSPELL], [test x$enable_cgspell = xyes])
-AS_IF([test "x$enable_cgspell" = xyes], [AC_DEFINE([WANT_CGSPELL])])
+AM_CONDITIONAL([HAVE_CGSPELL], [test x$enable_cgspell = xyes])
+AS_IF([test "x$enable_cgspell" = xyes], [AC_DEFINE([HAVE_CGSPELL])])
 
 # Checker:
 AC_ARG_ENABLE([checker],
@@ -104,8 +104,8 @@ AS_IF([test "x$enable_checker" != xno],
                                      [AC_MSG_ERROR([checker support requires either libarchive or libarchive2 for opening zipped pipespec archives])
                                       enable_checker=no],
                                      [enable_checker=no])])])])
-AM_CONDITIONAL([WANT_CHECKER], [test "x$enable_checker" != xno])
-AC_DEFINE([WANT_CHECKER])
+AM_CONDITIONAL([HAVE_CHECKER], [test "x$enable_checker" != xno])
+AC_DEFINE([HAVE_CHECKER])
 
 
 AC_CONFIG_FILES([src/divvun-gen-xmlschemas],    [chmod +x src/divvun-gen-xmlschemas])
@@ -167,7 +167,7 @@ AS_IF([test "x$enable_python_bindings" != xno],
                    [enable_python_bindings=yes],
                    [enable_python_bindings=no]))
       ])
-AM_CONDITIONAL([WANT_PYTHON_BINDINGS], [test "x$enable_python_bindings" != xno])
+AM_CONDITIONAL([HAVE_PYTHON_BINDINGS], [test "x$enable_python_bindings" != xno])
 
 dnl ===========================
 dnl Create the files from .in's

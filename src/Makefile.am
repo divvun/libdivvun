@@ -30,7 +30,7 @@ divvun_blanktag_CXXFLAGS = $(HFST_CFLAGS)
 bin_PROGRAMS            += divvun-blanktag
 dist_man_MANS           += divvun-blanktag.1
 
-if WANT_CGSPELL
+if HAVE_CGSPELL
 # divvun-cgspell binary:
 divvun_cgspell_SOURCES  = main_cgspell.cpp cgspell.cpp
 divvun_cgspell_LDADD    = $(HFSTOSPELL_LIBS)
@@ -39,12 +39,12 @@ bin_PROGRAMS           += divvun-cgspell
 dist_man_MANS          += divvun-cgspell.1
 endif
 
-if WANT_CHECKER
+if HAVE_CHECKER
 lib_LTLIBRARIES       = libdivvun.la
 divvunincludedir      = $(includedir)/divvun
 divvuninclude_HEADERS = checker.hpp checkertypes.hpp
 libdivvun_la_SOURCES  = checker.cpp pipeline.cpp pipespec.cpp suggest.cpp blanktag.cpp
-if WANT_CGSPELL
+if HAVE_CGSPELL
 libdivvun_la_SOURCES += cgspell.cpp
 endif
 # would've liked to put -lstdc++fs in LIBADD for <experimental/filesystem>, but macos

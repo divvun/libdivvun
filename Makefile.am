@@ -1,14 +1,14 @@
 SUBDIRS = src test/suggest test/blanktag
 
-if WANT_CGSPELL
+if HAVE_CGSPELL
 SUBDIRS += test/cgspell
 endif
 
-if WANT_CHECKER
-if WANT_PYTHON_BINDINGS
+if HAVE_CHECKER
+if HAVE_PYTHON_BINDINGS
 SUBDIRS += python
-endif # WANT_PYTHON_BINDINGS
+endif # HAVE_PYTHON_BINDINGS
 SUBDIRS += test/checker
-endif # WANT_CHECKER
+endif # HAVE_CHECKER
 
 test: check

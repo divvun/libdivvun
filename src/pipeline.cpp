@@ -86,7 +86,7 @@ void CGCmd::run(stringstream& input, stringstream& output) const
 	cg3_run_grammar_on_text(applicator.get(), (std_istream*)&input, (std_ostream*)&output);
 }
 
-#ifdef WANT_CGSPELL
+#ifdef HAVE_CGSPELL
 CGSpellCmd::CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, bool verbose)
 	: speller(new Speller(errmodel, acceptor, verbose, max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff))
 {
@@ -204,7 +204,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 			cmds.emplace_back(s);
 		}
 		else if(name == u"cgspell") {
-#ifdef WANT_CGSPELL
+#ifdef HAVE_CGSPELL
 			ArEntryHandler<hfst_ospell::Transducer*> f = [] (const string& ar_path, const void* buff, const size_t size) {
 				return new hfst_ospell::Transducer((char*)buff);
 			};
@@ -284,7 +284,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 			cmds.emplace_back(new CGCmd(args["grammar"], verbose));
 		}
 		else if(name == u"cgspell") {
-#ifdef WANT_CGSPELL
+#ifdef HAVE_CGSPELL
 			cmds.emplace_back(new CGSpellCmd(args["errmodel"],
 							 args["lexicon"],
 							 verbose));
