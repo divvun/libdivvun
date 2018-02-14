@@ -86,7 +86,7 @@ void CGCmd::run(stringstream& input, stringstream& output) const
 	cg3_run_grammar_on_text(applicator.get(), (std_istream*)&input, (std_ostream*)&output);
 }
 
-
+#ifdef WANT_CGSPELL
 CGSpellCmd::CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, bool verbose)
 	: speller(new Speller(errmodel, acceptor, verbose, max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff))
 {
@@ -105,6 +105,7 @@ void CGSpellCmd::run(stringstream& input, stringstream& output) const
 {
 	divvun::run_cgspell(input, output, *speller);
 }
+#endif
 
 BlanktagCmd::BlanktagCmd (const hfst::HfstTransducer* analyser, bool verbose)
 	: blanktag(new Blanktag(analyser, verbose))
@@ -202,6 +203,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 			CGCmd* s = readArchiveExtract(ar_spec->ar_path, args["grammar"], f);
 			cmds.emplace_back(s);
 		}
+#ifdef WANT_CGSPELL
 		else if(name == u"cgspell") {
 			ArEntryHandler<hfst_ospell::Transducer*> f = [] (const string& ar_path, const void* buff, const size_t size) {
 				return new hfst_ospell::Transducer((char*)buff);
@@ -211,6 +213,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 						 verbose);
 			cmds.emplace_back(s);
 		}
+#endif
 		else if(name == u"mwesplit") {
 			cmds.emplace_back(new MweSplitCmd(verbose));
 		}
@@ -275,11 +278,13 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 		else if(name == u"cg") {
 			cmds.emplace_back(new CGCmd(args["grammar"], verbose));
 		}
+#ifdef WANT_CGSPELL
 		else if(name == u"cgspell") {
 			cmds.emplace_back(new CGSpellCmd(args["errmodel"],
 							 args["lexicon"],
 							 verbose));
 		}
+#endif
 		else if(name == u"mwesplit") {
 			cmds.emplace_back(new MweSplitCmd(verbose));
 		}

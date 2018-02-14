@@ -174,8 +174,8 @@ std::set<string> searchPaths() {
 	return dirs;
 }
 
-map<Lang, vector<string>> listLangs() {
-	map<Lang, vector<string>> pipes;
+std::map<Lang, vector<string>> listLangs() {
+	std::map<Lang, vector<string>> pipes;
 	for(const auto& d : searchPaths()) {
 		const auto& zpaths = zcheckFilesInDir(d);
 		for(const auto& zpath : zpaths) {
