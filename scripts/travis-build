@@ -77,9 +77,9 @@ fi
 ./autogen.sh
 if [[ $TRAVIS_OS_NAME = osx ]]; then
     # TODO: No idea how to get this one working:
-    ./configure "${CONFIGURE[@]}" --disable-python-bindings
+    ./configure "$@" --disable-python-bindings
 else
-    ./configure "${CONFIGURE[@]}" --enable-python-bindings
+    ./configure "$@" --enable-python-bindings
 fi
 make -j3
 make check VERBOSE=true
