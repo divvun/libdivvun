@@ -203,8 +203,8 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 			CGCmd* s = readArchiveExtract(ar_spec->ar_path, args["grammar"], f);
 			cmds.emplace_back(s);
 		}
-#ifdef WANT_CGSPELL
 		else if(name == u"cgspell") {
+#ifdef WANT_CGSPELL
 			ArEntryHandler<hfst_ospell::Transducer*> f = [] (const string& ar_path, const void* buff, const size_t size) {
 				return new hfst_ospell::Transducer((char*)buff);
 			};
@@ -212,8 +212,10 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 						 readArchiveExtract(ar_spec->ar_path, args["lexicon"], f),
 						 verbose);
 			cmds.emplace_back(s);
-		}
+#else
+			throw std::runtime_error("libdivvun: ERROR: Tried to run pipeline with cgspell, but was compiled without cgspell support!");
 #endif
+		}
 		else if(name == u"mwesplit") {
 			cmds.emplace_back(new MweSplitCmd(verbose));
 		}
@@ -251,6 +253,9 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 		else if(name == u"prefs") {
 			parsePrefs(prefs, cmd);
 		}
+		else {
+			throw std::runtime_error("libdivvun: ERROR: Unknown <pipeline> element " + toUtf8(name));
+		}
 	}
 	return Pipeline(std::move(prefs), std::move(cmds), suggestcmd, verbose);
 }
@@ -278,13 +283,15 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 		else if(name == u"cg") {
 			cmds.emplace_back(new CGCmd(args["grammar"], verbose));
 		}
-#ifdef WANT_CGSPELL
 		else if(name == u"cgspell") {
+#ifdef WANT_CGSPELL
 			cmds.emplace_back(new CGSpellCmd(args["errmodel"],
 							 args["lexicon"],
 							 verbose));
-		}
+#else
+			throw std::runtime_error("libdivvun: ERROR: Tried to run pipeline with cgspell, but was compiled without cgspell support!");
 #endif
+		}
 		else if(name == u"mwesplit") {
 			cmds.emplace_back(new MweSplitCmd(verbose));
 		}
@@ -306,6 +313,9 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 		}
 		else if(name == u"prefs") {
 			parsePrefs(prefs, cmd);
+		}
+		else {
+			throw std::runtime_error("libdivvun: ERROR: Unknown <pipeline> element " + toUtf8(name));
 		}
 	}
 	return Pipeline(std::move(prefs), std::move(cmds), suggestcmd, verbose);

@@ -72,7 +72,8 @@ AS_IF([test "x$enable_cgspell" != xno],
                                 [AC_MSG_ERROR([cgspell support requires libhfstospell / hfst-ospell-dev])
                                  enable_cgspell=no],
                                 [enable_cgspell=no])])])
-AM_CONDITIONAL([WANT_CGSPELL], [test x$enable_cgspell != xno])
+AM_CONDITIONAL([WANT_CGSPELL], [test x$enable_cgspell = xyes])
+AS_IF([test "x$enable_cgspell" = xyes], [AC_DEFINE([WANT_CGSPELL])])
 
 # Checker:
 AC_ARG_ENABLE([checker],
@@ -104,6 +105,7 @@ AS_IF([test "x$enable_checker" != xno],
                                       enable_checker=no],
                                      [enable_checker=no])])])])
 AM_CONDITIONAL([WANT_CHECKER], [test "x$enable_checker" != xno])
+AC_DEFINE([WANT_CHECKER])
 
 
 AC_CONFIG_FILES([src/divvun-gen-xmlschemas],    [chmod +x src/divvun-gen-xmlschemas])
