@@ -71,11 +71,10 @@ if [[ $TRAVIS_OS_NAME = osx ]]; then
 else
     wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
     sudo apt-get -f install -y libhfst-dev libcg3-dev hfst-ospell-dev swig3.0 libpython3-dev
-fi
-
-if [[ ${CC} = gcc && ${CXX} = g++ ]]; then
-    export CC=gcc-5
-    export CXX=g++-5
+    if [[ ${CC} = gcc && ${CXX} = g++ ]]; then
+        export CC=gcc-5
+        export CXX=g++-5
+    fi
 fi
 
 ./autogen.sh
