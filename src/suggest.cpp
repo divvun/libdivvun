@@ -307,6 +307,15 @@ void rel_on_match(const relations& rels,
 	}
 }
 
+vector<Reading> readingsSameErrtype(const Cohort& trg, const ErrId& err_id) {
+	vector<Reading> filtered(trg.readings.size());
+	auto it = std::copy_if(trg.readings.begin(), trg.readings.end(),
+			       filtered.begin(),
+			       [&](const Reading& tr) { return tr.errtype == err_id; });
+	filtered.resize(std::distance(filtered.begin(), it));
+	return filtered;
+}
+
 /*
  * Return possibly altered beg/end indices for the Err coverage
  * (underline), along with a replacement suggestion (or Nothing() if
@@ -323,7 +332,7 @@ proc_LEFT_RIGHT(const ErrId& err_id,
 		const size_t i_t,
 		const Cohort& trg) {
 	if(sentence.ids_cohorts.find(src_id) == sentence.ids_cohorts.end()) {
-		std::cerr << "divvun-suggest: WARNING: Saw &LEFT/&RIGHT on cohort with id 0" << std::endl;
+		std::cerr << "divvun-suggest: WARNING: Saw &" << relname << " on cohort with id 0" << std::endl;
 		return Nothing();
 	}
 	const auto& i_c = sentence.ids_cohorts.at(src_id);
@@ -337,10 +346,9 @@ proc_LEFT_RIGHT(const ErrId& err_id,
 	size_t right = i_c < i_t ? i_t + 1 : i_c;
 	for(size_t i = left; i < right; ++i) {
 		const auto& trg = sentence.cohorts[i];
-		for(const auto& tr: trg.readings) {
-			if(tr.added == NotAdded || tr.errtype != err_id) {
-				continue;
-			}
+
+		const auto treadings = readingsSameErrtype(trg, err_id);
+		for(const auto& tr: treadings) {
 			size_t addstart = trg.pos;
 			if(tr.added == AddedBeforeBlank) {
 				if(i == 0) {
@@ -350,9 +358,11 @@ proc_LEFT_RIGHT(const ErrId& err_id,
 				const auto& pretrg = sentence.cohorts[i-1];
 				addstart = pretrg.pos + pretrg.form.size();
 			}
+			if(tr.added != NotAdded) {
+				add[addstart] = trg.form;
+			}
 			beg = std::min(beg, addstart);
 			end = std::max(end, addstart + trg.form.size());
-			add[addstart] = trg.form;
 		}
 	}
 	u16string repform = text.substr(beg, end - beg); // mut
