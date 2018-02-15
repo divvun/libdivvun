@@ -26,7 +26,7 @@ addons:
     branch_pattern: coverity_scan
 
 script:
-- scripts/travis-build "${CONFIGURE[@]}"
+  - scripts/travis-build "${CONFIGURE[@]}"
 
 os:
   - linux
@@ -36,40 +36,25 @@ compiler:
   - clang
   - gcc
 
-# matrix:
-#   include:
-#   - os: linux
-#     compiler: clang
-#     before_install:
-#     - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "Running coverity_scan on this configuration …"; echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt; fi
-#     script:
-#     - scripts/travis-build
+before_install:
+  - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "We only coverity_scan for one square of the matrix, exiting"; exit 0; fi
 
-#   - os: linux
-#     compiler: gcc
-#     install:
-#     - CXX="g++-5" CC="gcc-5"
-#     before_install:
-#     - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "We only coverity_scan for one square of the matrix, exiting"; exit 0; fi
-#    script:
-#     - scripts/travis-build
-
-#   - os: osx
-#     compiler: clang
-#     install:
-#     - COMPILER="gcc"
-#     before_install:
-#     - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "We only coverity_scan for one square of the matrix, exiting"; exit 0; fi
-#     script:
-#     - scripts/travis-build
-
-#   - os: osx
-#     compiler: gcc
-#     # on osx, nightly goes in /usr/local
-#     before_install:
-#     - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "We only coverity_scan for one square of the matrix, exiting"; exit 0; fi
-#     script:
-#     - scripts/travis-build
+# For include some more configure options, but just for one square of the matrix so we don't overload poor travis:
+matrix:
+  include:
+    - os: linux
+      compiler: clang
+      before_install: if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "Running coverity_scan on this configuration …"; echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt; fi
+      env: CONFIGURE=(--enable-checker --enable-cgspell)
+    - os: linux
+      compiler: clang
+      env: CONFIGURE=(--enable-checker --disable-cgspell)
+    - os: linux
+      compiler: clang
+      env: CONFIGURE=(--disable-checker --enable-cgspell)
+    - os: linux
+      compiler: clang
+      env: CONFIGURE=(--disable-checker --disable-cgspell)
 
 cache:
   directories:
@@ -79,9 +64,6 @@ cache:
 env:
   matrix:
     - CONFIGURE=(--enable-checker --enable-cgspell)
-    - CONFIGURE=(--enable-checker --disable-cgspell)
-    - CONFIGURE=(--disable-checker --enable-cgspell)
-    - CONFIGURE=(--disable-checker --disable-cgspell)
   global:
     # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
     #   via the "travis encrypt" command using the project repo's public key
