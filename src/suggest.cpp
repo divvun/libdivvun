@@ -307,13 +307,24 @@ void rel_on_match(const relations& rels,
 	}
 }
 
-vector<Reading> readingsSameErrtype(const Cohort& trg, const ErrId& err_id) {
+vector<Reading> readings_same_errtype(const Cohort& trg, const ErrId& err_id) {
 	vector<Reading> filtered(trg.readings.size());
 	auto it = std::copy_if(trg.readings.begin(), trg.readings.end(),
 			       filtered.begin(),
 			       [&](const Reading& tr) { return tr.errtype == err_id; });
 	filtered.resize(std::distance(filtered.begin(), it));
 	return filtered;
+}
+
+bool both_spaces(char16_t lhs, char16_t rhs) {
+	return (lhs == rhs) && (lhs == u' ');
+}
+
+u16string normalise_rep(const u16string& rep) {
+	auto str = rep;
+	str.erase(std::unique(str.begin(), str.end(), both_spaces),
+		  str.end());
+	return str;
 }
 
 /*
@@ -347,7 +358,7 @@ proc_LEFT_RIGHT(const ErrId& err_id,
 	for(size_t i = left; i < right; ++i) {
 		const auto& trg = sentence.cohorts[i];
 
-		const auto treadings = readingsSameErrtype(trg, err_id);
+		const auto treadings = readings_same_errtype(trg, err_id);
 		for(const auto& tr: treadings) {
 			size_t addstart = trg.pos;
 			if(tr.added == AddedBeforeBlank) {
@@ -374,7 +385,8 @@ proc_LEFT_RIGHT(const ErrId& err_id,
 		}
 		repform = repform.substr(0, at) + it->second + repform.substr(at);
 	}
-	return std::make_pair(std::make_pair(beg, end), repform);
+	return std::make_pair(std::make_pair(beg, end),
+			      normalise_rep(repform));
 }
 
 variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
