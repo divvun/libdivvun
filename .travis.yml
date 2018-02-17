@@ -25,68 +25,38 @@ addons:
     build_command:   "make -j4"
     branch_pattern: coverity_scan
 
+script:
+  # Unquoted because the .yml doesn't support arrays, but explicitly defined here at least
+  - scripts/travis-build ${CONFIGURE}
+
+os:
+  - linux
+  - osx
+
+compiler:
+  - clang
+  - gcc
+
+before_install:
+  - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "We only coverity_scan for one square of the matrix, exiting"; exit 0; fi
+
+# We include some more configure options, but just for one square of the matrix so we don't overload poor travis:
 matrix:
   include:
-  - os: linux
-    compiler: clang
-    env:
-    - VERBOSE=1
-    before_install:
-    - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "Running coverity_scan on this configuration …"; echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt; fi
-    before_script:
-    - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
-    - sudo apt-get -f install -y libhfst-dev libcg3-dev hfst-ospell-dev swig3.0 libpython3-dev
-    # - ./autogen.sh
-    script:
-    - scripts/travis-build
-
-  - os: linux
-    compiler: gcc
-    # Trusty's default gcc doesn't have C++11; can't be in env since then travis overrides it:
-    install:
-    - CXX="g++-5" CC="gcc-5"
-    env:
-    - VERBOSE=1
-    before_install:
-    - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "We only coverity_scan for one square of the matrix, exiting"; exit 0; fi
-    before_script:
-    - wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
-    - sudo apt-get -f install -y libhfst-dev libcg3-dev hfst-ospell-dev swig3.0 libpython3-dev
-    # - ./autogen.sh
-    script:
-    - scripts/travis-build
-
-  - os: osx
-    compiler: clang
-    install:
-    - COMPILER="gcc"
-    # on osx, nightly goes in /usr/local
-    env:
-    - PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
-    before_install:
-    - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "We only coverity_scan for one square of the matrix, exiting"; exit 0; fi
-    - travis_retry brew update
-    - brew ls --versions pugixml    || travis_retry brew install pugixml
-    - brew ls --versions libarchive || travis_retry brew install libarchive
-    - brew ls --versions swig       || travis_retry brew install swig
-    - brew ls --versions python3    || travis_retry brew install python3
-    script:
-    - scripts/travis-build
-
-  - os: osx
-    compiler: gcc
-    # on osx, nightly goes in /usr/local
-    env:
-    - PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig" ACLOCAL_PATH="${ACLOCAL_PATH}:/usr/local/share/aclocal" PATH="${PATH}:/usr/local/bin"
-    before_install:
-    - if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "We only coverity_scan for one square of the matrix, exiting"; exit 0; fi
-    - travis_retry brew update
-    - brew ls --versions pugixml    || travis_retry brew install pugixml
-    - brew ls --versions libarchive || travis_retry brew install libarchive
-    - brew ls --versions swig       || travis_retry brew install swig
-    - brew ls --versions python3    || travis_retry brew install python3
-    script:
-    - scripts/travis-build
+    - os: linux
+      compiler: clang
+      env: CONFIGURE="--enable-checker --disable-cgspell --enable-python-bindings"
+    - os: linux
+      compiler: clang
+      env: CONFIGURE="--disable-checker --enable-cgspell"
+    - os: linux
+      compiler: clang
+      env: CONFIGURE="--disable-checker --disable-cgspell"
+    # This one should only run for coverity_scan (and be the only one that runs on coverity_scan):
+    - os: linux
+      compiler: clang
+      before_install: if [[ $TRAVIS_BRANCH = coverity_scan ]]; then echo "Running coverity_scan on this configuration …"; echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt; else exit 0; fi
+      env: COVERITY_SCAN=true
 
 cache:
   directories:
@@ -94,7 +64,9 @@ cache:
     - $HOME/Library/Caches/Homebrew
 
 env:
+  matrix:
+    - CONFIGURE="--enable-checker --enable-cgspell --enable-python-bindings"
   global:
-   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-   #   via the "travis encrypt" command using the project repo's public key
-   - secure: "2lUcvNAdm5QO5m2r9eZQ6TAD8qiU8S0DzntXLUBPFtWmjD6atuptMr+6mVfgjG67eIfr05Q3v9jTpkb7JzSdqeB+foju6m/9iBtDXFRHfaED3OenWrI4ovFCRy+ClbT7rfHlwUYz/DKEAK8JEcDbqMG9hO4R9BTiPGJ7I0VuQxSeuSpVsxO+2CMqmEoLhtSs7+T929kn/fvVpvmHxYpmqswU1Hbjkb0SEYqmHlrNRWn/dFhYsm9EtRoBMX2NSC5MPGg+kadGZQQdhQJx8iODes+rVsLJs2sRVIcRy8te3R0Dn5FkCZUap+ntsGa1aGQufgaUCf4gwbGMAK0Ad6Wsyf/iuZmplKzr5U5MY4JI7Tmk0SzqndHYX9xL2CdtoHDxllK3UpgqNgUspkBdIwVdEol9jT2AtSngsl9MF5Z/u/yYgTaUyEEF8hNq7JLZR/EsrMcBhWi/ClV/7T2657h31AzMzP3eUxOW8XmX0Y25g/xicMvtGeE0t7ArGmCqFpM/417E3tmhZ2D/hInsprGetSwCuU7NJUhqPo61/+EnQ3njTFV4ooqwIS+93cx42yiueAldjgeAebpmKSxkbcO8Ayj5sVAAJQTCthDiCFVYvL3AT/VdS1NAB1HbLyku/tCxOmdKIlO5+MZqKlfr2nb0G57CLTt/3ac6Hb2WmgmgUNI="
+    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+    #   via the "travis encrypt" command using the project repo's public key
+    - secure: "2lUcvNAdm5QO5m2r9eZQ6TAD8qiU8S0DzntXLUBPFtWmjD6atuptMr+6mVfgjG67eIfr05Q3v9jTpkb7JzSdqeB+foju6m/9iBtDXFRHfaED3OenWrI4ovFCRy+ClbT7rfHlwUYz/DKEAK8JEcDbqMG9hO4R9BTiPGJ7I0VuQxSeuSpVsxO+2CMqmEoLhtSs7+T929kn/fvVpvmHxYpmqswU1Hbjkb0SEYqmHlrNRWn/dFhYsm9EtRoBMX2NSC5MPGg+kadGZQQdhQJx8iODes+rVsLJs2sRVIcRy8te3R0Dn5FkCZUap+ntsGa1aGQufgaUCf4gwbGMAK0Ad6Wsyf/iuZmplKzr5U5MY4JI7Tmk0SzqndHYX9xL2CdtoHDxllK3UpgqNgUspkBdIwVdEol9jT2AtSngsl9MF5Z/u/yYgTaUyEEF8hNq7JLZR/EsrMcBhWi/ClV/7T2657h31AzMzP3eUxOW8XmX0Y25g/xicMvtGeE0t7ArGmCqFpM/417E3tmhZ2D/hInsprGetSwCuU7NJUhqPo61/+EnQ3njTFV4ooqwIS+93cx42yiueAldjgeAebpmKSxkbcO8Ayj5sVAAJQTCthDiCFVYvL3AT/VdS1NAB1HbLyku/tCxOmdKIlO5+MZqKlfr2nb0G57CLTt/3ac6Hb2WmgmgUNI="

@@ -30,12 +30,16 @@ blanktagger.hfst: blanktagger.xfst
 
 check_DATA = sme.zcheck tokeniser.pmhfst generator.hfstol errors.xml blanktagger.hfst
 
+if HAVE_CGSPELL
 TESTS = ./run.xml ./run.archive ./run.spell
 if HAVE_PYTHON_BINDINGS
 TESTS += ./run-python-bindings
-endif
+endif # HAVE_PYTHON_BINDINGS
 # Keep the slowest one last:
 TESTS += ./run-lib
+else
+TESTS = ./run.nospell-xml ./run.nospell-archive
+endif # HAVE_CGSPELL
 
 CLEANFILES = $(check_DATA) analyser.hfst generator.hfstol errors.xml acceptor.hfstol errmodel.hfst
 clean-local:

@@ -15,6 +15,17 @@ cd "$(dirname "$0")/.."
 export PKG_CONFIG_PATH LD_LIBRARY_PATH DYLD_LIBRARY_PATH LDFLAGS CPPFLAGS
 
 if [[ $TRAVIS_OS_NAME = osx ]]; then
+    # Stuff from nightly goes in plain /usr/local:
+    PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}:/usr/local/share/pkgconfig:/usr/local/lib/pkgconfig"
+    ACLOCAL_PATH="${ACLOCAL_PATH:-}:/usr/local/share/aclocal"
+    PATH="${PATH}:/usr/local/bin"
+
+    brew update || brew update || true
+    brew ls --versions pugixml    || brew install pugixml    || brew install pugixml
+    brew ls --versions libarchive || brew install libarchive || brew install libarchive
+    brew ls --versions swig       || brew install swig       || brew install swig
+    brew ls --versions python3    || brew install python3    || brew install python3
+
     # brew puts pugixml/libarchive outside the regular paths:
     LDFLAGS="${LDFLAGS:-} -L/usr/local/Cellar/pugixml/1.8.1/lib/pugixml-1.8"
     LDFLAGS="${LDFLAGS:-} -L/usr/local/opt/libarchive/lib"
@@ -45,7 +56,7 @@ if [[ $TRAVIS_OS_NAME = osx ]]; then
             find . -type f -name '*.la' -exec rm -fv '{}' \;
         )
         echo "Fixing hardcoded paths"
-        FILES=$(egrep -l '^#!/' $(grep -rl '/opt/osx' bin))
+        FILES=$(grep -El '^#!/' $(grep -rl '/opt/osx' bin))
         FILES="$FILES $(grep -rl '/opt/osx' lib/pkgconfig)"
         for FILE in $FILES; do
             echo "Fixing $FILE"
@@ -57,21 +68,21 @@ if [[ $TRAVIS_OS_NAME = osx ]]; then
         cd /tmp
         rm -rf /tmp/aad.$$
     )
+else
+    wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
+    sudo apt-get -f install -y libhfst-dev libcg3-dev hfst-ospell-dev swig3.0 libpython3-dev
+    if [[ ${CC} = gcc && ${CXX} = g++ ]]; then
+        export CC=gcc-5
+        export CXX=g++-5
+    fi
 fi
-
-./autogen.sh
-./configure --disable-checker
-make -j3
-make check VERBOSE=true
-
-make distclean
 
 ./autogen.sh
 if [[ $TRAVIS_OS_NAME = osx ]]; then
     # TODO: No idea how to get this one working:
-    ./configure --enable-checker --disable-python-bindings
+    ./configure "$@" --disable-python-bindings
 else
-    ./configure --enable-checker --enable-python-bindings
+    ./configure "$@"
 fi
 make -j3
 make check VERBOSE=true

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -e -u
+
+./run archive -a sme.zcheck -n smegram-nospell
