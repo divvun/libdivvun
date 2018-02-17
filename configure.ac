@@ -31,7 +31,10 @@ AX_CHECK_COMPILE_FLAG([-Wall], [], AC_MSG_ERROR([compiler doesn't accept -Wall -
 
 AX_CHECK_COMPILE_FLAG([-fstack-protector-strong], [CXXFLAGS="$CXXFLAGS -fstack-protector-strong"])
 
-dnl check for C++11 support:
+
+dnl ====================
+dnl Checks C++11 support
+dnl ====================
 AX_CHECK_COMPILE_FLAG([-std=c++17], [CXXFLAGS="$CXXFLAGS -std=c++17"], [
  AX_CHECK_COMPILE_FLAG([-std=c++1z], [CXXFLAGS="$CXXFLAGS -std=c++1z"], [
   AX_CHECK_COMPILE_FLAG([-std=c++14], [CXXFLAGS="$CXXFLAGS -std=c++14"], [
@@ -43,7 +46,10 @@ AX_CHECK_COMPILE_FLAG([-std=c++17], [CXXFLAGS="$CXXFLAGS -std=c++17"], [
  ])
 ])
 
-# XML parsing:
+
+dnl ==================
+dnl Checks for pugixml
+dnl ==================
 AC_ARG_ENABLE([xml],
               AS_HELP_STRING([--disable-xml],
                              [Disable errors.xml parsing (no longer requiring pugixml library) @<:@default=check@:>@]),
@@ -59,7 +65,10 @@ AS_IF([test "x$enable_xml" != xno],
        enable_xml=yes])
 AM_CONDITIONAL([HAVE_LIBPUGIXML], [test x"$PUGIXML_LIBS" != x])
 
-# CGSpell:
+
+dnl ==================
+dnl Checks for cgspell
+dnl ==================
 AC_ARG_ENABLE([cgspell],
               [AS_HELP_STRING([--enable-cgspell],
                               [build divvun-cgspell, for spelling unknown (or even known) words from CG streams @<:@default=check@:>@])],
@@ -75,6 +84,10 @@ AS_IF([test "x$enable_cgspell" != xno],
 AM_CONDITIONAL([HAVE_CGSPELL], [test x$enable_cgspell = xyes])
 AS_IF([test "x$enable_cgspell" = xyes], [AC_DEFINE([HAVE_CGSPELL])])
 
+
+dnl =====================
+dnl Checks for libarchive
+dnl =====================
 PKG_CHECK_MODULES([LIBARCHIVE], [libarchive > 3],
                   [AC_DEFINE([HAVE_LIBARCHIVE], [1], [Use archives])
                    have_libarchive=yes],
@@ -83,7 +96,10 @@ PKG_CHECK_MODULES([LIBARCHIVE], [libarchive > 3],
                                have_libarchive=yes
 	                       AC_DEFINE([USE_LIBARCHIVE_2], [1], [libarchive is version 2])],
                                [have_libarchive=no])])
-# Checker:
+
+dnl ============================
+dnl Checks for checker/libdivvun
+dnl ============================
 AC_ARG_ENABLE([checker],
               [AS_HELP_STRING([--enable-checker],
                               [build divvun-checker, for running full pipelines from a library, with no IPC @<:@default=check@:>@])],
@@ -112,21 +128,6 @@ AS_CASE([$enable_checker],
         ])
 AM_CONDITIONAL([HAVE_CHECKER], [test "x$enable_checker" != xno])
 AC_DEFINE([HAVE_CHECKER])
-
-
-AC_CONFIG_FILES([src/divvun-gen-xmlschemas],    [chmod +x src/divvun-gen-xmlschemas])
-AC_CONFIG_FILES([src/divvun-validate-suggest],  [chmod +x src/divvun-validate-suggest])
-AC_CONFIG_FILES([src/divvun-validate-pipespec], [chmod +x src/divvun-validate-pipespec])
-
-AC_PATH_PROG([XMLLINT], [xmllint], [false], [$PATH$PATH_SEPARATOR$with_xmllint/bin])
-AS_IF([test x$XMLLINT = xfalse], [AC_MSG_ERROR([you don't have xmllint installed])])
-
-AC_PATH_PROG([BASH], [bash], [false], [$PATH$PATH_SEPARATOR$with_bash/bin])
-AS_IF([test x$BASH = xfalse], [AC_MSG_ERROR([you don't have bash installed])])
-
-AC_ARG_VAR([TRANG], [Path to trang.jar (dev dependency for updating DTD)])
-AC_ARG_WITH([trang], [AS_HELP_STRING([--with-trang],[Path to trang.jar (dev dependency for updating DTD)])], [TRANG=$withval], [TRANG=])
-AM_CONDITIONAL([HAVE_TRANG], [test x"$TRANG" != x])
 
 
 dnl ===============
@@ -159,25 +160,47 @@ AC_ARG_ENABLE([python-bindings],
                              [build python bindings (default=enabled)]),
               [enable_python_bindings=$enableval],
               [enable_python_bindings=check])
-AS_IF([test "x$enable_python_bindings" != xno],
-      [AS_IF([test x"$enable_python_bindings" = xyes], dnl Explicitly enabled -- fail if missing deps
-             [AS_IF([test "x$enable_checker" != xyes],
-                    [AC_MSG_ERROR([cannot build python bindings without building checker library (--enable-checker)])])
-              AS_IF([test "$PYTHON" = : -o "x$have_python_header" != xtrue],
-                    [AC_MSG_ERROR([cannot find python/python headers (use --disable-python-bindings if you don't need the bindings)])])
-              AS_IF([test ! "$SWIG"],
-                    [AC_MSG_ERROR([cannot find SWIG (use --disable-python-bindings if you don't need the bindings)])])
-             ],
+AS_CASE([$enable_python_bindings],
+        [no], [],
+        [yes], [ dnl Explicitly enabled -- fail if missing deps
+                 AS_IF([test "x$enable_checker" != xyes],
+                       [AC_MSG_ERROR([cannot build python bindings without building checker library (--enable-checker)])])
+                 AS_IF([test "$PYTHON" = : -o "x$have_python_header" != xtrue],
+                       [AC_MSG_ERROR([cannot find python/python headers (use --disable-python-bindings if you don't need the bindings)])])
+                 AS_IF([test ! "$SWIG"],
+                       [AC_MSG_ERROR([cannot find SWIG (use --disable-python-bindings if you don't need the bindings)])])
+        ],
+        [check], [ dnl Enable if deps are there
              dnl Not explicitly enabled, enable if we have deps:
              AS_IF([test "$SWIG" -a "$PYTHON" != : -a "x$have_python_header" = xtrue -a "x$enable_checker" = xyes],
                    [enable_python_bindings=yes],
-                   [enable_python_bindings=no]))
-      ])
+                   [enable_python_bindings=no])
+        ])
 AM_CONDITIONAL([HAVE_PYTHON_BINDINGS], [test "x$enable_python_bindings" != xno])
+
+
+dnl ===============================
+dnl Checks for xmllint, bash, trang
+dnl ===============================
+
+AC_PATH_PROG([XMLLINT], [xmllint], [false], [$PATH$PATH_SEPARATOR$with_xmllint/bin])
+AS_IF([test x$XMLLINT = xfalse], [AC_MSG_ERROR([you don't have xmllint installed])])
+
+AC_PATH_PROG([BASH], [bash], [false], [$PATH$PATH_SEPARATOR$with_bash/bin])
+AS_IF([test x$BASH = xfalse], [AC_MSG_ERROR([you don't have bash installed])])
+
+AC_ARG_VAR([TRANG], [Path to trang.jar (dev dependency for updating DTD)])
+AC_ARG_WITH([trang], [AS_HELP_STRING([--with-trang],[Path to trang.jar (dev dependency for updating DTD)])], [TRANG=$withval], [TRANG=])
+AM_CONDITIONAL([HAVE_TRANG], [test x"$TRANG" != x])
+
 
 dnl ===========================
 dnl Create the files from .in's
 dnl ===========================
+
+AC_CONFIG_FILES([src/divvun-gen-xmlschemas],    [chmod +x src/divvun-gen-xmlschemas])
+AC_CONFIG_FILES([src/divvun-validate-suggest],  [chmod +x src/divvun-validate-suggest])
+AC_CONFIG_FILES([src/divvun-validate-pipespec], [chmod +x src/divvun-validate-pipespec])
 
 AC_OUTPUT([Makefile
            src/Makefile
