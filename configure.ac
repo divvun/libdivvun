@@ -75,35 +75,41 @@ AS_IF([test "x$enable_cgspell" != xno],
 AM_CONDITIONAL([HAVE_CGSPELL], [test x$enable_cgspell = xyes])
 AS_IF([test "x$enable_cgspell" = xyes], [AC_DEFINE([HAVE_CGSPELL])])
 
+PKG_CHECK_MODULES([LIBARCHIVE], [libarchive > 3],
+                  [AC_DEFINE([HAVE_LIBARCHIVE], [1], [Use archives])
+                   have_libarchive=yes],
+                  [PKG_CHECK_MODULES([LIBARCHIVE], [libarchive > 2],
+                              [AC_DEFINE([HAVE_LIBARCHIVE], [1], [Use archives])
+                               have_libarchive=yes
+	                       AC_DEFINE([USE_LIBARCHIVE_2], [1], [libarchive is version 2])],
+                               [have_libarchive=no])])
 # Checker:
 AC_ARG_ENABLE([checker],
               [AS_HELP_STRING([--enable-checker],
                               [build divvun-checker, for running full pipelines from a library, with no IPC @<:@default=check@:>@])],
               [enable_checker=$enableval],
               [enable_checker=check])
-AS_IF([test "x$enable_checker" != xno],
-      [AS_IF([test x"$enable_checker" = xyes], dnl Explicitly enabled -- fail if missing deps
-              AS_IF([test x"$enable_xml" = xno],
-                    [AC_MSG_ERROR([you need --enable-xml if you want --enable-checker
+AS_CASE([$enable_checker],
+        [no], [],
+        [yes], [ dnl Explicitly enabled -- fail if missing deps
+                 AS_CASE([$enable_xml],
+                         [no], [AC_MSG_ERROR([you need --enable-xml if you want --enable-checker
 
                     Please run again with --enable-xml and ensure its dependencies are installed.
                     ])])
-              AS_IF([test x"$enable_cgspell" = xno],
-                    [AC_MSG_ERROR([you need --enable-cgspell if you want --enable-checker
-
-                    Please run again with --enable-cgspell and ensure its dependencies are installed.
-                    ])]))
-       PKG_CHECK_MODULES([LIBARCHIVE], [libarchive > 3],
-                  [AC_DEFINE([HAVE_LIBARCHIVE], [1], [Use archives])
-                   enable_checker=yes],
-                  [PKG_CHECK_MODULES([LIBARCHIVE], [libarchive > 2],
-                              [AC_DEFINE([HAVE_LIBARCHIVE], [1], [Use archives])
-	                       AC_DEFINE([USE_LIBARCHIVE_2], [1], [Use libarchive2])
-                               enable_checker=yes],
-                              [AS_IF([test x$enable_checker = xyes],
-                                     [AC_MSG_ERROR([checker support requires either libarchive or libarchive2 for opening zipped pipespec archives])
-                                      enable_checker=no],
-                                     [enable_checker=no])])])])
+                 AS_CASE([$have_libarchive],
+                         [no], [AC_MSG_ERROR([you need libarchive if you want --enable-checker])])
+        ],
+        [check], [ dnl Enable if deps are there
+                 AS_CASE([$enable_xml],
+                         [no],  [AC_MSG_WARN([No --enable-xml, disabling checker])
+                                 enable_checker=no])
+                 AS_CASE([$have_libarchive],
+                         [no],  [AC_MSG_WARN([No libarchive, disabling checker])
+                                 enable_checker=no])
+                 AS_CASE([$enable_checker],
+                         [check], [enable_checker=yes])
+        ])
 AM_CONDITIONAL([HAVE_CHECKER], [test "x$enable_checker" != xno])
 AC_DEFINE([HAVE_CHECKER])
 
