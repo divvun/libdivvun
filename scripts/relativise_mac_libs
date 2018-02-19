@@ -6,10 +6,10 @@ TRGDIR="$(pwd)"
 export TRGDIR
 
 munge_path () {
-    # Bug in apertium-all-dev.tar.gz?
-    # Some libs refer to /opt/osx, others have no paths
+    # Some libs refer to /opt/osx, others have no parent dir – bug in apertium-all-dev.tar.gz?
     sed -e 's%^/opt/osx/%/usr/local/%' \
-        -e 's%^lib%/usr/local/lib/lib%'
+        -e 's%^lib%/usr/local/lib/lib%' \
+        -e 's%^@rpath/%/usr/local/lib/%'
 }
 
 relativise_mac_lib () {
