@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# Usage: run with no arguments on a mac
+# Assumes you've installed dependencies from Tino's nightlies.
+
+# You'll end up with the file Darwin-64bit-.zip (which will be
+# uploaded to transfer.sh as well) which should be unpacked into
+# libreoffice-divvun/oxt before building a standalone extension for
+# macos.
+
+set -e -u
+
+munge_path () {
+    # Some libs refer to /opt/osx, others have no parent dir – bug in apertium-all-dev.tar.gz?
+    sed -e 's%^/opt/osx/%/usr/local/%' \
+        -e 's%^lib%/usr/local/lib/lib%' \
+        -e 's%^@rpath/%/usr/local/lib/%'
+}
+
+relativise_mac_lib () {
+    lib="$1"
+    name="$(basename "${lib}")"
+    rellib="./${name}"
+    if [[ -e ${rellib} ]]; then
+        echo "${name} already exists in ${PWD}, not reprocessing"
+        return 0
+    elif [[ ! -e ${lib} ]]; then
+        echo "WARNING: ${lib} doesn't exist"
+        return 1
+    fi
+    echo "Processing ${lib}"
+    ls -lah "${lib}"
+    cp -v -L "${lib}" "${rellib}"
+    chmod 755 "${rellib}"
+    # Assumes no deps have spaces in their paths
+    deps=( $(otool -L "${rellib}" | awk '$0 ~/^\t/ && $1 && $1!~"/usr/lib" {print $1}' ) )
+    for d in "${deps[@]}"; do
+        dname="$(basename "$d")"
+        install_name_tool -change "$d" @loader_path/"${dname}" "${rellib}"
+    done
+    for d in "${deps[@]}"; do
+        munged=$(munge_path <<< "$d")
+        if ! relativise_mac_lib "${munged}"; then
+            echo "Continuing anyway"
+        fi
+    done
+}
+
+
+#############################################################################
+#                               main:                                       #
+#############################################################################
+
+platform=Darwin-64bit-
+
+libdir=divvun/"${platform}"
+mkdir -p "${libdir}"
+(
+    cd "${libdir}"
+    find /usr/local/lib/ -name '_libdivvun*' -print0 | while read -r -d '' lib; do
+        relativise_mac_lib "${lib}"
+    done
+)
+
+# The outer Python libs go in a different path:
+pylibdir=pythonpath
+mkdir -p "${pylibdir}"
+mv "${libdir}"/_libdivvun* "${pylibdir}"
+for rellib in "${pylibdir}"/_libdivvun*; do
+    deps=( $(otool -L "${rellib}" | awk '$0 ~/^\t/ && $1 && $1!~"/usr/lib" {print $1}' ) )
+    for d in "${deps[@]}"; do
+        dname="$(basename "$d")"
+        install_name_tool -change "$d" @loader_path/../"${libdir}/${dname}" "${rellib}"
+    done
+done
+
+zip -r ./"${platform}".zip ./"${libdir}" ./"${pylibdir}"
+curl --upload-file ./"${platform}".zip https://transfer.sh/"${platform}".zip
