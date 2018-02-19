@@ -35,7 +35,9 @@ relativise_mac_lib () {
     done
     for d in "${deps[@]}"; do
         munged=$(munge_path <<< "$d")
-        relativise_mac_lib "${munged}"
+        if ! relativise_mac_lib "${munged}"; then
+            echo "Continuing anyway"
+        fi
     done
 }
 
