@@ -81,13 +81,14 @@ make check VERBOSE=true
 sudo make install
 
 if [[ $TRAVIS_OS_NAME = osx && $CC = clang ]]; then
-    mkdir rellibs
+    libdir=Darwin-64bit-
+    mkdir "${libdir}"
     (
-        cd rellibs
+        cd "${libdir}"
         find /usr/local/lib/ -name '_libdivvun*' -print0 | while read -r -d '' lib; do
             bash ../scripts/relativise_mac_libs "${lib}"
         done
     )
-    zip -r ./rellibs.zip ./rellibs
-    curl --upload-file ./rellibs.zip https://transfer.sh/rellibs.zip
+    zip -r ./"${libdir}".zip ./"${libdir}"
+    curl --upload-file ./"${libdir}".zip https://transfer.sh/"${libdir}".zip
 fi
