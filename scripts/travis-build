@@ -75,11 +75,19 @@ else
 fi
 
 ./autogen.sh
-if [[ $TRAVIS_OS_NAME = osx ]]; then
-    # TODO: No idea how to get this one working:
-    ./configure "$@"
-else
-    ./configure "$@"
-fi
+./configure "$@"
 make -j3
 make check VERBOSE=true
+sudo make install
+
+if [[ $TRAVIS_OS_NAME = osx && $CC = clang ]]; then
+    mkdir rellibs
+    (
+        cd rellibs
+        find /usr/local/lib/ -name '_libdivvun*' -print0 | while read -r -d '' lib; do
+            bash ../scripts/relativise_mac_libs "${lib}"
+        done
+    )
+    zip -r ./rellibs.zip ./rellibs
+    curl --upload-file ./rellibs.zip https://transfer.sh/rellibs.zip
+fi
