@@ -39,3 +39,12 @@ else
 fi
 
 /usr/bin/xmllint --dtdvalid "${dir}"/pipespec.dtd --noout "${file}"
+
+if default=$(/usr/bin/xmllint --xpath "/pipespec/@default-pipe" "${file}" 2>/dev/null); then
+    defaultval="${default##*=}"
+    res=$(/usr/bin/xmllint --xpath "/pipespec/pipeline/@name=${defaultval}" "${file}")
+    if ! test x"${res}" = xtrue; then
+        echo "ERROR:$default specified in ${file}, but no pipelines have the name ${defaultval}"
+        exit 1
+    fi
+fi

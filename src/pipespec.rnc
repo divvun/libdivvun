@@ -33,7 +33,8 @@ attlist.pipespec &=
   attribute copyright { text }?,
   attribute contact { text }?,
   attribute version { text }?,
-  attribute depversions { text }?
+  attribute depversions { text }?,
+  attribute default-pipe { text }?
 # == pipespec attributes ==
 #   language:    BCP-47, default language code for pipelines in this spec
 #   contact:     typically an e-mail address

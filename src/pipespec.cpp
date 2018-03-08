@@ -27,14 +27,18 @@ void PipeSpec::parsePipeSpec(pugi::xml_parse_result& result, const string& file)
 		if(language == "") {
 			language = "se"; // reasonable default
 		}
+		default_pipe = fromUtf8(doc.child("pipespec").attribute("default-pipe").value());
 		for (pugi::xml_node pipeline: doc.child("pipespec").children("pipeline")) {
 			const u16string& pipename = fromUtf8(pipeline.attribute("name").value());
 			if(default_pipe.empty()) {
-				// The first one is the default:
+				// If no attribute, the first pipe is the default:
 				default_pipe = pipename;
 			}
 			auto pr = std::make_pair(pipename, pipeline);
 			pnodes[pipename] = pipeline;
+		}
+		if(pnodes.find(default_pipe) == pnodes.end()) {
+			throw std::runtime_error("libdivvun: ERROR: Couldn't find pipeline with name of default-pipe " + toUtf8(default_pipe));
 		}
 	}
 	else {

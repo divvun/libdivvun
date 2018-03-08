@@ -25,6 +25,7 @@
           contact CDATA #IMPLIED
           version CDATA #IMPLIED
           depversions CDATA #IMPLIED
+          default-pipe CDATA #IMPLIED
           >
 <!--
 == pipespec attributes ==
