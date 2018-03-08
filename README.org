@@ -1,21 +1,22 @@
-#+TITLE: divvun-gramcheck
+#+TITLE: libdivvun
 #+STARTUP: showall
 
 #+CAPTION: Build Status
-[[https://travis-ci.org/divvun/divvun-gramcheck][https://travis-ci.org/divvun/divvun-gramcheck.svg]]
+[[https://travis-ci.org/divvun/libdivvun][https://travis-ci.org/divvun/libdivvun.svg]]
 
 #+CAPTION: Coverity static analysis
 [[https://scan.coverity.com/projects/divvun-divvun-gramcheck][https://scan.coverity.com/projects/13737/badge.svg]]
 
 * Description
 
-This repository contains four main programs:
+This repository contains the library =libdivvun=, and four main
+executables:
 
-=divvun-gramcheck=: This program opens a grammar checker pipeline XML
+=divvun-checker=: This program opens a grammar checker pipeline XML
 specification and lets you run grammar checking on strings. It can
 also open zip files containing the XML and all required language
-data. There is a C++ library =libdivvun= (headers installed to
-=$PREFIX/include/divvun/*.hpp=) which allows for the same features.
+data. The C++ library =libdivvun= (headers installed to
+=$PREFIX/include/divvun/*.hpp=) allows for the same features.
 
 
 =divvun-suggest=: This program does FST lookup on forms specified as
@@ -391,7 +392,7 @@ other way around. Hopefully this is not a problem in practice.
 
 * Writing grammar checkers
 
-Grammar checkers written for use in =divvun-gramcheck= consist of a
+Grammar checkers written for use in =libdivvun= consist of a
 pipeline, at a high level typically looking like:
 
 : tokenisation/morphology | multiword handling | disambiguation | error rules | generation
