@@ -76,6 +76,7 @@ class PipeSpec {
 		string language;
 		u16string default_pipe;
 	private:
+		void parsePipeSpec(pugi::xml_parse_result& result, const string& file);
 		pugi::xml_document doc; // needs to be alive for as long as we're referring to nodes in it
 };
 

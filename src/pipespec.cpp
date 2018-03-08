@@ -21,8 +21,7 @@
 
 namespace divvun {
 
-PipeSpec::PipeSpec(const string& file) {
-	pugi::xml_parse_result result = doc.load_file(file.c_str());
+void PipeSpec::parsePipeSpec(pugi::xml_parse_result& result, const string& file) {
 	if (result) {
 		language = doc.child("pipespec").attribute("language").value();
 		if(language == "") {
@@ -40,32 +39,18 @@ PipeSpec::PipeSpec(const string& file) {
 	}
 	else {
 		std::cerr << file << ":" << result.offset << " ERROR: " << result.description() << "\n";
-		throw std::runtime_error("libdivvun: ERROR: Couldn't load the pipespec xml \"" + file + "\"");
+		throw std::runtime_error("libdivvun: ERROR: Couldn't load the pipespec.xml from archive");
 	}
 }
 
+PipeSpec::PipeSpec(const string& file) {
+	pugi::xml_parse_result result = doc.load_file(file.c_str());
+	parsePipeSpec(result, file);
+}
 
 PipeSpec::PipeSpec(pugi::char_t* buff, size_t size) {
 	pugi::xml_parse_result result = doc.load_buffer(buff, size);
-	if (result) {
-		language = doc.child("pipespec").attribute("language").value();
-		if(language == "") {
-			language = "se"; // reasonable default
-		}
-		for (pugi::xml_node pipeline: doc.child("pipespec").children("pipeline")) {
-			const u16string& pipename = fromUtf8(pipeline.attribute("name").value());
-			if(default_pipe.empty()) {
-				// The first one is the default:
-				default_pipe = pipename;
-			}
-			auto pr = std::make_pair(pipename, pipeline);
-			pnodes[pipename] = pipeline;
-		}
-	}
-	else {
-		std::cerr << "pipespec.xml:" << result.offset << " ERROR: " << result.description() << "\n";
-		throw std::runtime_error("libdivvun: ERROR: Couldn't load the pipespec.xml from archive");
-	}
+	parsePipeSpec(result, "<buffer>");
 }
 
 // TODO: return optional string message instead?
