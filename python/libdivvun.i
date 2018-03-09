@@ -84,9 +84,35 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 			std::string msg;
 			StringVector rep;
 	};
+
+	typedef std::map<std::string, std::string> ToggleIdsBytes;      // toggleIds[errtype] = msg;
+	typedef std::vector<std::pair<std::string, std::string> > ToggleResBytes; // toggleRes = [(errtype_regex, msg), …];
+
+	struct OptionBytes {
+			std::string type;
+			std::string name;
+			ToggleIdsBytes choices;      // choices[errtype] = msg;
+	};
+	struct OptionBytesCompare {
+			bool operator() (const OptionBytes& a, const OptionBytes& b) const {
+				return a.name < b.name;
+			}
+	};
+	typedef std::set<OptionBytes, OptionBytesCompare> OptionSetBytes;
+
+	struct PrefsBytes {
+			ToggleIdsBytes toggleIds;
+			ToggleResBytes toggleRes;
+			OptionSetBytes options;
+	};
+	typedef std::map<divvun::Lang, PrefsBytes> LocalisedPrefsBytes;
 %}
 
 %template(ErrBytesVector) std::vector<ErrBytes>;
+%template(ToggleIdsBytes) std::map<std::string, std::string>;
+%template(ToggleResBytes) std::vector<std::pair<std::string, std::string> >;
+%template(OptionSetBytes) std::set<OptionBytes, OptionBytesCompare>;
+%template(LocalisedPrefsBytes) std::map<divvun::Lang, PrefsBytes>;
 
 %inline %{
 	typedef std::vector<ErrBytes> ErrBytesVector;
@@ -122,6 +148,31 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 			});
 		}
 		return errs_bytes;
+	};
+
+	const LocalisedPrefsBytes prefs_bytes(std::unique_ptr<divvun::Checker>& checker) {
+		divvun::LocalisedPrefs prefs = checker->prefs();
+		LocalisedPrefsBytes prefs_bytes;
+		for(const std::pair<divvun::Lang, divvun::Prefs>& lp : prefs) {
+			const divvun::Prefs& p = lp.second;
+			PrefsBytes pb;
+			for(const std::pair<divvun::ErrId, divvun::Msg>& em : p.toggleIds) {
+				pb.toggleIds[toUtf8(em.first)] = toUtf8(em.second);
+			}
+			// toggleRes TODO: can we get the regex as string out?
+			for(const divvun::Option& o : p.options) {
+				ToggleIdsBytes choices;
+				for(const std::pair<divvun::ErrId, divvun::Msg>& c : o.choices) {
+					choices[toUtf8(c.first)] = toUtf8(c.second);
+				}
+				OptionBytes ob = OptionBytes {
+					o.type, o.name, choices
+				};
+				pb.options.insert(ob);
+			}
+			prefs_bytes[lp.first] = pb;
+		}
+		return prefs_bytes;
 	};
 
 %}
