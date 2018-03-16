@@ -74,7 +74,7 @@ for rellib in "${pylibdir}"/_libdivvun*; do
     done
 done
 
-foundpylib=$(find "${libdir}"               \
+foundpylib=$(find /usr/local/lib            \
              -type f                        \
              -name 'libdivvun.py'           \
              -exec cp '{}' "${pylibdir}" \; \
