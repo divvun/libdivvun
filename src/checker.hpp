@@ -85,7 +85,7 @@ class Checker {
 };
 
 std::set<std::string> searchPaths();
-std::map<Lang, std::vector<std::string>> listLangs();
+std::map<Lang, std::vector<std::string>> listLangs(const std::string& extraPath = "");
 
 } // namespace divvun
 

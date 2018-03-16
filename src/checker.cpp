@@ -174,9 +174,13 @@ std::set<string> searchPaths() {
 	return dirs;
 }
 
-std::map<Lang, vector<string>> listLangs() {
+std::map<Lang, vector<string>> listLangs(const std::string& extraPath) {
 	std::map<Lang, vector<string>> pipes;
-	for(const auto& d : searchPaths()) {
+	std::set<string> paths = searchPaths();
+	if(!extraPath.empty()) {
+		paths.insert(extraPath);
+	}
+	for(const auto& d : paths) {
 		const auto& zpaths = zcheckFilesInDir(d);
 		for(const auto& zpath : zpaths) {
 			const auto& ar_spec = readArPipeSpec(zpath);
