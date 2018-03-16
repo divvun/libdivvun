@@ -74,10 +74,10 @@ for rellib in "${pylibdir}"/_libdivvun*; do
     done
 done
 
-foundpylib=$(find "${libdir}"
-             -type f
-             -name 'libdivvun.py'
-             -exec cp '{}' "${pylibdir}" \;
+foundpylib=$(find "${libdir}"               \
+             -type f                        \
+             -name 'libdivvun.py'           \
+             -exec cp '{}' "${pylibdir}" \; \
              -print)
 if [[ "$(wc -l <<< "${foundpylib}")" != 1 ]]; then
     echo "Warning: Expected exactly one libdivvun.py in ${libdir}, found:" >&2
