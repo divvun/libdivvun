@@ -8,7 +8,7 @@ CLEANFILES = $(BUILT_SOURCES)
 all-local: $(BUILT_SOURCES)
 	@./mac-libreoffice-workaround
 
-%_wrap.cpp %.py: %.i setup.py std_unique_ptr.i
+%_wrap.cpp %.py: %.i setup.py std_unique_ptr.i ../src/libdivvun.la
 	$(SWIG) -c++ -python -I$(top_srcdir)/src/lib -o $*_wrap.cpp -outdir . $(srcdir)/$*.i
 	CPPFLAGS="$(CPPFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="-Wl,-rpath,${prefix}/lib $(LDFLAGS)" $(PYTHON) setup.py build
 # build_ext doesn't copy the .py to the build dir
