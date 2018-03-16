@@ -74,5 +74,17 @@ for rellib in "${pylibdir}"/_libdivvun*; do
     done
 done
 
+foundpylib=$(find "${libdir}"
+             -type f
+             -name 'libdivvun.py'
+             -exec cp '{}' "${pylibdir}" \;
+             -print)
+if [[ "$(wc -l <<< "${foundpylib}")" != 1 ]]; then
+    echo "Warning: Expected exactly one libdivvun.py in ${libdir}, found:" >&2
+    echo "${foundpylib}" >&2
+    # Shouldn't happen on Travis, but could happen if people Try This
+    # At Home with several different Python versions
+fi
+
 zip -r ./"${platform}".zip ./"${libdir}" ./"${pylibdir}"
 curl --upload-file ./"${platform}".zip https://transfer.sh/"${platform}".zip
