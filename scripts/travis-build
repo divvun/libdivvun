@@ -31,9 +31,9 @@ if [[ $TRAVIS_OS_NAME = osx ]]; then
     pyenv global 3.6.3
 
     # brew puts pugixml/libarchive outside the regular paths:
-    LDFLAGS="${LDFLAGS:-} -L/usr/local/Cellar/pugixml/1.8.1/lib/pugixml-1.8"
+    LDFLAGS="${LDFLAGS:-} -L/usr/local/Cellar/pugixml/1.9/lib/pugixml-1.9"
     LDFLAGS="${LDFLAGS:-} -L/usr/local/opt/libarchive/lib"
-    CPPFLAGS="${CPPFLAGS:-} -I/usr/local/Cellar/pugixml/1.8.1/include/pugixml-1.8"
+    CPPFLAGS="${CPPFLAGS:-} -I/usr/local/Cellar/pugixml/1.9/include/pugixml-1.9"
     CPPFLAGS="${CPPFLAGS:-} -I/usr/local/opt/libarchive/include"
     PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}:/usr/local/opt/libarchive/lib/pkgconfig"
 
