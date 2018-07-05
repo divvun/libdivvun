@@ -175,7 +175,7 @@ class CGSpellCmd: public PipeCmd {
 		static constexpr Weight max_analysis_weight = -1.0;
 		static constexpr Weight max_weight = -1.0;
 		static constexpr bool real_word = false;
-		static constexpr unsigned long limit = 25;
+		static constexpr unsigned long limit = 10;
 		static constexpr hfst_ospell::Weight beam = -1.0;
 		static constexpr float time_cutoff = 0.0;
 	private:
