@@ -173,10 +173,10 @@ class CGSpellCmd: public PipeCmd {
 		// Some sane defaults for the speller
 		// TODO: Do we want any of this configurable from pipespec.xml, or from the Checker API?
 		static constexpr Weight max_analysis_weight = -1.0;
-		static constexpr Weight max_weight = -1.0;
+		static constexpr Weight max_weight = 5000.0;
 		static constexpr bool real_word = false;
 		static constexpr unsigned long limit = 10;
-		static constexpr hfst_ospell::Weight beam = -1.0;
+		static constexpr hfst_ospell::Weight beam = 15.0;
 		static constexpr float time_cutoff = 0.0;
 	private:
 		unique_ptr<Speller> speller;

@@ -194,7 +194,7 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const Pip
 			prog += " -g" + argprepare(dir, args["grammar"]);
 		}
 		else if(name == "cgspell") {
-			prog = "divvun-cgspell -n 10";
+			prog = "divvun-cgspell -n 10 -b 15 -w 5000";
 			prog += " -l" + argprepare(dir, args["lexicon"]);
 			prog += " -m" +  argprepare(dir, args["errmodel"]);
 		}
