@@ -2,7 +2,7 @@
 
 set -e -u
 
-if [[ ${COVERITY_SCAN_BRANCH} = 1 ]]; then
+if [[ ${COVERITY_SCAN_BRANCH-0} = 1 ]]; then
     echo 'On coverity_scan branch, not running usual travis build + test suite.'
     for f in cov-int/*log.txt; do
         test -f "$f" && echo "== $f ==" && cat "$f"
