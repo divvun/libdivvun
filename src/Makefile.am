@@ -49,7 +49,7 @@ libdivvun_la_SOURCES += cgspell.cpp
 endif
 # would've liked to put -lstdc++fs in LIBADD for <experimental/filesystem>, but macos
 libdivvun_la_LIBADD   =              $(CG3_LIBS)   $(divvun_gen_sh_LDADD)    $(divvun_suggest_LDADD)    $(divvun_cgspell_LDADD)
-libdivvun_CXXFLAGS    =              $(CG3_CFLAGS) $(divvun_gen_sh_CXXFLAGS) $(divvun_suggest_CXXFLAGS) $(divvun_cgspell_CXXFLAGS)
+libdivvun_la_CXXFLAGS =              $(CG3_CFLAGS) $(divvun_gen_sh_CXXFLAGS) $(divvun_suggest_CXXFLAGS) $(divvun_cgspell_CXXFLAGS)
 libdivvun_la_LDFLAGS  = -no-undefined
 # TODO something like -version-info 49:0:0
 
@@ -59,7 +59,7 @@ dist_man_MANS        += divvun-checker.1
 # divvun-checker binary:
 divvun_checker_SOURCES  = main_checker.cpp
 divvun_checker_LDADD    = libdivvun.la $(libdivvun_la_LIBADD)
-divvun_checker_CXXFLAGS =              $(libdivvun_CXXFLAGS)
+divvun_checker_CXXFLAGS =              $(libdivvun_la_CXXFLAGS)
 divvun_checkerdir       = $(datadir)
 endif
 
