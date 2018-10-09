@@ -535,7 +535,8 @@ surrounding blanks (the start-of-line colon is not included). The
 rules file is FST with blank-wordform-blank on the input side, and the
 tag on the output-side, typically written in the XFST regex format.
 
-As an example, if the =input.txt= contains
+As an example (with spaces changed to underscores for readability), if
+the =input.txt= contains
 
 #+begin_src cg :tangle input.txt
 :_
@@ -549,7 +550,9 @@ As an example, if the =input.txt= contains
 #+end_src
 
 then =divvun-blanktag= will try to match twice, first on the string
-=_"<)>"=, then on the string ="<.>"\n\n=.
+: _"<)>"
+then on the string
+: "<.>"\n\n
 
 If the rule file =ws.regex= (here in XFST regex format) contains
 
@@ -564,7 +567,6 @@ then we will get
   divvun-blanktag ws.hfst < input.txt
 #+end_src
 
-#+RESULTS:
 : :_
 : "<)>"
 : 	")" RPAREN @EOP <spaceBeforeParenEnd>
