@@ -527,6 +527,82 @@ the =grammarchecker= CG, you'd do something like
 echo "words go here" | sh modes/trace-smegram6-disam.mode
 #+end_src
 
+** Simple blanktag rules
+
+The =divvun-blanktag= program will tag a cohort if it finds a match on
+the wordform (including the CG wordform delimiters ="<= and =>"=) plus
+surrounding blanks (the start-of-line colon is not included). The
+rules file is FST with blank-wordform-blank on the input side, and the
+tag on the output-side, typically written in the XFST regex format.
+
+As an example, if the =input.txt= contains
+
+#+begin_src cg :tangle input.txt
+:_
+"<)>"
+	")" RPAREN @EOP
+	")" RPAREN @EMO
+"<.>"
+	"." PUNCT
+:\n
+:\n
+#+end_src
+
+then =divvun-blanktag= will try to match twice, first on the string
+=_"<)>"=, then on the string ="<.>"\n\n=.
+
+If the rule file =ws.regex= (here in XFST regex format) contains
+
+#+begin_src hfst :tangle ws.regex
+  [ {_} {"<)>"} ?* ]:[%<spaceBeforeParenEnd%>]
+#+end_src
+
+then we will get
+
+#+begin_src sh :results verbatim
+  hfst-regexp2fst --disjunct ws.regex | hfst-fst2fst -O -o ws.hfst
+  divvun-blanktag ws.hfst < input.txt
+#+end_src
+
+#+RESULTS:
+: :_
+: "<)>"
+: 	")" RPAREN @EOP <spaceBeforeParenEnd>
+: 	")" RPAREN @EMO <spaceBeforeParenEnd>
+: "<.>"
+: 	"." PUNCT
+: :\n
+: :\n
+
+The matching goes from the start of the preceding blank, across the
+wordform and to the end of the following blank. In this input, there
+was no blank following the right-parens, so the rule could just as
+well have been
+
+#+BEGIN_SRC hfst
+  [ {_} {"<)>"} ]:[%<spaceBeforeParenEnd%>]
+#+END_SRC
+
+– this would *require* that there is no following blank. However, if
+you want it to also match the input
+
+#+begin_src cg
+:_
+"<)>"
+	")" RPAREN @EOP
+	")" RPAREN @EMO
+:\n
+#+end_src
+
+then you need the final match-all =?*=.
+
+*** Troubleshooting
+If you get
+ : terminate called after throwing an instance of 'FunctionNotImplementedException'                                                [68/660]
+ : Aborted (core dumped)
+check how you compiled the HFST file – it should be in unweighted HFST
+optimized lookup format.
+
 ** Simple grammarchecker.cg3 rules
 
 In our North Saami checker, the
