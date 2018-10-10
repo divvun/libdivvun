@@ -529,11 +529,18 @@ echo "words go here" | sh modes/trace-smegram6-disam.mode
 
 ** Simple blanktag rules
 
-The =divvun-blanktag= program will tag a cohort if it finds a match on
-the wordform (including the CG wordform delimiters ="<= and =>"=) plus
-surrounding blanks (the start-of-line colon is not included). The
-rules file is FST with blank-wordform-blank on the input side, and the
-tag on the output-side, typically written in the XFST regex format.
+The =divvun-blanktag= program will tag a cohort with a user-specified
+tag if it finds a match on the input wordform and its surrounding
+blanks.
+
+The wordform includes the CG wordform delimiters
+: "<
+and
+: >"
+The surrounding blanks do /not/ include the start-of-line colon. The
+rule file is an FST with blank-wordform-blank on the input side, and
+the tag on the output-side, typically written in the XFST regex
+format.
 
 As an example (with spaces changed to underscores for readability), if
 the =input.txt= contains
@@ -675,9 +682,9 @@ without the target of the =DELETE1= relation.
 #+end_src
 
 The cohort matching =KeepThisWord= is now the central one of the
-error, so if e.g. =errors.xml= uses templates like =Don't use "$2"
-before "$1"=, the word form of =KeepThisWord= will be substituted for
-=$1=.
+error, so if e.g. =errors.xml= uses templates like
+: Don't use "$2" before "$1"
+the word form of =KeepThisWord= will be substituted for =$1=.
 
 You may delete more words from the same suggestion using =DELETE2=
 etc.
@@ -748,6 +755,97 @@ preceding cohort; then we use the tag =&ADDED-BEFORE-BLANK=, and
 #+end_src
 
 will give a suggestion that covers the space before the infinitive.
+
+** Adding literal word forms, altering existing wordforms
+
+Say you want to tag missing spaces after punctuation. You've added a
+rule like
+
+#+BEGIN_SRC hfst
+  [ ?* {"<,>"} ]:[%<NoSpaceAfterPunctMark>]
+#+END_SRC
+
+to your whitespace-analyser.regex (used by =divvun-blanktag=) and the
+input to the grammarchecker CG is now
+
+#+begin_src cg
+"<3>"
+	"3" Num Arab Sg Loc Attr <W:0.0000000000> @HNOUN
+	"3" Num Arab Sg Nom <W:0.0000000000> @HNOUN
+	"3" Num Arab Sg Ill Attr <W:0.0000000000> @HNOUN
+"<,>"
+	"," CLB <W:0.0000000000> <NoSpaceAfterPunctMark>
+"<ja>"
+	"ja" CC <W:0.0000000000> @CNP
+#+end_src
+
+Then you can first of all turn that blanktag tag into an error tag with
+
+#+begin_src cg
+ADD (&no-space-after-punct-mark) (<NoSpaceAfterPunctMark>);
+#+end_src
+
+Now, we could just suggest a wordform on the comma and call it a day:
+#+begin_src cg
+COPY ("<, >" &SUGGESTWF) TARGET ("," &no-space-after-punct-mark) ;
+#+end_src
+but that will
+
+1. only work on commas, and
+2. be a tiny underline, hard to click for users
+
+Instead, let's extend the underline to the following word:
+#+begin_src cg
+ADD (&no-space-after-punct-mark &LINK) TARGET (*) IF (-1 (<NoSpaceAfterPunctMark>));
+ADDRELATION (RIGHT) (&no-space-after-punct-mark) TO (1 (&LINK) LINK 0 (&no-space-after-punct-mark)) ;
+#+end_src
+
+(The =&LINK= says that the following word is just a link, not the
+central one, which matters for e.g. error messages, and the =RIGHT=
+relation says that this is one big error, not two separate ones.)
+
+Then we can add a suggestion that puts a space between the forms:
+#+begin_src cg
+COPY:no-space-after-punct ("<$1 $2>"v &SUGGESTWF) TARGET ("<(.*)>"r &no-space-after-punct-mark) IF (1 ("<(.*)>"r));
+#+end_src
+
+This uses vislcg3's [[http://beta.visl.sdu.dk/cg3/chunked/tags.html#variable-strings][variable strings / varstrings]] to create the
+wordform suggestion from two regular expression strings matching the
+wordforms of the two cohorts. Now the output is
+#+begin_src cg
+"<3>"
+	"3" Num Arab Sg Loc Attr <W:0.0000000000> @HNOUN
+	"3" Num Arab Sg Nom <W:0.0000000000> @HNOUN
+	"3" Num Arab Sg Ill Attr <W:0.0000000000> @HNOUN
+"<,>"
+	"," CLB <W:0.0000000000> <NoSpaceAfterPunctMark> &no-space-after-punct-mark ID:3 R:RIGHT:4 ADD:13066 ADDRELATION(RIGHT):13068
+	"," CLB <W:0.0000000000> <NoSpaceAfterPunctMark> "<, ja>" &no-space-after-punct-mark &SUGGESTWF ID:3 R:RIGHT:4 ADD:13066 ADDRELATION(RIGHT):13068 COPY:13069:no-space-after-punct
+"<ja>"
+	"ja" CC <W:0.0000000000> @CNP &LINK &no-space-after-punct-mark ID:4 ADD:13067
+#+end_src
+
+or, in JSON format:
+
+#+begin_src json
+{
+  "errs": [
+    [
+      ",ja",
+      4,
+      7,
+      "no-space-after-punct-mark",
+      "no-space-after-punct-mark",
+      [
+        ", ja"
+      ]
+    ]
+  ],
+  "text": "ja 3,ja"
+}
+#+end_src
+
+
+
 
 ** Including spelling errors
 
@@ -830,8 +928,9 @@ from the regular suggestion generator, and saves some duplicate work.
   generate this reading into a form for suggestions, using the
   generator FST. See [[*Simple grammarchecker.cg3 rules][Simple grammarchecker.cg3 rules]].
 - =&SUGGESTWF= on a reading means that =divvun-suggest= should use the
-  reading's wordform-tag (e.g. a tag like ="<Cupertino>"= on a
-  /reading/, not as the first line of a cohort) as a suggestion.
+  reading's wordform-tag (e.g. a tag like
+  : "<Cupertino>"
+  on a /reading/, not as the first line of a cohort) as a suggestion.
   See [[*Including spelling errors][Including spelling errors]].
 - =<spelled>= is added by =divvun-cgspell= to any suggestions it
   makes. See [[*Including spelling errors][Including spelling errors]].
