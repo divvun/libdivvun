@@ -844,8 +844,46 @@ or, in JSON format:
 }
 #+end_src
 
+This looks pretty good, except the error tag is listed twice. The
+second entry is actually supposed to contain a human-readable error
+message, but =errors.xml= contains no entry for this tag. Let's add it:
 
+#+begin_src nxml
+  <error id="no-space-after-punct-mark">
+    <header>
+      <title xml:lang="en">Missing space</title>
+    </header>
+    <body>
+      <description xml:lang="en">There is no space after the punctuation mark "$1"</description>
+    </body>
+  </error>
+#+end_src
 
+(In Giellatekno's setup, this goes in =errors.source.xml=, which is
+compiled to =errors.xml=.)
+
+Now we get:
+
+#+begin_src json
+{
+  "errs": [
+    [
+      ",ja",
+      4,
+      7,
+      "no-space-after-punct-mark",
+      "Missing space",
+      [
+        ", ja"
+      ]
+    ]
+  ],
+  "text": "ja 3,ja"
+}
+#+end_src
+
+which should end up as a nice error message, suggestion and
+underline in the UI.
 
 ** Including spelling errors
 
