@@ -8,7 +8,7 @@ generator.hfstol: generator.hfst
 	hfst-fst2fst -O -i $< -o $@
 
 
-check_DATA = generator.hfstol
+check_DATA = generator.hfstol bil.hfstol
 TESTS = ./run ./run-flushing ./run-genall ./validate
 
 CLEANFILES = $(check_DATA) generator.hfst bil.hfstol
