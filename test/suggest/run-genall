@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -u
+
+cd "$(dirname "$0")" || exit 1
+
+declare -i fail=0
+for input in input.*.cg.genall; do
+    base=${input##input}; base=${base%%cg.genall}
+    ../../src/divvun-suggest --generate-all bil.hfstol \
+                          < "${input}" \
+                          > output"${base}"cg \
+                          2>output"${base}"err
+    if ! diff expected"${base}"cg output"${base}"cg; then
+        echo "stdout differs for ${base}"
+        (( fail++ ))
+    fi
+    if ! diff expected"${base}"err output"${base}"err; then
+        echo "stderr differs for ${base}"
+        (( fail++ ))
+    fi
+done
+
+exit ${fail}

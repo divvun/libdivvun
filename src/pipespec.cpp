@@ -205,9 +205,13 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const Pip
 			prog = "divvun-blanktag" + argprepare(dir, args["blanktagger"]);
 		}
 		else if(name == "suggest") {
+			bool generate_all_readings = cmd.attribute("generate-all").as_bool(false);
 			prog = "divvun-suggest";
 			if(json) {
 				prog += " --json";
+			}
+			if(generate_all_readings) {
+				prog += " --generate-all";
 			}
 			prog += " -g" + argprepare(dir, args["generator"]);
 			prog += " -m" + argprepare(dir, args["messages"]);

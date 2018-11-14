@@ -41,6 +41,7 @@ int main(int argc, char ** argv)
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
 			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 if --json).")
+			("A,generate-all", "Run generator on every reading")
 			("v,verbose", "Be verbose")
 			("V,version", "Version information")
 			("h,help", "Print help")
@@ -84,6 +85,7 @@ int main(int argc, char ** argv)
 
 		const auto& genfile = options["generator"].as<std::string>();
 		bool json = options.count("j");
+		bool genall = options.count("A");
 		bool verbose = options.count("v");
 
 		const auto& locale = options.count("lang") ? options["lang"].as<std::string>() : "se";
@@ -120,7 +122,7 @@ int main(int argc, char ** argv)
 		}
 #endif
 
-		divvun::Suggest s(t, m, locale, verbose);
+		divvun::Suggest s(t, m, locale, verbose, genall);
 		s.run(std::cin, std::cout, json);
 	}
 	catch (const cxxopts::OptionException& e)

@@ -85,6 +85,8 @@
 <!ELEMENT mwesplit EMPTY>     <!-- takes no arguments -->
 <!ELEMENT blanktag (blanktagger)> <!-- arg: blanktagger.hfst -->
 <!ELEMENT suggest ((generator, messages)|(messages, generator))> <!-- arg1: generator.hfstol, arg2: error_messages.xml -->
+<!ATTLIST suggest
+          generate-all (true|false) "false">
 
 <!-- Is there a way to generalize over these apart from shifting to <arg key=… val=…>? -->
 <!ELEMENT arg EMPTY>         <!ATTLIST arg n CDATA #REQUIRED>

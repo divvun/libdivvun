@@ -152,7 +152,7 @@ const MsgMap Suggest::readMessages(const string& file) {
 }
 
 
-const Reading proc_subreading(const string& line) {
+const Reading proc_subreading(const string& line, bool generate_all_readings) {
 	Reading r;
 	const auto& lemma_beg = line.find("\"");
 	const auto& lemma_end = line.find("\" ", lemma_beg);
@@ -161,7 +161,7 @@ const Reading proc_subreading(const string& line) {
 	StringVec gentags;	// tags we generate with
 	r.id = 0; // CG-3 id's start at 1, should be safe. Want sum types :-/
 	r.wf = "";
-	r.suggest = false;
+	r.suggest = false || generate_all_readings;
 	r.suggestwf = false;
 	r.added = NotAdded;
 	r.link = false;
@@ -222,12 +222,12 @@ const Reading proc_subreading(const string& line) {
 	return r;
 };
 
-const Reading proc_reading(const hfst::HfstTransducer& t, const string& line) {
+const Reading proc_reading(const hfst::HfstTransducer& t, const string& line, bool generate_all_readings) {
 	stringstream ss(line);
 	string subline;
 	std::deque<Reading> subs;
 	while(std::getline(ss, subline, '\n')){
-		subs.push_front(proc_subreading(subline));
+		subs.push_front(proc_subreading(subline, generate_all_readings));
 	}
 	Reading r;
 	const size_t n_subs = subs.size();
@@ -238,7 +238,7 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const string& line) {
 		r.rels.insert(sub.rels.begin(), sub.rels.end());
 		// higher sub can override id if set; doesn't seem like cg3 puts ids on them though
 		r.id = (r.id == 0 ? sub.id : r.id);
-		r.suggest = r.suggest || sub.suggest;
+		r.suggest = r.suggest || sub.suggest || generate_all_readings;
 		r.suggestwf = r.suggestwf || sub.suggestwf;
 		r.link = r.link || sub.link;
 		r.added = r.added == NotAdded ? sub.added : r.added;
@@ -554,7 +554,7 @@ const string clean_blank(const string& raw)
 }
 
 
-Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const MsgMap& msgs) {
+Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const MsgMap& msgs, bool generate_all_readings) {
 	size_t pos = 0;
 	Cohort c = DEFAULT_COHORT;
 	Sentence sentence;
@@ -568,7 +568,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 		std::regex_match(line.c_str(), result, CG_LINE);
 
 		if(!readinglines.empty() && (result.empty() || result[3].length() <= 1)) {
-			const auto& reading = proc_reading(t, readinglines);
+			const auto& reading = proc_reading(t, readinglines, generate_all_readings);
 			readinglines = "";
 			if(!reading.errtype.empty()) {
 				c.errtypes.insert(reading.errtype);
@@ -617,7 +617,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 	} while(std::getline(is, line));
 
 	if(!readinglines.empty()) {
-		const auto& reading = proc_reading(t, readinglines);
+		const auto& reading = proc_reading(t, readinglines, generate_all_readings);
 		readinglines = "";
 		if(!reading.errtype.empty()) {
 			c.errtypes.insert(reading.errtype);
@@ -747,14 +747,14 @@ vector<Err> Suggest::mk_errs(const Sentence &sentence) {
 
 vector<Err> Suggest::run_errs(std::istream& is)
 {
-	return mk_errs(run_sentence(is, *generator, msgs));
+	return mk_errs(run_sentence(is, *generator, msgs, generate_all_readings));
 }
 
 
 RunState Suggest::run_json(std::istream& is, std::ostream& os)
 {
 	json::sanity_test();
-	Sentence sentence = run_sentence(is, *generator, msgs);
+	Sentence sentence = run_sentence(is, *generator, msgs, generate_all_readings);
 
 	// All processing done, output:
 	os << "{"
@@ -787,9 +787,9 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os)
 }
 
 
-void print_cg_reading(const string& readinglines, std::ostream& os, const hfst::HfstTransducer& t) {
+void print_cg_reading(const string& readinglines, std::ostream& os, const hfst::HfstTransducer& t, bool generate_all_readings) {
 	os << readinglines;
-	const auto& reading = proc_reading(t, readinglines);
+	const auto& reading = proc_reading(t, readinglines, generate_all_readings);
 	if(reading.suggest) {
 		// std::cerr << "\033[1;35mreading.suggest=\t" << reading.suggest << "\033[0m" << std::endl;
 
@@ -811,7 +811,7 @@ void print_cg_reading(const string& readinglines, std::ostream& os, const hfst::
 
 }
 
-void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
+void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, bool generate_all_readings)
 {
 	// Simple debug function; only subreading state kept between lines
 	string readinglines;
@@ -820,7 +820,7 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 		std::regex_match(line.c_str(), result, CG_LINE);
 
 		if(!readinglines.empty() && (result.empty() || result[3].length() <= 1)) {
-			print_cg_reading(readinglines, os, t);
+			print_cg_reading(readinglines, os, t, generate_all_readings);
 			readinglines = "";
 		}
 
@@ -837,7 +837,7 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t)
 		}
 	}
 	if(!readinglines.empty()) {
-		print_cg_reading(readinglines, os, t);
+		print_cg_reading(readinglines, os, t, generate_all_readings);
 	}
 }
 
@@ -847,7 +847,7 @@ void Suggest::run(std::istream& is, std::ostream& os, bool json)
 		while(run_json(is, os) == flushing);
 	}
 	else {
-		run_cg(is, os, *generator); // ignores ignores
+		run_cg(is, os, *generator, generate_all_readings); // ignores ignores
 	}
 }
 
@@ -864,18 +864,20 @@ SortedMsgLangs sortMessageLangs(const MsgMap& msgs, const string& prefer) {
 	return s;
 }
 
-Suggest::Suggest (const hfst::HfstTransducer* generator_, divvun::MsgMap msgs_, const string& locale_, bool verbose)
+Suggest::Suggest (const hfst::HfstTransducer* generator_, divvun::MsgMap msgs_, const string& locale_, bool verbose, bool genall)
 	: msgs(msgs_)
 	, locale(locale_)
 	, sortedmsglangs(sortMessageLangs(msgs, locale))
 	, generator(generator_)
+	, generate_all_readings(genall)
 {
 }
-Suggest::Suggest (const string& gen_path, const string& msg_path, const string& locale_, bool verbose)
+Suggest::Suggest (const string& gen_path, const string& msg_path, const string& locale_, bool verbose, bool genall)
 	: msgs(readMessages(msg_path))
 	, locale(locale_)
 	, sortedmsglangs(sortMessageLangs(msgs, locale))
 	, generator(readTransducer(gen_path))
+	, generate_all_readings(genall)
 {
 }
 Suggest::Suggest (const string& gen_path, const string& locale_, bool verbose)

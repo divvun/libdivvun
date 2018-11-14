@@ -110,8 +110,8 @@ struct Sentence {
 
 class Suggest {
 	public:
-		Suggest(const hfst::HfstTransducer* generator, divvun::MsgMap msgs, const string& locale, bool verbose);
-		Suggest(const string& gen_path, const string& msg_path, const string& locale, bool verbose);
+		Suggest(const hfst::HfstTransducer* generator, divvun::MsgMap msgs, const string& locale, bool verbose, bool genall);
+		Suggest(const string& gen_path, const string& msg_path, const string& locale, bool verbose, bool generate_all_readings);
 		Suggest(const string& gen_path, const string& locale, bool verbose);
 		~Suggest() = default;
 
@@ -130,6 +130,7 @@ class Suggest {
 		RunState run_json(std::istream& is, std::ostream& os);
 		std::unique_ptr<const hfst::HfstTransducer> generator;
 		std::set<ErrId> ignores;
+		bool generate_all_readings = false;
 		variant<Nothing, Err> cohort_errs(const ErrId& ErrId, const Cohort& c, const Sentence& sentence, const u16string& text);
 		vector<Err> mk_errs(const Sentence &sentence);
 };

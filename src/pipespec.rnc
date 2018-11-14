@@ -25,6 +25,8 @@
 
 #  Root element:
 
+namespace a = "http://relaxng.org/ns/compatibility/annotations/1.0"
+
 pipespec = element pipespec { attlist.pipespec, pipeline+ }
 attlist.pipespec &=
 
@@ -118,10 +120,11 @@ suggest =
     attlist.suggest,
     ((generator, messages) | (messages, generator))
   }
-attlist.suggest &= empty
-
 # arg1: generator.hfstol, arg2: error_messages.xml
+attlist.suggest &=
 
+  [ a:defaultValue = "false" ]
+  attribute generate-all { "true" | "false" }?
 # Is there a way to generalize over these apart from shifting to <arg key=… val=…>?
 arg = element arg { attlist.arg, empty }
 attlist.arg &= attribute n { text }

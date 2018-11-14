@@ -120,12 +120,12 @@ void BlanktagCmd::run(stringstream& input, stringstream& output) const
 	blanktag->run(input, output);
 }
 
-SuggestCmd::SuggestCmd (const hfst::HfstTransducer* generator, divvun::MsgMap msgs, const string& locale, bool verbose)
-	: suggest(new Suggest(generator, msgs, locale, verbose))
+SuggestCmd::SuggestCmd (const hfst::HfstTransducer* generator, divvun::MsgMap msgs, const string& locale, bool verbose, bool generate_all_readings)
+	: suggest(new Suggest(generator, msgs, locale, verbose, generate_all_readings))
 {
 }
-SuggestCmd::SuggestCmd (const string& gen_path, const string& msg_path, const string& locale, bool verbose)
-	: suggest(new Suggest(gen_path, msg_path, locale, verbose))
+SuggestCmd::SuggestCmd (const string& gen_path, const string& msg_path, const string& locale, bool verbose, bool generate_all_readings)
+	: suggest(new Suggest(gen_path, msg_path, locale, verbose, generate_all_readings))
 {
 }
 void SuggestCmd::run(stringstream& input, stringstream& output) const
@@ -238,10 +238,12 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 			ArEntryHandler<divvun::MsgMap> procMsgs = [] (const string& ar_path, const void* buff, const size_t size) {
 				return Suggest::readMessages((char*)buff, size);
 			};
+			bool generate_all_readings = cmd.attribute("generate-all").as_bool(false);
 			auto* s = new SuggestCmd(readArchiveExtract(ar_spec->ar_path, args["generator"], procGen),
 						 readArchiveExtract(ar_spec->ar_path, args["messages"], procMsgs),
 						 locale,
-						 verbose);
+						 verbose,
+						 generate_all_readings);
 			cmds.emplace_back(s);
 			mergePrefsFromMsgs(prefs, s->getMsgs());
 			suggestcmd = s;
@@ -299,10 +301,12 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 			cmds.emplace_back(new BlanktagCmd(args["blanktagger"], verbose));
 		}
 		else if(name == u"suggest") {
+			bool generate_all_readings = cmd.attribute("generate-all").as_bool(false);
 			auto *s = new SuggestCmd(args["generator"],
 						 args["messages"],
 						 locale,
-						 verbose);
+						 verbose,
+						 generate_all_readings);
 			cmds.emplace_back(s);
 			mergePrefsFromMsgs(prefs, s->getMsgs());
 			suggestcmd = s;

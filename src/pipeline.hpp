@@ -48,6 +48,7 @@ using std::u16string;
 using std::vector;
 using std::unordered_map;
 using std::unique_ptr;
+using std::size_t;
 
 #ifndef DEBUG
 const bool DEBUG=false;
@@ -196,8 +197,8 @@ class BlanktagCmd: public PipeCmd {
 
 class SuggestCmd: public PipeCmd {
 	public:
-		SuggestCmd (const hfst::HfstTransducer* generator, divvun::MsgMap msgs, const string& locale, bool verbose);
-		SuggestCmd (const string& gen_path, const string& msg_path, const string& locale, bool verbose);
+		SuggestCmd (const hfst::HfstTransducer* generator, divvun::MsgMap msgs, const string& locale, bool verbose, bool generate_all_readings);
+		SuggestCmd (const string& gen_path, const string& msg_path, const string& locale, bool verbose, bool generate_all_readings);
 		void run(stringstream& input, stringstream& output) const override;
 		vector<Err> run_errs(stringstream& input) const;
 		~SuggestCmd() override = default;
