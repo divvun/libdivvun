@@ -87,4 +87,4 @@ if [[ "$(wc -l <<< "${foundpylib}")" != 1 ]]; then
 fi
 
 zip -r ./"${platform}".zip ./"${libdir}" ./"${pylibdir}"
-curl --upload-file ./"${platform}".zip https://transfer.sh/"${platform}".zip
+curl --upload-file ./"${platform}".zip https://filepush.co/upload/"${platform}".zip
