@@ -805,9 +805,12 @@ ADDRELATION (RIGHT) (&no-space-after-punct-mark)
     ;
 #+end_src
 
-(The =&LINK= says that the following word is just a link, not the
-central one, which matters for e.g. error messages, and the =RIGHT=
-relation says that this is one big error, not two separate ones.)
+In the above rules,
+
+- The =&LINK= tag says that the following word is just a link, not the
+  central one, which matters for e.g. error messages.
+- The =RIGHT= relation says that this is one big error, not two
+  separate ones.
 
 Then we can add a suggestion that puts a space between the forms:
 #+begin_src cg
@@ -827,8 +830,8 @@ with =(-1 ("<(.*)>"r))=, you'd probably want the suggestion to be =<$2
 $1>=.
 
 We also make sure we don't put a suggestion-tag on the =&LINK= cohort
-(here the word =ja=), which would lead to some strange suggestions
-since it is already part of the suggestion-tag on the comma =,=
+(here the word =<ja>=), which would lead to some strange suggestions
+since it is already part of the suggestion-tag on the comma =<,>=
 cohort.
 
 Now the output is
