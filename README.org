@@ -770,13 +770,13 @@ input to the grammarchecker CG is now
 
 #+begin_src cg
 "<3>"
-	"3" Num Arab Sg Loc Attr <W:0.0000000000> @HNOUN
-	"3" Num Arab Sg Nom <W:0.0000000000> @HNOUN
-	"3" Num Arab Sg Ill Attr <W:0.0000000000> @HNOUN
+	"3" Num Arab Sg Loc Attr @HNOUN
+	"3" Num Arab Sg Nom @HNOUN
+	"3" Num Arab Sg Ill Attr @HNOUN
 "<,>"
-	"," CLB <W:0.0000000000> <NoSpaceAfterPunctMark>
+	"," CLB <NoSpaceAfterPunctMark>
 "<ja>"
-	"ja" CC <W:0.0000000000> @CNP
+	"ja" CC @CNP
 #+end_src
 
 Then you can first of all turn that blanktag tag into an error tag with
@@ -796,8 +796,13 @@ but that will
 
 Instead, let's extend the underline to the following word:
 #+begin_src cg
-ADD (&no-space-after-punct-mark &LINK) TARGET (*) IF (-1 (<NoSpaceAfterPunctMark>));
-ADDRELATION (RIGHT) (&no-space-after-punct-mark) TO (1 (&LINK) LINK 0 (&no-space-after-punct-mark)) ;
+ADD (&no-space-after-punct-mark &LINK)
+    TARGET (*)
+    IF (-1 (<NoSpaceAfterPunctMark>))
+    ;
+ADDRELATION (RIGHT) (&no-space-after-punct-mark)
+    TO (1 (&LINK) LINK 0 (&no-space-after-punct-mark))
+    ;
 #+end_src
 
 (The =&LINK= says that the following word is just a link, not the
@@ -806,22 +811,37 @@ relation says that this is one big error, not two separate ones.)
 
 Then we can add a suggestion that puts a space between the forms:
 #+begin_src cg
-COPY:no-space-after-punct ("<$1 $2>"v &SUGGESTWF) TARGET ("<(.*)>"r &no-space-after-punct-mark) IF (1 ("<(.*)>"r));
+COPY:no-space-after-punct ("<$1 $2>"v &SUGGESTWF)
+    TARGET ("<(.*)>"r &no-space-after-punct-mark)
+    IF (1 ("<(.*)>"r))
+       (NOT 0 (&LINK))
+    ;
 #+end_src
 
 This uses vislcg3's [[http://beta.visl.sdu.dk/cg3/chunked/tags.html#variable-strings][variable strings / varstrings]] to create the
 wordform suggestion from two regular expression strings matching the
-wordforms of the two cohorts. Now the output is
+wordforms of the two cohorts. Note that the =$1= and =$2= refer to the
+first and second regex groups as they appear in the rule, not as they
+appear in the sentence. If the rule referred to the preceding word
+with =(-1 ("<(.*)>"r))=, you'd probably want the suggestion to be =<$2
+$1>=.
+
+We also make sure we don't put a suggestion-tag on the =&LINK= cohort
+(here the word =ja=), which would lead to some strange suggestions
+since it is already part of the suggestion-tag on the comma =,=
+cohort.
+
+Now the output is
 #+begin_src cg
 "<3>"
-	"3" Num Arab Sg Loc Attr <W:0.0000000000> @HNOUN
-	"3" Num Arab Sg Nom <W:0.0000000000> @HNOUN
-	"3" Num Arab Sg Ill Attr <W:0.0000000000> @HNOUN
+	"3" Num Arab Sg Loc Attr @HNOUN
+	"3" Num Arab Sg Nom @HNOUN
+	"3" Num Arab Sg Ill Attr @HNOUN
 "<,>"
-	"," CLB <W:0.0000000000> <NoSpaceAfterPunctMark> &no-space-after-punct-mark ID:3 R:RIGHT:4 ADD:13066 ADDRELATION(RIGHT):13068
-	"," CLB <W:0.0000000000> <NoSpaceAfterPunctMark> "<, ja>" &no-space-after-punct-mark &SUGGESTWF ID:3 R:RIGHT:4 ADD:13066 ADDRELATION(RIGHT):13068 COPY:13069:no-space-after-punct
+	"," CLB <NoSpaceAfterPunctMark> &no-space-after-punct-mark ID:3 R:RIGHT:4
+	"," CLB <NoSpaceAfterPunctMark> "<, ja>" &no-space-after-punct-mark &SUGGESTWF ID:3 R:RIGHT:4
 "<ja>"
-	"ja" CC <W:0.0000000000> @CNP &LINK &no-space-after-punct-mark ID:4 ADD:13067
+	"ja" CC @CNP &LINK &no-space-after-punct-mark ID:4
 #+end_src
 
 or, in JSON format:
