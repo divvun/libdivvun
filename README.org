@@ -805,10 +805,14 @@ ADDRELATION (RIGHT) (&no-space-after-punct-mark)
     ;
 #+end_src
 
-In the above rules,
+Every error needs a "central" cohort, even if it involves several
+words; this is important in order to get error messages to show
+correctly. It doesn't matter which one you pick, as long as you pick
+one. Here we've picked the comma to be central, while the following
+word is a "link" word. In the above rules,
 
-- The =&LINK= tag says that the following word is just a link, not the
-  central one, which matters for e.g. error messages.
+- The =&LINK= tag says that the following word is just a part of the
+  error, not the central cohort.
 - The =RIGHT= relation says that this is one big error, not two
   separate ones.
 
