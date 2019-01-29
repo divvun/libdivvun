@@ -1015,7 +1015,8 @@ from the regular suggestion generator, and saves some duplicate work.
 *** Relations
 
 - =LEFT= and =RIGHT= are used to extend the underline to added
-  cohorts; see [[*Adding words][Adding words]].
+  cohorts; see [[*Adding words][Adding words]] and [[README.org::*Adding literal word forms, altering existing wordforms][Adding literal word forms, altering
+  existing wordforms]].
 - =DELETE1= (and =DELETE2= etc.) are used to say that a word in the
   context of this error should be deleted in the suggestion. See [[*Deleting words][Deleting words]].
 - =$2= (and =$3= etc.) are used to make wordforms in the context
