@@ -61,11 +61,13 @@ class Speller {
 			bool real_word_,
 			unsigned long limit_,
 			hfst_ospell::Weight beam,
-			float time_cutoff)
+			float time_cutoff,
+			float max_sent_unknown_rate_)
 			: max_analysis_weight(max_analysis_weight_)
 			, max_weight(max_weight_)
 			, real_word(real_word_)
 			, limit(limit_)
+			, max_sent_unknown_rate(max_sent_unknown_rate_)
 			, speller(new hfst_ospell::ZHfstOspeller())
 		{
 			speller->read_zhfst(zhfstpath);
@@ -87,11 +89,13 @@ class Speller {
 			bool real_word_,
 			unsigned long limit_,
 			hfst_ospell::Weight beam,
-			float time_cutoff)
+			float time_cutoff,
+			float max_sent_unknown_rate_)
 			: max_analysis_weight(max_analysis_weight_)
 			, max_weight(max_weight_)
 			, real_word(real_word_)
 			, limit(limit_)
+			, max_sent_unknown_rate(max_sent_unknown_rate_)
 			, speller(new hfst_ospell::ZHfstOspeller())
 		{
 			FILE* err_fp = fopen(errpath.c_str(), "r");
@@ -119,11 +123,13 @@ class Speller {
 			bool real_word_,
 			unsigned long limit_,
 			hfst_ospell::Weight beam,
-			float time_cutoff)
+ 			float time_cutoff,
+			float max_sent_unknown_rate_)
 			: max_analysis_weight(max_analysis_weight_)
 			, max_weight(max_weight_)
 			, real_word(real_word_)
 			, limit(limit_)
+			, max_sent_unknown_rate(max_sent_unknown_rate_)
 			, speller(new hfst_ospell::ZHfstOspeller())
 			, err(err_)
 			, lex(lex_)

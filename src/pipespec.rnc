@@ -96,9 +96,10 @@ cgspell =
     attlist.cgspell,
     ((lexicon, errmodel) | (errmodel, lexicon))
   }
-attlist.cgspell &= empty
-
 # arg1: acceptor.hfstol, arg2: errmodel.hfst
+attlist.cgspell &=
+
+  [ a:defaultValue = "0.4" ] attribute max-unknown-rate { text }?
 tokenize = element tokenize { attlist.tokenize, tokenizer }
 attlist.tokenize &= empty
 

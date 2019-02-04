@@ -45,6 +45,7 @@ int main(int argc, char ** argv)
 			("W,max-analysis-weight", "Suppress corrections with analysis weight above WA", cxxopts::value<Weight>(), "WA")
 			("b,beam", "Suppress corrections worse than best candidate by more than W (W is a float)", cxxopts::value<Weight>(), "W")
 			("X,real-word", "Also suggest corrections to correct words")
+			("u,max-unknown-rate", "If ratio of unknowns > U for long sentences (≥7 cohorts), don't spell the sentence. If U=1.0, spell all unknowns.", cxxopts::value<float>(), "U")
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
 			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 if --json).")
@@ -110,18 +111,19 @@ int main(int argc, char ** argv)
 		const auto& limit = options.count("limit") ? options["limit"].as<unsigned long>() : ULONG_MAX;
 		const auto& beam = options.count("beam") ? options["beam"].as<Weight>() : -1.0;
 		const auto& time_cutoff = options.count("time-cutoff") ? options["time-cutoff"].as<float>() : 0.0;
+		const auto& max_sent_unknown_rate = options.count("max-unknown-rate") ? options["max-unknown-rate"].as<float>() : 0.4;
 
 		if (positional.size() == 1) {
 			const auto& zhfstfile = positional[0];
 			auto speller = divvun::Speller(zhfstfile, verbose,
-						       max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff);
+						       max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff, max_sent_unknown_rate);
 			divvun::run_cgspell(std::cin, std::cout, speller);
 		}
 		else if (positional.size() == 2) {
 			const auto& lexfile = positional[0];
 			const auto& errfile = positional[1];
 			auto speller = divvun::Speller(errfile, lexfile, verbose,
-						       max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff);
+						       max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff, max_sent_unknown_rate);
 			divvun::run_cgspell(std::cin, std::cout, speller);
 		}
 		else {

@@ -167,8 +167,8 @@ class CGCmd: public PipeCmd {
 #ifdef HAVE_CGSPELL
 class CGSpellCmd: public PipeCmd {
 	public:
-		CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, bool verbose);
-		CGSpellCmd (const string& err_path, const string& lex_path, bool verbose);
+		CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, float max_sent_unknown_rate, bool verbose);
+		CGSpellCmd (const string& err_path, const string& lex_path, float max_sent_unknown_rate, bool verbose);
 		void run(stringstream& input, stringstream& output) const override;
 		~CGSpellCmd() override = default;
 		// Some sane defaults for the speller

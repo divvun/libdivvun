@@ -194,7 +194,9 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const Pip
 			prog += " -g" + argprepare(dir, args["grammar"]);
 		}
 		else if(name == "cgspell") {
+			float max_sent_unknown_rate = cmd.attribute("max-unknown-rate").as_float(0.4);
 			prog = "divvun-cgspell -n 10 -b 15 -w 5000";
+			prog += " -u " + std::to_string(max_sent_unknown_rate);
 			prog += " -l" + argprepare(dir, args["lexicon"]);
 			prog += " -m" +  argprepare(dir, args["errmodel"]);
 		}

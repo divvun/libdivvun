@@ -87,8 +87,8 @@ void CGCmd::run(stringstream& input, stringstream& output) const
 }
 
 #ifdef HAVE_CGSPELL
-CGSpellCmd::CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, bool verbose)
-	: speller(new Speller(errmodel, acceptor, verbose, max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff))
+CGSpellCmd::CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, float max_sent_unknown_rate, bool verbose)
+	: speller(new Speller(errmodel, acceptor, verbose, max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff, max_sent_unknown_rate))
 {
 	if (!acceptor) {
 		throw std::runtime_error("libdivvun: ERROR: CGSpell command couldn't read acceptor");
@@ -97,8 +97,8 @@ CGSpellCmd::CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transduc
 		throw std::runtime_error("libdivvun: ERROR: CGSpell command couldn't read errmodel");
 	}
 }
-CGSpellCmd::CGSpellCmd (const string& err_path, const string& lex_path, bool verbose)
-	: speller(new Speller(err_path, lex_path, verbose, max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff))
+CGSpellCmd::CGSpellCmd (const string& err_path, const string& lex_path, float max_sent_unknown_rate, bool verbose)
+	: speller(new Speller(err_path, lex_path, verbose, max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff, max_sent_unknown_rate))
 {
 }
 void CGSpellCmd::run(stringstream& input, stringstream& output) const
@@ -210,6 +210,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 			};
 			auto* s = new CGSpellCmd(readArchiveExtract(ar_spec->ar_path, args["errmodel"], f),
 						 readArchiveExtract(ar_spec->ar_path, args["lexicon"], f),
+						 cmd.attribute("max-unknown-rate").as_float(0.4),
 						 verbose);
 			cmds.emplace_back(s);
 #else
@@ -289,6 +290,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 #ifdef HAVE_CGSPELL
 			cmds.emplace_back(new CGSpellCmd(args["errmodel"],
 							 args["lexicon"],
+							 cmd.attribute("max-unknown-rate").as_float(0.4),
 							 verbose));
 #else
 			throw std::runtime_error("libdivvun: ERROR: Tried to run pipeline with cgspell, but was compiled without cgspell support!");
