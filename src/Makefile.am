@@ -8,12 +8,14 @@ divvun_suggest_CXXFLAGS = $(HFST_CFLAGS) $(PUGIXML_CFLAGS)
 bin_PROGRAMS            = divvun-suggest
 dist_man_MANS           = divvun-suggest.1
 
+if HAVE_LIBPUGIXML
 # divvun-gen-sh binary
 divvun_gen_sh_SOURCES  = main_gen_sh.cpp pipespec.cpp
 divvun_gen_sh_LDADD    = $(PUGIXML_LIBS)   $(LIBARCHIVE_LIBS)
 divvun_gen_sh_CXXFLAGS = $(PUGIXML_CFLAGS) $(LIBARCHIVE_CFLAGS)
 bin_PROGRAMS          += divvun-gen-sh
 dist_man_MANS         += divvun-gen-sh.1
+endif
 
 bin_SCRIPTS         = divvun-gen-xmlschemas   divvun-validate-suggest   divvun-validate-pipespec
 dist_man_MANS      += divvun-gen-xmlschemas.1 divvun-validate-suggest.1 divvun-validate-pipespec.1

@@ -56,6 +56,7 @@ using UStringVector = vector<u16string>;
 using MsgMap = std::unordered_map<Lang, pair<ToggleIds, ToggleRes> >;	// msgs[Lang] = make_pair(ToggleIds, ToggleRes)
 using SortedMsgLangs = vector<Lang>; // sorted with preferred language first
 
+#ifdef HAVE_LIBPUGIXML
 inline string xml_raw_cdata(const pugi::xml_node& label) {
 	std::ostringstream os;
 	for(const auto& cc: label.children())
@@ -64,6 +65,7 @@ inline string xml_raw_cdata(const pugi::xml_node& label) {
 	}
 	return os.str();
 }
+#endif
 
 enum RunState {
 	flushing,
