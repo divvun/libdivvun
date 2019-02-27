@@ -10,11 +10,19 @@ export CPPFLAGS=-DDEBUG
 # for make check:
 export VERBOSE=1
 
+bake () {
+    if command -V bear &>/dev/null; then
+        bear make "$@"
+    else
+        make "$@"
+    fi
+}
+
 build () {
     ./autogen.sh
     ./configure --prefix="$HOME"/PREFIX/gtd-gc --with-trang="$HOME"/.jedit/jars/trang.jar --enable-checker
-    make -j3
-    make -j3 install
+    bake -j3
+    bake -j3 install
     for prog in "$HOME"/PREFIX/gtd-gc/bin/divvun*; do
         PATH="$HOME/PREFIX/gtd-gc/bin/:$PATH"                 \
             help2man -N                                       \
@@ -23,7 +31,7 @@ build () {
             "${prog##*/}"                                     \
             > src/"${prog##*/}".1
     done
-    make -j3 check
+    bake -j3 check
     git ls-files src | grep pp$ | grep -ve mapbox -e cxxopts | xargs -I{} clang-tidy --checks='-*,modernize-*,-modernize-make-unique,-modernize-pass-by-value,-modernize-raw-string-literal' {} -- -Isrc -std=c++11
 }
 
