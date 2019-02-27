@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<locatingRules xmlns="http://thaiopensource.com/ns/locating-rules/1.0">
+
+  <!--
+       Having this file in the same dir as your XML's
+       lets Emacs show validation errors.
+       More information at:
+       https://www.gnu.org/software/emacs/manual/html_node/nxml-mode/Schema-locating-files.html#Schema-locating-files
+  -->
+
+  <typeId id="errors" uri="../../src/errors.rnc"/>
+  <documentElement localName="errors" typeId="errors"/>
+  <uri pattern="errors.xml" typeId="errors"/>
+
+  <typeId id="pipespec" uri="../../src/pipespec.rnc"/>
+  <documentElement localName="pipespec" typeId="pipespec"/>
+  <uri pattern="pipespec.xml" typeId="pipespec"/>
+
+</locatingRules>

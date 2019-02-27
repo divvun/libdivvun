@@ -94,16 +94,16 @@ void printPrefs(const Pipeline& pipeline) {
 		const Prefs& prefs = lp.second;
 		std::cout << "==== Toggles: ====" << std::endl;
 		for(const auto& id : prefs.toggleIds) {
-			std::cout << "- [ ] " << toUtf8(id.first) << " \t" << toUtf8(id.second) << std::endl;
+			std::cout << "- [ ] " << toUtf8(id.first) << " \t" << toUtf8(id.second.first) << std::endl;
 		}
 		for(const auto& re : prefs.toggleRes) {
-			std::cout << "- [ ] [regex] \t" << toUtf8(re.second) << std::endl;
+			std::cout << "- [ ] [regex] \t" << toUtf8(re.second.first) << std::endl;
 		}
 		std::cout << "==== Options: ====" << std::endl;
 		for(const Option& o : prefs.options) {
 			std::cout << "- " << o.name << " (" << o.type << "):" << std::endl;
 			for(const auto& c : o.choices) {
-				std::cout << "- ( ) " << toUtf8(c.first) << " \t" << toUtf8(c.second) << std::endl;
+				std::cout << "- ( ) " << toUtf8(c.first) << " \t" << toUtf8(c.second.first) << std::endl;
 			}
 		}
 	}

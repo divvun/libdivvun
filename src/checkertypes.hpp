@@ -34,7 +34,7 @@ namespace divvun {
  */
 
 typedef std::string Lang;
-typedef std::u16string Msg;
+typedef std::pair<std::u16string, std::u16string> Msg;
 typedef std::u16string ErrId;
 typedef std::basic_regex<char> ErrRe;
 

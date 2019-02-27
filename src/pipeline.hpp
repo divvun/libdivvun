@@ -217,11 +217,23 @@ inline void parsePrefs(LocalisedPrefs& prefs, const pugi::xml_node& cmd) {
 		unordered_map<Lang, unordered_map<ErrId, Msg>> lems;
 		for (const pugi::xml_node& option: pref.children()) {
 			const auto errId = fromUtf8(option.attribute("err-id").value());
-			for (const pugi::xml_node& label: option.children()) {
+			for (const pugi::xml_node& label: option.children("label")) {
 				const auto lang = label.attribute("xml:lang").value();
 				const auto msg = fromUtf8(label.text().get()); // or xml_raw_cdata(label);
-				lems[lang][errId] = msg;
+				// Let <description> default to <label> first:
+				lems[lang][errId] = std::make_pair(msg, msg);
 			}
+			for (const pugi::xml_node& description: option.children("description")) {
+				const auto lang = description.attribute("xml:lang").value();
+				const auto msg = fromUtf8(description.text().get());
+				if(lems[lang].find(errId) != lems[lang].end()) {
+					lems[lang][errId].second = msg;
+                                }
+				else {
+					// No <label> for this language, fallback to <description>:
+					lems[lang][errId] = std::make_pair(msg, msg);
+				}
+                        }
 		}
 		for(const auto& lem : lems) {
 			const Lang& lang = lem.first;

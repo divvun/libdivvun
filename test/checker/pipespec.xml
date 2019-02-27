@@ -15,6 +15,7 @@
       <pref type="Punctuation" name="Tusenskilje">
         <option err-id="tusen-mellom">
           <label xml:lang="nn">Eg vil ha mellomrom mellom 000</label>
+          <description xml:lang="nn">Det er lov med anten mellomrom eller punktum som skiljeteikn for tal over tusen.</description>
         </option>
         <option err-id="tusen-punktum">
           <label xml:lang="nn">Eg vil ha punktum mellom 000</label>

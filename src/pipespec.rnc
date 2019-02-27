@@ -1,5 +1,5 @@
 # THIS IS A GENERATED FILE, DO NOT EDIT!
-# Copyright (C) 2017, Kevin Brubeck Unhammer <unhammer@fsfe.org>
+# Copyright (C) 2017–2019, Kevin Brubeck Unhammer <unhammer@fsfe.org>
 
 # This program is free software: you can redistribute it and/or modify
 
@@ -72,12 +72,15 @@ attlist.pref &=
   attribute type { text },
   attribute name { text }
 # type and name are *not* unique here; several pipelines may have a pref for e.g. "Oxford comma"
-option = element option { attlist.option, label+ }
+option = element option { attlist.option, (label | description)+ }
 attlist.option &= attribute err-id { text }
 
 Text = (text | em)*
 label = element label { attlist.label, Text }
 attlist.label &= attribute xml:lang { text }
+
+description = element description { attlist.description, Text }
+attlist.description &= attribute xml:lang { text }
 
 # General "system" command – pipelines with this can only be used
 # in settings where we can open processes:

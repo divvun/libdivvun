@@ -89,36 +89,66 @@ const MsgMap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& re
 	MsgMap msgs;
 
 	if (result) {
+		// <default>'s:
 		for (pugi::xml_node def: doc.child("errors").child("defaults").children("default")) {
-			// std::cerr << "defaults" << std::endl;
+			// For all <title>'s and <description>'s, add all their parent <id>/<re>'s:
 			for (pugi::xml_node child: def.child("header").children("title")) {
 				const auto& msg = fromUtf8(xml_raw_cdata(child));
 				const auto& lang = child.attribute("xml:lang").value();
 				for (pugi::xml_node e: def.child("ids").children("e")) {
 					// e_value assumes we only ever have one PCDATA element here:
 					const auto& errtype = fromUtf8(e.attribute("id").value());
-					// std::cerr << toUtf8(errtype) << std::endl;
 					if(msgs[lang].first.count(errtype) != 0) {
 						std::cerr << "divvun-suggest: WARNING: Duplicate titles for " << e.attribute("id").value() << std::endl;
 					}
-					msgs[lang].first[errtype] = msg;
+					// Default to <title> as <description>, may be overridden below:
+					msgs[lang].first[errtype] = make_pair(msg, msg);
 				}
 				for (pugi::xml_node re: def.child("ids").children("re")) {
 					std::basic_regex<char> r(re.attribute("v").value());
-					msgs[lang].second.push_back(std::make_pair(r, msg));
+					msgs[lang].second.push_back(std::make_pair(r, make_pair(msg, msg)));
 				}
 			}
-		}
-		for (pugi::xml_node error: doc.child("errors").children("error")) {
-			for (pugi::xml_node child: error.child("header").children("title")) {
-				// child_value assumes we only ever have one PCDATA element here:
-				const auto& errtype = fromUtf8(error.attribute("id").value());
+			for (pugi::xml_node child: def.child("body").children("description")) {
 				const auto& msg = fromUtf8(xml_raw_cdata(child));
 				const auto& lang = child.attribute("xml:lang").value();
-				if(msgs[lang].first.count(errtype) != 0) {
-					std::cerr << "divvun-suggest: WARNING: Duplicate titles for " << error.attribute("id").value() << std::endl;
+				for (pugi::xml_node e: def.child("ids").children("e")) {
+					const auto& errtype = fromUtf8(e.attribute("id").value());
+					auto &langmsgs = msgs[lang].first;
+					if (langmsgs.find(errtype) != langmsgs.end()) {
+						langmsgs[errtype].second = msg;
+					} else {
+						// No <title> for this language, fallback to <description>:
+						langmsgs[errtype] = std::make_pair(msg, msg);
+					}
+                                }
+			}
+		}
+		// <error>'s
+		for (pugi::xml_node error: doc.child("errors").children("error")) {
+			const auto& errtype = fromUtf8(error.attribute("id").value());
+			// For all <title>'s and <description>'s, add the <error id> attribute:
+			for (pugi::xml_node child: error.child("header").children("title")) {
+				// child_value assumes we only ever have one PCDATA element here:
+				const auto& msg = fromUtf8(xml_raw_cdata(child));
+				const auto& lang = child.attribute("xml:lang").value();
+				auto& langmsgs = msgs[lang].first;
+				if(langmsgs.count(errtype) != 0) {
+					std::cerr << "divvun-suggest: WARNING: Duplicate <title>'s for " << error.attribute("id").value() << std::endl;
 				}
-				msgs[lang].first[errtype] = msg;
+				langmsgs[errtype] = make_pair(msg, msg);
+			}
+			for (pugi::xml_node child: error.child("body").children("description")) {
+				const auto& msg = fromUtf8(xml_raw_cdata(child));
+				const auto& lang = child.attribute("xml:lang").value();
+				auto& langmsgs = msgs[lang].first;
+				if(langmsgs.find(errtype) != langmsgs.end()) {
+					langmsgs[errtype].second = msg;
+                                }
+				else {
+					// No <title> for this language, fallback to <description>:
+					langmsgs[errtype] = std::make_pair(msg, msg);
+				}
 			}
 		}
 	}
@@ -397,10 +427,10 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 	if(cohort_empty(c) || c.added || ignores.find(err_id) != ignores.end()) {
 		return Nothing();
 	}
-	u16string msg;
+	Msg msg;
 	for(const auto& mlang : sortedmsglangs) {
-		if(msg.empty() && mlang != locale) {
-			std::cerr << "divvun-suggest: WARNING: No message for " << json::str(err_id) << " in xml:lang '" << locale << "', trying '" << mlang << "'" << std::endl;
+		if(msg.second.empty() && mlang != locale) {
+			std::cerr << "divvun-suggest: WARNING: No <description> for " << json::str(err_id) << " in xml:lang '" << locale << "', trying '" << mlang << "'" << std::endl;
 		}
 		const auto& lmsgs = msgs.at(mlang);
 		if(lmsgs.first.count(err_id) != 0) {
@@ -421,23 +451,28 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 				}
 			}
 		}
-		if(!msg.empty()) {
+		if(!msg.second.empty()) {
 			break;
 		}
 	}
-	if(msg.empty()) {
-		std::cerr << "divvun-suggest: WARNING: No message for " << json::str(err_id) << " in any xml:lang" << std::endl;
-		msg = err_id;
+	if(msg.second.empty()) {
+		std::cerr << "divvun-suggest: WARNING: No <description> for " << json::str(err_id) << " in any xml:lang" << std::endl;
+		msg.second = err_id;
+	}
+	if(msg.first.empty()) {
+		msg.first = err_id;
 	}
 	// TODO: Make suitable structure on creating MsgMap instead?
-	replaceAll(msg, u"$1", c.form);
+	replaceAll(msg.first, u"$1", c.form);
+	replaceAll(msg.second, u"$1", c.form);
 	for(const auto& r: c.readings) {
 		if((!r.errtype.empty()) && err_id != r.errtype) {
 			continue;
 		}
 		rel_on_match(r.rels, MSG_TEMPLATE_REL, sentence,
 			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
-				     replaceAll(msg, fromUtf8(relname.c_str()), trg.form);
+				     replaceAll(msg.first, fromUtf8(relname.c_str()), trg.form);
+				     replaceAll(msg.second, fromUtf8(relname.c_str()), trg.form);
 			     });
 	}
 	auto beg = c.pos;
@@ -770,8 +805,9 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os)
 		   << "," << std::to_string(e.beg)
 		   << "," << std::to_string(e.end)
 		   << "," << json::str(e.err)
-		   << "," << json::str(e.msg)
+		   << "," << json::str(e.msg.second)
 		   << "," << json::str_arr(e.rep)
+		   << "," << json::str(e.msg.first)
 		   << "]";
 		wantsep = true;
 	}
