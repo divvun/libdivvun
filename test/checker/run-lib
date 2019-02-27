@@ -4,6 +4,9 @@ if ! command -V git >/dev/null 2>/dev/null; then
     # We use git to make pristine copy of ./examples; skip if we don't have git (e.g. package builders)
     echo "No git, skipping run-lib test"
     exit 77
+elif ! { git diff --quiet && git diff --cached --quiet; }; then
+    echo "You have uncommitted changes, not running run-lib test"
+    exit 77
 fi
 
 set -u
@@ -28,6 +31,7 @@ fi
 (
     cd ../..
     make --quiet install DESTDIR="${destdir}" &>>"${log}"
+    echo "done installing" &>>"${log}"
 )
 
 ls "${destdir}/${prefix}"/include/divvun/checker.hpp &>>"${log}"
@@ -57,8 +61,16 @@ fi
 make -j3     &>>"${log}"
 
 input="seammas ballat ođđa dieđuiguin"
-expected='{"errs":[["dieđuiguin",20,30,"msyn-valency-loc-com","msyn thingy",["diehtukorrekt"]]],"text":"seammas ballat ođđa dieđuiguin"}
-form=dieđuiguin beg=20 end=30 err=msyn-valency-loc-com msg=msyn thingy rep=diehtukorrekt'
-echo "${input}"                                                             \
-    | src/using-checker -a sme.zcheck -n smegram                            \
-    | diff <(printf "%s\n" "${expected}") -
+got=$(echo "${input}" | src/using-checker -a sme.zcheck -n smegram)
+expected='{"errs":[["dieđuiguin",20,30,"msyn-valency-loc-com","boasttut sátni",["diehtukorrekt"],"msyn thingy"]],"text":"seammas ballat ođđa dieđuiguin"}
+form=dieđuiguin beg=20 end=30 err=msyn-valency-loc-com msg=msyn thingy dsc=boasttut sátni rep=diehtukorrekt'
+{
+    echo "Input"
+    echo "${input}"
+    echo "Expected:"
+    echo "${expected}"
+    echo "Got:"
+    echo "${got}"
+} &>>"${log}"
+
+diff -b <(echo "${expected}") <(echo "${got}") &>>"${log}"

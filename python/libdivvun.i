@@ -81,12 +81,13 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 			size_t beg;
 			size_t end;
 			std::string err;
-			std::string msg;
+			std::string dsc;
 			StringVector rep;
+                        std::string msg;
 	};
 
-	typedef std::map<std::string, std::string> ToggleIdsBytes;      // toggleIds[errtype] = msg;
-	typedef std::vector<std::pair<std::string, std::string> > ToggleResBytes; // toggleRes = [(errtype_regex, msg), …];
+	typedef std::map<std::string, std::pair<std::string, std::string>> ToggleIdsBytes;      // toggleIds[errtype] = msg;
+	typedef std::vector<std::pair<std::string, std::pair<std::string, std::string>> > ToggleResBytes; // toggleRes = [(errtype_regex, msg), …];
 
 	struct OptionBytes {
 			std::string type;
@@ -134,17 +135,19 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 				utf8::utf16to8(r.begin(), r.end(), std::back_inserter(r8));
 				rep.push_back(r8);
 			}
-			std::string form8, err8, msg8;
+			std::string form8, err8, msg8, dsc8;
 			utf8::utf16to8(e.form.begin(), e.form.end(), std::back_inserter(form8));
 			utf8::utf16to8(e.err.begin(), e.err.end(), std::back_inserter(err8));
-			utf8::utf16to8(e.msg.begin(), e.msg.end(), std::back_inserter(msg8));
+			utf8::utf16to8(e.msg.first.begin(), e.msg.first.end(), std::back_inserter(msg8));
+			utf8::utf16to8(e.msg.second.begin(), e.msg.second.end(), std::back_inserter(dsc8));
 			errs_bytes.push_back({
 				form8,
 				e.beg,
 				e.end,
 				err8,
-				msg8,
-				rep
+				dsc8,
+				rep,
+                                msg8
 			});
 		}
 		return errs_bytes;
@@ -157,13 +160,13 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 			const divvun::Prefs& p = lp.second;
 			PrefsBytes pb;
 			for(const std::pair<divvun::ErrId, divvun::Msg>& em : p.toggleIds) {
-				pb.toggleIds[toUtf8(em.first)] = toUtf8(em.second);
+				pb.toggleIds[toUtf8(em.first)] = std::make_pair(toUtf8(em.second.first), toUtf8(em.second.second));
 			}
 			// toggleRes TODO: can we get the regex as string out?
 			for(const divvun::Option& o : p.options) {
 				ToggleIdsBytes choices;
 				for(const std::pair<divvun::ErrId, divvun::Msg>& c : o.choices) {
-					choices[toUtf8(c.first)] = toUtf8(c.second);
+					choices[toUtf8(c.first)] = std::make_pair(toUtf8(c.second.first), toUtf8(c.second.second));
 				}
 				OptionBytes ob = OptionBytes {
 					o.type, o.name, choices

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2017, Kevin Brubeck Unhammer <unhammer@fsfe.org>
+* Copyright (C) 2017–2019, Kevin Brubeck Unhammer <unhammer@fsfe.org>
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -14,6 +14,8 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+// IMPORTANT: Check any changes to this file into git before running make check!
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -70,7 +72,8 @@ int runAr(const std::string& path, const std::u16string& pipename, bool verbose)
 				  << " beg=" << e.beg
 				  << " end=" << e.end
 				  << " err=" << utf16conv.to_bytes(e.err)
-				  << " msg=" << utf16conv.to_bytes(e.msg);
+				  << " msg=" << utf16conv.to_bytes(e.msg.first)
+				  << " dsc=" << utf16conv.to_bytes(e.msg.second);
 			for(const auto& r : e.rep) {
 				std::cout << " rep=" << utf16conv.to_bytes(r);
 			}
