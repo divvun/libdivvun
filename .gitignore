@@ -138,3 +138,5 @@ old/
 /m4/lt~obsolete.m4
 test/suggest/bil.hfstol
 compile_commands.json
+/pugixml-1.7
+/pugixml-1.7.tar.gz
