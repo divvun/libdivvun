@@ -1,4 +1,4 @@
-AC_INIT([Divvun gramcheck], [0.3.0], [unhammer+apertium@mm.st], [divvun-gramcheck], [https://github.com/divvun/divvun-gramcheck])
+AC_INIT([Divvun gramcheck], [0.3.1], [unhammer+apertium@mm.st], [divvun-gramcheck], [https://github.com/divvun/divvun-gramcheck])
 AC_CONFIG_SRCDIR([src])
 AM_INIT_AUTOMAKE
 
