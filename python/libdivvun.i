@@ -110,8 +110,8 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 %}
 
 %template(ErrBytesVector) std::vector<ErrBytes>;
-%template(ToggleIdsBytes) std::map<std::string, std::string>;
-%template(ToggleResBytes) std::vector<std::pair<std::string, std::string> >;
+%template(ToggleIdsBytes) std::map<std::string, std::pair<std::string, std::string> >;
+%template(ToggleResBytes) std::vector<std::pair<std::string, std::pair<std::string, std::string> > >;
 %template(OptionSetBytes) std::set<OptionBytes, OptionBytesCompare>;
 %template(LocalisedPrefsBytes) std::map<divvun::Lang, PrefsBytes>;
 
