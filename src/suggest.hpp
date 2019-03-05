@@ -77,6 +77,73 @@ using relations = std::unordered_map<string, rel_id>;
 
 enum Added { NotAdded, AddedAfterBlank, AddedBeforeBlank };
 
+enum Casing { lower, Title, UPPER, mIxed } ;
+inline Casing getCasing(u16string input) {
+	if(input.length() < 1) {
+		return mIxed;
+	}
+	bool seenupper = false;
+	bool seenlower = false;
+	bool fstupper = false;
+	bool nonfstupper = false;
+	for(const auto& c : input) {
+		if(isupper(c)) {
+			if(seenlower || seenupper) {
+				nonfstupper = true;
+			}
+			else {
+				fstupper = true;
+			}
+			seenupper = true;
+		}
+		if(islower(c)) {
+			seenlower = true;
+		}
+	}
+	if(!seenupper) {
+		return lower;
+	}
+	if(!seenlower) {
+		return UPPER;
+	}
+	if(fstupper && !nonfstupper) {
+		return Title;
+	}
+	else {
+		return mIxed;
+	}
+}
+
+// #ifndef icu TODO
+//
+// Does lots of probably unnecessary encoding-mangling too, but at
+// least it works, if the user locale is OK.
+inline std::u16string toupper(const string& input) {
+	std::wstring w = wideFromUtf8(input);
+	std::setlocale(LC_ALL, "");
+	std::transform(w.begin(), w.end(), w.begin(), std::towupper);
+	return fromUtf8(wideToUtf8(w));
+}
+
+inline std::u16string totitle(const string& input) {
+	std::wstring w = wideFromUtf8(input);
+	std::setlocale(LC_ALL, "");
+	std::transform(w.begin(), w.begin()+1, w.begin(), std::towupper);
+	return fromUtf8(wideToUtf8(w));
+}
+// #endif
+
+inline std::u16string withCasing(bool fixedcase, const Casing& inputCasing, const string& input) {
+		if (!fixedcase && inputCasing == Title) {
+			return totitle(input);
+		} else if (!fixedcase && inputCasing == UPPER) {
+			return toupper(input);
+		}
+		else {
+			return fromUtf8(input);
+		}
+}
+
 struct Reading {
 	bool suggest = false;
 	string ana;	   // for generating suggestions from this reading
@@ -88,6 +155,7 @@ struct Reading {
 	bool suggestwf = false;
 	bool link = false; // cohorts that are not the "core" of the underline never become Err's; message template offsets refer to the cohort of the Err
 	Added added = NotAdded;
+	bool fixedcase = false;	// don't change casing on suggestions if we have this tag
 };
 
 struct Cohort {

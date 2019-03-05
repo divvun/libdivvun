@@ -34,6 +34,7 @@
 #include <algorithm>
 
 #include <locale>
+#include <codecvt>
 #include "utf8.h"
 
 namespace divvun {
@@ -58,6 +59,18 @@ inline const std::u16string fromUtf8(const std::string& from) {
 	std::u16string to;
         utf8::utf8to16(from.begin(), from.end(), std::back_inserter(to));
 	return to;
+}
+
+inline const std::wstring wideFromUtf8 (const std::string& str)
+{
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+    return myconv.from_bytes(str);
+}
+
+inline const std::string wideToUtf8 (const std::wstring& str)
+{
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+    return myconv.to_bytes(str);
 }
 
 template<typename Container>

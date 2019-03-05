@@ -32,6 +32,7 @@ const std::basic_regex<char> CG_TAG_TYPE (
 	"|R:(.+):([0-9]+)"	// Group 3 & 4: Relation name and target
 	"|ID:([0-9]+)"		// Group 5: Relation ID
 	"|\"<(.+)>\""           // Group 6: Reading word-form
+	"|(<fixedcase>)"        // Group 7: Fixed Casing
 	"|@"			// Syntactic tag
 	"|Sem/"			// Semantic tag
 	"|§"			// Semantic role
@@ -182,7 +183,7 @@ const MsgMap Suggest::readMessages(const string& file) {
 }
 
 
-const Reading proc_subreading(const string& line, bool generate_all_readings) {
+const Reading proc_subreading(const Casing& inputCasing, const string& line, bool generate_all_readings) {
 	Reading r;
 	const auto& lemma_beg = line.find("\"");
 	const auto& lemma_end = line.find("\" ", lemma_beg);
@@ -195,6 +196,7 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 	r.suggestwf = false;
 	r.added = NotAdded;
 	r.link = false;
+	r.fixedcase = false;
 	for(auto& tag : allmatches(tags, CG_TAGS_RE)) { // proc_tags
 		std::match_results<const char*> result;
 		std::regex_match(tag.c_str(), result, CG_TAG_TYPE);
@@ -242,22 +244,24 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 		else if(result[6].length() != 0) {
 			r.wf = result[6];
 		}
-
+		else if(result[7].length() != 0) {
+			r.fixedcase = true;
+		}
 	}
 	const auto& tagsplus = join(gentags, "+");
 	r.ana = lemma+"+"+tagsplus;
 	if(r.suggestwf) {
-		r.sforms.emplace_back(fromUtf8(r.wf));
+		r.sforms.emplace_back(withCasing(r.fixedcase, inputCasing, r.wf));
 	}
 	return r;
 };
 
-const Reading proc_reading(const hfst::HfstTransducer& t, const string& line, bool generate_all_readings) {
+const Reading proc_reading(const hfst::HfstTransducer& t, const Casing& inputCasing, const string& line, bool generate_all_readings) {
 	stringstream ss(line);
 	string subline;
 	std::deque<Reading> subs;
 	while(std::getline(ss, subline, '\n')){
-		subs.push_front(proc_subreading(subline, generate_all_readings));
+		subs.push_front(proc_subreading(inputCasing, subline, generate_all_readings));
 	}
 	Reading r;
 	const size_t n_subs = subs.size();
@@ -274,6 +278,7 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const string& line, bo
 		r.added = r.added == NotAdded ? sub.added : r.added;
 		r.sforms.insert(r.sforms.end(), sub.sforms.begin(), sub.sforms.end());
 		r.wf = r.wf.empty() ? sub.wf : r.wf;
+		r.fixedcase |= sub.fixedcase;
 	}
 	if(r.suggest) {
 		const auto& paths = t.lookup_fd({ r.ana }, -1, 10.0);
@@ -284,7 +289,7 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const string& line, bo
 					form << symbol;
 				}
 			}
-			r.sforms.emplace_back(fromUtf8(form.str()));
+			r.sforms.emplace_back(withCasing(r.fixedcase, inputCasing, form.str()));
 		}
 	}
 	return r;
@@ -597,13 +602,14 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 
 	string line;
 	string readinglines;
+	Casing inputCasing;
 	std::getline(is, line);	// TODO: Why do I need at least one getline before os<< after flushing?
 	do {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 
 		if(!readinglines.empty() && (result.empty() || result[3].length() <= 1)) {
-			const auto& reading = proc_reading(t, readinglines, generate_all_readings);
+			const auto& reading = proc_reading(t, inputCasing, readinglines, generate_all_readings);
 			readinglines = "";
 			if(!reading.errtype.empty()) {
 				c.errtypes.insert(reading.errtype);
@@ -633,6 +639,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 
 		if (!result.empty() && result[2].length() != 0) { // wordform
 			c.form = fromUtf8(result[2]);
+			inputCasing = getCasing(c.form);
 		}
 		else if(!result.empty() && result[3].length() != 0) { // reading
 			readinglines += line + "\n";
@@ -652,7 +659,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 	} while(std::getline(is, line));
 
 	if(!readinglines.empty()) {
-		const auto& reading = proc_reading(t, readinglines, generate_all_readings);
+		const auto& reading = proc_reading(t, inputCasing, readinglines, generate_all_readings);
 		readinglines = "";
 		if(!reading.errtype.empty()) {
 			c.errtypes.insert(reading.errtype);
@@ -823,9 +830,9 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os)
 }
 
 
-void print_cg_reading(const string& readinglines, std::ostream& os, const hfst::HfstTransducer& t, bool generate_all_readings) {
+void print_cg_reading(const Casing& inputCasing, const string& readinglines, std::ostream& os, const hfst::HfstTransducer& t, bool generate_all_readings) {
 	os << readinglines;
-	const auto& reading = proc_reading(t, readinglines, generate_all_readings);
+	const auto& reading = proc_reading(t, inputCasing, readinglines, generate_all_readings);
 	if(reading.suggest) {
 		// std::cerr << "\033[1;35mreading.suggest=\t" << reading.suggest << "\033[0m" << std::endl;
 
@@ -849,19 +856,24 @@ void print_cg_reading(const string& readinglines, std::ostream& os, const hfst::
 
 void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, bool generate_all_readings)
 {
-	// Simple debug function; only subreading state kept between lines
+	// Simple debug function; only casing+subreading state kept between lines
 	string readinglines;
+	Casing inputCasing;
 	for (string line;std::getline(is, line);) {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 
 		if(!readinglines.empty() && (result.empty() || result[3].length() <= 1)) {
-			print_cg_reading(readinglines, os, t, generate_all_readings);
+			print_cg_reading(inputCasing, readinglines, os, t, generate_all_readings);
 			readinglines = "";
 		}
 
 		if(!result.empty() && result[3].length() != 0) {
 			readinglines += line + "\n";
+		}
+		else if(!result.empty() && result[2].length() != 0) {
+			inputCasing = getCasing(fromUtf8(result[2]));
+			os << line << std::endl;
 		}
 		else if(!result.empty() && result[7].length() != 0) {
 			// TODO: Can we ever get a flush in the middle of readings?
@@ -873,7 +885,7 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, b
 		}
 	}
 	if(!readinglines.empty()) {
-		print_cg_reading(readinglines, os, t, generate_all_readings);
+		print_cg_reading(inputCasing, readinglines, os, t, generate_all_readings);
 	}
 }
 
