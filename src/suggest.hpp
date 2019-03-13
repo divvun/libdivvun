@@ -78,16 +78,17 @@ using relations = std::unordered_map<string, rel_id>;
 enum Added { NotAdded, AddedAfterBlank, AddedBeforeBlank };
 
 enum Casing { lower, Title, UPPER, mIxed } ;
-inline Casing getCasing(u16string input) {
+inline Casing getCasing(string input) {
 	if(input.length() < 1) {
 		return mIxed;
 	}
+	std::locale loc("");
 	bool seenupper = false;
 	bool seenlower = false;
 	bool fstupper = false;
 	bool nonfstupper = false;
-	for(const auto& c : input) {
-		if(isupper(c)) {
+	for(const auto& c : wideFromUtf8(input)) {
+		if(isupper(c, loc)) {
 			if(seenlower || seenupper) {
 				nonfstupper = true;
 			}
@@ -96,7 +97,7 @@ inline Casing getCasing(u16string input) {
 			}
 			seenupper = true;
 		}
-		if(islower(c)) {
+		if(islower(c, loc)) {
 			seenlower = true;
 		}
 	}

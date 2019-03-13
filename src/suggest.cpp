@@ -639,7 +639,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 
 		if (!result.empty() && result[2].length() != 0) { // wordform
 			c.form = fromUtf8(result[2]);
-			inputCasing = getCasing(c.form);
+			inputCasing = getCasing(toUtf8(c.form));
 		}
 		else if(!result.empty() && result[3].length() != 0) { // reading
 			readinglines += line + "\n";
@@ -872,7 +872,7 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, b
 			readinglines += line + "\n";
 		}
 		else if(!result.empty() && result[2].length() != 0) {
-			inputCasing = getCasing(fromUtf8(result[2]));
+			inputCasing = getCasing(result[2]);
 			os << line << std::endl;
 		}
 		else if(!result.empty() && result[7].length() != 0) {
