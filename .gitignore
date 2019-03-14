@@ -141,3 +141,6 @@ compile_commands.json
 /pugixml-1.7
 /pugixml-1.7.tar.gz
 /.ccls-cache/
+/test/suggest/output.generate-all.cg
+/test/suggest/run-genall.log
+/test/suggest/run-genall.trs
