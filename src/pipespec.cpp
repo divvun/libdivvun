@@ -177,7 +177,11 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const Pip
 		}
 		validatePipespecCmd(cmd, args);
 		if(name == "tokenise" || name == "tokenize") {
+			int weight_classes = cmd.attribute("weight-classes").as_int(std::numeric_limits<int>::max());
 			prog = "hfst-tokenise -g";
+			if (weight_classes < std::numeric_limits<int>::max()) {
+				prog += " -l " + std::to_string(weight_classes);
+			}
 			if(json) {
 				prog += " -S";
 			}

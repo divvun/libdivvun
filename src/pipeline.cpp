@@ -28,24 +28,24 @@ void dbg(const string& label, stringstream& output) {
 }
 
 hfst_ol::PmatchContainer*
-TokenizeCmd::mkContainer(std::istream& instream, bool verbose) {
+TokenizeCmd::mkContainer(std::istream& instream, int weight_classes, bool verbose) {
 	settings.output_format = hfst_ol_tokenize::giellacg;
 	settings.tokenize_multichar = false; // TODO: https://github.com/hfst/hfst/issues/367#issuecomment-334922284
 	settings.print_weights = true;
 	settings.print_all = true;
 	settings.dedupe = true;
-	settings.max_weight_classes = 2;
+	settings.max_weight_classes = weight_classes;
 	auto* c = new hfst_ol::PmatchContainer(instream);
 	c->set_verbose(verbose);
 	return c;
 }
-TokenizeCmd::TokenizeCmd (std::istream& instream, bool verbose)
-	: container(mkContainer(instream, verbose))
+TokenizeCmd::TokenizeCmd (std::istream& instream, int weight_classes, bool verbose)
+	: container(mkContainer(instream, weight_classes, verbose))
 {
 }
-TokenizeCmd::TokenizeCmd (const string& path, bool verbose)
+TokenizeCmd::TokenizeCmd (const string& path, int weight_classes, bool verbose)
 	: istream(unique_ptr<std::istream>(new std::ifstream(path.c_str())))
-	, container(mkContainer(*istream, verbose))
+	, container(mkContainer(*istream, weight_classes, verbose))
 {
 }
 void TokenizeCmd::run(stringstream& input, stringstream& output) const
@@ -188,10 +188,11 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 		}
 		validatePipespecCmd(cmd, args);
 		if(name == u"tokenise" || name == u"tokenize") {
-			ArEntryHandler<TokenizeCmd*> f = [verbose] (const string& ar_path, const void* buff, const size_t size) {
+			int weight_classes = cmd.attribute("weight-classes").as_int(std::numeric_limits<int>::max());
+			ArEntryHandler<TokenizeCmd*> f = [verbose, weight_classes] (const string& ar_path, const void* buff, const size_t size) {
 				OneShotReadBuf osrb((char*)buff, size);
 				std::istream is(&osrb);
-				return new TokenizeCmd(is, verbose);
+				return new TokenizeCmd(is, weight_classes, verbose);
 			};
 			TokenizeCmd* s = readArchiveExtract(ar_spec->ar_path, args["tokenizer"], f);
 			cmds.emplace_back(s);
@@ -281,7 +282,8 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 		}
 		validatePipespecCmd(cmd, args);
 		if(name == u"tokenise" || name == u"tokenize") {
-			cmds.emplace_back(new TokenizeCmd(args["tokenizer"], verbose));
+			int weight_classes = cmd.attribute("weight-classes").as_int(std::numeric_limits<int>::max());
+			cmds.emplace_back(new TokenizeCmd(args["tokenizer"], weight_classes, verbose));
 		}
 		else if(name == u"cg") {
 			cmds.emplace_back(new CGCmd(args["grammar"], verbose));

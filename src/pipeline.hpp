@@ -105,12 +105,12 @@ class PipeCmd {
 
 class TokenizeCmd: public PipeCmd {
 	public:
-		TokenizeCmd (std::istream& instream, bool verbose);
-		TokenizeCmd (const string& path, bool verbose);
+		TokenizeCmd (std::istream& instream, int weight_classes, bool verbose);
+		TokenizeCmd (const string& path, int weight_classes, bool verbose);
 		void run(stringstream& input, stringstream& output) const override;
 		~TokenizeCmd() override = default;
 	private:
-		hfst_ol::PmatchContainer* mkContainer(std::istream& instream, bool verbose);
+		hfst_ol::PmatchContainer* mkContainer(std::istream& instream, int weight_classes, bool verbose);
 		hfst_ol_tokenize::TokenizeSettings settings;
 		unique_ptr<std::istream> istream; // Only used if we're not given a stream in the first place
 		unique_ptr<hfst_ol::PmatchContainer> container;
