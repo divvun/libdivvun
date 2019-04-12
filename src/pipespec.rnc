@@ -104,13 +104,15 @@ attlist.cgspell &=
 
   [ a:defaultValue = "0.4" ] attribute max-unknown-rate { text }?
 tokenize = element tokenize { attlist.tokenize, tokenizer }
-attlist.tokenize &= empty
-
 # arg: tokeniser.pmhfst
 tokenise = element tokenise { attlist.tokenise, tokenizer }
-attlist.tokenise &= empty
-
 # en_GB alias of the above
+attlist.tokenize &= attribute weight-classes { text }?
+
+# no limit if not specified
+attlist.tokenise &= attribute weight-classes { text }?
+
+# no limit if not specified
 mwesplit = element mwesplit { attlist.mwesplit, empty }
 attlist.mwesplit &= empty
 

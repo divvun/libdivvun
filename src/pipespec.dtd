@@ -89,6 +89,10 @@
           max-unknown-rate CDATA "0.4">
 <!ELEMENT tokenize (tokenizer)>     <!-- arg: tokeniser.pmhfst -->
 <!ELEMENT tokenise (tokenizer)>     <!-- en_GB alias of the above -->
+<!ATTLIST tokenize
+          weight-classes CDATA #IMPLIED> <!-- no limit if not specified -->
+<!ATTLIST tokenise
+          weight-classes CDATA #IMPLIED> <!-- no limit if not specified -->
 <!ELEMENT mwesplit EMPTY>     <!-- takes no arguments -->
 <!ELEMENT blanktag (blanktagger)> <!-- arg: blanktagger.hfst -->
 <!ELEMENT suggest ((generator, messages)|(messages, generator))> <!-- arg1: generator.hfstol, arg2: error_messages.xml -->
