@@ -82,7 +82,7 @@ inline Casing getCasing(string input) {
 	if(input.length() < 1) {
 		return mIxed;
 	}
-	std::locale loc("");
+	std::locale loc;
 	bool seenupper = false;
 	bool seenlower = false;
 	bool fstupper = false;

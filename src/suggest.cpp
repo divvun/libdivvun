@@ -891,6 +891,13 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, b
 
 void Suggest::run(std::istream& is, std::ostream& os, bool json)
 {
+	try {
+		auto _old = std::locale::global(std::locale(""));
+	}
+	catch (const std::runtime_error& e)
+	{
+		std::cerr << "WARNING: Couldn't set global locale \"\" (locale-specific native environment): " << e.what() << std::endl;
+	}
 	if(json) {
 		while(run_json(is, os) == flushing);
 	}
