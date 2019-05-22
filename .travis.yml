@@ -48,6 +48,9 @@ matrix:
       env: CONFIGURE="--enable-checker --disable-cgspell --enable-python-bindings"
     - os: linux
       compiler: clang
+      env: CONFIGURE="--enable-checker --disable-python-bindings" # gtweb-01 runs Centos7 which doesn't have python3 in normal repos
+    - os: linux
+      compiler: clang
       env: CONFIGURE="--disable-checker --enable-cgspell"
     - os: linux
       compiler: clang
