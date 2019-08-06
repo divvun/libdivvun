@@ -170,4 +170,26 @@
     </body>
   </error>
 
+  <error id="typo">
+    <header>
+      <title xml:lang="en">Spelling errors</title>
+      <title xml:lang="se">Čállinmeattáhusat</title>
+    </header>
+    <body>
+      <description xml:lang="en">Not in the dictionary</description>
+      <description xml:lang="se">Ii leat sátnelisttus</description>
+    </body>
+  </error>
+
+  <error id="space-before-punct-mark">
+    <header>
+      <title xml:lang="en">Space errors</title>
+      <title xml:lang="se">Sátnegaskameattáhusat</title>
+    </header>
+    <body>
+      <description xml:lang="en">There is a space in front of the punctuation mark "$1"</description>
+      <description xml:lang="se">Lea gaska "$1" ovddas</description>
+    </body>
+  </error>
+
 </errors>
