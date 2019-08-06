@@ -1,0 +1,8 @@
+"<ovddasvástadus>"
+	"ovddasvástádus" Err/Orth-a-á N <BE-Ill-Any> Sem/Perc-emo Sg Nom <W:0.0> @<SUBJ &LINK &space-before-punct-mark &typo #6->6 ID:6
+	"ovddasvástádus" N <BE-Ill-Any> Sem/Perc-emo Sg Nom <W:0.0> @<SUBJ &typo &SUGGEST #6->6 ID:6
+: 
+"<.>"
+	"." CLB <W:0.0> <SpaceBeforePunctMark> &space-before-punct-mark #7->7 ID:7 R:LEFT:6
+	"." CLB <W:0.0> <SpaceBeforePunctMark> "<ovddasvástadus.>" &space-before-punct-mark &SUGGESTWF #7->7 ID:7 R:LEFT:6
+:\n

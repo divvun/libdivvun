@@ -147,8 +147,8 @@ inline std::u16string withCasing(bool fixedcase, const Casing& inputCasing, cons
 
 struct Reading {
 	bool suggest = false;
-	string ana;	   // for generating suggestions from this reading
-	u16string errtype; // the error tag (without leading ampersand)
+	string ana;    // for generating suggestions from this reading
+	std::set<u16string> errtypes; // the error tag(s) (without leading ampersand)
 	UStringVector sforms;
 	relations rels;	// rels[relname] = target.id
 	rel_id id = 0; // id is 0 if unset, otherwise the relation id of this word

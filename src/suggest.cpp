@@ -220,7 +220,7 @@ const Reading proc_subreading(const Casing& inputCasing, const string& line, boo
 				r.link = true;
 			}
 			else {
-				r.errtype = fromUtf8(result[2]);
+				r.errtypes.insert(fromUtf8(result[2]));
 			}
 		}
 		else if(result[3].length() != 0 && result[4].length() != 0) {
@@ -268,7 +268,7 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const Casing& inputCas
 	for(size_t i = 0; i < n_subs; ++i) {
 		const auto& sub = subs[i];
 		r.ana += sub.ana + (i+1 == n_subs ? "" : "#");
-		r.errtype += sub.errtype;
+		r.errtypes.insert(sub.errtypes.begin(), sub.errtypes.end());
 		r.rels.insert(sub.rels.begin(), sub.rels.end());
 		// higher sub can override id if set; doesn't seem like cg3 puts ids on them though
 		r.id = (r.id == 0 ? sub.id : r.id);
@@ -342,11 +342,13 @@ void rel_on_match(const relations& rels,
 	}
 }
 
-vector<Reading> readings_same_errtype(const Cohort& trg, const ErrId& err_id) {
+vector<Reading> readings_with_errtype(const Cohort& trg, const ErrId& err_id) {
 	vector<Reading> filtered(trg.readings.size());
 	auto it = std::copy_if(trg.readings.begin(), trg.readings.end(),
 			       filtered.begin(),
-			       [&](const Reading& tr) { return tr.errtype == err_id; });
+			       [&](const Reading& tr) {
+				       return tr.errtypes.find(err_id) != tr.errtypes.end();
+			       });
 	filtered.resize(std::distance(filtered.begin(), it));
 	return filtered;
 }
@@ -393,7 +395,7 @@ proc_LEFT_RIGHT(const ErrId& err_id,
 	for(size_t i = left; i < right; ++i) {
 		const auto& trg = sentence.cohorts[i];
 
-		const auto treadings = readings_same_errtype(trg, err_id);
+		const auto treadings = readings_with_errtype(trg, err_id);
 		for(const auto& tr: treadings) {
 			size_t addstart = trg.pos;
 			if(tr.added == AddedBeforeBlank) {
@@ -471,8 +473,8 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 	replaceAll(msg.first, u"$1", c.form);
 	replaceAll(msg.second, u"$1", c.form);
 	for(const auto& r: c.readings) {
-		if((!r.errtype.empty()) && err_id != r.errtype) {
-			continue;
+		if((!r.errtypes.empty()) && r.errtypes.find(err_id) == r.errtypes.end()) {
+			continue; // there is some other error on this reading
 		}
 		rel_on_match(r.rels, MSG_TEMPLATE_REL, sentence,
 			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
@@ -484,22 +486,26 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 	auto end = c.pos + c.form.size();
 	UStringVector rep;
 	for(const auto& r: c.readings) {
-		if((!r.errtype.empty()) && err_id != r.errtype) {
-			continue;
+		if((!r.errtypes.empty()) && r.errtypes.find(err_id) == r.errtypes.end()) {
+			continue; // there is some other error on this reading
 		}
 		rep.insert(rep.end(),
 			   r.sforms.begin(),
 			   r.sforms.end());
 		// If there are LEFT/RIGHT added relations, add suggestions with those concatenated to our form
 		// TODO: What about our current suggestions of the same error tag? Currently just using wordform
+		// std::cerr << "\033[1;35m1=\t" << 1 << "\033[0m" << std::endl;
 		rel_on_match(r.rels, LEFT_RIGHT_REL, sentence,
 			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
+				     // std::cerr << "\033[1;35mmatch left/Right=\t"  << c.id << ":"<< trg.id << " i_t=" << i_t << "\033[0m ";
+				     // std::cerr << "\033[1;34mbeg:end=\t" << beg <<":" <<end << "\033[0m" << std::endl;
 				     proc_LEFT_RIGHT(err_id, c.id, sentence, text, beg, end, relname, i_t, trg).match(
 					     []  (Nothing) {},
 					     [&] (pair<pair<size_t, size_t>, u16string> p)   {
 						     beg = p.first.first;
 						     end = p.first.second;
 						     rep.push_back(p.second);
+						     // std::cerr << "\033[1;32mmatched left/Right=\t" << beg << ":"<< end << " " << p.second << "\033[0m" << std::endl;
 					     });
 			     });
 		std::map<size_t, size_t> deleted;
@@ -509,7 +515,9 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 					     // Only treat delete relations into targets that have a reading with the same error type
 					     // (Unfortunately, CG3 can't do relations from reading to reading, but requiring the same error type lets us work around that)
 					     auto found = std::find_if(trg.readings.begin(), trg.readings.end(),
-								       [&](const Reading& r) -> bool { return r.errtype == err_id; });
+								       [&](const Reading& tr) -> bool {
+									       return tr.errtypes.find(err_id) != tr.errtypes.end();
+								       });
 					     if(found == trg.readings.end()) {
 						     return;
 					     }
@@ -611,13 +619,12 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 		if(!readinglines.empty() && (result.empty() || result[3].length() <= 1)) {
 			const auto& reading = proc_reading(t, inputCasing, readinglines, generate_all_readings);
 			readinglines = "";
-			if(!reading.errtype.empty()) {
-				c.errtypes.insert(reading.errtype);
-			}
-			if(reading.id != 0) {
+			c.errtypes.insert(reading.errtypes.begin(),
+					  reading.errtypes.end());
+                        if (reading.id != 0) {
 				c.id = reading.id;
 			}
-			c.added = reading.added == NotAdded ? c.added : reading.added;
+                        c.added = reading.added == NotAdded ? c.added : reading.added;
 			c.readings.push_back(reading);
 		}
 
@@ -661,9 +668,8 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 	if(!readinglines.empty()) {
 		const auto& reading = proc_reading(t, inputCasing, readinglines, generate_all_readings);
 		readinglines = "";
-		if(!reading.errtype.empty()) {
-			c.errtypes.insert(reading.errtype);
-		}
+		c.errtypes.insert(reading.errtypes.begin(),
+				  reading.errtypes.end());
 		if(reading.id != 0) {
 			c.id = reading.id;
 		}
@@ -772,7 +778,9 @@ vector<Err> Suggest::mk_errs(const Sentence &sentence) {
 			if(r.link) {
 				continue;
 			}
-			c_errs[r.errtype].push_back(i);
+			for(const auto& e : r.errtypes) {
+				c_errs[e].push_back(i);
+			}
 		}
 		for(const auto& e : c_errs) {
 			if(e.first.empty()) {
@@ -846,9 +854,8 @@ void print_cg_reading(const Casing& inputCasing, const string& readinglines, std
 		}
 	}
 	else {
-		const auto& errtype = reading.errtype;
-		if(!errtype.empty()) {
-			os << toUtf8(errtype) << std::endl;
+		for(const auto& e : reading.errtypes) {
+			os << toUtf8(e) << std::endl;
 		}
 	}
 
