@@ -38,6 +38,8 @@ const std::basic_regex<char> CG_TAG_TYPE (
 	"|§"			// Semantic role
 	"|<"			// Weights (<W:0>) and such
 	"|ADD:"			// --trace
+	"|PROTECT:"
+	"|UNPROTECT:"
 	"|MAP:"
 	"|REPLACE:"
 	"|SELECT:"
