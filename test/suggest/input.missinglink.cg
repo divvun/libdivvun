@@ -1,0 +1,24 @@
+"<Romanias>"
+	"Romania" N Prop Sem/Sur Sg Loc <W:0.0> <cohort-with-dynamic-compound> @N<
+"<,>"
+	"," CLB <W:0.0> <NoSpaceAfterPunctMark> &no-space-after-punct-mark ID:3 R:RIGHT:4
+	"," CLB <W:0.0> <NoSpaceAfterPunctMark> "<, Hellasis>" &no-space-after-punct-mark &SUGGESTWF ID:3 R:RIGHT:4
+"<Hellasis>"
+	"Hellas" N Prop Sem/Plc Sg Loc <W:0.0> <cohort-with-dynamic-compound> @<ADVL &typo &SUGGEST ID:4
+:\n
+
+"<mánuid>"
+	"mánnu" N Sem/Measr_Time Pl Acc <W:0.0> @HNOUN
+	"mánnu" N Sem/Measr_Time Pl Gen <W:0.0> @<ADVL
+:
+"<Romanias>"
+	"Romania" N Prop Sem/Plc Sg Loc <W:0.0> <cohort-with-dynamic-compound> @N<
+	"Romania" N Prop Sem/Sur Sg Loc <W:0.0> <cohort-with-dynamic-compound> @N<
+"<,>"
+	"," CLB <W:0.0> <NoSpaceAfterPunctMark> &no-space-after-punct-mark ID:7 R:RIGHT:8
+	"," CLB <W:0.0> <NoSpaceAfterPunctMark> "<, Hellasis>" &no-space-after-punct-mark &SUGGESTWF ID:7 R:RIGHT:8
+"<Hellasis>"
+	"Hellas" N Prop Sem/Plc Sg Loc <W:0.0> <cohort-with-dynamic-compound> @<ADVL &typo &SUGGEST ID:8
+	"Hellas" N Prop Sem/Sur Sg Loc <W:0.0> <cohort-with-dynamic-compound> @<ADVL &typo &SUGGEST ID:8
+:\n
+

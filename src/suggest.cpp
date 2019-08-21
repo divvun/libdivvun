@@ -344,6 +344,20 @@ void rel_on_match(const relations& rels,
 	}
 }
 
+/**
+ * Return the readings of Cohort trg that have ErrId err_id; fallback
+ * to all the readings if no match.
+ *
+ * The reason we want readings with a certain error type, is if we
+ * have overlapping errors where e.g. one wants to DELETE a word. We
+ * don't want to suggest a deletion on the suggestions of the *other*
+ * error types.
+ *
+ * The reason we fallback to all the readings is that some times
+ * people write CG rules that delete the &LINK readings or similar –
+ * we don't want to fail to find the cohort that's supposed to be
+ * underlined in that case.
+ */
 vector<Reading> readings_with_errtype(const Cohort& trg, const ErrId& err_id) {
 	vector<Reading> filtered(trg.readings.size());
 	auto it = std::copy_if(trg.readings.begin(), trg.readings.end(),
@@ -352,7 +366,13 @@ vector<Reading> readings_with_errtype(const Cohort& trg, const ErrId& err_id) {
 				       return tr.errtypes.find(err_id) != tr.errtypes.end();
 			       });
 	filtered.resize(std::distance(filtered.begin(), it));
-	return filtered;
+	if(filtered.empty()) {
+		vector<Reading> unfiltered(trg.readings);
+		return unfiltered;
+	}
+	else {
+		return filtered;
+	}
 }
 
 bool both_spaces(char16_t lhs, char16_t rhs) {
