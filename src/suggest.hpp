@@ -52,6 +52,7 @@ using std::pair;
 using std::vector;
 
 using UStringVector = vector<u16string>;
+using StringVector = vector<string>;
 
 using MsgMap = std::unordered_map<Lang, pair<ToggleIds, ToggleRes> >;	// msgs[Lang] = make_pair(ToggleIds, ToggleRes)
 using SortedMsgLangs = vector<Lang>; // sorted with preferred language first
@@ -149,7 +150,7 @@ struct Reading {
 	bool suggest = false;
 	string ana;    // for generating suggestions from this reading
 	std::set<u16string> errtypes; // the error tag(s) (without leading ampersand)
-	UStringVector sforms;
+	StringVector sforms;
 	relations rels;	// rels[relname] = target.id
 	rel_id id = 0; // id is 0 if unset, otherwise the relation id of this word
 	string wf;
@@ -202,7 +203,18 @@ class Suggest {
 		std::unique_ptr<const hfst::HfstTransducer> generator;
 		std::set<ErrId> ignores;
 		bool generate_all_readings = false;
-		variant<Nothing, Err> cohort_errs(const ErrId& ErrId, const Cohort& c, const Sentence& sentence, const u16string& text);
+
+		/**
+		 * For a single cohort, if it has errors, creates the
+		 * user-readable Msg (in the preferred language,
+		 * inserting the right word forms in the template),
+		 * and finds the indices of the error underline, as
+		 * well as the form of that substring, and expands the
+		 * error replacements until they cover the beg/end
+		 * part of the text.
+                 */
+                variant<Nothing, Err> cohort_errs(const ErrId& ErrId, const Cohort& c, const Sentence& sentence, const u16string& text);
+
 		vector<Err> mk_errs(const Sentence &sentence);
 };
 

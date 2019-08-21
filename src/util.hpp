@@ -87,7 +87,7 @@ template<typename Container>
 inline const std::string join(const Container& ss, const std::string& delim=" ") {
 	std::ostringstream os;
 	std::copy(ss.begin(), ss.end(), std::ostream_iterator<std::string>(os, delim.c_str()));
-	const auto& str = os.str();
+	const std::string& str = os.str();
 	return str.substr(0,
 			  str.size() - delim.size());
 }
@@ -96,10 +96,10 @@ inline const std::string join(const Container& ss, const std::string& delim=" ")
 template<typename Container>
 inline const std::string u16join(const Container& ss, const std::string& delim=" ") {
 	std::ostringstream os;
-	for(const auto& s : ss) {
-		os << toUtf8(s) << ",";
+	for(const std::u16string& s : ss) {
+		os << toUtf8(s) << delim;
 	}
-	const auto& str = os.str();
+	const std::string& str = os.str();
 	return str.substr(0,
 			  str.size() - delim.size());
 }

@@ -1,0 +1,6 @@
+"<A.>"
+	"A" N Sg <NoSpaceAfterPunctMark> &no-space-after-punct-mark ID:1 R:RIGHT:2
+	"A" N Sg <NoSpaceAfterPunctMark> "<A. Eira>" &no-space-after-punct-mark &SUGGESTWF ID:1 R:RIGHT:2
+"<Eira>"
+	"Eira" N Prop &LINK &no-space-after-punct-mark ID:2
+

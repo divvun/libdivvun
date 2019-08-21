@@ -185,7 +185,7 @@ const MsgMap Suggest::readMessages(const string& file) {
 }
 
 
-const Reading proc_subreading(const Casing& inputCasing, const string& line, bool generate_all_readings) {
+const Reading proc_subreading(const string& line, bool generate_all_readings) {
 	Reading r;
 	const auto& lemma_beg = line.find("\"");
 	const auto& lemma_end = line.find("\" ", lemma_beg);
@@ -253,17 +253,17 @@ const Reading proc_subreading(const Casing& inputCasing, const string& line, boo
 	const auto& tagsplus = join(gentags, "+");
 	r.ana = lemma+"+"+tagsplus;
 	if(r.suggestwf) {
-		r.sforms.emplace_back(withCasing(r.fixedcase, inputCasing, r.wf));
+		r.sforms.emplace_back(r.wf);
 	}
 	return r;
 };
 
-const Reading proc_reading(const hfst::HfstTransducer& t, const Casing& inputCasing, const string& line, bool generate_all_readings) {
+const Reading proc_reading(const hfst::HfstTransducer& t, const string& line, bool generate_all_readings) {
 	stringstream ss(line);
 	string subline;
 	std::deque<Reading> subs;
 	while(std::getline(ss, subline, '\n')){
-		subs.push_front(proc_subreading(inputCasing, subline, generate_all_readings));
+		subs.push_front(proc_subreading(subline, generate_all_readings));
 	}
 	Reading r;
 	const size_t n_subs = subs.size();
@@ -291,8 +291,8 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const Casing& inputCas
 					form << symbol;
 				}
 			}
-			r.sforms.emplace_back(withCasing(r.fixedcase, inputCasing, form.str()));
-		}
+                        r.sforms.emplace_back(form.str());
+                }
 	}
 	return r;
 }
@@ -436,6 +436,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 	if(cohort_empty(c) || c.added || ignores.find(err_id) != ignores.end()) {
 		return Nothing();
 	}
+	// Begin set msg:
 	Msg msg;
 	for(const auto& mlang : sortedmsglangs) {
 		if(msg.second.empty() && mlang != locale) {
@@ -484,32 +485,33 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 				     replaceAll(msg.second, fromUtf8(relname.c_str()), trg.form);
 			     });
 	}
+	// End set msg
+	// Begin set beg, end, form, rep:
 	auto beg = c.pos;
 	auto end = c.pos + c.form.size();
 	UStringVector rep;
+	const Casing inputCasing = getCasing(toUtf8(c.form));
 	for(const auto& r: c.readings) {
 		if((!r.errtypes.empty()) && r.errtypes.find(err_id) == r.errtypes.end()) {
 			continue; // there is some other error on this reading
 		}
-		rep.insert(rep.end(),
-			   r.sforms.begin(),
-			   r.sforms.end());
 		// If there are LEFT/RIGHT added relations, add suggestions with those concatenated to our form
 		// TODO: What about our current suggestions of the same error tag? Currently just using wordform
-		// std::cerr << "\033[1;35m1=\t" << 1 << "\033[0m" << std::endl;
+		Casing underlineCasing = inputCasing;
 		rel_on_match(r.rels, LEFT_RIGHT_REL, sentence,
 			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
-				     // std::cerr << "\033[1;35mmatch left/Right=\t"  << c.id << ":"<< trg.id << " i_t=" << i_t << "\033[0m ";
-				     // std::cerr << "\033[1;34mbeg:end=\t" << beg <<":" <<end << "\033[0m" << std::endl;
 				     proc_LEFT_RIGHT(err_id, c.id, sentence, text, beg, end, relname, i_t, trg).match(
 					     []  (Nothing) {},
 					     [&] (pair<pair<size_t, size_t>, u16string> p)   {
 						     beg = p.first.first;
 						     end = p.first.second;
 						     rep.push_back(p.second);
-						     // std::cerr << "\033[1;32mmatched left/Right=\t" << beg << ":"<< end << " " << p.second << "\033[0m" << std::endl;
+						     underlineCasing = getCasing(toUtf8(p.second));
 					     });
 			     });
+		for(const auto s: r.sforms) {
+			rep.push_back(withCasing(r.fixedcase, underlineCasing, s));
+		}
 		std::map<size_t, size_t> deleted;
 		rel_on_match(r.rels, DELETE_REL, sentence,
 			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
@@ -559,6 +561,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 		  rep.end());
 	rep.erase(Dedupe(rep.begin(), rep.end()),
 		  rep.end());
+	// End set beg, end, form, rep
 	return Err {
 		form,
 		beg,
@@ -612,14 +615,13 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 
 	string line;
 	string readinglines;
-	Casing inputCasing;
 	std::getline(is, line);	// TODO: Why do I need at least one getline before os<< after flushing?
 	do {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 
 		if(!readinglines.empty() && (result.empty() || result[3].length() <= 1)) {
-			const auto& reading = proc_reading(t, inputCasing, readinglines, generate_all_readings);
+			const auto& reading = proc_reading(t, readinglines, generate_all_readings);
 			readinglines = "";
 			c.errtypes.insert(reading.errtypes.begin(),
 					  reading.errtypes.end());
@@ -648,7 +650,6 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 
 		if (!result.empty() && result[2].length() != 0) { // wordform
 			c.form = fromUtf8(result[2]);
-			inputCasing = getCasing(toUtf8(c.form));
 		}
 		else if(!result.empty() && result[3].length() != 0) { // reading
 			readinglines += line + "\n";
@@ -668,7 +669,7 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 	} while(std::getline(is, line));
 
 	if(!readinglines.empty()) {
-		const auto& reading = proc_reading(t, inputCasing, readinglines, generate_all_readings);
+		const auto& reading = proc_reading(t, readinglines, generate_all_readings);
 		readinglines = "";
 		c.errtypes.insert(reading.errtypes.begin(),
 				  reading.errtypes.end());
@@ -842,7 +843,7 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os)
 
 void print_cg_reading(const Casing& inputCasing, const string& readinglines, std::ostream& os, const hfst::HfstTransducer& t, bool generate_all_readings) {
 	os << readinglines;
-	const auto& reading = proc_reading(t, inputCasing, readinglines, generate_all_readings);
+	const auto& reading = proc_reading(t, readinglines, generate_all_readings);
 	if(reading.suggest) {
 		// std::cerr << "\033[1;35mreading.suggest=\t" << reading.suggest << "\033[0m" << std::endl;
 
@@ -852,7 +853,7 @@ void print_cg_reading(const Casing& inputCasing, const string& readinglines, std
 			os << ana << "\t" << "?" << std::endl;
 		}
 		else {
-			os << ana << "\t" << u16join(formv) << std::endl;
+			os << ana << "\t" << join(formv, ",") << std::endl;
 		}
 	}
 	else {
