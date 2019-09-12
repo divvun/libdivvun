@@ -94,10 +94,12 @@ const MsgMap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& re
 	if (result) {
 		// <default>'s:
 		for (pugi::xml_node def: doc.child("errors").child("defaults").children("default")) {
+			// Regexes we first have to store as strings, then put the compiled versions in msgs[lang].second:
+			std::unordered_map<Lang, std::unordered_map<string, Msg > > regexes;
 			// For all <title>'s and <description>'s, add all their parent <id>/<re>'s:
 			for (pugi::xml_node child: def.child("header").children("title")) {
-				const auto& msg = fromUtf8(xml_raw_cdata(child));
-				const auto& lang = child.attribute("xml:lang").value();
+				const u16string& msg = fromUtf8(xml_raw_cdata(child));
+				const Lang& lang = child.attribute("xml:lang").value();
 				for (pugi::xml_node e: def.child("ids").children("e")) {
 					// e_value assumes we only ever have one PCDATA element here:
 					const auto& errtype = fromUtf8(e.attribute("id").value());
@@ -108,13 +110,12 @@ const MsgMap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& re
 					msgs[lang].first[errtype] = make_pair(msg, msg);
 				}
 				for (pugi::xml_node re: def.child("ids").children("re")) {
-					std::basic_regex<char> r(re.attribute("v").value());
-					msgs[lang].second.push_back(std::make_pair(r, make_pair(msg, msg)));
+					regexes[lang][re.attribute("v").value()] = make_pair(msg, msg);
 				}
 			}
 			for (pugi::xml_node child: def.child("body").children("description")) {
-				const auto& msg = fromUtf8(xml_raw_cdata(child));
-				const auto& lang = child.attribute("xml:lang").value();
+				const u16string& msg = fromUtf8(xml_raw_cdata(child));
+				const Lang& lang = child.attribute("xml:lang").value();
 				for (pugi::xml_node e: def.child("ids").children("e")) {
 					const auto& errtype = fromUtf8(e.attribute("id").value());
 					auto &langmsgs = msgs[lang].first;
@@ -125,9 +126,27 @@ const MsgMap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& re
 						langmsgs[errtype] = std::make_pair(msg, msg);
 					}
                                 }
+				for (pugi::xml_node re: def.child("ids").children("re")) {
+					const auto& rstr = re.attribute("v").value();
+					auto &langmsgs = regexes[lang];
+					if (langmsgs.find(rstr) != langmsgs.end()) {
+						langmsgs[rstr].second = msg;
+					}
+					else {
+						// No <title> for this language, fallback to <description>:
+						langmsgs[rstr] = std::make_pair(msg, msg);
+					}
+				}
+			}
+                        for (const auto &langres : regexes) {
+				const Lang &lang = langres.first;
+				for (const auto &rstrmsg : langres.second) {
+					std::basic_regex<char> r(rstrmsg.first);
+					msgs[lang].second.push_back(std::make_pair(r, rstrmsg.second));
+				}
 			}
 		}
-		// <error>'s
+                // <error>'s
 		for (pugi::xml_node error: doc.child("errors").children("error")) {
 			const auto& errtype = fromUtf8(error.attribute("id").value());
 			// For all <title>'s and <description>'s, add the <error id> attribute:
