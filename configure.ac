@@ -179,6 +179,16 @@ AS_CASE([$enable_python_bindings],
 AM_CONDITIONAL([HAVE_PYTHON_BINDINGS], [test "x$enable_python_bindings" != xno])
 
 
+dnl Install parameters for Python, overridable by Debian packaging:
+AC_ARG_VAR([PYTHON_INSTALL_PARAMS], [Parameters to pass to the Python 3 module install step])
+if test "x$PYTHON_INSTALL_PARAMS" = "x"
+then
+  PYTHON_INSTALL_PARAMS="--prefix=\$(prefix) --root=\$(DESTDIR)/"
+fi
+
+
+
+
 dnl ===============================
 dnl Checks for xmllint, bash, trang
 dnl ===============================

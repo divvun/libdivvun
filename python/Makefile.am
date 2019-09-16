@@ -15,7 +15,7 @@ all-local: $(BUILT_SOURCES)
 # rpath in LDFLAGS so users don't have to set LD_LIBRARY_PATH
 
 install-exec-local:
-	$(PYTHON) setup.py install --prefix=$(DESTDIR)$(prefix)
+	$(PYTHON) setup.py install $(PYTHON_INSTALL_PARAMS)
 
 uninstall-local:
 	rm -f $(DESTDIR)$(libdir)/python*/site-packages/_libdivvun.*.so
