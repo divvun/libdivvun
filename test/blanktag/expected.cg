@@ -1,14 +1,14 @@
 : 
 "<)>"
-	")" RPAREN @EOP <spaceBeforeParenEnd>
-	")" RPAREN @EMO <spaceBeforeParenEnd>
+	")" RPAREN @EOP <firstWord> <spaceBeforeParenEnd>
+	")" RPAREN @EMO <firstWord> <spaceBeforeParenEnd>
 "<.>"
-	"." PUNCT
+	"." PUNCT <LastCohort>
 :\n
 :\n
 "<Twas>"
-	"be" V Pret "<was>" <firstWordOfParagraph>
-		"it" Prn 3Sg Neut "<T>" <firstWordOfParagraph>
+	"be" V Pret "<was>" <firstWord> <firstWordOfParagraph>
+		"it" Prn 3Sg Neut "<T>" <firstWord> <firstWordOfParagraph>
 : 
 "<bryllyg>"
 	"bryllyg" A
@@ -20,6 +20,6 @@
 	"the" D
 : 
 "<slithy>"
-	"slithy" A
+	"slithy" A <LastCohort>
 ;	"slithy" V Inf
 : 

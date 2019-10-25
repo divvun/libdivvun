@@ -34,7 +34,9 @@ Blanktag::Blanktag(const string& analyser_, bool verbose)
 const string Blanktag::proc(const vector<string>& preblank, const string& wf, const vector<string>& postblank, const vector<string>& readings) {
 	string ret;
 	for(const auto& b : preblank) {
-		ret += ":" + b + "\n";
+		if(b != BOSMARK && b != EOSMARK) {
+			ret += ":" + b + "\n";
+		}
 	}
 	if(wf.empty()) {
 		return ret;
@@ -69,6 +71,7 @@ const void Blanktag::run(std::istream& is, std::ostream& os)
 	vector<string> postblank;
 	string wf;
 	vector<string> readings;
+	postblank.push_back(BOSMARK); // swapped into preblank before first proc
 	for (string line; std::getline(is, line);) {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
@@ -105,6 +108,7 @@ const void Blanktag::run(std::istream& is, std::ostream& os)
 			os << line;
 		}
 	}
+	postblank.push_back(EOSMARK);
 	os << proc(preblank, wf, postblank, readings);
 	preblank.swap(postblank);
 	wf = "";

@@ -50,6 +50,8 @@ class Blanktag {
 	private:
 		unique_ptr<const hfst::HfstTransducer> analyser;
 		const string proc(const vector<string>& preblank, const string& wf, const vector<string>& postblank, const vector<string>& readings);
+		const string BOSMARK = "__DIVVUN_BOS__";
+		const string EOSMARK = "__DIVVUN_EOS__";
 };
 
 }

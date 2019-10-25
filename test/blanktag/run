@@ -6,4 +6,8 @@ cd "$(dirname "$0")"
 
 ../../src/divvun-blanktag blanktagger.hfst < input.cg > output.cg
 
-diff output.cg expected.cg
+diff expected.cg output.cg
+
+../../src/divvun-blanktag blanktagger.hfst < input.ends.cg > output.ends.cg
+
+diff expected.ends.cg output.ends.cg

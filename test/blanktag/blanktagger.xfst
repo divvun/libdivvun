@@ -1,4 +1,9 @@
-[ { }                {"<)>"}      ?*  ]:[%<spaceBeforeParenEnd%>]
+[ ?* { }             {"<)>"}      ?*  ]:[%<spaceBeforeParenEnd%>]
 [ ?*                 {"<(>"}      { } ]:[%<spaceAfterParenBeg%>]
 [ {  }               {"<} ?* {>"} ?*  ]:[%<doubleSpaceBefore%>]
 [ ?* {\n} ?* {\n} ?* {"<} ?* {>"} ?*  ]:[%<firstWordOfParagraph%>]
+
+[ {__DIVVUN_BOS__} ?* {"<} ?* {>"}  ?*                  ]:[ "<firstWord>"  ]
+[ {\n} ?*             {"<} ?* {>"}  ?*                  ]:[ "<firstWord>"  ]
+[ ?*                  {"<} ?* {>"}  ?* {\n}             ]:[ "<LastCohort>" ]
+[ ?*                  {"<} ?* {>"}  ?* {__DIVVUN_EOS__} ]:[ "<LastCohort>" ]
