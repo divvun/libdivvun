@@ -1,0 +1,11 @@
+"<ja>"
+	"ja" CC <W:0.0> <firstWord>
+: 
+"<ja>"
+	"ja" CC <W:0.0>
+: 
+"<ja>"
+	"ja" CC <W:0.0> <LastCohort>
+:\n
+"<Ja>"
+	"ja" CC <W:0.0> <LastCohort> <firstWord>

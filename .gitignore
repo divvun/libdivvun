@@ -96,6 +96,7 @@ old/
 /test/blanktag/blanktagger.hfst
 /test/blanktag/blanktagger.hfst.tmp
 /test/blanktag/output.cg
+/test/blanktag/output.ends.cg
 /test/checker/run-python-bindings
 /test/checker/python-build/
 
