@@ -21,7 +21,7 @@ namespace divvun {
 
 const std::basic_regex<char> DELIMITERS ("^[.!?]$");
 
-const std::basic_regex<char> CG_TAGS_RE ("\"[^\"]*\"|[^ ]+");
+const std::basic_regex<char> CG_TAGS_RE ("\"[^\"]*\"S?|[^ ]+");
 
 // Anything *not* matched by CG_TAG_TYPE is sent to the generator.
 // … or we could make an (h)fst out of these to match on lines :)
@@ -31,7 +31,7 @@ const std::basic_regex<char> CG_TAG_TYPE (
 	"|&(.+)"		// Group 2: Errtype
 	"|R:(.+):([0-9]+)"	// Group 3 & 4: Relation name and target
 	"|ID:([0-9]+)"		// Group 5: Relation ID
-	"|\"<(.+)>\""           // Group 6: Reading word-form
+	"|\"([^\"]+)\"S"        // Group 6: Reading word-form
 	"|(<fixedcase>)"        // Group 7: Fixed Casing
 	"|@"			// Syntactic tag
 	"|Sem/"			// Semantic tag

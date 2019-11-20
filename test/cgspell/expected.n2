@@ -1,10 +1,10 @@
 "<skuvlabufse>"
 	"skuvllabufse" ?
-	"busse" N Sg <W:1> <WA:0> <spelled> "<skuvlabusse>"
+	"busse" N Sg <W:1> <WA:0> <spelled> "skuvlabusse"S
 		"skuvla" N Sg
 : 
 "<balaat>"
 	"balaat" ?
-	"ballat" V TV Imprt Sg2 <W:1> <WA:0> <spelled> "<balat>"
-	"ballat" V TV Ind Prs Pl1 <W:1> <WA:0> <spelled> "<ballat>"
-	"ballat" V TV Inf <W:1> <WA:0> <spelled> "<ballat>"
+	"ballat" V TV Imprt Sg2 <W:1> <WA:0> <spelled> "balat"S
+	"ballat" V TV Ind Prs Pl1 <W:1> <WA:0> <spelled> "ballat"S
+	"ballat" V TV Inf <W:1> <WA:0> <spelled> "ballat"S

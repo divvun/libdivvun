@@ -10,15 +10,15 @@
 	"ja" CC <W:0.0> @CVP #5->5
 : 
 "<Ulbmill>"
-	"ulbmil" N Sem/Semcon Sg Nom <W:15.8955> <WA:7.89551> <spelled> "<ulbmil>" &SUGGESTWF &typo #6->6
-	"ulbmildit" V IV Ind Prs ConNeg <W:15.8955> <WA:7.89551> <spelled> "<ulbmil>" &SUGGESTWF &typo #6->6
-	"ulbmil" N Sem/Semcon Sg Acc <W:29.1738> <WA:9.17383> <spelled> "<ulbmila>" &SUGGESTWF &typo #6->6
-	"ulbmil" N Sem/Semcon Sg Gen <W:29.1738> <WA:9.17383> <spelled> "<ulbmila>" &SUGGESTWF &typo #6->6
-	"ulbmil" N Sem/Semcon Sg Foo <W:29.1738> <WA:9.97383> <spelled> "<čulbmila>" &SUGGESTWF &typo #6->6
+	"ulbmil" N Sem/Semcon Sg Nom <W:15.8955> <WA:7.89551> <spelled> "ulbmil"S &SUGGESTWF &typo #6->6
+	"ulbmildit" V IV Ind Prs ConNeg <W:15.8955> <WA:7.89551> <spelled> "ulbmil"S &SUGGESTWF &typo #6->6
+	"ulbmil" N Sem/Semcon Sg Acc <W:29.1738> <WA:9.17383> <spelled> "ulbmila"S &SUGGESTWF &typo #6->6
+	"ulbmil" N Sem/Semcon Sg Gen <W:29.1738> <WA:9.17383> <spelled> "ulbmila"S &SUGGESTWF &typo #6->6
+	"ulbmil" N Sem/Semcon Sg Foo <W:29.1738> <WA:9.97383> <spelled> "čulbmila"S &SUGGESTWF &typo #6->6
 : 
 "<ULBMILL>"
-	"ulbmil" N Sem/Semcon Sg Nom <W:15.8955> <WA:7.89551> <spelled> "<ulbmil>" <fixedcase> &SUGGESTWF &typo #8->8
-	"ulbmildit" V IV Ind Prs ConNeg <W:15.8955> <WA:7.89551> <spelled> "<ulbðmil>" &SUGGESTWF &typo #8->8
-	"ulbmil" N Sem/Semcon Sg Acc <W:29.1738> <WA:9.17383> <spelled> "<ulæmila>" &SUGGESTWF &typo #8->8
-	"ulbmil" N Sem/Semcon Sg Gen <W:29.1738> <WA:9.17383> <spelled> "<ulbmßla>" &SUGGESTWF &typo #8->8
+	"ulbmil" N Sem/Semcon Sg Nom <W:15.8955> <WA:7.89551> <spelled> "ulbmil"S <fixedcase> &SUGGESTWF &typo #8->8
+	"ulbmildit" V IV Ind Prs ConNeg <W:15.8955> <WA:7.89551> <spelled> "ulbðmil"S &SUGGESTWF &typo #8->8
+	"ulbmil" N Sem/Semcon Sg Acc <W:29.1738> <WA:9.17383> <spelled> "ulæmila"S &SUGGESTWF &typo #8->8
+	"ulbmil" N Sem/Semcon Sg Gen <W:29.1738> <WA:9.17383> <spelled> "ulbmßla"S &SUGGESTWF &typo #8->8
 : 

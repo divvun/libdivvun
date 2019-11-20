@@ -4,5 +4,5 @@
 : 
 "<.>"
 	"." CLB <W:0.0> <SpaceBeforePunctMark> &space-before-punct-mark #7->7 ID:7 R:LEFT:6
-	"." CLB <W:0.0> <SpaceBeforePunctMark> "<ovddasvástadus.>" &space-before-punct-mark &SUGGESTWF #7->7 ID:7 R:LEFT:6
+	"." CLB <W:0.0> <SpaceBeforePunctMark> "ovddasvástadus."S &space-before-punct-mark &SUGGESTWF #7->7 ID:7 R:LEFT:6
 :\n

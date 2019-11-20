@@ -84,7 +84,7 @@ void print_cg_subreading(size_t indent,
 		mw_a.match([]      (Nothing) {},
 			   [&os] (Weight w_a) { os << " <WA:" << w_a << ">"; });
 		os << " " << errtag;
-		os << " \"<" << form << ">\"";
+		os << " \"" << form << "\"S";
 	}
 	os << std::endl;
 }
