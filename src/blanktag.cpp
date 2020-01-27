@@ -105,7 +105,7 @@ const void Blanktag::run(std::istream& is, std::ostream& os)
 		}
 		else {
 			// don't match on blanks not prefixed by ':'
-			os << line;
+			os << line << "\n";
 		}
 	}
 	postblank.push_back(EOSMARK);
