@@ -2,12 +2,17 @@
 
 set -u
 
-# TODO: This fails with mawk – can we make it work with both, or
-# perhaps use plain bash?
 
 if ! command -V timeout >/dev/null 2>/dev/null; then
     # require /usr/bin/timeout, since it could hang if there's a bug
     exit 77
+fi
+
+# Prefer gawk if installed (fails with macos awk, mawk etc.).
+# TODO: Can we make it work with with plain bash?
+awk="awk"
+if command -V gawk >/dev/null 2>/dev/null; then
+    awk="gawk"
 fi
 
 tmpd=$(mktemp -d -t divvun-suggest-test.XXXXXXXX)
@@ -31,7 +36,8 @@ exec 4<"${from}"
 for _ in test it a couple times; do
     for input in input.*.cg; do
         base=${input##input}; base=${base%%cg}
-        timeout 1 awk '{print $0} END{print "<STREAMCMD:FLUSH>"}' "${input}" >&3
+        # shellcheck disable=SC2016
+        timeout 1 "${awk}" '{print $0} END{print "<STREAMCMD:FLUSH>"}' "${input}" >&3
         case $? in
             0) : ;;
             124) echo "divvun-suggest flushing write timed out"
@@ -41,7 +47,8 @@ for _ in test it a couple times; do
                exit 1
                ;;
         esac
-        timeout 1 awk 'BEGIN{RS="\0"}{printf "%s", $0;exit}' <&4 >output-flushing"${base}"json
+        # shellcheck disable=SC2016
+        timeout 1 "${awk}" 'BEGIN{RS="\0"}{printf "%s", $0;exit}' <&4 >output-flushing"${base}"json
         case $? in
             0) : ;;
             124) echo "divvun-suggest flushing read timed out"

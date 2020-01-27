@@ -25,6 +25,7 @@ if [[ $TRAVIS_OS_NAME = osx ]]; then
     brew ls --versions libarchive || brew install libarchive || brew install libarchive
     brew ls --versions swig       || brew install swig       || brew install swig
     brew ls --versions pyenv      || brew install pyenv      || brew install pyenv
+    brew ls --versions gawk       || brew install gawk       || brew install gawk
 
     eval "$(pyenv init -)"
     pyenv install 3.6.3
