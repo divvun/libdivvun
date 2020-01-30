@@ -73,6 +73,12 @@ enum RunState {
 	eof
 };
 
+enum RunMode {
+	RunCG,
+	RunJson,
+	RunAutoCorrect
+};
+
 using rel_id = size_t;
 using relations = std::unordered_map<string, rel_id>;
 
@@ -187,7 +193,7 @@ class Suggest {
 		Suggest(const string& gen_path, const string& locale, bool verbose);
 		~Suggest() = default;
 
-		void run(std::istream& is, std::ostream& os, bool json);
+		void run(std::istream& is, std::ostream& os, RunMode mode);
 
 		vector<Err> run_errs(std::istream& is);
 		void setIgnores(const std::set<ErrId>& ignores);
@@ -200,6 +206,7 @@ class Suggest {
 	private:
 		const SortedMsgLangs sortedmsglangs; // invariant: contains all and only the keys of msgs
 		RunState run_json(std::istream& is, std::ostream& os);
+		RunState run_autocorrect(std::istream& is, std::ostream& os);
 		std::unique_ptr<const hfst::HfstTransducer> generator;
 		std::set<ErrId> ignores;
 		bool generate_all_readings = false;

@@ -879,6 +879,39 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os)
 	return sentence.runstate;
 }
 
+RunState Suggest::run_autocorrect(std::istream& is, std::ostream& os)
+{
+	json::sanity_test();
+	Sentence sentence = run_sentence(is, *generator, msgs, generate_all_readings);
+	vector<Err> errs = mk_errs(sentence);
+
+	size_t offset = 0;
+	u16string text = fromUtf8(sentence.text.str());
+	for(const auto& e : errs) {
+		if(e.beg > offset) {
+			os << toUtf8(text.substr(offset, e.beg - offset));
+		}
+		bool printed = false;
+		for(const auto& r : e.rep) {
+			os << toUtf8(r);
+			printed = true;
+			break;
+		}
+		if(!printed) {
+			os << toUtf8(e.form);
+		}
+		offset = e.end;
+	}
+	os << toUtf8(text.substr(offset));
+
+	if(sentence.runstate == flushing) {
+		os << '\0';
+		os.flush();
+		os.clear();
+	}
+	return sentence.runstate;
+}
+
 
 void print_cg_reading(const Casing& inputCasing, const string& readinglines, std::ostream& os, const hfst::HfstTransducer& t, bool generate_all_readings) {
 	os << readinglines;
@@ -938,7 +971,7 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, b
 	}
 }
 
-void Suggest::run(std::istream& is, std::ostream& os, bool json)
+void Suggest::run(std::istream& is, std::ostream& os, RunMode mode)
 {
 	try {
 		auto _old = std::locale::global(std::locale(""));
@@ -947,11 +980,17 @@ void Suggest::run(std::istream& is, std::ostream& os, bool json)
 	{
 		std::cerr << "WARNING: Couldn't set global locale \"\" (locale-specific native environment): " << e.what() << std::endl;
 	}
-	if(json) {
-		while(run_json(is, os) == flushing);
-	}
-	else {
-		run_cg(is, os, *generator, generate_all_readings); // ignores ignores
+	switch(mode) {
+		case RunJson:
+			while(run_json(is, os) == flushing);
+			break;
+		case RunAutoCorrect:
+			while(run_autocorrect(is, os) == flushing);
+			break;
+		case RunCG:
+		default:
+			run_cg(is, os, *generator, generate_all_readings); // ignores ignores
+			break;
 	}
 }
 

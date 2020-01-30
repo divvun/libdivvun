@@ -31,6 +31,7 @@ int main(int argc, char ** argv)
 
 		options.add_options()
 			("j,json", "Use JSON output format (default: CG)")
+			("a,autocorrect", "Use Autocorrect output format (default: CG)")
 			("g,generator", "Generator (HFSTOL format)", cxxopts::value<std::string>(), "BIN")
 #ifdef HAVE_LIBPUGIXML
 			("m,messages", "ERROR messages (XML format)", cxxopts::value<std::string>(), "FILE")
@@ -84,7 +85,17 @@ int main(int argc, char ** argv)
 		}
 
 		const auto& genfile = options["generator"].as<std::string>();
-		bool json = options.count("j");
+		divvun::RunMode mode = divvun::RunCG;
+		if(options.count("j")) {
+			mode = divvun::RunJson;
+			if(options.count("a")) {
+			  std::cerr << argv[0] << " ERROR: Pick just one of --json/--autocorrect" << std::endl;
+                          return (EXIT_FAILURE);
+                        }
+                };
+		if(options.count("a")) {
+			mode = divvun::RunAutoCorrect;
+		};
 		bool genall = options.count("A");
 		bool verbose = options.count("v");
 
@@ -123,7 +134,7 @@ int main(int argc, char ** argv)
 #endif
 
 		divvun::Suggest s(t, m, locale, verbose, genall);
-		s.run(std::cin, std::cout, json);
+		s.run(std::cin, std::cout, mode);
 	}
 	catch (const cxxopts::OptionException& e)
 	{

@@ -130,7 +130,7 @@ SuggestCmd::SuggestCmd (const string& gen_path, const string& msg_path, const st
 }
 void SuggestCmd::run(stringstream& input, stringstream& output) const
 {
-	suggest->run(input, output, true);
+	suggest->run(input, output, RunJson);
 }
 vector<Err> SuggestCmd::run_errs(stringstream& input) const
 {
