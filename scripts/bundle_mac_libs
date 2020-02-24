@@ -87,4 +87,11 @@ if [[ "$(wc -l <<< "${foundpylib}")" != 1 ]]; then
 fi
 
 zip -r ./"${platform}".zip ./"${libdir}" ./"${pylibdir}"
+cat <<EOF
+
+             🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+               UPLOADING TO FILEPUSH
+             🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+EOF
 curl --upload-file ./"${platform}".zip https://filepush.co/upload/"${platform}".zip
