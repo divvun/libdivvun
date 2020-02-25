@@ -88,16 +88,20 @@ sudo make install
 
 if [[ $TRAVIS_OS_NAME = osx && $CC = clang ]]; then
     # Rebuild with python 3.5.4, should give us two _libdivvun*so's with different names in /usr/local/lib/…
-    eval "$(pyenv init -)"
-    pyenv install 3.5.4
-    pyenv global 3.5.4
-    ./configure "$@"
-    (
-        cd python
-        make clean
-        make
-    )
-    make -j3
-    sudo make install
+    for version in "3.5.5" "3.7.6"; do
+        (
+            eval "$(pyenv init -)"
+            pyenv install "${version}"
+            pyenv global "${version}"
+            ./configure "$@"
+            (
+                cd python
+                make clean
+                make
+            )
+            make -j3
+            sudo make install
+        )
+    done
     scripts/bundle_mac_libs
 fi
