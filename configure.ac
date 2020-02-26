@@ -144,12 +144,16 @@ AS_IF([test ! "$SWIG"],
 dnl =================
 dnl Checks for Python
 dnl =================
+
+dnl The test must instead add the result of `python3-config --includes` to the build flags and only `#include <Python.h>`
+
 AM_PATH_PYTHON([3.0],
                [],
                [AC_MSG_WARN([Python not found. Python is required to build divvun-gramcheck python bindings.])])
 AS_IF([test "$PYTHON" != :],
-      [python_include_path=`$PYTHON -c "import distutils.sysconfig; print(distutils.sysconfig.get_python_inc());"`
-       AC_CHECK_HEADERS([${python_include_path}/Python.h],
+      [AC_SUBST(PYTHONINCLUDE,["`python3-config --includes`"])
+       CPPFLAGS="$CPPFLAGS $PYTHONINCLUDE"
+       AC_CHECK_HEADERS([Python.h],
                         [have_python_header=true],
                         [AC_MSG_WARN([Python.h header file not found. Python development files are required to build the divvun-gramcheck python bindings.])],
                         [])])
