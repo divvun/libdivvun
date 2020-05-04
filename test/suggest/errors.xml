@@ -115,13 +115,13 @@
 
   <error id="lex-bokte-not-badjel">
     <header>
-      <title xml:lang="en">"bokte" not "badjel"</title>
-      <title xml:lang="se">"bokte" iige "badjel"</title>
+      <title xml:lang="en">"€1" not "$1"</title>
+      <title xml:lang="se">"€1" iige "$1"</title>
       <references><ref n=""/></references>
     </header>
     <body>
-      <description xml:lang="en">wrong word</description>
-      <description xml:lang="se">boasttut sátni</description>
+      <description xml:lang="en">wrong word, use "€1", not "$1"</description>
+      <description xml:lang="se">boasttut sátni, "€1" iige "$1"</description>
     <examples>
       <ex xml:lang="se">Ovdalgihtiigeassima sierra máksingoartta ferte álohii atnit go máksá boastagiro dahje báŋku {badjel}.</ex>
     </examples>

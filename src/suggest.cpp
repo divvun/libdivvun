@@ -600,7 +600,11 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 		  rep.end());
 	rep.erase(Dedupe(rep.begin(), rep.end()),
 		  rep.end());
-	// End set beg, end, form, rep
+	if(!rep.empty()) {
+		replaceAll(msg.first,  u"€1", rep[0]);
+		replaceAll(msg.second, u"€1", rep[0]);
+        }
+        // End set beg, end, form, rep
 	return Err {
 		form,
 		beg,
