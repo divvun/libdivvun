@@ -655,6 +655,14 @@ using =$1= in errors.xml, e.g.
       <description xml:lang="en">The word "$1" seems to be in the wrong case.</description>
 #+end_src
 
+You can refer to the word form of the first correction / suggestion
+using =€1= in errors.xml, e.g.
+
+#+begin_src xml
+      <description xml:lang="en">Please don't write "$1", it sounds much nicer if you use "€1" instead.</description>
+#+end_src
+
+
 -----
 
 To refer to other words, you add relations named =$2= and so on:
