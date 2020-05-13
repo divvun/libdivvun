@@ -87,7 +87,7 @@ void CGCmd::run(stringstream& input, stringstream& output) const
 }
 
 #ifdef HAVE_CGSPELL
-CGSpellCmd::CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, float max_sent_unknown_rate, bool verbose)
+CGSpellCmd::CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, int limit, float beam, float max_weight, float max_sent_unknown_rate, bool verbose)
 	: speller(new Speller(errmodel, acceptor, verbose, max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff, max_sent_unknown_rate))
 {
 	if (!acceptor) {
@@ -97,7 +97,7 @@ CGSpellCmd::CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transduc
 		throw std::runtime_error("libdivvun: ERROR: CGSpell command couldn't read errmodel");
 	}
 }
-CGSpellCmd::CGSpellCmd (const string& err_path, const string& lex_path, float max_sent_unknown_rate, bool verbose)
+CGSpellCmd::CGSpellCmd (const string& err_path, const string& lex_path, int limit, float beam, float max_weight, float max_sent_unknown_rate, bool verbose)
 	: speller(new Speller(err_path, lex_path, verbose, max_analysis_weight, max_weight, real_word, limit, beam, time_cutoff, max_sent_unknown_rate))
 {
 }
@@ -211,6 +211,9 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 			};
 			auto* s = new CGSpellCmd(readArchiveExtract(ar_spec->ar_path, args["errmodel"], f),
 						 readArchiveExtract(ar_spec->ar_path, args["lexicon"], f),
+						 cmd.attribute("limit").as_int(10),
+						 cmd.attribute("beam").as_float(15.0),
+						 cmd.attribute("max-weight").as_float(5000.0),
 						 cmd.attribute("max-unknown-rate").as_float(0.4),
 						 verbose);
 			cmds.emplace_back(s);
@@ -292,6 +295,9 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 #ifdef HAVE_CGSPELL
 			cmds.emplace_back(new CGSpellCmd(args["errmodel"],
 							 args["lexicon"],
+							 cmd.attribute("limit").as_int(10),
+							 cmd.attribute("beam").as_float(15.0),
+							 cmd.attribute("max-weight").as_float(5000.0),
 							 cmd.attribute("max-unknown-rate").as_float(0.4),
 							 verbose));
 #else

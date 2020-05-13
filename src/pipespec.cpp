@@ -198,8 +198,14 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const Pip
 			prog += " -g" + argprepare(dir, args["grammar"]);
 		}
 		else if(name == "cgspell") {
+			int limit = cmd.attribute("limit").as_int(10);
+			float beam = cmd.attribute("beam").as_float(15);
+			float max_weight = cmd.attribute("max-weight").as_float(5000);
 			float max_sent_unknown_rate = cmd.attribute("max-unknown-rate").as_float(0.4);
-			prog = "divvun-cgspell -n 10 -b 15 -w 5000";
+			prog = "divvun-cgspell";
+			prog += " -n " + std::to_string(limit);
+			prog += " -b " + std::to_string(beam);
+			prog += " -w " + std::to_string(max_weight);
 			prog += " -u " + std::to_string(max_sent_unknown_rate);
 			prog += " -l" + argprepare(dir, args["lexicon"]);
 			prog += " -m" +  argprepare(dir, args["errmodel"]);

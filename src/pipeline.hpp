@@ -167,17 +167,14 @@ class CGCmd: public PipeCmd {
 #ifdef HAVE_CGSPELL
 class CGSpellCmd: public PipeCmd {
 	public:
-		CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, float max_sent_unknown_rate, bool verbose);
-		CGSpellCmd (const string& err_path, const string& lex_path, float max_sent_unknown_rate, bool verbose);
+		CGSpellCmd (hfst_ospell::Transducer* errmodel, hfst_ospell::Transducer* acceptor, int limit, float beam, float max_weight, float max_sent_unknown_rate, bool verbose);
+		CGSpellCmd (const string& err_path,            const string& lex_path,            int limit, float beam, float max_weight, float max_sent_unknown_rate, bool verbose);
 		void run(stringstream& input, stringstream& output) const override;
 		~CGSpellCmd() override = default;
 		// Some sane defaults for the speller
 		// TODO: Do we want any of this configurable from pipespec.xml, or from the Checker API?
 		static constexpr Weight max_analysis_weight = -1.0;
-		static constexpr Weight max_weight = 5000.0;
 		static constexpr bool real_word = false;
-		static constexpr unsigned long limit = 10;
-		static constexpr hfst_ospell::Weight beam = 15.0;
 		static constexpr float time_cutoff = 0.0;
 	private:
 		unique_ptr<Speller> speller;

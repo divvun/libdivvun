@@ -86,6 +86,9 @@
 <!ELEMENT cg (grammar)>           <!-- arg: grammar.cg3 -->
 <!ELEMENT cgspell ((lexicon, errmodel)|(errmodel, lexicon))> <!-- arg1: acceptor.hfstol, arg2: errmodel.hfst -->
 <!ATTLIST cgspell
+          limit CDATA "10"
+          beam CDATA "15.0"
+          max-weight CDATA "5000.0"
           max-unknown-rate CDATA "0.4">
 <!ELEMENT tokenize (tokenizer)>     <!-- arg: tokeniser.pmhfst -->
 <!ELEMENT tokenise (tokenizer)>     <!-- en_GB alias of the above -->
