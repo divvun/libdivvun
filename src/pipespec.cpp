@@ -21,7 +21,40 @@
 
 namespace divvun {
 
-void PipeSpec::parsePipeSpec(pugi::xml_parse_result& result, const string& file) {
+string abspath(const string& path) {
+	// TODO: would love to use <experimental/filesystem> here, but doesn't exist on Mac :(
+	// return std::experimental::filesystem::absolute(specfile).remove_filename();
+        char resolved_path[PATH_MAX];
+	if(realpath(path.c_str(), resolved_path) == NULL) {
+		throw std::runtime_error("libdivvun: ERROR: realpath(3) failed to resolve '" + path + "', got: " + std::strerror(errno));
+	}
+	return resolved_path;
+}
+
+
+/*
+ * return path1 / path2
+ */
+string pathconcat(const string& path1, const string& path2) {
+	// TODO: would love to use <experimental/filesystem> here, but doesn't exist on Mac :(
+	// TODO: \\ on Windows
+	if(path2.length() > 0 && path2[0] == '/') {
+		// second path is absolute, use second
+		return path2;
+	}
+	if(path1.length() > 0 && path1[path1.length() - 1] == '/') {
+		// first path ends in slash, just concatenate
+		return path1 + path2;
+	}
+	if(path1.length() == 0) {
+		// nothing to concatenate, keep relative if relative:
+		return path2;
+        }
+	// path1 is nonempty and doesn't end in slash already:
+	return path1 + "/" + path2;
+}
+
+void PipeSpec::parsePipeSpec(const string& dir, pugi::xml_parse_result& result, const string& file) {
 	if (result) {
 		language = doc.child("pipespec").attribute("language").value();
 		if(language == "") {
@@ -34,13 +67,19 @@ void PipeSpec::parsePipeSpec(pugi::xml_parse_result& result, const string& file)
 				// If no attribute, the first pipe is the default:
 				default_pipe = pipename;
 			}
-			auto pr = std::make_pair(pipename, pipeline);
-			pnodes[pipename] = pipeline;
+                        for (const pugi::xml_node &cmd : pipeline.children()) {
+                          for (const pugi::xml_node &arg : cmd.children()) {
+				  arg.attribute("n").set_value(
+					  pathconcat(dir,
+						     arg.attribute("n").value()).c_str());
+			  }
+                        }
+                        pnodes[pipename] = pipeline;
 		}
 		if(pnodes.find(default_pipe) == pnodes.end()) {
 			throw std::runtime_error("libdivvun: ERROR: Couldn't find pipeline with name of default-pipe " + toUtf8(default_pipe));
 		}
-	}
+        }
 	else {
 		std::cerr << file << ":" << result.offset << " ERROR: " << result.description() << "\n";
 		throw std::runtime_error("libdivvun: ERROR: Couldn't load the pipespec.xml from archive");
@@ -48,13 +87,14 @@ void PipeSpec::parsePipeSpec(pugi::xml_parse_result& result, const string& file)
 }
 
 PipeSpec::PipeSpec(const string& file) {
+	const auto dir = dirname(abspath(file));
 	pugi::xml_parse_result result = doc.load_file(file.c_str());
-	parsePipeSpec(result, file);
+	parsePipeSpec(dir, result, file);
 }
 
 PipeSpec::PipeSpec(pugi::char_t* buff, size_t size) {
 	pugi::xml_parse_result result = doc.load_buffer(buff, size);
-	parsePipeSpec(result, "<buffer>");
+	parsePipeSpec("", result,"<buffer>");
 }
 
 // TODO: return optional string message instead?
@@ -135,38 +175,13 @@ string makeDebugSuff(string name, std::unordered_map<string, string> args) {
 	return name;
 }
 
-string abspath(const string& path) {
-	// TODO: would love to use <experimental/filesystem> here, but doesn't exist on Mac :(
-	// return std::experimental::filesystem::absolute(specfile).remove_filename();
-        char resolved_path[PATH_MAX];
-	if(realpath(path.c_str(), resolved_path) == NULL) {
-		throw std::runtime_error("libdivvun: ERROR: realpath(3) failed to resolve '" + path + "', got: " + std::strerror(errno));
-	}
-	return resolved_path;
-}
-
-string pathconcat(const string& path1, const string& path2) {
-	// TODO: would love to use <experimental/filesystem> here, but doesn't exist on Mac :(
-	// return path1 / path2;
-	if(path2.length() > 0 && path2[0] == '/') {
-		return path2;
-	}
-	if(path1.length() > 0 && path1[path1.length() - 1] == '/') {
-		return path1 + path2;
-	}
-	else {
-		// TODO: \\ on Windows
-		return path1 + "/" + path2;
-	}
-}
-
-string argprepare(const string& dir, string file) {
+string argprepare(string file) {
 	// Wrap the whole thing in single-quotes, but put existing single-quotes in double-quotes
 	replaceAll(file, "'", "'\"'\"'");
-	return " '" + pathconcat(dir, file) + "'";
+	return " '" + file + "'";
 }
 
-vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const PipeSpec& spec, const u16string& pipename, bool trace, bool json) {
+vector<std::pair<string,string>> toPipeSpecShVector(const PipeSpec& spec, const u16string& pipename, bool trace, bool json) {
 	vector<std::pair<string, string>> cmds = {};
 	for (const pugi::xml_node& cmd: spec.pnodes.at(pipename).children()) {
 		const auto& name = string(cmd.name());
@@ -185,7 +200,7 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const Pip
 			if(json) {
 				prog += " -S";
 			}
-			prog += argprepare(dir, args["tokenizer"]);
+			prog += argprepare(args["tokenizer"]);
 		}
 		else if(name == "cg") {
 			prog = "vislcg3";
@@ -195,7 +210,7 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const Pip
 			if(json) {
 				prog += " --quiet";
 			}
-			prog += " -g" + argprepare(dir, args["grammar"]);
+			prog += " -g" + argprepare(args["grammar"]);
 		}
 		else if(name == "cgspell") {
 			int limit = cmd.attribute("limit").as_int(10);
@@ -207,14 +222,14 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const Pip
 			prog += " -b " + std::to_string(beam);
 			prog += " -w " + std::to_string(max_weight);
 			prog += " -u " + std::to_string(max_sent_unknown_rate);
-			prog += " -l" + argprepare(dir, args["lexicon"]);
-			prog += " -m" +  argprepare(dir, args["errmodel"]);
+			prog += " -l" + argprepare(args["lexicon"]);
+			prog += " -m" +  argprepare(args["errmodel"]);
 		}
 		else if(name == "mwesplit") {
 			prog = "cg-mwesplit";
 		}
 		else if(name == "blanktag") {
-			prog = "divvun-blanktag" + argprepare(dir, args["blanktagger"]);
+			prog = "divvun-blanktag" + argprepare(args["blanktagger"]);
 		}
 		else if(name == "suggest") {
 			bool generate_all_readings = cmd.attribute("generate-all").as_bool(false);
@@ -225,14 +240,14 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const Pip
 			if(generate_all_readings) {
 				prog += " --generate-all";
 			}
-			prog += " -g" + argprepare(dir, args["generator"]);
-			prog += " -m" + argprepare(dir, args["messages"]);
+			prog += " -g" + argprepare(args["generator"]);
+			prog += " -m" + argprepare(args["messages"]);
 			prog += " -l " + spec.language;
 		}
 		else if(name == "sh") {
 			prog = cmd.attribute("prog").value();
 			for(auto& a : args) {
-				prog += argprepare(dir, a.second);
+				prog += argprepare(a.second);
 			}
 		}
 		else if(name == "prefs") {
@@ -251,8 +266,7 @@ vector<std::pair<string,string>> toPipeSpecShVector(const string& dir, const Pip
 
 void writePipeSpecSh(const string& specfile, const u16string& pipename, bool json, std::ostream& os) {
 	const std::unique_ptr<PipeSpec> spec(new PipeSpec(specfile));
-	const auto dir = dirname(abspath(specfile));
-	const auto cmds = toPipeSpecShVector(dir, *spec, pipename, false, json);
+	const auto cmds = toPipeSpecShVector(*spec, pipename, false, json);
 	bool first = true;
 	os << "#!/bin/sh" << std::endl << std::endl;
 	for (const auto& cmd: cmds) {
@@ -307,15 +321,14 @@ void writePipeSpecShDirOne(const vector<std::pair<string, string>> cmds, const s
 
 void writePipeSpecShDir(const string& specfile, bool json, const string& modesdir, bool nodebug) {
 	const std::unique_ptr<PipeSpec> spec(new PipeSpec(specfile));
-	const auto dir = dirname(abspath(specfile));
 	for(const auto& p : spec->pnodes) {
 		const auto& pipename = toUtf8(p.first);
-		writePipeSpecShDirOne(toPipeSpecShVector(dir, *spec, p.first, false, json),
+		writePipeSpecShDirOne(toPipeSpecShVector(*spec, p.first, false, json),
 				      pipename,
 				      modesdir,
 				      nodebug);
 		if(!nodebug) {
-			writePipeSpecShDirOne(toPipeSpecShVector(dir, *spec, p.first, true, json),
+			writePipeSpecShDirOne(toPipeSpecShVector(*spec, p.first, true, json),
 					      "trace-" + pipename,
 					      modesdir,
 					      nodebug);

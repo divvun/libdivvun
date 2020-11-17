@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Test that we can run pipespec.xml's from other working directories.
+
+set -e
+if [[ ${BASH_VERSINFO[0]} -gt 4
+   || ${BASH_VERSINFO[0]} -eq 4 && ${BASH_VERSINFO[1]} -ge 4 ]]; then
+    set -u
+    # With bash <4.4, using ${a[@]} or ${a[*]} with an array without
+    # any assigned elements when the nounset option is enabled will
+    # throw an unbound variable error; so don't -u there
+fi
+
+cd "$(dirname "$0")"/../..
+
+n="xml"
+src/divvun-validate-pipespec test/checker/pipespec.xml
+(
+    set -x
+    src/divvun-checker -s test/checker/pipespec.xml -n smegram < test/checker/input."$n".txt > test/checker/output."$n".json
+)
+if ! diff test/checker/output."$n".json test/checker/expected."$n".json; then
+    echo diff test/checker/output."$n".json test/checker/expected."$n".json
+    exit 1
+fi
