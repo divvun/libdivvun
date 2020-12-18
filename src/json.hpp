@@ -59,7 +59,7 @@ inline const std::string esc(const std::u16string& str) {
 			default:
 				auto ci = (int)c;
 				if((sizeof(c) == 1 || static_cast<unsigned>(c) < 256)
-				   && (ci<0x1f ||
+				   && (ci<=0x1f ||
 				       ci==0x7f ||
 				       (ci>=0x80 && ci<=0x9f) ||
 				       c == '\\' ||
