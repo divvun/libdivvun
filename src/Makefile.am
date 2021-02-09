@@ -65,7 +65,14 @@ divvun_checker_CXXFLAGS =              $(libdivvun_la_CXXFLAGS)
 divvun_checkerdir       = $(datadir)
 endif
 
+# divvun-normaliser binary:
+divvun_normaliser_SOURCES  = main_normaliser.cpp normaliser.cpp
+divvun_normaliser_LDADD    = libdivvun.la $(libdivvun_la_LIBADD)
+divvun_normaliser_CXXFLAGS =              $(libdivvun_la_CXXFLAGS)
+bin_PROGRAMS            += divvun-normaliser
+dist_man_MANS           += divvun-normaliser.1
 # Only needed for development; we keep rnc's in version control:
+
 if HAVE_TRANG
 %.rnc: %.dtd
 	test -f $(TRANG) && java -jar $(TRANG) -I dtd -O rnc $< /dev/stdout >$@.tmp
