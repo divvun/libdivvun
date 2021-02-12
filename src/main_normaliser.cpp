@@ -81,7 +81,21 @@ int main(int argc, char ** argv)
 		{
 			std::cout << options.help({""}) << std::endl;
 			std::cerr << argv[0] <<
-              " ERROR: expected --normaliserser option." << std::endl;
+              " ERROR: expected --normaliser option" << std::endl;
+			return(EXIT_FAILURE);
+		}
+		if (!options.count("generator"))
+		{
+			std::cout << options.help({""}) << std::endl;
+			std::cerr << argv[0] <<
+              " ERROR: expected --generator option" << std::endl;
+			return(EXIT_FAILURE);
+		}
+		if (!options.count("surface-analyser"))
+		{
+			std::cout << options.help({""}) << std::endl;
+			std::cerr << argv[0] <<
+              " ERROR: expected --surface-analyser option." << std::endl;
 			return(EXIT_FAILURE);
 		}
 		const auto& danalyser = options["deep-analyser"].as<std::string>();
@@ -90,7 +104,6 @@ int main(int argc, char ** argv)
 		const auto& generator = options["generator"].as<std::string>();
 		const auto& verbose = options.count("verbose");
 		const auto& tags = options["tags"].as<std::vector<std::string>>();
-
 		auto normaliser = divvun::Normaliser(normaliserfile, generator,
                                              sanalyser, danalyser,
                                              tags, verbose);

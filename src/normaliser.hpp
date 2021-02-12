@@ -44,14 +44,14 @@ using std::unique_ptr;
 class Normaliser {
 	public:
 		Normaliser(const string& normaliser, const string& generator,
-                   const string& sanalyser, const string& analyser,
+                   const string& sanalyser, const string& danalyser,
                    const vector<string>& tags, bool verbose);
 		/*const*/ void run(std::istream& is, std::ostream& os);
 	private:
 		unique_ptr<const hfst::HfstTransducer> normaliser;
 		unique_ptr<const hfst::HfstTransducer> generator;
-		unique_ptr<const hfst::HfstTransducer> danalyser;
 		unique_ptr<const hfst::HfstTransducer> sanalyser;
+		unique_ptr<const hfst::HfstTransducer> danalyser;
         vector<string> tags;
         bool verbose;
 };

@@ -23,9 +23,16 @@ Normaliser::Normaliser(const string& normaliser_, const string& generator_,
                        const string& sanalyser_, const string& danalyser_,
                        const vector<string>& tags_, bool verbose_)
 	: normaliser(readTransducer(normaliser_)),
-      tags(tags_),
-      verbose(verbose_)
+      generator(readTransducer(generator_)),
+      sanalyser(readTransducer(sanalyser_)),
+      danalyser(readTransducer(danalyser_))
 {
+    if (verbose_) {
+        std::cout << "Read " << normaliser_ << ", " << generator_ << ", "
+          << sanalyser_ << ", " << danalyser_ << std::endl;
+    }
+    tags = tags_;
+    verbose = verbose_;
 
 }
 
@@ -49,6 +56,7 @@ void Normaliser::run(std::istream& is, std::ostream& os)
         else if ((!result.empty()) && (result[4].length() != 0)) {
             for (auto tag : tags) {
                 if (string(result[0]).find(tag) != std::string::npos) {
+                    // 1. apply expansions from normaliser
                     const auto& expansions = normaliser->lookup_fd(surf, -1, 2.0);
                     for (auto& e : *expansions) {
                         std::stringstream form;
@@ -57,8 +65,93 @@ void Normaliser::run(std::istream& is, std::ostream& os)
                                 form << symbol;
                             }
                         }
-                        os << "\t\"" << form.str() << "\"" << result[5] <<
-                          std::endl;
+                        std::string phon = form.str();
+                        std::string newlemma = form.str();
+                        std::string reanal = result[5].str();
+                        // 2. generate specific form wuth new lemma
+                        std::stringstream regen;
+                        regen << form.str();
+                        bool in_quot = false;
+                        bool in_at = false;
+                        bool in_bracket = false;
+                        for (auto& c : result[0].str()) {
+                            if (c == '\t') {
+                                continue;
+                            }
+                            else if (!in_quot && (c == '"')) {
+                                in_quot = true;
+                            }
+                            else if (in_quot && (c == '"')) {
+                                in_quot = false;
+                            }
+                            else if (c == '@') {
+                                in_at = true;
+                            }
+                            else if (c == '<') {
+                                in_bracket = true;
+                            }
+                            else if (c == '>') {
+                                in_bracket = false;
+                            }
+                            else if (c == ' ') {
+                                regen << "+";
+                                in_at = false;
+                            }
+                            else if (in_quot || in_at || in_bracket) {
+                                continue;
+                            }
+                            else {
+                                regen << c;
+                            }
+                        }
+                        auto s = regen.str();
+                        auto p = s.find("++");
+                        while (p != std::string::npos) {
+                            s.replace(p, 2, "+");
+                            p = s.find("++", p);
+                        }
+                        if (s.compare(s.length() - 1, 1, "+") == 0) {
+                            s = s.substr(0, s.length() - 1);
+                        }
+                        std::vector<std::string> removables{"+ABBR",
+                            "+Cmpnd"};
+                        for (auto r : removables) {
+                            p = s.find(r);
+                            while (p != std::string::npos) {
+                                s.replace(p, r.length(), "");
+                                p = s.find(r);
+                            }
+                        }
+                        const auto& regenerations =
+                          generator->lookup_fd(s, -1, 2.0);
+                        for (auto& rg : *regenerations) {
+                            std::stringstream regen;
+                            for (auto& reg: rg.second) {
+                                regen << reg;
+                            }
+                            phon = regen.str();
+                        }
+                        const auto& reanalyses =
+                          sanalyser->lookup_fd(phon, -1, 2.0);
+                        for (auto& ra : *reanalyses) {
+                            std::stringstream reform;
+                            for (auto& res: ra.second) {
+                                reform << res;
+                            }
+                            if (reform.str().find("+Cmp") == std::string::npos)
+                            {
+                                reanal = reform.str();
+                                p = reanal.find("+");
+                                reanal = reanal.substr(p, reanal.length());
+                                p = reanal.find("+");
+                                while (p != std::string::npos) {
+                                    reanal.replace(p, 1, " ");
+                                    p = reanal.find("+", p);
+                                }
+                            }
+                        }
+                        os << "\t\"" << newlemma << "\"" << reanal <<
+                          " \"" << phon << "\"phon" << std::endl;
                         os << "\t" << result[0] << std::endl;
                     }
                 }
