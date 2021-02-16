@@ -922,14 +922,18 @@ void print_cg_reading(const Casing& inputCasing, const string& readinglines, std
 	const auto& reading = proc_reading(t, readinglines, generate_all_readings);
 	if(reading.suggest) {
 		// std::cerr << "\033[1;35mreading.suggest=\t" << reading.suggest << "\033[0m" << std::endl;
-
 		const auto& ana = reading.ana;
 		const auto& formv = reading.sforms;
 		if(formv.empty()) {
 			os << ana << "\t" << "?" << std::endl;
 		}
 		else {
-			os << ana << "\t" << join(formv, ",") << std::endl;
+			StringVector casedforms;
+			for(const auto& s : formv) {
+				casedforms.push_back(
+					toUtf8(withCasing(reading.fixedcase, inputCasing, s)));
+			}
+			os << ana << "\t" << join(casedforms, ",") << std::endl;
 		}
 	}
 	else {
