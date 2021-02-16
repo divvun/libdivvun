@@ -928,21 +928,12 @@ void print_cg_reading(const Casing& inputCasing, const string& readinglines, std
 			os << ana << "\t" << "?" << std::endl;
 		}
 		else {
-            switch (inputCasing) {
-            case Casing::lower:
-    			os << ana << "\t" << join(formv, ",") << std::endl;
-                break;
-            case Casing::UPPER:
-    			os << ana << "\t" << toUtf8(toupper(join(formv, ","))) << std::endl;
-                break;
-            case Casing::Title:
-    			os << ana << "\t" << toUtf8(totitle(join(formv, ","))) << std::endl;
-                break;
-            case Casing::mIxed:
-              /* fall through */
-            default:
-    			os << ana << "\t" << join(formv, ",") << std::endl;
-            }
+			StringVector casedforms;
+			for(const auto& s : formv) {
+				casedforms.push_back(
+					toUtf8(withCasing(reading.fixedcase, inputCasing, s)));
+			}
+			os << ana << "\t" << join(casedforms, ",") << std::endl;
 		}
 	}
 	else {
