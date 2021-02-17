@@ -126,30 +126,35 @@ inline Casing getCasing(string input) {
 //
 // Does lots of probably unnecessary encoding-mangling too, but at
 // least it works, if the user locale is OK.
-inline std::u16string toupper(const string& input) {
+inline std::string toupper(const string& input) {
 	std::wstring w = wideFromUtf8(input);
 	setlocale(LC_ALL, "");
 	std::transform(w.begin(), w.end(), w.begin(), std::towupper);
-	return fromUtf8(wideToUtf8(w));
+	return wideToUtf8(w);
 }
 
-inline std::u16string totitle(const string& input) {
+inline std::string totitle(const string& input) {
 	std::wstring w = wideFromUtf8(input);
 	setlocale(LC_ALL, "");
 	std::transform(w.begin(), w.begin()+1, w.begin(), std::towupper);
-	return fromUtf8(wideToUtf8(w));
+	return wideToUtf8(w);
 }
 // #endif
 
-inline std::u16string withCasing(bool fixedcase, const Casing& inputCasing, const string& input) {
-		if (!fixedcase && inputCasing == Title) {
+inline std::string withCasing(bool fixedcase, const Casing& inputCasing, const string& input) {
+	if(fixedcase) {
+		return input;
+	}
+	switch(inputCasing) {
+		case Title:
 			return totitle(input);
-		} else if (!fixedcase && inputCasing == UPPER) {
+		case UPPER:
 			return toupper(input);
-		}
-		else {
-			return fromUtf8(input);
-		}
+		case mIxed:
+			return input;
+		case lower:
+			return input;
+	}
 }
 
 struct Reading {

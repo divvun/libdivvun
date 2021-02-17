@@ -549,7 +549,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 					     });
 			     });
 		for(const auto s: r.sforms) {
-			rep.push_back(withCasing(r.fixedcase, underlineCasing, s));
+			rep.push_back(fromUtf8(withCasing(r.fixedcase, underlineCasing, s)));
 		}
 		std::map<size_t, size_t> deleted;
 		rel_on_match(r.rels, DELETE_REL, sentence,
@@ -931,7 +931,7 @@ void print_cg_reading(const Casing& inputCasing, const string& readinglines, std
 			StringVector casedforms;
 			for(const auto& s : formv) {
 				casedforms.push_back(
-					toUtf8(withCasing(reading.fixedcase, inputCasing, s)));
+					withCasing(reading.fixedcase, inputCasing, s));
 			}
 			os << ana << "\t" << join(casedforms, ",") << std::endl;
 		}
@@ -996,7 +996,6 @@ void Suggest::run(std::istream& is, std::ostream& os, RunMode mode)
 			while(run_autocorrect(is, os) == flushing);
 			break;
 		case RunCG:
-		default:
 			run_cg(is, os, *generator, generate_all_readings); // ignores ignores
 			break;
 	}
