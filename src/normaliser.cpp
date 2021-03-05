@@ -24,12 +24,24 @@ Normaliser::Normaliser(const string& normaliser_, const string& generator_,
                        const vector<string>& tags_, bool verbose_)
 	: normaliser(readTransducer(normaliser_)),
       generator(readTransducer(generator_)),
-      sanalyser(readTransducer(sanalyser_))
-//      danalyser(readTransducer(danalyser_))
+      sanalyser(readTransducer(sanalyser_)),
+      danalyser(readTransducer(danalyser_))
 {
     if (verbose_) {
-        std::cout << "Read " << normaliser_ << ", " << generator_ << ", "
-          << sanalyser_ << ", " << danalyser_ << std::endl;
+        std::cout << "Read ";
+        if (normaliser) {
+            std::cout << normaliser_;
+        }
+        if (generator) {
+            std::cout << ", " << generator_;
+        }
+        if (sanalyser) {
+            std::cout << ", " << sanalyser_;
+        }
+        if (danalyser) {
+            std::cout << ", " << danalyser_;
+        }
+        std::cout << std::endl;
     }
     tags = tags_;
     verbose = verbose_;
