@@ -24,8 +24,8 @@ Normaliser::Normaliser(const string& normaliser_, const string& generator_,
                        const vector<string>& tags_, bool verbose_)
 	: normaliser(readTransducer(normaliser_)),
       generator(readTransducer(generator_)),
-      sanalyser(readTransducer(sanalyser_)),
-      danalyser(readTransducer(danalyser_))
+      sanalyser(readTransducer(sanalyser_))
+//      danalyser(readTransducer(danalyser_))
 {
     if (verbose_) {
         std::cout << "Read " << normaliser_ << ", " << generator_ << ", "
@@ -54,6 +54,9 @@ void Normaliser::run(std::istream& is, std::ostream& os)
             os << result[0] << std::endl;
         }
         else if ((!result.empty()) && (result[4].length() != 0)) {
+            if (tags.empty()) {
+                os << result[0] << std::endl;
+            }
             for (auto tag : tags) {
                 if (string(result[0]).find(tag) != std::string::npos) {
                     // 1. apply expansions from normaliser
