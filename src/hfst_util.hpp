@@ -37,7 +37,7 @@ inline const hfst::HfstTransducer* readTransducer(std::istream& is) {
 		return nullptr;
 	}
 	catch (HfstException& e) {
-		std::cerr << "libdivvun: ERROR: HfstException." << std::endl;
+		std::cerr << "libdivvun: ERROR: HfstException: " << e.what() << std::endl;
 		return nullptr;
 	}
 
@@ -76,7 +76,7 @@ inline const hfst::HfstTransducer* readTransducer(const string& file) {
 		return nullptr;
 	}
 	catch (HfstException& e) {
-		std::cerr << "libdivvun: ERROR: HfstException." << std::endl;
+		std::cerr << "libdivvun: ERROR: HfstException: " << e.what() << std::endl;
 		return nullptr;
 	}
 
