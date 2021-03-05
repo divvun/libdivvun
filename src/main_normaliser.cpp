@@ -43,7 +43,7 @@ int main(int argc, char ** argv)
              cxxopts::value<std::string>(), "FILE")
 			("g,generator", "FST for generations",
              cxxopts::value<std::string>(), "BIN")
-			("t,tags", "limit tags to expand (UNIMPLEMENTED)",
+			("t,tags", "limit tags to expand",
              cxxopts::value<std::vector<std::string>>(), "TAGS")
 			("v,verbose", "Be verbose")
 			("V,version", "Version information")
@@ -98,12 +98,17 @@ int main(int argc, char ** argv)
               " ERROR: expected --surface-analyser option." << std::endl;
 			return(EXIT_FAILURE);
 		}
+		if (!options.count("tags"))
+		{
+			std::cerr << argv[0] <<
+              " WARNING: expected at least one --tags option." << std::endl;
+		}
 		const auto& danalyser = options["deep-analyser"].as<std::string>();
 		const auto& sanalyser = options["surface-analyser"].as<std::string>();
 		const auto& normaliserfile = options["normaliser"].as<std::string>();
 		const auto& generator = options["generator"].as<std::string>();
 		const auto& verbose = options.count("verbose");
-		const auto& tags = options["tags"].as<std::vector<std::string>>();
+        const auto& tags =  options["tags"].as<std::vector<std::string>>();
 		auto normaliser = divvun::Normaliser(normaliserfile, generator,
                                              sanalyser, danalyser,
                                              tags, verbose);
