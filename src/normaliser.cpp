@@ -142,8 +142,10 @@ void Normaliser::run(std::istream& is, std::ostream& os)
                         for (auto& rg : *regenerations) {
                             std::stringstream regen;
                             for (auto& reg: rg.second) {
-                                regen << reg;
-                            }
+                                if (!hfst::FdOperation::is_diacritic(reg)) {
+                                    regen << reg;
+                                }
+                             }
                             phon = regen.str();
                         }
                         const auto& reanalyses =
@@ -151,7 +153,9 @@ void Normaliser::run(std::istream& is, std::ostream& os)
                         for (auto& ra : *reanalyses) {
                             std::stringstream reform;
                             for (auto& res: ra.second) {
-                                reform << res;
+                                if (!hfst::FdOperation::is_diacritic(res)) {
+                                    reform << res;
+                                }
                             }
                             if (reform.str().find("+Cmp") == std::string::npos)
                             {
