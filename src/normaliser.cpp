@@ -30,16 +30,16 @@ Normaliser::Normaliser(const string& normaliser_, const string& generator_,
     normaliser = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(normaliser_)));
     if (verbose_) {
         std::cout << "* " << generator_ << std::endl;
-        generator = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(generator_)));
     }
+    generator = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(generator_)));
     if (verbose_) {
         std::cout << "* " << sanalyser_ << std::endl;
-        sanalyser = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(sanalyser_)));
     }
+    sanalyser = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(sanalyser_)));
     if (verbose_) {
         std::cout << "* " << danalyser_ << std::endl;
-        danalyser = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(danalyser_)));
     }
+    danalyser = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(danalyser_)));
     if (verbose_) {
         std::cout << "expanding tags: ";
         for (auto tag : tags) {
@@ -150,6 +150,10 @@ void Normaliser::run(std::istream& is, std::ostream& os)
                                 p = s.find(r);
                             }
                         }
+                        if (verbose) {
+                            std::cout << "2. looking up regenerating: " << s
+                                      <<  std::endl;
+                        }
                         const auto& regenerations =
                           generator->lookup_fd(s, -1, 2.0);
                         for (auto& rg : *regenerations) {
@@ -160,6 +164,10 @@ void Normaliser::run(std::istream& is, std::ostream& os)
                                 }
                              }
                             phon = regen.str();
+                        }
+                        if (verbose) {
+                            std::cout << "3. looking up reanalysing: " << phon
+                                      <<  std::endl;
                         }
                         const auto& reanalyses =
                           sanalyser->lookup_fd(phon, -1, 2.0);
