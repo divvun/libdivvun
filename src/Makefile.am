@@ -71,8 +71,8 @@ divvun_normaliser_LDADD    = libdivvun.la $(libdivvun_la_LIBADD) $(HFST_LIBS)
 divvun_normaliser_CXXFLAGS =              $(libdivvun_la_CXXFLAGS) $(HFST_CXXFLAGS)
 bin_PROGRAMS            += divvun-normaliser
 dist_man_MANS           += divvun-normaliser.1
-# Only needed for development; we keep rnc's in version control:
 
+# Only needed for development; we keep rnc's in version control:
 if HAVE_TRANG
 %.rnc: %.dtd
 	test -f $(TRANG) && java -jar $(TRANG) -I dtd -O rnc $< /dev/stdout >$@.tmp
