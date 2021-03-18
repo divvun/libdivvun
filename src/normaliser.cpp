@@ -22,24 +22,28 @@ namespace divvun {
 Normaliser::Normaliser(const string& normaliser_, const string& generator_,
                        const string& sanalyser_, const string& danalyser_,
                        const vector<string>& tags_, bool verbose_)
-	: normaliser(readTransducer(normaliser_)),
-      generator(readTransducer(generator_)),
-      sanalyser(readTransducer(sanalyser_)),
-      danalyser(readTransducer(danalyser_))
 {
     if (verbose_) {
-        std::cout << "Read ";
-        if (normaliser) {
-            std::cout << normaliser_;
-        }
-        if (generator) {
-            std::cout << ", " << generator_;
-        }
-        if (sanalyser) {
-            std::cout << ", " << sanalyser_;
-        }
-        if (danalyser) {
-            std::cout << ", " << danalyser_;
+        std::cout << "Reading files: " << std::endl;
+        std::cout << "* " << normaliser_ << std::endl;
+    }
+    normaliser = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(normaliser_)));
+    if (verbose_) {
+        std::cout << "* " << generator_ << std::endl;
+        generator = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(generator_)));
+    }
+    if (verbose_) {
+        std::cout << "* " << sanalyser_ << std::endl;
+        sanalyser = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(sanalyser_)));
+    }
+    if (verbose_) {
+        std::cout << "* " << danalyser_ << std::endl;
+        danalyser = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(danalyser_)));
+    }
+    if (verbose_) {
+        std::cout << "expanding tags: ";
+        for (auto tag : tags) {
+            std::cout << tag << " ";
         }
         std::cout << std::endl;
     }
@@ -47,6 +51,7 @@ Normaliser::Normaliser(const string& normaliser_, const string& generator_,
     verbose = verbose_;
 
 }
+
 
 
 void Normaliser::run(std::istream& is, std::ostream& os)
@@ -62,6 +67,9 @@ void Normaliser::run(std::istream& is, std::ostream& os)
         //
         //
         if ((!result.empty()) && (result[2].length() != 0)) {
+            if (verbose) {
+                std::cout << "New surface form: " << result[2] << std::endl;
+            }
             surf = result[2];
             os << result[0] << std::endl;
         }
@@ -72,6 +80,11 @@ void Normaliser::run(std::istream& is, std::ostream& os)
             for (auto tag : tags) {
                 if (string(result[0]).find(tag) != std::string::npos) {
                     // 1. apply expansions from normaliser
+                    if (verbose) {
+                        std::cout << "Expanding because of " << tag <<
+                                     std::endl;
+                        std::cout << "1. looking up normaliser" << std::endl;
+                    }
                     const auto& expansions = normaliser->lookup_fd(surf, -1, 2.0);
                     for (auto& e : *expansions) {
                         std::stringstream form;

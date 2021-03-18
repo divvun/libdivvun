@@ -103,16 +103,38 @@ int main(int argc, char ** argv)
 			std::cerr << argv[0] <<
               " WARNING: expected at least one --tags option." << std::endl;
 		}
-		const auto& danalyser = options["deep-analyser"].as<std::string>();
-		const auto& sanalyser = options["surface-analyser"].as<std::string>();
-		const auto& normaliserfile = options["normaliser"].as<std::string>();
-		const auto& generator = options["generator"].as<std::string>();
 		const auto& verbose = options.count("verbose");
+        if (verbose) {
+            std::cout << "Being verbose." << std::endl;
+        }
+		const auto& sanalyser = options["surface-analyser"].as<std::string>();
+		if (verbose) {
+            std::cout << "Surface analyser set to: " << sanalyser << std::endl;
+        }
+        const auto& normaliserfile = options["normaliser"].as<std::string>();
+		if (verbose) {
+            std::cout << "Normaliser set to: " << normaliserfile << std::endl;
+        }
+		const auto& generator = options["generator"].as<std::string>();
+		if (verbose) {
+            std::cout << "Generator set to: " << generator << std::endl;
+        }
+		const auto& danalyser = options["deep-analyser"].as<std::string>();
+		if (verbose) {
+            std::cout << "Deep analyser set to: " << danalyser << std::endl;
+        }
         const auto& tags =  options["tags"].as<std::vector<std::string>>();
-		auto normaliser = divvun::Normaliser(normaliserfile, generator,
+		if (verbose) {
+            std::cout << "Tags set to: ";
+            for (auto tag : tags) {
+                std::cout << tag << " ";
+            }
+            std::cout << std::endl;
+        }
+        auto normaliser = divvun::Normaliser(normaliserfile, generator,
                                              sanalyser, danalyser,
                                              tags, verbose);
-		normaliser.run(std::cin, std::cout);
+        normaliser.run(std::cin, std::cout);
 	}
 	catch (const cxxopts::OptionException& e)
 	{
