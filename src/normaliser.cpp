@@ -101,6 +101,12 @@ void Normaliser::run(std::istream& is, std::ostream& os)
                     std::cout << "1. looking up normaliser" << std::endl;
                 }
                 const auto& expansions = normaliser->lookup_fd(surf, -1, 2.0);
+                if (expansions->empty()) {
+                    if (verbose) {
+                        std::cout << "Normaliser results empty." << std::endl;
+                    }
+                    os << result[0] << std::endl;
+                }
                 for (auto& e : *expansions) {
                     std::stringstream form;
                     for (auto& symbol: e.second) {
