@@ -27,19 +27,27 @@ Normaliser::Normaliser(const string& normaliser_, const string& generator_,
         std::cout << "Reading files: " << std::endl;
         std::cout << "* " << normaliser_ << std::endl;
     }
-    normaliser = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(normaliser_)));
+    if (normaliser_ != "") {
+        normaliser = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(normaliser_)));
+    }
     if (verbose_) {
         std::cout << "* " << generator_ << std::endl;
     }
-    generator = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(generator_)));
+    if (generator_ != "") {
+        generator = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(generator_)));
+    }
     if (verbose_) {
         std::cout << "* " << sanalyser_ << std::endl;
     }
-    sanalyser = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(sanalyser_)));
+    if (sanalyser_ != "") {
+        sanalyser = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(sanalyser_)));
+    }
     if (verbose_) {
         std::cout << "* " << danalyser_ << std::endl;
     }
-    danalyser = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(danalyser_)));
+    if (danalyser_ != "") {
+        danalyser = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(danalyser_)));
+    }
     if (verbose_) {
         std::cout << "expanding tags: ";
         for (auto tag : tags) {
