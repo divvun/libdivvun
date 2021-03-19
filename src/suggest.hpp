@@ -155,6 +155,8 @@ inline std::string withCasing(bool fixedcase, const Casing& inputCasing, const s
 		case lower:
 			return input;
 	}
+	// should never get to this point
+	return input;
 }
 
 struct Reading {
