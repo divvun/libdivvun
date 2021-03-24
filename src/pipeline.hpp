@@ -32,6 +32,7 @@
 #include "cgspell.hpp"
 #endif
 #include "blanktag.hpp"
+#include "normaliser.hpp"
 // xml:
 #include <pugixml.hpp>
 // cg3:
@@ -149,6 +150,14 @@ class MweSplitCmd: public PipeCmd {
 		// cg3_applicator* applicator;
 };
 
+class NormaliseCmd: public PipeCmd {
+	public:
+		explicit NormaliseCmd (bool verbose);
+		void run(stringstream& input, stringstream& output) const override;
+		~NormaliseCmd() override = default;
+	private:
+		unique_ptr<Normaliser> normaliser;
+};
 
 class CGCmd: public PipeCmd {
 	public:

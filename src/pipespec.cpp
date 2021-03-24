@@ -120,6 +120,19 @@ void validatePipespecCmd(const pugi::xml_node& cmd, const std::unordered_map<str
 			throw std::runtime_error("Wrong arguments to <mwesplit> command (expected none), at byte offset " + std::to_string(cmd.offset_debug()));
 		}
 	}
+	else if(name == "normalise") {
+		if(args.size() != 4) {
+			throw std::runtime_error("Wrong arguments to <normalise> command (expected 4), at byte offset " + std::to_string(cmd.offset_debug()));
+		}
+		if(args.find("normaliser") == args.end() || args.find("analyser") ==
+           args.end() || args.find("generator") == args.end()  ||
+           args.find("tags") == args.end()) {
+			throw std::runtime_error("Wrong arguments to <normalise> command "
+                                     "(expected <normaliser>, <analyser>, "
+                                     "<generator> and <tags>), at byte offset "
+                                     + std::to_string(cmd.offset_debug()));
+		}
+	}
 	else if(name == "blanktag") {
 		if(args.size() != 1 || args.find("blanktagger") == args.end()) {
 			throw std::runtime_error("Wrong arguments to <blanktag> command (expected <blanktagger>), at byte offset " + std::to_string(cmd.offset_debug()));
@@ -166,6 +179,9 @@ string makeDebugSuff(string name, std::unordered_map<string, string> args) {
 	if(name == "mwesplit") {
 		return "mwe-split";
 	}
+	if(name == "normalise") {
+		return "normalise";
+	}
 	if(name == "blanktag") {
 		return "blanktag";
 	}
@@ -181,8 +197,8 @@ string argprepare(string file) {
 	return " '" + file + "'";
 }
 
-vector<std::pair<string,string>> toPipeSpecShVector(const PipeSpec& spec, const u16string& pipename, bool trace, bool json) {
-	vector<std::pair<string, string>> cmds = {};
+std::vector<std::pair<string,string>> toPipeSpecShVector(const PipeSpec& spec, const u16string& pipename, bool trace, bool json) {
+    std::vector<std::pair<string, string>> cmds = {};
 	for (const pugi::xml_node& cmd: spec.pnodes.at(pipename).children()) {
 		const auto& name = string(cmd.name());
 		string prog;
@@ -227,6 +243,13 @@ vector<std::pair<string,string>> toPipeSpecShVector(const PipeSpec& spec, const 
 		}
 		else if(name == "mwesplit") {
 			prog = "cg-mwesplit";
+		}
+		else if(name == "normalise") {
+			prog = "divvun-normalise";
+            prog += " -a " + argprepare(args["analyser"]);
+            prog += " -g " + argprepare(args["generator"]);
+            prog += " -n " + argprepare(args["normaliser"]);
+            prog += " -t " + args["tags"];
 		}
 		else if(name == "blanktag") {
 			prog = "divvun-blanktag" + argprepare(args["blanktagger"]);
@@ -285,7 +308,7 @@ void chmod777(const string& path) {
 	}
 }
 
-void writePipeSpecShDirOne(const vector<std::pair<string, string>> cmds, const string& pipename, const string& modesdir, bool nodebug) {
+void writePipeSpecShDirOne(const std::vector<std::pair<std::string, std::string>> cmds, const string& pipename, const string& modesdir, bool nodebug) {
 	// TODO: (modesdir / …) when we get <experimental/filesystem>
 	size_t i = 0;
 	if(nodebug) {

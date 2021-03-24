@@ -63,6 +63,15 @@ void MweSplitCmd::run(stringstream& input, stringstream& output) const
 	cg3_run_mwesplit_on_text(applicator.get(), (std_istream*)&input, (std_ostream*)&output);
 }
 
+NormaliseCmd::NormaliseCmd (bool verbose)
+{
+}
+
+void NormaliseCmd::run(stringstream& input, stringstream& output) const
+{
+	normaliser->run(input, output);
+}
+
 
 
 CGCmd::CGCmd (const char* buff, const size_t size, bool verbose)
@@ -224,6 +233,9 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 		else if(name == u"mwesplit") {
 			cmds.emplace_back(new MweSplitCmd(verbose));
 		}
+		else if(name == u"normalise") {
+			cmds.emplace_back(new NormaliseCmd(verbose));
+		}
 		else if(name == u"blanktag") {
 			ArEntryHandler<const hfst::HfstTransducer*> f = [] (const string& ar_path, const void* buff, const size_t size) {
 				OneShotReadBuf osrb((char*)buff, size);
@@ -303,6 +315,9 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 #else
 			throw std::runtime_error("libdivvun: ERROR: Tried to run pipeline with cgspell, but was compiled without cgspell support!");
 #endif
+		}
+		else if(name == u"normalise") {
+			cmds.emplace_back(new NormaliseCmd(verbose));
 		}
 		else if(name == u"mwesplit") {
 			cmds.emplace_back(new MweSplitCmd(verbose));

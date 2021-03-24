@@ -55,12 +55,12 @@
 
 namespace divvun {
 
-using mapbox::util::variant;
+//using mapbox::util::variant;
 using std::string;
 using std::stringstream;
 using std::u16string;
 using std::unique_ptr;
-using std::vector;
+//using std::vector;
 
 class PipeSpec {
 	public:
