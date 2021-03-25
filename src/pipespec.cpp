@@ -245,12 +245,15 @@ std::vector<std::pair<string,string>> toPipeSpecShVector(const PipeSpec& spec, c
 			prog = "cg-mwesplit";
 		}
 		else if(name == "normalise") {
-			prog = "divvun-normalise";
+			prog = "divvun-normaliser";
             prog += " -a " + argprepare(args["analyser"]);
             prog += " -g " + argprepare(args["generator"]);
             prog += " -n " + argprepare(args["normaliser"]);
-            prog += " -t " + args["tags"];
-		}
+            const pugi::xml_node& tags = cmd.child("tags");
+            for (const pugi::xml_node& tag: tags.children()) {
+                prog += string(" -t ") +  string(tag.attribute("n").value());
+            }
+        }
 		else if(name == "blanktag") {
 			prog = "divvun-blanktag" + argprepare(args["blanktagger"]);
 		}
