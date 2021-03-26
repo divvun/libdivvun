@@ -265,7 +265,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
                                                           args["generator"],
                                                           f),
                                        readArchiveExtract(ar_spec->ar_path,
-                                                          args["generator"],
+                                                          args["analyser"],
                                                           f),
                                        tags,
                                        verbose);
