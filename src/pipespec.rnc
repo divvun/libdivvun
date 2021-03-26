@@ -134,6 +134,20 @@ attlist.suggest &=
 
   [ a:defaultValue = "false" ]
   attribute generate-all { "true" | "false" }?
+normalise =
+  element normalise {
+    attlist.normalise, normaliser, analyser, generator, tags
+  }
+attlist.normalise &= empty
+
+normalize =
+  element normalize {
+    attlist.normalize, normaliser, analyser, generator, tags
+  }
+attlist.normalize &= empty
+
+# en_US variant of above
+
 # Is there a way to generalize over these apart from shifting to <arg key=… val=…>?
 arg = element arg { attlist.arg, empty }
 attlist.arg &= attribute n { text }
@@ -159,5 +173,17 @@ attlist.generator &= attribute n { text }
 messages = element messages { attlist.messages, empty }
 attlist.messages &= attribute n { text }
 
+normaliser = element normaliser { attlist.normaliser, empty }
+attlist.normaliser &= attribute n { text }
+
+analyser = element analyser { attlist.analyser, empty }
+attlist.analyser &= attribute n { text }
+
+tags = element tags { attlist.tags, tag+ }
+attlist.tags &= empty
+
+tag = element tag { attlist.tag, empty }
+attlist.tag &= attribute n { text }
+
 em |= notAllowed
-start = pipespec
+start = normalize | normalise | pipespec
