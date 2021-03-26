@@ -120,7 +120,7 @@ void validatePipespecCmd(const pugi::xml_node& cmd, const std::unordered_map<str
 			throw std::runtime_error("Wrong arguments to <mwesplit> command (expected none), at byte offset " + std::to_string(cmd.offset_debug()));
 		}
 	}
-	else if(name == "normalise") {
+	else if((name == "normalise") || (name == "normalize")) {
 		if(args.size() != 4) {
 			throw std::runtime_error("Wrong arguments to <normalise> command (expected 4), at byte offset " + std::to_string(cmd.offset_debug()));
 		}
@@ -244,7 +244,7 @@ std::vector<std::pair<string,string>> toPipeSpecShVector(const PipeSpec& spec, c
 		else if(name == "mwesplit") {
 			prog = "cg-mwesplit";
 		}
-		else if(name == "normalise") {
+		else if((name == "normalise") || (name == "normalize")) {
 			prog = "divvun-normaliser";
             prog += " -a " + argprepare(args["analyser"]);
             prog += " -g " + argprepare(args["generator"]);
