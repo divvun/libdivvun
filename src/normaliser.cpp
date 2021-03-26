@@ -19,6 +19,20 @@
 
 namespace divvun {
 
+Normaliser::Normaliser(const hfst::HfstTransducer* normaliser_,
+                       const hfst::HfstTransducer* generator_,
+                       const hfst::HfstTransducer* sanalyser_,
+                       const hfst::HfstTransducer* danalyser_,
+                       const vector<string>& tags_, bool verbose_) :
+    normaliser(normaliser_),
+    generator(generator_),
+    sanalyser(sanalyser_),
+    danalyser(danalyser_),
+    tags(tags_),
+    verbose(verbose_)
+{
+}
+
 Normaliser::Normaliser(const string& normaliser_, const string& generator_,
                        const string& sanalyser_, const string& danalyser_,
                        const vector<string>& tags_, bool verbose_)

@@ -63,8 +63,22 @@ void MweSplitCmd::run(stringstream& input, stringstream& output) const
 	cg3_run_mwesplit_on_text(applicator.get(), (std_istream*)&input, (std_ostream*)&output);
 }
 
-NormaliseCmd::NormaliseCmd (bool verbose)
+NormaliseCmd::NormaliseCmd (const hfst::HfstTransducer* normaliser_,
+                            const hfst::HfstTransducer* generator,
+                            const hfst::HfstTransducer* analyser,
+                            const vector<string>& tags, bool verbose) :
+    normaliser(new divvun::Normaliser(normaliser_, generator, analyser, NULL,
+                                      tags, verbose))
 {
+
+}
+NormaliseCmd::NormaliseCmd (const string& normaliser_, const string& generator,
+                            const string& analyser,
+                            const vector<string>& tags, bool verbose) :
+    normaliser(new divvun::Normaliser(normaliser_, generator, analyser, "",
+                                      tags, verbose))
+{
+
 }
 
 void NormaliseCmd::run(stringstream& input, stringstream& output) const
@@ -233,8 +247,29 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 		else if(name == u"mwesplit") {
 			cmds.emplace_back(new MweSplitCmd(verbose));
 		}
-		else if(name == u"normalise") {
-			cmds.emplace_back(new NormaliseCmd(verbose));
+		else if((name == u"normalise") || (name == u"normalize")) {
+			ArEntryHandler<const hfst::HfstTransducer*> f = [] (const string& ar_path, const void* buff, const size_t size) {
+				OneShotReadBuf osrb((char*)buff, size);
+				std::istream is(&osrb);
+				return readTransducer(is);
+			};
+            auto tags = std::vector<std::string>();
+            const pugi::xml_node& tags_element = cmd.child("tags");
+            for (const pugi::xml_node& tag : tags_element.children()) {
+                tags.push_back(tag.attribute("n").value());
+            }
+            auto* s = new NormaliseCmd(readArchiveExtract(ar_spec->ar_path,
+                                                          args["normaliser"],
+                                                          f),
+                                       readArchiveExtract(ar_spec->ar_path,
+                                                          args["generator"],
+                                                          f),
+                                       readArchiveExtract(ar_spec->ar_path,
+                                                          args["generator"],
+                                                          f),
+                                       tags,
+                                       verbose);
+			cmds.emplace_back(s);
 		}
 		else if(name == u"blanktag") {
 			ArEntryHandler<const hfst::HfstTransducer*> f = [] (const string& ar_path, const void* buff, const size_t size) {
@@ -316,8 +351,14 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 			throw std::runtime_error("libdivvun: ERROR: Tried to run pipeline with cgspell, but was compiled without cgspell support!");
 #endif
 		}
-		else if(name == u"normalise") {
-			cmds.emplace_back(new NormaliseCmd(verbose));
+		else if((name == u"normalise") || (name == u"normalize")) {
+            std::cerr << "This normaliser codepath is not yet implemented up!"
+                      << std::endl;
+            /*cmds.emplace_back(new NormaliseCmd(args["normaliser"],
+                                               args["generator"],
+                                               args["analyser"],
+                                               args["tags"],
+                                               verbose));*/
 		}
 		else if(name == u"mwesplit") {
 			cmds.emplace_back(new MweSplitCmd(verbose));

@@ -43,6 +43,11 @@ using std::unique_ptr;
 
 class Normaliser {
     public:
+        Normaliser(const hfst::HfstTransducer* normaliser,
+                   const hfst::HfstTransducer* generator,
+                   const hfst::HfstTransducer* sanalyser,
+                   const hfst::HfstTransducer* danalyser,
+                   const vector<string>& tags, bool verbose);
         Normaliser(const string& normaliser, const string& generator,
                    const string& sanalyser, const string& danalyser,
                    const vector<string>& tags, bool verbose);

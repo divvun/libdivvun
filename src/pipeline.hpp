@@ -152,7 +152,19 @@ class MweSplitCmd: public PipeCmd {
 
 class NormaliseCmd: public PipeCmd {
 	public:
-		explicit NormaliseCmd (bool verbose);
+//        Normaliser(const string& normaliser, const string& generator,
+//                   const string& sanalyser, const string& danalyser,
+//                   const vector<string>& tags, bool verbose); 
+        explicit NormaliseCmd (const string& normaliser,
+                               const string& generator,
+                               const string& analyser, 
+                               const vector<string>& tags,
+                               bool verbose);
+        NormaliseCmd (const hfst::HfstTransducer* normaliser,
+                      const hfst::HfstTransducer* generator,
+                      const hfst::HfstTransducer* analyser, 
+                      const vector<string>& tags,
+                      bool verbose);
 		void run(stringstream& input, stringstream& output) const override;
 		~NormaliseCmd() override = default;
 	private:
