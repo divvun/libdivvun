@@ -16,8 +16,8 @@
 */
 
 #pragma once
-#ifndef a0d6827329788a87_BLANKTAG_HPP
-#define a0d6827329788a87_BLANKTAG_HPP
+#ifndef a0d6827329788a87_NORMALISER_HPP
+#define a0d6827329788a87_NORMALISER_HPP
 
 #include <locale>
 #include <vector>
