@@ -72,6 +72,13 @@ divvun_normaliser_CXXFLAGS =              $(libdivvun_la_CXXFLAGS) $(HFST_CXXFLA
 bin_PROGRAMS            += divvun-normaliser
 dist_man_MANS           += divvun-normaliser.1
 
+# divvun-phon binary:
+divvun_phon_SOURCES  = main_phon.cpp phon.cpp
+divvun_phon_LDADD    = libdivvun.la $(libdivvun_la_LIBADD) $(HFST_LIBS)
+divvun_phon_CXXFLAGS =              $(libdivvun_la_CXXFLAGS) $(HFST_CXXFLAGS)
+bin_PROGRAMS            += divvun-phon
+dist_man_MANS           += divvun-phon.1
+
 # Only needed for development; we keep rnc's in version control:
 if HAVE_TRANG
 %.rnc: %.dtd
