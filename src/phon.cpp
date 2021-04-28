@@ -61,7 +61,7 @@ void Phon::run(std::istream& is, std::ostream& os)
             os << result[0] << std::endl;
         }
         else if ((!result.empty()) && (result[4].length() != 0)) {
-            auto& phon = surf;
+            auto phon = surf;
             string outstring = string(result[0]);
             // try find existing ",,,"phon tag
             auto phonend = outstring.find("\"phon");
@@ -74,10 +74,12 @@ void Phon::run(std::istream& is, std::ostream& os)
                     std::cout << "Using Phon: " << phon <<
                                  std::endl;
                 }
+            } else if (verbose) {
+                std::cout << "Using surf: " << phon << std::endl;
             }
             // apply text2ipa
             if (verbose) {
-                std::cout << "looking up text2ipa" << std::endl;
+                std::cout << "looking up text2ipa: " << phon << std::endl;
             }
             const auto& expansions = text2ipa->lookup_fd(phon, -1, 2.0);
             if (expansions->empty()) {
