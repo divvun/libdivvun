@@ -31,7 +31,8 @@ blanktagger.hfst: blanktagger.xfst
 check_DATA = sme.zcheck tokeniser.pmhfst generator.hfstol errors.xml blanktagger.hfst
 
 if HAVE_CGSPELL
-TESTS = ./run.xml ./run.archive ./run.spell ./run.workingdir
+#TESTS = ./run.xml ./run.archive ./run.spell ./run.workingdir
+TESTS = ./run.archive ./run.spell ./run.workingdir
 if HAVE_PYTHON_BINDINGS
 TESTS += ./run-python-bindings
 endif # HAVE_PYTHON_BINDINGS
