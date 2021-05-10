@@ -207,6 +207,17 @@ AC_ARG_VAR([TRANG], [Path to trang.jar (dev dependency for updating DTD)])
 AC_ARG_WITH([trang], [AS_HELP_STRING([--with-trang],[Path to trang.jar (dev dependency for updating DTD)])], [TRANG=$withval], [TRANG=])
 AM_CONDITIONAL([HAVE_TRANG], [test x"$TRANG" != x])
 
+dnl require gawk for sanity in testing
+dnl NB: this is not the feature we need but works for detecting gawk for now...
+
+AC_PATH_PROGS_FEATURE_CHECK([GAWK], [awk mawk nawk gawk],
+    [[awkout=`$ac_path_GAWK 'BEGIN{gensub(/a/,"b","g");}'; exvalue=$?; echo $exvalue`
+      test "x$awkout" = x0 \
+      && ac_cv_path_GAWK=$ac_path_GAWK ac_path_GAWK_found=:]],
+    [AC_MSG_ERROR([gawk compatible awk is required for tests])])
+AC_SUBST([GAWK], [$ac_cv_path_GAWK])
+
+
 
 dnl ===========================
 dnl Create the files from .in's
@@ -215,6 +226,7 @@ dnl ===========================
 AC_CONFIG_FILES([src/divvun-gen-xmlschemas],    [chmod +x src/divvun-gen-xmlschemas])
 AC_CONFIG_FILES([src/divvun-validate-suggest],  [chmod +x src/divvun-validate-suggest])
 AC_CONFIG_FILES([src/divvun-validate-pipespec], [chmod +x src/divvun-validate-pipespec])
+AC_CONFIG_FILES([test/suggest/run-flushing], [chmod +x test/suggest/run-flushing])
 
 AC_OUTPUT([Makefile
            src/Makefile

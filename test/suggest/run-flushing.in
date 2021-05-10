@@ -9,11 +9,7 @@ if ! command -V timeout >/dev/null 2>/dev/null; then
 fi
 
 # Prefer gawk if installed (fails with macos awk, mawk etc.).
-# TODO: Can we make it work with with plain bash?
-awk="awk"
-if command -V gawk >/dev/null 2>/dev/null; then
-    awk="gawk"
-fi
+awk=@AWK@
 
 tmpd=$(mktemp -d -t divvun-suggest-test.XXXXXXXX)
 to="${tmpd}/to"
