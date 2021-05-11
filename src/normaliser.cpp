@@ -114,7 +114,7 @@ void Normaliser::run(std::istream& is, std::ostream& os)
                 if (verbose) {
                     std::cout << "1. looking up normaliser" << std::endl;
                 }
-                const auto& expansions = normaliser->lookup_fd(surf, -1, 2.0);
+                const HfstPaths1L expansions(normaliser->lookup_fd(surf, -1, 2.0));
                 if (expansions->empty()) {
                     if (verbose) {
                         std::cout << "Normaliser results empty." << std::endl;
@@ -189,8 +189,8 @@ void Normaliser::run(std::istream& is, std::ostream& os)
                         std::cout << "2. looking up regenerating: " << s
                                   <<  std::endl;
                     }
-                    const auto& regenerations =
-                      generator->lookup_fd(s, -1, 2.0);
+                    const HfstPaths1L regenerations(
+                      generator->lookup_fd(s, -1, 2.0));
                     for (auto& rg : *regenerations) {
                         std::stringstream regen;
                         for (auto& reg: rg.second) {
@@ -204,8 +204,8 @@ void Normaliser::run(std::istream& is, std::ostream& os)
                         std::cout << "3. looking up reanalysing: " << phon
                                   <<  std::endl;
                     }
-                    const auto& reanalyses =
-                      sanalyser->lookup_fd(phon, -1, 2.0);
+                    const HfstPaths1L reanalyses(
+			    sanalyser->lookup_fd(phon, -1, 2.0));
                     for (auto& ra : *reanalyses) {
                         std::stringstream reform;
                         for (auto& res: ra.second) {

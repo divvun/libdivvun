@@ -25,6 +25,8 @@
 
 namespace divvun {
 
+typedef std::unique_ptr<hfst::HfstOneLevelPaths> HfstPaths1L;
+
 inline const hfst::HfstTransducer* readTransducer(std::istream& is) {
 	hfst::HfstInputStream *in = nullptr;
 	try

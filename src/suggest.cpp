@@ -302,7 +302,7 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const string& line, bo
 		r.fixedcase |= sub.fixedcase;
 	}
 	if(r.suggest) {
-		const auto& paths = t.lookup_fd({ r.ana }, -1, 10.0);
+		const HfstPaths1L paths(t.lookup_fd({ r.ana }, -1, 10.0));
 		for(auto& p : *paths) {
 			stringstream form;
 			for(auto& symbol : p.second) {

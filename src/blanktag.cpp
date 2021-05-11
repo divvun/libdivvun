@@ -42,7 +42,7 @@ const string Blanktag::proc(const vector<string>& preblank, const string& wf, co
 		return ret;
 	}
 	// std::cerr << "\033[1;36mpreblank + wf + postblank=\t'" << join(preblank,"") + wf + join(postblank, "") << "'\033[0m" << std::endl;
-	const auto& paths = analyser->lookup_fd({ join(preblank,"") + wf + join(postblank, "") }, -1, 2.0);
+	const HfstPaths1L paths(analyser->lookup_fd({ join(preblank,"") + wf + join(postblank, "") }, -1, 2.0));
 	string tags;
 	for(auto& p : *paths) {
 		std::stringstream form;
