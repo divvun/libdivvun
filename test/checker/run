@@ -27,5 +27,5 @@ check () {
     fi
 }
 
-# Arg 1 is the name of test set; the rest of the args are passed to divvun-cgspell
+# Arg 1 is the name of test set; the rest of the args are passed to divvun-checker
 check "$@"

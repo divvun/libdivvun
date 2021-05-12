@@ -113,7 +113,7 @@ int main(int argc, char ** argv)
 {
 	try
 	{
-		cxxopts::Options options(argv[0], " - generate grammar checker suggestions from a CG stream");
+		cxxopts::Options options(argv[0], " - run a grammar checker on plain text");
 
 		options.add_options()
 			("s,spec", "Pipeline XML specification", cxxopts::value<std::string>(), "FILE")
