@@ -13,13 +13,12 @@ fi
 
 cd "$(dirname "$0")"/../..
 
-n="xml"
 src/divvun-validate-pipespec test/checker/pipespec.xml
 (
     set -x
-    src/divvun-checker -s test/checker/pipespec.xml -n smegram < test/checker/input."$n".txt > test/checker/output."$n".json
+    src/divvun-checker -s test/checker/pipespec.xml -n smegram < test/checker/input.xml.txt > test/checker/output.workingdir.json
 )
-if ! diff test/checker/output."$n".json test/checker/expected."$n".json; then
-    echo diff test/checker/output."$n".json test/checker/expected."$n".json
+if ! diff test/checker/output.workingdir.json test/checker/expected.xml.json; then
+    echo diff test/checker/output.workingdir.json test/checker/expected.xml.json
     exit 1
 fi
