@@ -33,6 +33,7 @@
 #endif
 #include "blanktag.hpp"
 #include "normaliser.hpp"
+#include "phon.hpp"
 // xml:
 #include <pugixml.hpp>
 // cg3:
@@ -210,6 +211,16 @@ class BlanktagCmd: public PipeCmd {
 		~BlanktagCmd() override = default;
 	private:
 		unique_ptr<Blanktag> blanktag;
+};
+
+class PhonCmd: public PipeCmd {
+	public:
+		PhonCmd (const hfst::HfstTransducer* analyser, bool verbose);
+		PhonCmd (const string& ana_path, bool verbose);
+		void run(stringstream& input, stringstream& output) const override;
+		~PhonCmd() override = default;
+	private:
+		unique_ptr<Phon> phon;
 };
 
 

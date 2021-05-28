@@ -143,6 +143,19 @@ void BlanktagCmd::run(stringstream& input, stringstream& output) const
 	blanktag->run(input, output);
 }
 
+PhonCmd::PhonCmd (const hfst::HfstTransducer* analyser, bool verbose)
+	: phon(new Phon(analyser, verbose))
+{
+}
+PhonCmd::PhonCmd (const string& ana_path, bool verbose)
+	: phon(new Phon(ana_path, verbose))
+{
+}
+void PhonCmd::run(stringstream& input, stringstream& output) const
+{
+	phon->run(input, output);
+}
+
 SuggestCmd::SuggestCmd (const hfst::HfstTransducer* generator, divvun::MsgMap msgs, const string& locale, bool verbose, bool generate_all_readings)
 	: suggest(new Suggest(generator, msgs, locale, verbose, generate_all_readings))
 {
@@ -246,6 +259,16 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 		}
 		else if(name == u"mwesplit") {
 			cmds.emplace_back(new MweSplitCmd(verbose));
+		}
+		else if(name == u"phon") {
+			ArEntryHandler<const hfst::HfstTransducer*> f = [] (const string& ar_path, const void* buff, const size_t size) {
+				OneShotReadBuf osrb((char*)buff, size);
+				std::istream is(&osrb);
+				return readTransducer(is);
+			};
+			auto* s = new PhonCmd(readArchiveExtract(ar_spec->ar_path, args["text2ipa"], f),
+						  verbose);
+			cmds.emplace_back(s);
 		}
 		else if((name == u"normalise") || (name == u"normalize")) {
 			ArEntryHandler<const hfst::HfstTransducer*> f = [] (const string& ar_path, const void* buff, const size_t size) {
@@ -359,6 +382,11 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
                                                args["analyser"],
                                                args["tags"],
                                                verbose));*/
+		}
+		else if(name == u"phon") {
+            /*std::cerr << "This phon codepath is not yet implemented up!"
+                      << std::endl;*/
+			cmds.emplace_back(new PhonCmd(args["text2ipa"], verbose));
 		}
 		else if(name == u"mwesplit") {
 			cmds.emplace_back(new MweSplitCmd(verbose));

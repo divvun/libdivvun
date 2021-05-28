@@ -103,6 +103,7 @@
           generate-all (true|false) "false">
 <!ELEMENT normalise (normaliser,analyser,generator,tags)>
 <!ELEMENT normalize (normaliser,analyser,generator,tags)> <!-- en_US variant of above -->
+<!ELEMENT phon (text2ipa)> <!-- arg: text2ipa.hfst -->
 
 <!-- Is there a way to generalize over these apart from shifting to <arg key=… val=…>? -->
 <!ELEMENT arg EMPTY>         <!ATTLIST arg n CDATA #REQUIRED>
@@ -115,5 +116,6 @@
 <!ELEMENT messages EMPTY>    <!ATTLIST messages n CDATA #REQUIRED>
 <!ELEMENT normaliser EMPTY>  <!ATTLIST normaliser n CDATA #REQUIRED>
 <!ELEMENT analyser EMPTY>    <!ATTLIST analyser n CDATA #REQUIRED>
+<!ELEMENT text2ipa EMPTY>    <!ATTLIST text2ipa n CDATA #REQUIRED>
 <!ELEMENT tags (tag+)>
 <!ELEMENT tag EMPTY>         <!ATTLIST tag n CDATA #REQUIRED>

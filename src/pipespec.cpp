@@ -143,6 +143,11 @@ void validatePipespecCmd(const pugi::xml_node& cmd, const std::unordered_map<str
 			throw std::runtime_error("Wrong arguments to <suggest> command (expected <generator> and <messages>), at byte offset " + std::to_string(cmd.offset_debug()));
 		}
 	}
+	else if(name == "phon") {
+		if(args.size() != 1 || args.find("text2ipa") == args.end()) {
+			throw std::runtime_error("Wrong arguments to <phon> command (expected <text2ipa>), at byte offset " + std::to_string(cmd.offset_debug()));
+		}
+	}
 	else if(name == "sh") {
 		throw std::runtime_error("<sh> command not implemented yet!");
 		// const auto& prog = fromUtf8(cmd.attribute("prog").value());
@@ -256,6 +261,10 @@ std::vector<std::pair<string,string>> toPipeSpecShVector(const PipeSpec& spec, c
         }
 		else if(name == "blanktag") {
 			prog = "divvun-blanktag" + argprepare(args["blanktagger"]);
+		}
+		else if(name == "phon") {
+			prog = "divvun-phon";
+            prog += " -p" + argprepare(args["text2ipa"]);
 		}
 		else if(name == "suggest") {
 			bool generate_all_readings = cmd.attribute("generate-all").as_bool(false);
