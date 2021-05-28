@@ -45,7 +45,9 @@ if HAVE_CHECKER
 lib_LTLIBRARIES       = libdivvun.la
 divvunincludedir      = $(includedir)/divvun
 divvuninclude_HEADERS = checker.hpp checkertypes.hpp
-libdivvun_la_SOURCES  = checker.cpp pipeline.cpp pipespec.cpp suggest.cpp blanktag.cpp normaliser.cpp
+libdivvun_la_SOURCES  = checker.cpp pipeline.cpp pipespec.cpp \
+						suggest.cpp blanktag.cpp normaliser.cpp \
+						phon.cpp
 if HAVE_CGSPELL
 libdivvun_la_SOURCES += cgspell.cpp
 endif
