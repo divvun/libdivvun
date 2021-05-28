@@ -1,8 +1,8 @@
-AC_INIT([Divvun gramcheck], [0.3.9], [unhammer+apertium@mm.st], [divvun-gramcheck], [https://github.com/divvun/divvun-gramcheck])
+AC_INIT([Divvun gramcheck], [0.3.10], [unhammer+apertium@mm.st], [divvun-gramcheck], [https://github.com/divvun/divvun-gramcheck])
 AC_CONFIG_SRCDIR([src])
 AM_INIT_AUTOMAKE
 
-dnl TODO: tests require zip and gawk (not mawk)
+dnl TODO: tests require zip 
 
 # AC_PROG_LIBTOOL deprecated in favour of LT_INIT
 LT_INIT
