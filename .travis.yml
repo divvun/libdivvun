@@ -2,7 +2,7 @@ language: cpp
 
 # let linux be Ubuntu Xenial
 sudo: required
-dist: xenial
+dist: focal
 
 addons:
   apt:
