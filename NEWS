@@ -1,0 +1,7 @@
+# Notable changes in libdivvun
+
+For more details see the git log.
+
+## Notable changes in 0.3.10
+
+* `divvun-phon` and `divvun-normalise` tools for TTS
