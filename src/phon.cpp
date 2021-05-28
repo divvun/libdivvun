@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2015-2018, Kevin Brubeck Unhammer <unhammer@fsfe.org>
+* Copyright (C) 2021, Divvun
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ Phon::Phon(const hfst::HfstTransducer* text2ipa_, bool verbose_) :
     }
 }
 
-Phon::Phon(const string& text2ipa_, bool verbose_)
+Phon::Phon(const std::string& text2ipa_, bool verbose_)
 {
     if (verbose_) {
         std::cout << "Reading: " << text2ipa_ << std::endl;
