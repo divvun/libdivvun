@@ -146,3 +146,5 @@ compile_commands.json
 /test/suggest/run-genall.log
 /test/suggest/run-genall.trs
 /src/divvun-normaliser
+/src/divvun-phon
+/test/suggest/run-flushing
