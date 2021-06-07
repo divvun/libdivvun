@@ -1,17 +1,16 @@
 language: cpp
 
-# let linux be Ubuntu Xenial
 sudo: required
 dist: focal
 
 addons:
   apt:
-    sources:
-    - ubuntu-toolchain-r-test
     packages:
-    - gcc-5
-    - g++-5
-    - libstdc++-5-dev
+    - gcc-10
+    - g++-10
+    - g++
+    - gcc
+    - libstdc++-10-dev
     - libpugixml-dev
     - libxml2-utils
     - libarchive-dev
@@ -68,9 +67,10 @@ cache:
     - $HOME/gtd-cache
     - $HOME/Library/Caches/Homebrew
 
+# Unfortunately installing g++ isn't enough, need to export CXX for it to find the compiler when gcc (why?)
 env:
   matrix:
-    - CONFIGURE="--enable-checker --enable-cgspell --enable-python-bindings"
+    - CONFIGURE="--enable-checker --enable-cgspell --enable-python-bindings" CC="gcc-10" CXX="g++-10"
   global:
     # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
     #   via the "travis encrypt" command using the project repo's public key
