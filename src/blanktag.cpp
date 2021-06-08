@@ -43,7 +43,7 @@ const string Blanktag::proc(const vector<string>& preblank, const string& wf, co
 	}
 	// std::cerr << "\033[1;36mpreblank + wf + postblank=\t'" << join(preblank,"") + wf + join(postblank, "") << "'\033[0m" << std::endl;
 	const HfstPaths1L paths(analyser->lookup_fd({ join(preblank,"") + wf + join(postblank, "") }, -1, 2.0));
-	string tags;
+	vector<string> tags;
 	for(auto& p : *paths) {
 		std::stringstream form;
 		for(auto& symbol : p.second) {
@@ -51,15 +51,16 @@ const string Blanktag::proc(const vector<string>& preblank, const string& wf, co
 				form << symbol;
 			}
 		}
-		tags += " " + form.str();
+		tags.push_back(" " + form.str());
 	}
+	std::sort(tags.begin(), tags.end());
 	ret += wf + "\n";
 	for(const auto& r: readings) {
 		if(r.substr(0, 1) == ";") { // traced reading, don't touch
 			ret += r + "\n";
 		}
 		else {
-			ret += r + tags + "\n";
+			ret += r + join(tags, "") + "\n";
 		}
 	}
 	return ret;
