@@ -28,14 +28,6 @@ script:
   # Unquoted because the .yml doesn't support arrays, but explicitly defined here at least
   - scripts/travis-build ${CONFIGURE}
 
-os:
-  - linux
-  - osx
-
-compiler:
-  - clang
-  - gcc
-
 osx_image: xcode11.3
 
 before_install:
@@ -44,6 +36,15 @@ before_install:
 # We include some more configure options, but just for one square of the matrix so we don't overload poor travis:
 matrix:
   include:
+    - os: osx
+      compiler: clang
+      env: CONFIGURE="--enable-checker --enable-cgspell --enable-python-bindings"
+    - os: osx
+      compiler: gcc
+      env: CONFIGURE="--enable-checker --enable-cgspell --enable-python-bindings"
+    - os: linux
+      compiler: gcc
+      env: CONFIGURE="--enable-checker --enable-cgspell --enable-python-bindings" CC="gcc-10" CXX="g++-10"
     - os: linux
       compiler: clang
       env: CONFIGURE="--enable-checker --disable-cgspell --enable-python-bindings"
@@ -69,8 +70,6 @@ cache:
 
 # Unfortunately installing g++ isn't enough, need to export CXX for it to find the compiler when gcc (why?)
 env:
-  matrix:
-    - CONFIGURE="--enable-checker --enable-cgspell --enable-python-bindings" CC="gcc-10" CXX="g++-10"
   global:
     # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
     #   via the "travis encrypt" command using the project repo's public key
