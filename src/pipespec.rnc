@@ -147,6 +147,10 @@ normalize =
 attlist.normalize &= empty
 
 # en_US variant of above
+phon = element phon { attlist.phon, text2ipa }
+attlist.phon &= empty
+
+# arg: text2ipa.hfst
 
 # Is there a way to generalize over these apart from shifting to <arg key=… val=…>?
 arg = element arg { attlist.arg, empty }
@@ -179,6 +183,9 @@ attlist.normaliser &= attribute n { text }
 analyser = element analyser { attlist.analyser, empty }
 attlist.analyser &= attribute n { text }
 
+text2ipa = element text2ipa { attlist.text2ipa, empty }
+attlist.text2ipa &= attribute n { text }
+
 tags = element tags { attlist.tags, tag+ }
 attlist.tags &= empty
 
@@ -186,4 +193,4 @@ tag = element tag { attlist.tag, empty }
 attlist.tag &= attribute n { text }
 
 em |= notAllowed
-start = normalize | normalise | pipespec
+start = normalize | phon | normalise | pipespec
