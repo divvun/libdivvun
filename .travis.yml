@@ -44,7 +44,7 @@ matrix:
       osx_image: xcode12.5
     - os: linux
       compiler: gcc
-      env: CONFIGURE="--enable-checker --enable-cgspell --enable-python-bindings" CC="gcc-10" CXX="g++-10"
+      env: CONFIGURE="--enable-checker --enable-cgspell --enable-python-bindings"
     - os: linux
       compiler: clang
       env: CONFIGURE="--enable-checker --disable-cgspell --enable-python-bindings"
