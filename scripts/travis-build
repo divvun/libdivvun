@@ -27,6 +27,9 @@ if [[ $TRAVIS_OS_NAME = osx ]]; then
     brew ls --versions pyenv      || brew install pyenv      || brew install pyenv
     brew ls --versions gawk       || brew install gawk       || brew install gawk
     brew ls --versions zlib       || brew install zlib       || brew install zlib
+    brew ls --versions readline   || brew install readline   || brew install readline
+    brew ls --versions bzip2      || brew install bzip2      || brew install bzip2
+    brew ls --versions openssl    || brew install openssl    || brew install openssl
 
     eval "$(pyenv init -)"
     pyenv install 3.6.3
@@ -36,9 +39,15 @@ if [[ $TRAVIS_OS_NAME = osx ]]; then
     LDFLAGS="${LDFLAGS:-} -L/usr/local/Cellar/pugixml/1.9/lib/pugixml-1.9"
     LDFLAGS="${LDFLAGS:-} -L/usr/local/opt/libarchive/lib"
     LDFLAGS="${LDFLAGS:-} -L$(brew --prefix zlib)/lib"
+    LDFLAGS="${LDFLAGS:-} -L$(brew --prefix readline)/lib"
+    LDFLAGS="${LDFLAGS:-} -L$(brew --prefix bzip2)/lib"
+    LDFLAGS="${LDFLAGS:-} -L$(brew --prefix openssl)/lib"
     CPPFLAGS="${CPPFLAGS:-} -I/usr/local/Cellar/pugixml/1.9/include/pugixml-1.9"
     CPPFLAGS="${CPPFLAGS:-} -I/usr/local/opt/libarchive/include"
     CPPFLAGS="${CPPFLAGS:-} -I$(brew --prefix zlib)/include"
+    CPPFLAGS="${CPPFLAGS:-} -I$(brew --prefix readline)/include"
+    CPPFLAGS="${CPPFLAGS:-} -I$(brew --prefix bzip2)/include"
+    CPPFLAGS="${CPPFLAGS:-} -I$(brew --prefix openssl)/include"
     PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}:/usr/local/opt/libarchive/lib/pkgconfig"
 
     (
