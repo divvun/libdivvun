@@ -74,10 +74,6 @@ if [[ $TRAVIS_OS_NAME = osx ]]; then
 else
     wget http://apertium.projectjj.com/apt/install-nightly.sh -O - | sudo bash
     sudo apt-get -f install -y libhfst-dev libcg3-dev hfst-ospell-dev swig3.0 libpython3-dev
-    if [[ ${CC} = gcc && ${CXX} = g++ ]]; then
-        export CC=gcc-5
-        export CXX=g++-5
-    fi
 fi
 
 ./autogen.sh
@@ -86,7 +82,7 @@ make -j3
 make check VERBOSE=true
 sudo make install
 
-if [[ $TRAVIS_OS_NAME = osx && $CC = clang ]]; then
+if [[ ${TRAVIS_OS_NAME} = osx && ${CC} = clang ]]; then
     # Rebuild with python 3.5.4, should give us two _libdivvun*so's with different names in /usr/local/lib/…
     for version in "3.5.5" "3.7.6"; do
         (
