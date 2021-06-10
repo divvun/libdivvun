@@ -42,6 +42,7 @@ if [[ $TRAVIS_OS_NAME = osx ]]; then
     LDFLAGS="${LDFLAGS:-} -L$(brew --prefix readline)/lib"
     LDFLAGS="${LDFLAGS:-} -L$(brew --prefix bzip2)/lib"
     LDFLAGS="${LDFLAGS:-} -L$(brew --prefix openssl)/lib"
+    LDFLAGS="${LDFLAGS:-} -L$(xcrun --show-sdk-path)/usr/lib"
     CPPFLAGS="${CPPFLAGS:-} -I/usr/local/Cellar/pugixml/1.9/include/pugixml-1.9"
     CPPFLAGS="${CPPFLAGS:-} -I/usr/local/opt/libarchive/include"
     CPPFLAGS="${CPPFLAGS:-} -I$(brew --prefix zlib)/include"
