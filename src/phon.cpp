@@ -108,7 +108,9 @@ void Phon::run(std::istream& is, std::ostream& os)
                 }
                 oldform = newphon;
             }
-            phon = oldform;
+            if (!oldform.empty()) {
+                phon = oldform;
+            }
             os << outstring << " \"" << phon << "\"phon" << std::endl;
         }
         else {
