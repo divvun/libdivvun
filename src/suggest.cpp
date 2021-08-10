@@ -33,6 +33,7 @@ const std::basic_regex<char> CG_TAG_TYPE (
 	"|ID:([0-9]+)"		// Group 5: Relation ID
 	"|\"([^\"]+)\"S"        // Group 6: Reading word-form
 	"|(<fixedcase>)"        // Group 7: Fixed Casing
+	"|\"<([^>]+)>\""        // Group 6b: Reading word-form without S?
 	"|@"			// Syntactic tag
 	"|Sem/"			// Semantic tag
 	"|§"			// Semantic role
