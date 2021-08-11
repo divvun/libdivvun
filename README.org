@@ -1,7 +1,9 @@
 #+TITLE: libdivvun
 #+STARTUP: showall
 
-[![Build Status](https://www.travis-ci.com/divvun/libdivvun.svg?branch=master)](https://www.travis-ci.com/divvun/libdivvun)
+
+#+CAPTION: Buoöd status
+[[https://www.travis-ci.com/divvun/libdivvun][https://www.travis-ci.com/divvun/libdivvun.svg?branch=master]]
 
 #+CAPTION: Coverity static analysis
 [[https://scan.coverity.com/projects/divvun-divvun-gramcheck][https://scan.coverity.com/projects/13737/badge.svg]]
