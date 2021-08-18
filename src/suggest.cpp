@@ -33,7 +33,7 @@ const std::basic_regex<char> CG_TAG_TYPE (
 	"|ID:([0-9]+)"		// Group 5: Relation ID
 	"|\"([^\"]+)\"S"        // Group 6: Reading word-form
 	"|(<fixedcase>)"        // Group 7: Fixed Casing
-	"|\"<([^>]+)>\""        // Group 6b: Reading word-form without S?
+	"|\"<([^>]+)>\""        // Group 8: Broken word-form from MWE-split
 	"|@"			// Syntactic tag
 	"|Sem/"			// Semantic tag
 	"|§"			// Semantic role
@@ -268,6 +268,10 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 		}
 		else if(result[7].length() != 0) {
 			r.fixedcase = true;
+		}
+		else if(result[8].length() != 0) {
+            std::cerr << "divvun-suggest: WARNING: Broken MWE wordform in analyses: " << result[8] << std::endl;
+			r.wf = result[8];
 		}
 	}
 	const auto& tagsplus = join(gentags, "+");
