@@ -92,6 +92,10 @@ int main(int argc, char ** argv)
               options["alttext2ipa"].as<std::vector<std::string>>();
             for (const auto& tag2fsa : tags2fsas) {
                 auto eqpos = tag2fsa.find("=");
+                if (eqpos == string::npos) {
+                    std::cerr << "missing = in " << tag2fsa << std::endl;
+                    return EXIT_FAILURE;
+                }
                 auto tag = tag2fsa.substr(0, eqpos);
                 auto fsa = tag2fsa.substr(eqpos + 1);
                 if (verbose) {
