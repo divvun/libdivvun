@@ -21,6 +21,7 @@ namespace divvun {
 
 Phon::Phon(const hfst::HfstTransducer* text2ipa_, bool verbose_) :
     text2ipa(text2ipa_),
+    altText2ipas(),
     verbose(verbose_)
 {
     if (verbose_) {
@@ -36,9 +37,26 @@ Phon::Phon(const std::string& text2ipa_, bool verbose_)
     }
     text2ipa = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(text2ipa_)));
     verbose = verbose_;
-
 }
 
+void Phon::addAlternateText2ipa(const std::string& tag,
+                                const hfst::HfstTransducer* text2ipa_)
+{
+    if (verbose) {
+        std::cout << "addinf HFST transducer for tag " << tag << std::endl;
+    }
+    altText2ipas[tag] = std::unique_ptr<const hfst::HfstTransducer>(text2ipa_);
+}
+
+void Phon::addAlternateText2ipa(const std::string& tag,
+                                const std::string& text2ipa_)
+{
+    if (verbose) {
+        std::cout << "Reading " << text2ipa_ << " for tag " << tag << std::endl;
+    }
+    altText2ipas[tag] = std::unique_ptr<const
+      hfst::HfstTransducer>(readTransducer(text2ipa_));
+}
 
 
 void Phon::run(std::istream& is, std::ostream& os)
@@ -77,11 +95,23 @@ void Phon::run(std::istream& is, std::ostream& os)
             } else if (verbose) {
                 std::cout << "Using surf: " << phon << std::endl;
             }
+            std::string alttag = "";
+            // check if specific alt tag
+            for (const auto&  tag2fsa : altText2ipas) {
+                if (outstring.find(tag2fsa.first) != std::string::npos) {
+                    alttag = tag2fsa.first;
+                }
+            }
             // apply text2ipa
             if (verbose) {
                 std::cout << "looking up text2ipa: " << phon << std::endl;
             }
-            const auto& expansions = text2ipa->lookup_fd(phon, -1, 2.0);
+            const hfst::HfstOneLevelPaths* expansions = nullptr;
+            if (alttag.empty()) {
+                expansions = text2ipa->lookup_fd(phon, -1, 2.0);
+            } else {
+                expansions = altText2ipas[alttag]->lookup_fd(phon, -1, 2.0);
+            }
             if (expansions->empty()) {
                 if (verbose) {
                     std::cout << "text2ipa results empty." << std::endl;

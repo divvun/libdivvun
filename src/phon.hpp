@@ -24,6 +24,7 @@
 #include <string>
 #include <regex>
 #include <unordered_map>
+#include <map>
 #include <exception>
 
 // divvun-gramcheck:
@@ -37,17 +38,20 @@
 
 namespace divvun {
 
-using std::string;
-using std::vector;
-using std::unique_ptr;
 
 class Phon {
     public:
         Phon(const hfst::HfstTransducer* text2ipa, bool verbose);
-        Phon(const string& text2ipa, bool verbose);
+        Phon(const std::string& text2ipa, bool verbose);
+        void addAlternateText2ipa(const std::string& tag,
+                                  const hfst::HfstTransducer* text2ipa);
+        void addAlternateText2ipa(const std::string& tag,
+                                  const std::string& text2ipa);
         /*const*/ void run(std::istream& is, std::ostream& os);
     private:
-        unique_ptr<const hfst::HfstTransducer> text2ipa;
+        std::unique_ptr<const hfst::HfstTransducer> text2ipa;
+        std::map<std::string, std::unique_ptr<const hfst::HfstTransducer>>
+          altText2ipas;
         bool verbose;
 };
 

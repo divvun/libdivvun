@@ -33,6 +33,8 @@ int main(int argc, char ** argv)
 		options.add_options()
 			("p,text2ipa", "FST for phonetic analysis",
              cxxopts::value<std::string>(), "BIN")
+			("a,alttext2ipa", "alternative FSTs for phonetic analysis per tag",
+             cxxopts::value<std::vector<std::string>>(), "BIN")
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)",
              cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)",
@@ -85,6 +87,20 @@ int main(int argc, char ** argv)
             std::cout << "Text2ipa set to: " << text2ipa << std::endl;
         }
         auto text2ipaer = divvun::Phon(text2ipa, verbose);
+        if (options.count("alttext2ipa")) {
+            const auto& tags2fsas =
+              options["alttext2ipa"].as<std::vector<std::string>>();
+            for (const auto& tag2fsa : tags2fsas) {
+                auto eqpos = tag2fsa.find("=");
+                auto tag = tag2fsa.substr(0, eqpos);
+                auto fsa = tag2fsa.substr(eqpos + 1);
+                if (verbose) {
+                    std::cout << "Alternate text2ipa for tag '" << tag <<
+                      "' set to " << fsa << std::endl;
+                }
+                text2ipaer.addAlternateText2ipa(tag, fsa);
+            }
+        }
         text2ipaer.run(std::cin, std::cout);
 	}
 	catch (const cxxopts::OptionException& e)
