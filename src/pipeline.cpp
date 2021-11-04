@@ -397,18 +397,25 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 #endif
 		}
 		else if((name == u"normalise") || (name == u"normalize")) {
-            std::cerr << "This normaliser codepath is not yet implemented up!"
-                      << std::endl;
-            /*cmds.emplace_back(new NormaliseCmd(args["normaliser"],
+            auto tags = std::vector<std::string>();
+            const pugi::xml_node& tags_element = cmd.child("tags");
+            for (const pugi::xml_node& tag : tags_element.children()) {
+                tags.push_back(tag.attribute("n").value());
+            }
+            cmds.emplace_back(new NormaliseCmd(args["normaliser"],
                                                args["generator"],
                                                args["analyser"],
-                                               args["tags"],
-                                               verbose));*/
+                                               tags,
+                                               verbose));
 		}
 		else if(name == u"phon") {
-            std::cerr << "This phon codepath is not yet implemented up!"
-                      << std::endl;
-			/*cmds.emplace_back(new PhonCmd(args["text2ipa"], verbose));*/
+            map<string,string> altfsas;
+            auto alttags = cmd.children("alttext2ipa");
+            for (const auto& alttag : alttags) {
+                altfsas[alttag.attribute("n").as_string()] =
+                  alttag.attribute("s").as_string();
+            }
+			cmds.emplace_back(new PhonCmd(args["text2ipa"], altfsas, verbose));
 		}
 		else if(name == u"mwesplit") {
 			cmds.emplace_back(new MweSplitCmd(verbose));
