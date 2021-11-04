@@ -143,14 +143,27 @@ void BlanktagCmd::run(stringstream& input, stringstream& output) const
 	blanktag->run(input, output);
 }
 
-PhonCmd::PhonCmd (const hfst::HfstTransducer* analyser, bool verbose)
+PhonCmd::PhonCmd (const hfst::HfstTransducer* analyser,
+                  const std::map<string,const hfst::HfstTransducer*>& alttagfsas,
+                  bool verbose)
 	: phon(new Phon(analyser, verbose))
 {
+    for (const auto& tagfsa : alttagfsas)
+      {
+        phon->addAlternateText2ipa(tagfsa.first, tagfsa.second);
+      }
 }
-PhonCmd::PhonCmd (const string& ana_path, bool verbose)
+PhonCmd::PhonCmd (const string& ana_path,
+                  const std::map<string,string>& alttagpaths,
+                  bool verbose)
 	: phon(new Phon(ana_path, verbose))
 {
+    for (const auto& tagpath : alttagpaths)
+      {
+        phon->addAlternateText2ipa(tagpath.first, tagpath.second);
+      }
 }
+
 void PhonCmd::run(stringstream& input, stringstream& output) const
 {
 	phon->run(input, output);
@@ -266,8 +279,17 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 				std::istream is(&osrb);
 				return readTransducer(is);
 			};
-			auto* s = new PhonCmd(readArchiveExtract(ar_spec->ar_path, args["text2ipa"], f),
-						  verbose);
+            map<string,const hfst::HfstTransducer*> altfsas;
+            auto alttags = cmd.children("alttext2ipa");
+            for (const auto& alttag : alttags) {
+                altfsas[alttag.attribute("n").as_string()] =
+                  readArchiveExtract(ar_spec->ar_path,
+                                     alttag.attribute("s").as_string(),
+                                     f);
+            }
+			auto* s = new PhonCmd(readArchiveExtract(ar_spec->ar_path,
+                                                     args["text2ipa"], f),
+                                  altfsas, verbose);
 			cmds.emplace_back(s);
 		}
 		else if((name == u"normalise") || (name == u"normalize")) {
@@ -384,9 +406,9 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
                                                verbose));*/
 		}
 		else if(name == u"phon") {
-            /*std::cerr << "This phon codepath is not yet implemented up!"
-                      << std::endl;*/
-			cmds.emplace_back(new PhonCmd(args["text2ipa"], verbose));
+            std::cerr << "This phon codepath is not yet implemented up!"
+                      << std::endl;
+			/*cmds.emplace_back(new PhonCmd(args["text2ipa"], verbose));*/
 		}
 		else if(name == u"mwesplit") {
 			cmds.emplace_back(new MweSplitCmd(verbose));
