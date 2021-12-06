@@ -147,7 +147,7 @@ normalize =
 attlist.normalize &= empty
 
 # en_US variant of above
-phon = element phon { attlist.phon, text2ipa }
+phon = element phon { attlist.phon, text2ipa, alttext2ipa* }
 attlist.phon &= empty
 
 # arg: text2ipa.hfst
@@ -186,6 +186,11 @@ attlist.analyser &= attribute n { text }
 text2ipa = element text2ipa { attlist.text2ipa, empty }
 attlist.text2ipa &= attribute n { text }
 
+alttext2ipa = element alttext2ipa { attlist.alttext2ipa, empty }
+attlist.alttext2ipa &=
+
+  attribute s { text },
+  attribute n { text }
 tags = element tags { attlist.tags, tag+ }
 attlist.tags &= empty
 
