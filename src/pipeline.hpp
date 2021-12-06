@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2017-2018, Kevin Brubeck Unhammer <unhammer@fsfe.org>
+* Copyright (C) 2017-2021, Kevin Brubeck Unhammer <unhammer@fsfe.org>
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -300,8 +300,16 @@ class Pipeline {
 		// 		std::cerr << "libdivvun: WARNING: Couldn't cleanup from CG3" << std::endl;
 		// 	}
 		// }
+
+
+		// Run pipeline on input, printing to output
 		void proc(stringstream& input, stringstream& output);
+
+		// Run pipeline that ends in a SuggestCmd on input,
+		// and instead of printing output with SuggestCmd.run,
+		// we use SuggestCmd.run_errs as the last step
 		vector<Err> proc_errs(stringstream& input);
+
 		const bool verbose;
 		// Preferences:
 		void setIgnores(const std::set<ErrId>& ignores);

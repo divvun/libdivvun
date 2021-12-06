@@ -21,3 +21,7 @@ for _ in range(1, 10):
     test(errs[0].msg, "msyn thingy")
     test(errs[0].err, "msyn-valency-loc-com")
     test(errs[0].rep, ('diehtukorrekt',))
+
+inp2 = "Čoahkkinjoiheaddji gohčču"
+errs2 = libdivvun.proc_errs_bytes(smegram, inp2)
+test(errs2[0].rep, ('Čoahkkinjođiheaddji',))

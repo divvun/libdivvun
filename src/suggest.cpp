@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2015-2018, Kevin Brubeck Unhammer <unhammer@fsfe.org>
+* Copyright (C) 2015-2021, Kevin Brubeck Unhammer <unhammer@fsfe.org>
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -553,7 +553,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 						     underlineCasing = getCasing(toUtf8(p.second));
 					     });
 			     });
-		for(const auto s: r.sforms) {
+		for(const auto& s: r.sforms) {
 			rep.push_back(fromUtf8(withCasing(r.fixedcase, underlineCasing, s)));
 		}
 		std::map<size_t, size_t> deleted;
@@ -848,6 +848,13 @@ vector<Err> Suggest::mk_errs(const Sentence &sentence) {
 
 vector<Err> Suggest::run_errs(std::istream& is)
 {
+	try {
+		auto _old = std::locale::global(std::locale(""));
+	}
+	catch (const std::runtime_error& e)
+	{
+		std::cerr << "WARNING: Couldn't set global locale \"\" (locale-specific native environment): " << e.what() << std::endl;
+	}
 	return mk_errs(run_sentence(is, *generator, msgs, generate_all_readings));
 }
 

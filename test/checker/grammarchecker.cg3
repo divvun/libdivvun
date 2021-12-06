@@ -11936,6 +11936,7 @@ ADD (&typo &SUGGESTWF) (<spelled>);
 
 ADD (&double-space-before) (<doubleSpaceBefore>);
 
+COPY ("Čoahkkinjođiheaddji"S &SUGGESTWF &typo) TARGET ("<Čoahkkinjoiheaddji>") ;
 
 # Local Variables:
 # cg-pre-pipe: "sh modes/smegram-disam.mode"
