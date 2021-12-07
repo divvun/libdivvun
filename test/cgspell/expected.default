@@ -13,3 +13,9 @@
 "<ballat>"
 	"ballat" V TV Inf
 	"ballat" V TV Ind Prs Pl1
+: 
+"<skuvlabufse>"
+	"skuvllabufse" ? <LastCohort> <NotFirstCohort>
+	"busse" N Sg <W:1> <WA:0> <spelled> "skuvlabusse"S
+		"skuvla" N Sg
+: 

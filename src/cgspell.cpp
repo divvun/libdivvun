@@ -20,7 +20,7 @@
 namespace divvun {
 
 static const string subreading_separator = "#";
-static const string unknown_analysis = " ?";
+static const string tag_unknown = "?";
 
 /**
  * Return the size in bytes of the first complete UTF-8 codepoint in c,
@@ -230,11 +230,18 @@ void run_cgspell(std::istream& is,
 		}
 		else if (!result.empty() && result[5].length() != 0)
 		{
-			c.unknown = (result[5] == unknown_analysis);
-			if(c.unknown) {
-				sent.n_unknowns += 1;
-			}
-			c.lines.push_back(line);
+		  std::stringstream ana(result[5]);
+		  std::string tag;
+                  c.unknown = false;
+                  while (ana >> tag) {
+			  if(tag == tag_unknown) {
+				  c.unknown = true;
+			  }
+		  }
+		  if (c.unknown) {
+			  sent.n_unknowns += 1;
+		  }
+		  c.lines.push_back(line);
 		}
 		else if(!result.empty() && result[7].length() != 0) {
 			// TODO: Can we ever get a flush in the middle of readings?
