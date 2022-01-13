@@ -137,6 +137,9 @@ struct CGGrammarDeleter {
 		void operator()(cg3_grammar* ptr)
 		{
 			cg3_grammar_free(ptr);
+			if (!cg3_cleanup()) {
+				std::cerr << "libdivvun: WARNING: Couldn't cleanup from CG3" << std::endl;
+			}
 		}
 };
 
@@ -300,7 +303,7 @@ class Pipeline {
 		// 		std::cerr << "libdivvun: WARNING: Couldn't cleanup from CG3" << std::endl;
 		// 	}
 		// }
-
+        
 
 		// Run pipeline on input, printing to output
 		void proc(stringstream& input, stringstream& output);
