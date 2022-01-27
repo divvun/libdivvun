@@ -265,8 +265,8 @@ std::vector<std::pair<string,string>> toPipeSpecShVector(const PipeSpec& spec, c
 		else if(name == "phon") {
 			prog = "divvun-phon";
             prog += " -p" + argprepare(args["text2ipa"]);
-            const pugi::xml_node& tags = cmd.child("alttext2ipa");
-            for (const pugi::xml_node& tag: tags) {
+            const auto& tags = cmd.children("alttext2ipa");
+            for (const auto& tag: tags) {
                 prog += string(" -a ") + string(tag.attribute("s").value()) +
                   "=" + string(tag.attribute("n").value());
             }
@@ -325,7 +325,7 @@ void chmod777(const string& path) {
 	}
 }
 
-void writePipeSpecShDirOne(const std::vector<std::pair<std::string, std::string>> cmds, const string& pipename, const string& modesdir, bool nodebug) {
+void writePipeSpecShDirOne(const std::vector<std::pair<std::string, std::string>>& cmds, const string& pipename, const string& modesdir, bool nodebug) {
 	// TODO: (modesdir / …) when we get <experimental/filesystem>
 	size_t i = 0;
 	if(nodebug) {
