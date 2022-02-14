@@ -33,7 +33,7 @@ int main(int argc, char ** argv)
 		options.add_options()
 			("p,text2ipa", "FST for phonetic analysis",
              cxxopts::value<std::string>(), "BIN")
-			("a,alttext2ipa", "alternative FSTs for phonetic analysis per tag",
+			("a,alttext2ipa", "alternative FSTs for phonetic analysis per tag: TAG=ABIN",
              cxxopts::value<std::vector<std::string>>(), "BIN")
 			("i,input", "Input file (UNIMPLEMENTED, stdin for now)",
              cxxopts::value<std::string>(), "FILE")
