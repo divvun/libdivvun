@@ -282,9 +282,9 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
             map<string,const hfst::HfstTransducer*> altfsas;
             auto alttags = cmd.children("alttext2ipa");
             for (const auto& alttag : alttags) {
-                altfsas[alttag.attribute("n").as_string()] =
+                altfsas[alttag.attribute("s").as_string()] =
                   readArchiveExtract(ar_spec->ar_path,
-                                     alttag.attribute("s").as_string(),
+                                     alttag.attribute("n").as_string(),
                                      f);
             }
 			auto* s = new PhonCmd(readArchiveExtract(ar_spec->ar_path,
