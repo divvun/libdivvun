@@ -6,23 +6,26 @@ cd "$(dirname "$0")"
 
 # Install the python lib in a subdir here:
 set +x
+topdir="$(cd ../.. && pwd)"
 export base=$PWD/python-build
+export PYTHONUSERBASE="$base"
 (
     cd ../../python
-    if ! "@PYTHON@" setup.py install -f --install-base="$base" --install-purelib="$base" --install-platlib="$base" --install-scripts="$base" --install-data="$base" --install-headers="$base"; then
+    if ! "@PYTHON@" setup.py install -f --user; then
         echo "Python setup.py install failed! Probably on travis mac and don't know what to do, bailing out ..."
         exit 77
     fi
 )
 
-export PYTHONPATH="$base:$PYTHONPATH"
 export LD_LIBRARY_PATH="../../src/.libs:$LD_LIBRARY_PATH"
 if [[ $TRAVIS_OS_NAME = osx || "$(uname)" = Darwin ]]; then
     (
         cd "$base"
-        pyclib=$("@PYTHON@" -c 'import sysconfig;print("_libdivvun" + sysconfig.get_config_var("EXT_SUFFIX"))')
-        dep=$(otool -L "$pyclib" | grep -m1 -o '[^[:space:]]*/libdivvun[.]0[.]dylib')
-        install_name_tool -change "${dep}" @loader_path/../../../src/.libs/libdivvun.0.dylib "$pyclib"
+        pyclib_basename=$("@PYTHON@" -c 'import sysconfig;print("_libdivvun" + sysconfig.get_config_var("EXT_SUFFIX"))')
+	find . -type f -name "${pyclib_basename}" -print0 | while read -r -d '' pyclib; do
+		dep=$(otool -L "$pyclib" | grep -m1 -o '[^[:space:]]*/libdivvun[.]0[.]dylib')
+		install_name_tool -change "${dep}" "${topdir}/src/.libs/libdivvun.0.dylib" "$pyclib"
+	done
     )
 fi
 
