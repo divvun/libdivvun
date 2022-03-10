@@ -145,8 +145,8 @@ void BlanktagCmd::run(stringstream& input, stringstream& output) const
 
 PhonCmd::PhonCmd (const hfst::HfstTransducer* analyser,
                   const std::map<string,const hfst::HfstTransducer*>& alttagfsas,
-                  bool verbose)
-	: phon(new Phon(analyser, verbose))
+                  bool verbose, bool trace)
+	: phon(new Phon(analyser, verbose, trace))
 {
     for (const auto& tagfsa : alttagfsas)
       {
@@ -155,8 +155,8 @@ PhonCmd::PhonCmd (const hfst::HfstTransducer* analyser,
 }
 PhonCmd::PhonCmd (const string& ana_path,
                   const std::map<string,string>& alttagpaths,
-                  bool verbose)
-	: phon(new Phon(ana_path, verbose))
+                  bool verbose, bool trace)
+	: phon(new Phon(ana_path, verbose, trace))
 {
     for (const auto& tagpath : alttagpaths)
       {
@@ -200,25 +200,26 @@ const MsgMap& SuggestCmd::getMsgs()
 Pipeline::Pipeline(LocalisedPrefs prefs_,
 		   vector<unique_ptr<PipeCmd>> cmds_,
 		   SuggestCmd* suggestcmd_,
-		   bool verbose_)
+		   bool verbose_, bool trace_)
 	: verbose(verbose_)
+    , trace(trace_)
 	, prefs(std::move(prefs_))
 	, cmds(std::move(cmds_))
 	, suggestcmd(suggestcmd_)
 {
 };
 
-Pipeline::Pipeline (const unique_ptr<PipeSpec>& spec, const u16string& pipename, bool verbose)
-	: Pipeline(mkPipeline(spec, pipename, verbose))
+Pipeline::Pipeline (const unique_ptr<PipeSpec>& spec, const u16string& pipename, bool verbose, bool trace)
+	: Pipeline(mkPipeline(spec, pipename, verbose, trace))
 {
 };
 
-Pipeline::Pipeline (const unique_ptr<ArPipeSpec>& ar_spec, const u16string& pipename, bool verbose)
-	: Pipeline(mkPipeline(ar_spec, pipename, verbose))
+Pipeline::Pipeline (const unique_ptr<ArPipeSpec>& ar_spec, const u16string& pipename, bool verbose, bool trace)
+	: Pipeline(mkPipeline(ar_spec, pipename, verbose, trace))
 {
 };
 
-Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16string& pipename, bool verbose)
+Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16string& pipename, bool verbose, bool trace)
 {
 	LocalisedPrefs prefs;
 	vector<unique_ptr<PipeCmd>> cmds;
@@ -289,7 +290,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
             }
 			auto* s = new PhonCmd(readArchiveExtract(ar_spec->ar_path,
                                                      args["text2ipa"], f),
-                                  altfsas, verbose);
+                                  altfsas, verbose, trace);
 			cmds.emplace_back(s);
 		}
 		else if((name == u"normalise") || (name == u"normalize")) {
@@ -356,10 +357,11 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec, const u16st
 			throw std::runtime_error("libdivvun: ERROR: Unknown <pipeline> element " + toUtf8(name));
 		}
 	}
-	return Pipeline(std::move(prefs), std::move(cmds), suggestcmd, verbose);
+	return Pipeline(std::move(prefs), std::move(cmds), suggestcmd, verbose,
+                    trace);
 }
 
-Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string& pipename, bool verbose)
+Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string& pipename, bool verbose, bool trace)
 {
 	LocalisedPrefs prefs;
 	vector<unique_ptr<PipeCmd>> cmds;
@@ -415,7 +417,8 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
                 altfsas[alttag.attribute("n").as_string()] =
                   alttag.attribute("s").as_string();
             }
-			cmds.emplace_back(new PhonCmd(args["text2ipa"], altfsas, verbose));
+			cmds.emplace_back(new PhonCmd(args["text2ipa"], altfsas, verbose,
+                                          trace));
 		}
 		else if(name == u"mwesplit") {
 			cmds.emplace_back(new MweSplitCmd(verbose));
@@ -445,7 +448,8 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string&
 			throw std::runtime_error("libdivvun: ERROR: Unknown <pipeline> element " + toUtf8(name));
 		}
 	}
-	return Pipeline(std::move(prefs), std::move(cmds), suggestcmd, verbose);
+	return Pipeline(std::move(prefs), std::move(cmds), suggestcmd, verbose,
+                    trace);
 }
 
 void Pipeline::proc(stringstream& input, stringstream& output) {

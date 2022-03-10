@@ -19,10 +19,11 @@
 
 namespace divvun {
 
-Phon::Phon(const hfst::HfstTransducer* text2ipa_, bool verbose_) :
+Phon::Phon(const hfst::HfstTransducer* text2ipa_, bool verbose_, bool trace_) :
     text2ipa(text2ipa_),
     altText2ipas(),
-    verbose(verbose_)
+    verbose(verbose_),
+    trace(trace_)
 {
     if (verbose_) {
         std::cout << "Constructed text2ipa thing from HFST Transducer" <<
@@ -30,13 +31,14 @@ Phon::Phon(const hfst::HfstTransducer* text2ipa_, bool verbose_) :
     }
 }
 
-Phon::Phon(const std::string& text2ipa_, bool verbose_)
+Phon::Phon(const std::string& text2ipa_, bool verbose_, bool trace_)
 {
     if (verbose_) {
         std::cout << "Reading: " << text2ipa_ << std::endl;
     }
     text2ipa = std::unique_ptr<const hfst::HfstTransducer>((readTransducer(text2ipa_)));
     verbose = verbose_;
+    trace = trace_;
 }
 
 void Phon::addAlternateText2ipa(const std::string& tag,
@@ -79,6 +81,7 @@ void Phon::run(std::istream& is, std::ostream& os)
             os << result[0] << std::endl;
         }
         else if ((!result.empty()) && (result[4].length() != 0)) {
+            string traces;
             auto phon = surf;
             string outstring = string(result[0]);
             // try find existing ",,,"phon tag
@@ -109,14 +112,23 @@ void Phon::run(std::istream& is, std::ostream& os)
             const hfst::HfstOneLevelPaths* expansions = nullptr;
             if (alttag.empty()) {
                 expansions = text2ipa->lookup_fd(phon, -1, 2.0);
+                if (trace) {
+                    traces = " DIVVUN-PHON:TEXT2IPA";
+                }
             } else {
                 expansions = altText2ipas[alttag]->lookup_fd(phon, -1, 2.0);
+                if (trace) {
+                    traces = " DIVVUN-PHON:ALT:" + alttag;
+                }
             }
             if (expansions->empty()) {
                 if (verbose) {
                     std::cout << "text2ipa results empty." << std::endl;
                 }
-                os << result[0] << std::endl;
+                if (trace) {
+                    traces += " DIVVUN-PHON:?";
+                }
+                os << result[0] << traces << std::endl;
             }
             std::string oldform;
             for (auto& e : *expansions) {
@@ -141,7 +153,7 @@ void Phon::run(std::istream& is, std::ostream& os)
             if (!oldform.empty()) {
                 phon = oldform;
             }
-            os << outstring << " \"" << phon << "\"phon" << std::endl;
+            os << outstring << " \"" << phon << "\"phon" << traces << std::endl;
         }
         else {
             if (verbose) {

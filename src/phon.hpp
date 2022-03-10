@@ -41,8 +41,9 @@ namespace divvun {
 
 class Phon {
     public:
-        Phon(const hfst::HfstTransducer* text2ipa, bool verbose);
-        Phon(const std::string& text2ipa, bool verbose);
+        Phon(const hfst::HfstTransducer* text2ipa, bool verbose,
+             bool trace);
+        Phon(const std::string& text2ipa, bool verbose, bool trace);
         void addAlternateText2ipa(const std::string& tag,
                                   const hfst::HfstTransducer* text2ipa);
         void addAlternateText2ipa(const std::string& tag,
@@ -53,6 +54,7 @@ class Phon {
         std::map<std::string, std::unique_ptr<const hfst::HfstTransducer>>
           altText2ipas;
         bool verbose;
+        bool trace;
 };
 
 }

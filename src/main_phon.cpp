@@ -39,6 +39,7 @@ int main(int argc, char ** argv)
              cxxopts::value<std::string>(), "FILE")
 			("o,output", "Output file (UNIMPLEMENTED, stdout for now)",
              cxxopts::value<std::string>(), "FILE")
+			("t,trace", "Debugging mode 1")
 			("v,verbose", "Be verbose")
 			("V,version", "Version information")
 			("h,help", "Print help")
@@ -78,7 +79,11 @@ int main(int argc, char ** argv)
               " ERROR: expected --text2ipa option" << std::endl;
 			return(EXIT_FAILURE);
 		}
-		const auto& verbose = options.count("verbose");
+        const auto& trace = options.count("trace");
+        if (trace) {
+            std::cout << "Tracing (auto-verbose)..." << std::endl;
+        }
+		const auto& verbose = options.count("verbose") + trace;
         if (verbose) {
             std::cout << "Being verbose." << std::endl;
         }
@@ -86,7 +91,7 @@ int main(int argc, char ** argv)
 		if (verbose) {
             std::cout << "Text2ipa set to: " << text2ipa << std::endl;
         }
-        auto text2ipaer = divvun::Phon(text2ipa, verbose);
+        auto text2ipaer = divvun::Phon(text2ipa, verbose, trace);
         if (options.count("alttext2ipa")) {
             const auto& tags2fsas =
               options["alttext2ipa"].as<std::vector<std::string>>();

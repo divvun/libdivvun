@@ -220,9 +220,10 @@ class PhonCmd: public PipeCmd {
 	public:
 		PhonCmd (const hfst::HfstTransducer* analyser,
                  const map<string,const hfst::HfstTransducer*>& alttagfsas,
-                 bool verbose);
+                 bool verbose, bool trace);
 		PhonCmd (const string& ana_path,
-                 const map<string,string>& alttagpaths, bool verbose);
+                 const map<string,string>& alttagpaths, bool verbose, 
+                 bool trace);
 		void run(stringstream& input, stringstream& output) const override;
 		~PhonCmd() override = default;
 	private:
@@ -295,8 +296,8 @@ inline void mergePrefsFromMsgs(LocalisedPrefs& prefs, const MsgMap& msgs) {
 
 class Pipeline {
 	public:
-		Pipeline(const unique_ptr<PipeSpec>& spec, const u16string& pipename, bool verbose);
-		Pipeline(const unique_ptr<ArPipeSpec>& spec, const u16string& pipename, bool verbose);
+		Pipeline(const unique_ptr<PipeSpec>& spec, const u16string& pipename, bool verbose, bool trace = false);
+		Pipeline(const unique_ptr<ArPipeSpec>& spec, const u16string& pipename, bool verbose, bool trace = false);
 		// ~Pipeline() {
 		// TODO: gives /usr/include/c++/6/bits/stl_construct.h:75:7: error: use of deleted function ‘unique_ptr<_Tp, _Dp>::unique_ptr(const unique_ptr<_Tp, _Dp>&) [with _Tp = divvun::PipeCmd; _Dp = std::default_delete<divvun::PipeCmd>]’
 		// 	if (!cg3_cleanup()) {
@@ -314,6 +315,7 @@ class Pipeline {
 		vector<Err> proc_errs(stringstream& input);
 
 		const bool verbose;
+        const bool trace;
 		// Preferences:
 		void setIgnores(const std::set<ErrId>& ignores);
 		const LocalisedPrefs prefs;
@@ -322,12 +324,13 @@ class Pipeline {
 		// the final command, if it is SuggestCmd, can also do non-stringly-typed output, see proc_errs
 		SuggestCmd* suggestcmd;
 		// "Real" constructors here since we can't init const members in constructor bodies:
-		static Pipeline mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string& pipename, bool verbose);
-		static Pipeline mkPipeline(const unique_ptr<ArPipeSpec>& spec, const u16string& pipename, bool verbose);
+		static Pipeline mkPipeline(const unique_ptr<PipeSpec>& spec, const u16string& pipename, bool verbose, bool trace = false);
+		static Pipeline mkPipeline(const unique_ptr<ArPipeSpec>& spec, const u16string& pipename, bool verbose, bool trace = false);
 		Pipeline (LocalisedPrefs prefs,
 			  vector<unique_ptr<PipeCmd>> cmds,
 			  SuggestCmd* suggestcmd,
-			  bool verbose);
+			  bool verbose,
+              bool trace = false);
 };
 
 } // namespace divvun

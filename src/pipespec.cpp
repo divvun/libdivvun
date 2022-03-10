@@ -264,6 +264,9 @@ std::vector<std::pair<string,string>> toPipeSpecShVector(const PipeSpec& spec, c
 		}
 		else if(name == "phon") {
 			prog = "divvun-phon";
+            if (trace) {
+                prog += " -t ";
+            }
             prog += " -p" + argprepare(args["text2ipa"]);
             const auto& tags = cmd.children("alttext2ipa");
             for (const auto& tag: tags) {

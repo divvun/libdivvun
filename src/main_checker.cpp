@@ -126,6 +126,7 @@ int main(int argc, char ** argv)
 			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 when format is json).")
 			("p,preferences", "Print the preferences defined by the given pipeline")
 			("v,verbose", "Be verbose")
+			("t,trace", "Be verbose")
 			("V,version", "Version information")
 			("h,help", "Print help")
 			;
@@ -159,6 +160,7 @@ int main(int argc, char ** argv)
 		}
 
 		bool verbose = options.count("v");
+		bool trace = options.count("t");
 
 		auto ignores = std::set<divvun::ErrId>();
 		if(options.count("ignore")) {
