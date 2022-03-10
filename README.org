@@ -1049,3 +1049,12 @@ https://github.com/hfst/hfst/issues/366. A workaround is to edit
 =@GLIB_CFLAGS@=.
 
 
+* References / more documentation
+
+The architecture of systems using libdivvun is described in
+
+- Wiechetek, L., Moshagen, S., & Unhammer, K. B. (2019, February).
+  [[https://aclanthology.org/W19-6007.pdf][Seeing more than whitespace—Tokenisation and disambiguation in a North Sámi grammar checker]]. In
+  /Proceedings of the 3rd Workshop on the Use of Computational Methods in the Study of Endangered Languages Volume 1 (Papers)/
+  (pp. 46-55).
+
