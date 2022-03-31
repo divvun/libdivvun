@@ -45,7 +45,7 @@ void Phon::addAlternateText2ipa(const std::string& tag,
                                 const hfst::HfstTransducer* text2ipa_)
 {
     if (verbose) {
-        std::cout << "addinf HFST transducer for tag " << tag << std::endl;
+        std::cout << "adding HFST transducer for tag " << tag << std::endl;
     }
     altText2ipas[tag] = std::unique_ptr<const hfst::HfstTransducer>(text2ipa_);
 }
@@ -58,15 +58,17 @@ void Phon::addAlternateText2ipa(const std::string& tag,
     }
     altText2ipas[tag] = std::unique_ptr<const
       hfst::HfstTransducer>(readTransducer(text2ipa_));
+    assert(altText2ipas[tag]);
 }
 
 
 void Phon::run(std::istream& is, std::ostream& os)
 {
-	string surf;
-	for (string line; std::getline(is, line);) {
-		std::match_results<const char*> result;
-		std::regex_match(line.c_str(), result, CG_LINE);
+    assert(text2ipa);
+    string surf;
+    for (string line; std::getline(is, line);) {
+        std::match_results<const char*> result;
+        std::regex_match(line.c_str(), result, CG_LINE);
         // 0, 1 all
         // 2: surf
         // 4: lemma
@@ -84,9 +86,11 @@ void Phon::run(std::istream& is, std::ostream& os)
             string traces;
             auto phon = surf;
             string outstring = string(result[0]);
-            // try find existing ",,,"phon tag
+            // try find existing ",,,"phon tag or a alt surf. "<>"
             auto phonend = outstring.find("\"phon");
             auto phonstart = phonend;
+            auto altsurfstart = outstring.find("\"<", 3);
+            auto altsurfend = outstring.find(">\"", 3);
             if (phonstart != std::string::npos) {
                 phonstart = outstring.rfind("\"", phonend - 1);
                 phon = outstring.substr(phonstart + 1, phonend - phonstart - 1);
@@ -95,7 +99,16 @@ void Phon::run(std::istream& is, std::ostream& os)
                     std::cout << "Using Phon: " << phon <<
                                  std::endl;
                 }
+            } else if ((altsurfstart != std::string::npos) &&
+                       (altsurfend != std::string::npos)) {
+                phon = outstring.substr(altsurfstart + 2,
+                                        altsurfend - altsurfstart - 2);
+                if(verbose) {
+                    std::cout << "Using re-analysed surface form: " << phon <<
+                      std::endl;
+                }
             } else if (verbose) {
+                phon = surf;
                 std::cout << "Using surf: " << phon << std::endl;
             }
             std::string alttag = "";
@@ -157,7 +170,17 @@ void Phon::run(std::istream& is, std::ostream& os)
         }
         else {
             if (verbose) {
-                std::cout << "Probably not cg formatted stuff: " << std::endl;
+                if (result[0].str()[0] == ';') {
+                    std::cout << "Skipping traced removed CG line:" <<
+                      std::endl;
+                } else if (result[0].str()[0] == ':') {
+                    std::cout << "Skipping superblanks:" << std::endl;
+                } else if (result[0].str() == "") {
+                    std::cout << "Blanks:" << std::endl;
+                } else {
+                    std::cout << "Probably not cg formatted stuff: " <<
+                      std::endl;
+                }
             }
             os << result[0] << std::endl;
         }
