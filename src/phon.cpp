@@ -89,6 +89,8 @@ void Phon::run(std::istream& is, std::ostream& os)
             // try find existing ",,,"phon tag or a alt surf. "<>"
             auto phonend = outstring.find("\"phon");
             auto phonstart = phonend;
+            auto midtend = outstring.find("\"MIDTAPE");
+            auto midtstart = phonend;
             auto altsurfstart = outstring.find("\"<", 3);
             auto altsurfend = outstring.find(">\"", 3);
             if (phonstart != std::string::npos) {
@@ -106,6 +108,14 @@ void Phon::run(std::istream& is, std::ostream& os)
                 if(verbose) {
                     std::cout << "Using re-analysed surface form: " << phon <<
                       std::endl;
+                }
+            } else if (midtstart != std::string::npos) {
+                midtstart = outstring.rfind("\"", midtend - 1);
+                phon = outstring.substr(midtstart + 1, midtend - midtstart - 1);
+                outstring = outstring.replace(midtstart, midtend, "");
+                if (verbose) {
+                    std::cout << "Using MIDTAPE: " << phon <<
+                                 std::endl;
                 }
             } else if (verbose) {
                 phon = surf;
