@@ -96,18 +96,53 @@ void Normaliser::run(std::istream& is, std::ostream& os)
             os << result[0] << std::endl;
         }
         else if ((!result.empty()) && (result[4].length() != 0)) {
+            string outstring = string(result[0]);
             if (tags.empty()) {
-                os << result[0] << std::endl;
+                os << outstring << std::endl;
             }
             bool expand = false;
             for (auto tag : tags) {
-                if (string(result[0]).find(tag) != std::string::npos) {
+                if (outstring.find(tag) != std::string::npos) {
                     if (verbose) {
                         std::cout << "Expanding because of " << tag <<
                                      std::endl;
                     }
                     expand = true;
                 }
+            }
+            // try find existing ",,,"phon tag or a alt surf. "<>"
+            auto phonend = outstring.find("\"phon");
+            auto phonstart = phonend;
+            auto midtend = outstring.find("\"MIDTAPE");
+            auto midtstart = phonend;
+            auto altsurfstart = outstring.find("\"<", 3);
+            auto altsurfend = outstring.find(">\"", 3);
+            if ((altsurfstart != std::string::npos) &&
+                       (altsurfend != std::string::npos)) {
+                surf = outstring.substr(altsurfstart + 2,
+                                        altsurfend - altsurfstart - 2);
+                if(verbose) {
+                    std::cout << "Using re-analysed surface form: " << surf <<
+                      std::endl;
+                }
+            } else if (phonstart != std::string::npos) {
+                phonstart = outstring.rfind("\"", phonend - 1);
+                surf = outstring.substr(phonstart + 1, phonend - phonstart - 1);
+                outstring = outstring.replace(phonstart, phonend, "");
+                if (verbose) {
+                    std::cout << "Using Phon(?): " << surf <<
+                                 std::endl;
+                }
+            } else if (midtstart != std::string::npos) {
+                midtstart = outstring.rfind("\"", midtend - 1);
+                surf = outstring.substr(midtstart + 1, midtend - midtstart - 1);
+                outstring = outstring.replace(midtstart, midtend, "");
+                if (verbose) {
+                    std::cout << "Using MIDTAPE: " << surf <<
+                                 std::endl;
+                }
+            } else if (verbose) {
+                std::cout << "Using surf: " << surf << std::endl;
             }
             if (expand) {
                 // 1. apply expansions from normaliser
