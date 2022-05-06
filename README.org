@@ -10,7 +10,13 @@
 
 * Description
 
-This repository contains the library =libdivvun=, and four main
+Libdivvun is a library for handling Finite-State Morphology and Constraint
+Grammar based NLP tools in GiellaLT. The tools are used for tokenisation,
+normalisation, grammar-checking and correction, and other NLP tasks.
+
+* Tools
+
+This repository contains the library =libdivvun=, and following
 executables:
 
 =divvun-checker=: This program opens a grammar checker pipeline XML
@@ -38,6 +44,15 @@ input and uses the FST to add readings to cohorts that match on the
 wordform surrounded by the preceding and following blanks. Use cases
 include adding error tags that are dependent on spaces before/after,
 or tagging the first word after a linebreak or certain formatting.
+
+
+=divvun-phon=: This program takes FSAs, reads CG input and uses
+the FSAs to add phonetic readings to each analysis lines
+
+
+=divvun-normalise=: This program takes FSAs, reads CG input and uses
+the FSAs to normalise the text towards TTS friendlier, read-out forms
+
 
 
 There are also some helper programs for validating XML
