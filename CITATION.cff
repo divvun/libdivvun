@@ -1,0 +1,46 @@
+authors:
+  - family-names: Wiechetek
+    given-names: Linda
+    orcid: "https://orcid.org/0000-0002-5171-0841"
+  - family-names: Unhammer
+    given-names: Kevin Brubeck
+    orcid: "https://orcid.org/0000-0002-2883-1899"
+  - family-names: Moshagen
+    given-names: Sjur Nørstebø
+    orcid: "https://orcid.org/0000-0003-3771-9521"
+cff-version: 1.2.0
+identifiers:
+  - description: Workshop on the Use of Computational Methods in the Study of Endangered Languages
+    type: url
+    value: https://computel-workshop.org/wp-content/uploads/2019/02/CEL3_book_papers_draft.pdf#page=58
+keywords:
+  - Sámi
+  - Saami
+  - North Saami
+  - proofing
+  - grammar checking
+  - grammar checker
+  - spellcheck
+  - tokenisation
+  - FST
+  - HFST
+message: If you use this software, please cite it using these metadata.
+repository-code: "https://github.com/divvun/libdivvun"
+title: Divvun gramcheck
+version: 0.3.10
+preferred-citation:
+  authors:
+    - family-names: Wiechetek
+      given-names: Linda
+    - family-names: Unhammer
+      given-names: Kevin Brubeck
+    - family-names: Moshagen
+      given-names: Sjur Nørstebø
+  title: "Seeing more than whitespace—Tokenisation and disambiguation in a North Sámi grammar checker"
+  type: article
+  year: 2019
+  url: "https://computel-workshop.org/wp-content/uploads/2019/02/CEL3_book_papers_draft.pdf#page=58"
+  abstract: "Communities of lesser resourced languages like North Sámi benefit from language tools such as spell checkers and grammar checkers to improve literacy. Accurate error feedback is dependent on well-tokenised input, but traditional tokenisation as shallow preprocessing is inadequate to solve the challenges of real-world language usage. We present an alternative where tokenisation remains ambiguous until we have linguistic context information available. This lets us accurately detect sentence boundaries, multiwords and compound error detection. We describe a North Sámi grammar checker with such a tokenisation system, and show the results of its evaluation."
+license: GPL-3.0-or-later
+url: https://github.com/divvun/libdivvun
+
