@@ -270,7 +270,8 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 			r.fixedcase = true;
 		}
 		else if(result[8].length() != 0) {
-            std::cerr << "divvun-suggest: WARNING: Broken MWE wordform in analyses: " << result[8] << std::endl;
+//            std::cerr << "divvun-suggest: WARNING: Broken MWE wordform in analyses: " << result[8] << std::endl;
+//            this breaks something hard to debug but cannot remember what..?
 			r.wf = result[8];
 		}
 	}
