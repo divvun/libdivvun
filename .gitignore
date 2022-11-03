@@ -148,3 +148,6 @@ compile_commands.json
 /src/divvun-normaliser
 /src/divvun-phon
 /test/suggest/run-flushing
+
+/python/python_divvun_gramcheck.egg-info/
+
