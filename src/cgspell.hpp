@@ -99,7 +99,13 @@ class Speller {
 			, speller(new hfst_ospell::ZHfstOspeller())
 		{
 			FILE* err_fp = fopen(errpath.c_str(), "r");
+            if (err_fp == nullptr) {
+                throw std::runtime_error("libdivvun: ERROR: Couldn't read error model " + errpath);
+            }
 			FILE* lex_fp = fopen(lexpath.c_str(), "r");
+            if (lex_fp == NULL) {
+                throw std::runtime_error("libdivvun: ERROR: Couldn't read language model " + lexpath);
+            }
 			err = std::unique_ptr<hfst_ospell::Transducer> (new hfst_ospell::Transducer(err_fp));
 			lex = std::unique_ptr<hfst_ospell::Transducer> (new hfst_ospell::Transducer(lex_fp));
 			// This one is freed by ZHfstOspeller, but it seems like its acceptor and errmodel are not!
