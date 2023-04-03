@@ -1,5 +1,6 @@
 
 EXTRA_DIST=run.xml run.archive run.spell run.workingdir run-lib run \
+		   run-python-bindings \
 		   pipespec.xml tokeniser.pmscript analyser.lexc \
 		   blanktagger.xfst \
 		   valency.cg3 mwe-dis.cg3 disambiguator.cg3 grammarchecker.cg3 \

@@ -230,18 +230,17 @@ AC_CONFIG_FILES([src/divvun-gen-xmlschemas],    [chmod +x src/divvun-gen-xmlsche
 AC_CONFIG_FILES([src/divvun-validate-suggest],  [chmod +x src/divvun-validate-suggest])
 AC_CONFIG_FILES([src/divvun-validate-pipespec], [chmod +x src/divvun-validate-pipespec])
 AC_CONFIG_FILES([test/suggest/run-flushing], [chmod +x test/suggest/run-flushing])
+AC_CONFIG_FILES([test/checker/run-python-bindings], [chmod +x test/checker/run-python-bindings])
 
 AC_OUTPUT([Makefile
            src/Makefile
            src/version.hpp
            python/Makefile
-	   python/setup.py
+           python/setup.py
            test/suggest/Makefile
            test/checker/Makefile
-           test/checker/run-python-bindings
            test/blanktag/Makefile
-           test/cgspell/Makefile],
-          [chmod +x test/checker/run-python-bindings])
+           test/cgspell/Makefile])
 
 cat <<EOF
 -- Building $PACKAGE_STRING
