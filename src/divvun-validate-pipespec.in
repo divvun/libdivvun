@@ -33,12 +33,12 @@ fi
 # dir as this script; otherwise assume we're installed:
 d=$(dirname "$0")
 if [ "$0" != "@prefix@/bin/divvun-validate-pipespec" ] && [ -e "$d"/pipespec.dtd ]; then
-    dir="$d"
-else
-    dir=@prefix@/share/divvun-gramcheck
+    dtd="$d"/pipespec.dtd
+elif [ -e "@prefix@/share/divvun-gramcheck/pipespec.dtd" ] ; then
+    dtd=@prefix@/share/divvun-gramcheck/pipespec.dtd
 fi
 
-/usr/bin/xmllint --dtdvalid "${dir}"/pipespec.dtd --noout "${file}"
+/usr/bin/xmllint --dtdvalid "${dtd}" --noout "${file}"
 
 if default=$(/usr/bin/xmllint --xpath "/pipespec/@default-pipe" "${file}" 2>/dev/null); then
     defaultval="${default##*=}"

@@ -1,12 +1,13 @@
-SWIG_INTERFACE = libdivvun.i
+SWIG_INTERFACE=libdivvun.i
 
-EXTRA_DIST = libdivvun.i std_unique_ptr.i setup.py
+EXTRA_DIST=libdivvun.i std_unique_ptr.i setup.py mac-libreoffice-workaround
+noinst_SCRIPTS=mac-libreoffice-workaround
 
-BUILT_SOURCES = libdivvun_wrap.cpp libdivvun.py
-CLEANFILES = $(BUILT_SOURCES)
+BUILT_SOURCES=libdivvun_wrap.cpp libdivvun.py
+CLEANFILES=$(BUILT_SOURCES)
 
 all-local: $(BUILT_SOURCES)
-	@./mac-libreoffice-workaround
+	@$(srcdir)/mac-libreoffice-workaround
 
 %_wrap.cpp %.py: %.i setup.py std_unique_ptr.i ../src/libdivvun.la
 	$(SWIG) -c++ -python -I$(top_srcdir)/src/lib -o $*_wrap.cpp -outdir . $(srcdir)/$*.i
@@ -21,8 +22,8 @@ uninstall-local:
 	rm -f $(DESTDIR)$(libdir)/python*/site-packages/_libdivvun.*.so
 	rm -f $(DESTDIR)$(libdir)/python*/site-packages/libdivvun.py
 	rm -f $(DESTDIR)$(libdir)/python*/site-packages/__pycache__/libdivvun.*.pyc
-	rm -f $(DESTDIR)$(libdir)/python*/site-packages/python_$(PACKAGE)-*.egg-info
+	rm -rf $(DESTDIR)$(libdir)/python*/site-packages/python_*.egg-info
 
 clean-local:
-	rm -rf build __pycache__
+	rm -rf build __pycache__ dist python_*.egg-info
 

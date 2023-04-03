@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if test -z "$srcdir" ; then
+    echo run this from make check or set srcdir=.
+    exit 1
+fi
+
 set -e -u
 
-./run spell -a sme.zcheck -n smegram
+builddir=$(pwd) "$srcdir"/run spell -a sme.zcheck -n smegram

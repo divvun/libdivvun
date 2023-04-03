@@ -223,6 +223,9 @@ dnl ===========================
 dnl Create the files from .in's
 dnl ===========================
 
+AC_CONFIG_LINKS([src/errors.dtd:src/errors.dtd])
+AC_CONFIG_LINKS([src/pipespec.dtd:src/pipespec.dtd])
+
 AC_CONFIG_FILES([src/divvun-gen-xmlschemas],    [chmod +x src/divvun-gen-xmlschemas])
 AC_CONFIG_FILES([src/divvun-validate-suggest],  [chmod +x src/divvun-validate-suggest])
 AC_CONFIG_FILES([src/divvun-validate-pipespec], [chmod +x src/divvun-validate-pipespec])

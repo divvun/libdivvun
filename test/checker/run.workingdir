@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if test -z "$srcdir" ; then
+    echo run this from make check or set srcdir=.
+    exit 1
+fi
+
 # Test that we can run pipespec.xml's from other working directories.
 
 set -e
@@ -11,14 +16,15 @@ if [[ ${BASH_VERSINFO[0]} -gt 4
     # throw an unbound variable error; so don't -u there
 fi
 
-cd "$(dirname "$0")"/../..
+#cd "$(dirname "$0")"/../..
 
-src/divvun-validate-pipespec test/checker/pipespec.xml
+../../src/divvun-validate-pipespec ../../test/checker/pipespec.xml
 (
     set -x
-    src/divvun-checker -s test/checker/pipespec.xml -n smegram < test/checker/input.xml.txt > test/checker/output.workingdir.json
+    ../../src/divvun-checker -s ../../test/checker/pipespec.xml -n smegram \
+        < "$srcdir"/input.xml.txt > ../../test/checker/output.workingdir.json
 )
-if ! diff test/checker/output.workingdir.json test/checker/expected.xml.json; then
+if ! diff ../../test/checker/output.workingdir.json "$srcdir"/expected.xml.json; then
     echo diff test/checker/output.workingdir.json test/checker/expected.xml.json
     exit 1
 fi

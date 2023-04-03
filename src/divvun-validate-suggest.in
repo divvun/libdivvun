@@ -33,9 +33,12 @@ fi
 # dir as this script; otherwise assume we're installed:
 d=$(dirname "$0")
 if [ "$0" != "@prefix@/bin/divvun-validate-suggest" ] && [ -e "$d"/errors.dtd ]; then
-    dir="$d"
+    dtd="$d"/errors.dtd
+elif [ -e @prefix@/share/divvun-gramcheck/errors.dtd ] ; then
+    dtd=@prefix@/share/divvun-gramcheck/errors.dtd
 else
-    dir=@prefix@/share/divvun-gramcheck
+    echo "cannot find errors.dtd in $d or @prefix@/share/divvun-gramcheck"
+    exit 1
 fi
 
-/usr/bin/xmllint --dtdvalid "${dir}"/errors.dtd --noout "${file}"
+/usr/bin/xmllint --dtdvalid "${dtd}" --noout "${file}"

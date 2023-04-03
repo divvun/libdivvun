@@ -1,13 +1,17 @@
 #!/bin/bash
 
+if test -z "$srcdir" ; then 
+    echo "run this from make check or set srcdir=."
+    exit 1
+fi
 set -e -u
 
-cd "$(dirname "$0")"
+#cd "$(dirname "$0")"
 
-../../src/divvun-blanktag blanktagger.hfst < input.cg > output.cg
+../../src/divvun-blanktag blanktagger.hfst < "$srcdir"/input.cg > output.cg
 
-diff expected.cg output.cg
+diff "$srcdir"/expected.cg output.cg
 
-../../src/divvun-blanktag blanktagger.hfst < input.ends.cg > output.ends.cg
+../../src/divvun-blanktag blanktagger.hfst < "$srcdir"/input.ends.cg > output.ends.cg
 
-diff expected.ends.cg output.ends.cg
+diff "$srcdir"/expected.ends.cg output.ends.cg

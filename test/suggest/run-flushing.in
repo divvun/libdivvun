@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if test -z "$srcdir" ; then
+    echo run from make check or set srcdir=.
+    exit 1
+fi
+
 set -u
 
 
@@ -16,10 +21,11 @@ to="${tmpd}/to"
 from="${tmpd}/from"
 mkfifo "${to}" "${from}"
 
-cd "$(dirname "$0")" || exit 1
+#cd "$(dirname "$0")" || exit 1
 
 # Server:
-../../src/divvun-suggest --json generator.hfstol errors.xml <"${to}" >"${from}" 2>"${tmpd}/err" &
+../../src/divvun-suggest --json generator.hfstol "$srcdir"/errors.xml \
+    < "${to}" >"${from}" 2>"${tmpd}/err" &
 pid=$!
 trap 'kill $pid; rm -rf "${tmpd}"' EXIT
 
@@ -30,8 +36,9 @@ declare -i success=0
 exec 3>"${to}"
 exec 4<"${from}"
 for _ in test it a couple times; do
-    for input in input.*.cg; do
-        base=${input##input}; base=${base%%cg}
+    for input in "$srcdir"/input.*.cg; do
+        base=$(basename "$input")
+        base=${base##input}; base=${base%%cg}
         # shellcheck disable=SC2016
         timeout 1 "${awk}" '{print $0} END{print "<STREAMCMD:FLUSH>"}' "${input}" >&3
         case $? in
@@ -55,7 +62,7 @@ for _ in test it a couple times; do
                exit 1
                ;;
         esac
-        if ! diff expected"${base}"json output-flushing"${base}"json; then
+        if ! diff "$srcdir"/expected"${base}"json output-flushing"${base}"json; then
             echo "stdout differs for ${base} (flushing)"
             exit 1
         fi

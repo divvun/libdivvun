@@ -1,24 +1,31 @@
 #!/bin/bash
 
+if test -z "$srcdir" ; then
+    echo "run from make check or set srcdir=."
+    exit 1
+fi
 set -u
 
-cd "$(dirname "$0")" || exit 1
+#cd "$(dirname "$0")" || exit 1
 
 declare -i fail=0
-for input in input.*.cg; do
-    base=${input##input}; base=${base%%cg}
-    ../../src/divvun-suggest --json generator.hfstol errors.xml \
+for input in "$srcdir"/input.*.cg; do
+    base=$(basename "$input")
+    base=${base##input}; base=${base%%cg}
+    ../../src/divvun-suggest --json generator.hfstol "$srcdir"/errors.xml \
                           < "${input}" \
                           > output"${base}"json \
                           2>output"${base}"err
-    if ! diff expected"${base}"json output"${base}"json; then
+    if ! diff "$srcdir"/expected"${base}"json output"${base}"json; then
         echo "stdout differs for ${base}"
         (( fail++ ))
     fi
-    if ! diff expected"${base}"err output"${base}"err; then
+    if ! diff "$srcdir"/expected"${base}"err output"${base}"err; then
         echo "stderr differs for ${base}"
         (( fail++ ))
     fi
 done
 
-exit ${fail}
+if test "$fail" -gt 0 ; then
+    exit 1
+fi

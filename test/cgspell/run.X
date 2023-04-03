@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if test -z "$srcdir" ; then
+    echo call this from make check or set srcdir=.
+    exit 1
+fi
+
 set -e -u
 
-./run X -X
+"$srcdir"/run X -X

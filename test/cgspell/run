@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if test -z "$srcdir" ; then
+    echo call this from make check or set srcdir=.
+    exit 1
+fi
+
 set -e
 if [[ ${BASH_VERSINFO[0]} -gt 4
    || ${BASH_VERSINFO[0]} -eq 4 && ${BASH_VERSINFO[1]} -ge 4 ]]; then
@@ -9,7 +14,7 @@ if [[ ${BASH_VERSINFO[0]} -gt 4
     # throw an unbound variable error; so don't -u there
 fi
 
-cd "$(dirname "$0")"/../..
+#cd "$(dirname "$0")"/../.
 
 check () {
     local -r n="$1"
@@ -17,11 +22,12 @@ check () {
     local -ra args=( "$@" )
 
     (
-        cd test/cgspell
+        #cd test/cgspell
         set -x
-        ../../src/divvun-cgspell -l analyser.hfstol -m errmodel.hfst "${args[@]}" < input."$n" > output."$n"
+        ../../src/divvun-cgspell -l analyser.hfstol -m "$srcdir"/errmodel.hfst \
+            "${args[@]}" < "$srcdir"/input."$n" > output."$n"
     )
-    if ! diff test/cgspell/output."$n" test/cgspell/expected."$n"; then
+    if ! diff output."$n" "$srcdir"/expected."$n"; then
         echo diff test/cgspell/output."$n" test/cgspell/expected."$n"
         exit 1
     fi

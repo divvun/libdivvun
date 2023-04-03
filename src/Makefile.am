@@ -1,8 +1,13 @@
 datadir = $(prefix)/share/divvun-gramcheck
 AM_CPPFLAGS = -DPREFIX="\"$(prefix)\""
 
+noinst_HEADERS=util.hpp hfst_util.hpp json.hpp \
+			   utf8.h utf8/checked.h utf8/core.h utf8/unchecked.h \
+			   mapbox/variant.hpp mapbox/recursive_wrapper.hpp \
+			   mapbox/variant_visitor.hpp \
+			   cxxopts.hpp
 # divvun-suggest binary:
-divvun_suggest_SOURCES  = main_suggest.cpp suggest.cpp
+divvun_suggest_SOURCES  = main_suggest.cpp suggest.cpp suggest.hpp
 divvun_suggest_LDADD    = $(HFST_LIBS)   $(PUGIXML_LIBS)
 divvun_suggest_CXXFLAGS = $(HFST_CFLAGS) $(PUGIXML_CFLAGS)
 bin_PROGRAMS            = divvun-suggest
@@ -10,7 +15,7 @@ dist_man_MANS           = divvun-suggest.1
 
 if HAVE_LIBPUGIXML
 # divvun-gen-sh binary
-divvun_gen_sh_SOURCES  = main_gen_sh.cpp pipespec.cpp
+divvun_gen_sh_SOURCES  = main_gen_sh.cpp pipespec.cpp pipespec.hpp
 divvun_gen_sh_LDADD    = $(PUGIXML_LIBS)   $(LIBARCHIVE_LIBS)
 divvun_gen_sh_CXXFLAGS = $(PUGIXML_CFLAGS) $(LIBARCHIVE_CFLAGS)
 bin_PROGRAMS          += divvun-gen-sh
@@ -26,7 +31,7 @@ EXTRA_DIST          = errors.dtd errors.rnc pipespec.dtd pipespec.rnc
 # We make pipespec-stuff even if --disable-checker; it doesn't add to dependencies
 
 # divvun-blanktag binary:
-divvun_blanktag_SOURCES  = main_blanktag.cpp blanktag.cpp
+divvun_blanktag_SOURCES  = main_blanktag.cpp blanktag.cpp blanktag.hpp
 divvun_blanktag_LDADD    = $(HFST_LIBS)
 divvun_blanktag_CXXFLAGS = $(HFST_CFLAGS)
 bin_PROGRAMS            += divvun-blanktag
@@ -34,7 +39,7 @@ dist_man_MANS           += divvun-blanktag.1
 
 if HAVE_CGSPELL
 # divvun-cgspell binary:
-divvun_cgspell_SOURCES  = main_cgspell.cpp cgspell.cpp
+divvun_cgspell_SOURCES  = main_cgspell.cpp cgspell.cpp cgspell.hpp
 divvun_cgspell_LDADD    = $(HFSTOSPELL_LIBS)
 divvun_cgspell_CXXFLAGS = $(HFSTOSPELL_CFLAGS)
 bin_PROGRAMS           += divvun-cgspell
@@ -61,7 +66,7 @@ bin_PROGRAMS         += divvun-checker
 dist_man_MANS        += divvun-checker.1
 
 # divvun-checker binary:
-divvun_checker_SOURCES  = main_checker.cpp
+divvun_checker_SOURCES  = main_checker.cpp pipeline.hpp normaliser.hpp phon.hpp
 divvun_checker_LDADD    = libdivvun.la $(libdivvun_la_LIBADD)
 divvun_checker_CXXFLAGS =              $(libdivvun_la_CXXFLAGS)
 divvun_checkerdir       = $(datadir)

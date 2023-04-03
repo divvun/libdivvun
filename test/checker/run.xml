@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if test -z "$srcdir" ; then
+    echo run this from make check or set srcdir=.
+    exit 1
+fi
+
 set -e -u
 
-./run xml -s pipespec.xml -n smegram
+builddir=$(pwd) "$srcdir"/run xml -s pipespec.xml -n smegram
