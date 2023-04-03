@@ -124,7 +124,7 @@ directory, build that (with cmake) and configure this program to use
 that library. Alternatively, you can run ./configure with
 =--disable-xml= if you don't care about human-readable error messages.
 
-** If you also want =divvun-gramcheck=
+** If you also want =divvun-checker=
 
 - gcc >=5.0.0 with libstdc++-5-dev (or similarly recent version of
   clang, with full C++11 support)
@@ -168,7 +168,7 @@ dependencies are missing.
 
 #+BEGIN_SRC sh
 ./autogen.sh
-./configure --enable-checker  # or just "./configure" if you don't need divvun-gramcheck
+./configure --enable-checker  # or just "./configure" if you don't need divvun-checker
 make
 make install # with sudo if you didn't specify a --prefix to ./configure
 #+END_SRC
@@ -287,7 +287,7 @@ pipespec are relative to the current directory.
 
 See the =test/= folder for an example of zipped archives.
 
-See the [[file:examples/using-checker-lib-from-cpp][examples folder]] for how to link into divvun-gramcheck and use
+See the [[file:examples/using-checker-lib-from-cpp][examples folder]] for how to link into libdivvun and use
 it as a library, getting out either the JSON-formatted list of errors,
 or a simple [[file:src/checkertypes.hpp::struct%20Err%20{][data structure]] that contains the same information as the
 JSON. The next section describes the JSON format.

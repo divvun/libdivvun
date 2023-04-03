@@ -1,4 +1,4 @@
-datadir = $(prefix)/share/divvun-gramcheck
+datadir = $(prefix)/share/libdivvun
 AM_CPPFLAGS = -DPREFIX="\"$(prefix)\""
 
 noinst_HEADERS=util.hpp hfst_util.hpp json.hpp \

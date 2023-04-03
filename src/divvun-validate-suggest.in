@@ -34,10 +34,10 @@ fi
 d=$(dirname "$0")
 if [ "$0" != "@prefix@/bin/divvun-validate-suggest" ] && [ -e "$d"/errors.dtd ]; then
     dtd="$d"/errors.dtd
-elif [ -e @prefix@/share/divvun-gramcheck/errors.dtd ] ; then
-    dtd=@prefix@/share/divvun-gramcheck/errors.dtd
+elif [ -e @prefix@/share/libdivvun/errors.dtd ] ; then
+    dtd=@prefix@/share/libdivvun/errors.dtd
 else
-    echo "cannot find errors.dtd in $d or @prefix@/share/divvun-gramcheck"
+    echo "cannot find errors.dtd in $d or @prefix@/share/libdivvun"
     exit 1
 fi
 

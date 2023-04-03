@@ -34,8 +34,8 @@ fi
 d=$(dirname "$0")
 if [ "$0" != "@prefix@/bin/divvun-validate-pipespec" ] && [ -e "$d"/pipespec.dtd ]; then
     dtd="$d"/pipespec.dtd
-elif [ -e "@prefix@/share/divvun-gramcheck/pipespec.dtd" ] ; then
-    dtd=@prefix@/share/divvun-gramcheck/pipespec.dtd
+elif [ -e "@prefix@/share/libdivvun/pipespec.dtd" ] ; then
+    dtd=@prefix@/share/libdivvun/pipespec.dtd
 fi
 
 /usr/bin/xmllint --dtdvalid "${dtd}" --noout "${file}"

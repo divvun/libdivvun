@@ -31,7 +31,7 @@ d=$(dirname "$0")
 if [ "$0" != "@prefix@/bin/divvun-gen-xmlschemas" ] && [ -e "$d"/errors.dtd ]; then
     dir="$d"
 else
-    dir=@prefix@/share/divvun-gramcheck
+    dir=@prefix@/share/libdivvun
 fi
 
 cat <<EOF
