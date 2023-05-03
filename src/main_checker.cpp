@@ -127,33 +127,29 @@ int main(int argc, char** argv) {
 		cxxopts::Options options(
 		  argv[0], " - run a grammar checker on plain text");
 
-		options.add_options()
-          ("s,spec", "Pipeline XML specification",cxxopts::value<std::string>(),
-		   "FILE")
-          ("a,archive", "Zipped pipeline archive of language data",
-		   cxxopts::value<std::string>(), "FILE")
-          ("l,language", "Language to use (in case no FILE arguments given)",
-		   cxxopts::value<std::string>(), "LANG")
-          ("n,variant", "Name of the pipeline variant",
-           cxxopts::value<std::string>(), "NAME")
-          ("I,ignore",
-		   "Comma-separated list of error tags to ignore (see -p for possible "
-		   "values)", cxxopts::value<std::string>(), "TAGS")
-          ("U,include-only",
-		   "Comma-separated list of error tags to include (see -p for possible "
-		   "values)", cxxopts::value<std::string>(), "TAGS")
-          ("i,input", "Input file (UNIMPLEMENTED, stdin for now)",
-           cxxopts::value<std::string>(), "FILE")
-          ("o,output", "Output file (UNIMPLEMENTED, stdout for now)",
-		   cxxopts::value<std::string>(), "FILE")
-          ("z,null-flush",
-		   "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 "
-		   "when format is json).")
-          ("p,preferences",
-           "Print the preferences defined by the given pipeline")
-          ("v,verbose", "Be verbose")
-          ("t,trace", "Be verbose")
-          ("V,version", "Version information")("h,help", "Print help");
+		options.add_options()("s,spec", "Pipeline XML specification",
+		  cxxopts::value<std::string>(),
+		  "FILE")("a,archive", "Zipped pipeline archive of language data",
+		  cxxopts::value<std::string>(), "FILE")("l,language",
+		  "Language to use (in case no FILE arguments given)",
+		  cxxopts::value<std::string>(), "LANG")("n,variant",
+		  "Name of the pipeline variant", cxxopts::value<std::string>(),
+		  "NAME")("I,ignore",
+		  "Comma-separated list of error tags to ignore (see -p for possible "
+		  "values)",
+		  cxxopts::value<std::string>(), "TAGS")("U,include-only",
+		  "Comma-separated list of error tags to include (see -p for possible "
+		  "values)",
+		  cxxopts::value<std::string>(),
+		  "TAGS")("i,input", "Input file (UNIMPLEMENTED, stdin for now)",
+		  cxxopts::value<std::string>(),
+		  "FILE")("o,output", "Output file (UNIMPLEMENTED, stdout for now)",
+		  cxxopts::value<std::string>(), "FILE")("z,null-flush",
+		  "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 "
+		  "when format is json).")("p,preferences",
+		  "Print the preferences defined by the given pipeline")(
+		  "v,verbose", "Be verbose")("t,trace", "Be verbose")(
+		  "V,version", "Version information")("h,help", "Print help");
 
 		std::vector<std::string> pos = {
 			// "spec",
@@ -187,24 +183,24 @@ int main(int argc, char** argv) {
 		bool trace = options.count("t");
 
 		auto ignores = std::set<divvun::ErrId>();
-        auto includes = std::set<divvun::ErrId>();
-        if (options.count("include-only") && options.count("ignore")) {
-            std::cerr << "Cannot use both include and ignore tags " <<
-              std::endl;
-            return EXIT_FAILURE;
-        }
-        else if (options.count("ignore")) {
+		auto includes = std::set<divvun::ErrId>();
+		if (options.count("include-only") && options.count("ignore")) {
+			std::cerr << "Cannot use both include and ignore tags "
+			          << std::endl;
+			return EXIT_FAILURE;
+		}
+		else if (options.count("ignore")) {
 			for (const auto& ignore :
 			  divvun::split(options["ignore"].as<std::string>(), ',')) {
 				ignores.insert(fromUtf8(ignore));
 			}
 		}
-        else if (options.count("include-only")) {
-            for (const auto& include :
-                 divvun::split(options["include-only"].as<string>(), ',')) {
-                includes.insert(fromUtf8(include));
-            }
-        }
+		else if (options.count("include-only")) {
+			for (const auto& include :
+			  divvun::split(options["include-only"].as<string>(), ',')) {
+				includes.insert(fromUtf8(include));
+			}
+		}
 
 		if (options.count("spec")) {
 			if (options.count("archive") + options.count("language")) {

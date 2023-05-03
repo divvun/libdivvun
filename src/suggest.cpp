@@ -19,117 +19,121 @@
 
 namespace divvun {
 
-const std::basic_regex<char> DELIMITERS ("^[.!?]$");
+const std::basic_regex<char> DELIMITERS("^[.!?]$");
 
-const std::basic_regex<char> CG_TAGS_RE ("\"[^\"]*\"S?|[^ ]+");
+const std::basic_regex<char> CG_TAGS_RE("\"[^\"]*\"S?|[^ ]+");
 
 // Anything *not* matched by CG_TAG_TYPE is sent to the generator.
 // … or we could make an (h)fst out of these to match on lines :)
-const std::basic_regex<char> CG_TAG_TYPE (
-	"^"
-	"(#"			// Group 1: Dependencies, comments
-	"|&(.+)"		// Group 2: Errtype
-	"|R:(.+):([0-9]+)"	// Group 3 & 4: Relation name and target
-	"|ID:([0-9]+)"		// Group 5: Relation ID
-	"|\"([^\"]+)\"S"        // Group 6: Reading word-form
-	"|(<fixedcase>)"        // Group 7: Fixed Casing
-	"|\"<([^>]+)>\""        // Group 8: Broken word-form from MWE-split
-	"|@"			// Syntactic tag
-	"|Sem/"			// Semantic tag
-	"|§"			// Semantic role
-	"|<"			// Weights (<W:0>) and such
-	"|ADD:"			// --trace
-	"|PROTECT:"
-	"|UNPROTECT:"
-	"|MAP:"
-	"|REPLACE:"
-	"|SELECT:"
-	"|REMOVE:"
-	"|IFF:"
-	"|APPEND:"
-	"|SUBSTITUTE:"
-	"|REMVARIABLE:"
-	"|SETVARIABLE:"
-	"|DELIMIT:"
-	"|MATCH:"
-	"|SETPARENT:"
-	"|SETCHILD:"
-	"|ADDRELATION[:\(]"
-	"|SETRELATION[:\(]"
-	"|REMRELATION[:\(]"
-	"|ADDRELATIONS[:\(]"
-	"|SETRELATIONS[:\(]"
-	"|REMRELATIONS[:\(]"
-	"|MOVE:"
-	"|MOVE-AFTER:"
-	"|MOVE-BEFORE:"
-	"|SWITCH:"
-	"|REMCOHORT:"
-	"|UNMAP:"
-	"|COPY:"
-	"|ADDCOHORT:"
-	"|ADDCOHORT-AFTER:"
-	"|ADDCOHORT-BEFORE:"
-	"|EXTERNAL:"
-	"|EXTERNAL-ONCE:"
-	"|EXTERNAL-ALWAYS:"
-	"|REOPEN-MAPPINGS:"
-	").*"
-	);
+const std::basic_regex<char> CG_TAG_TYPE(
+  "^"
+  "(#"               // Group 1: Dependencies, comments
+  "|&(.+)"           // Group 2: Errtype
+  "|R:(.+):([0-9]+)" // Group 3 & 4: Relation name and target
+  "|ID:([0-9]+)"     // Group 5: Relation ID
+  "|\"([^\"]+)\"S"   // Group 6: Reading word-form
+  "|(<fixedcase>)"   // Group 7: Fixed Casing
+  "|\"<([^>]+)>\""   // Group 8: Broken word-form from MWE-split
+  "|@"               // Syntactic tag
+  "|Sem/"            // Semantic tag
+  "|§"               // Semantic role
+  "|<"               // Weights (<W:0>) and such
+  "|ADD:"            // --trace
+  "|PROTECT:"
+  "|UNPROTECT:"
+  "|MAP:"
+  "|REPLACE:"
+  "|SELECT:"
+  "|REMOVE:"
+  "|IFF:"
+  "|APPEND:"
+  "|SUBSTITUTE:"
+  "|REMVARIABLE:"
+  "|SETVARIABLE:"
+  "|DELIMIT:"
+  "|MATCH:"
+  "|SETPARENT:"
+  "|SETCHILD:"
+  "|ADDRELATION[:\(]"
+  "|SETRELATION[:\(]"
+  "|REMRELATION[:\(]"
+  "|ADDRELATIONS[:\(]"
+  "|SETRELATIONS[:\(]"
+  "|REMRELATIONS[:\(]"
+  "|MOVE:"
+  "|MOVE-AFTER:"
+  "|MOVE-BEFORE:"
+  "|SWITCH:"
+  "|REMCOHORT:"
+  "|UNMAP:"
+  "|COPY:"
+  "|ADDCOHORT:"
+  "|ADDCOHORT-AFTER:"
+  "|ADDCOHORT-BEFORE:"
+  "|EXTERNAL:"
+  "|EXTERNAL-ONCE:"
+  "|EXTERNAL-ALWAYS:"
+  "|REOPEN-MAPPINGS:"
+  ").*");
 
-const std::basic_regex<char> MSG_TEMPLATE_REL ("^[$][0-9]+$");
-const std::basic_regex<char> LEFT_RIGHT_REL ("^(LEFT|RIGHT)$"); // cohort added to the left/right
-const std::basic_regex<char> DELETE_REL ("^DELETE[0-9]+");
+const std::basic_regex<char> MSG_TEMPLATE_REL("^[$][0-9]+$");
+const std::basic_regex<char> LEFT_RIGHT_REL(
+  "^(LEFT|RIGHT)$"); // cohort added to the left/right
+const std::basic_regex<char> DELETE_REL("^DELETE[0-9]+");
 
-enum LineType {
-	WordformL, ReadingL, BlankL
-};
-
+enum LineType { WordformL, ReadingL, BlankL };
 
 
 #ifdef HAVE_LIBPUGIXML
-const MsgMap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& result)
-{
+const MsgMap readMessagesXml(
+  pugi::xml_document& doc, pugi::xml_parse_result& result) {
 	MsgMap msgs;
 
 	if (result) {
 		// <default>'s:
-		for (pugi::xml_node def: doc.child("errors").child("defaults").children("default")) {
+		for (pugi::xml_node def :
+		  doc.child("errors").child("defaults").children("default")) {
 			// Regexes we first have to store as strings, then put the compiled versions in msgs[lang].second:
-			std::unordered_map<Lang, std::unordered_map<string, Msg > > regexes;
+			std::unordered_map<Lang, std::unordered_map<string, Msg>> regexes;
 			// For all <title>'s and <description>'s, add all their parent <id>/<re>'s:
-			for (pugi::xml_node child: def.child("header").children("title")) {
+			for (pugi::xml_node child :
+			  def.child("header").children("title")) {
 				const u16string& msg = fromUtf8(xml_raw_cdata(child));
 				const Lang& lang = child.attribute("xml:lang").value();
-				for (pugi::xml_node e: def.child("ids").children("e")) {
+				for (pugi::xml_node e : def.child("ids").children("e")) {
 					// e_value assumes we only ever have one PCDATA element here:
 					const auto& errtype = fromUtf8(e.attribute("id").value());
-					if(msgs[lang].first.count(errtype) != 0) {
-						std::cerr << "divvun-suggest: WARNING: Duplicate titles for " << e.attribute("id").value() << std::endl;
+					if (msgs[lang].first.count(errtype) != 0) {
+						std::cerr
+						  << "divvun-suggest: WARNING: Duplicate titles for "
+						  << e.attribute("id").value() << std::endl;
 					}
 					// Default to <title> as <description>, may be overridden below:
 					msgs[lang].first[errtype] = make_pair(msg, msg);
 				}
-				for (pugi::xml_node re: def.child("ids").children("re")) {
-					regexes[lang][re.attribute("v").value()] = make_pair(msg, msg);
+				for (pugi::xml_node re : def.child("ids").children("re")) {
+					regexes[lang][re.attribute("v").value()] =
+					  make_pair(msg, msg);
 				}
 			}
-			for (pugi::xml_node child: def.child("body").children("description")) {
+			for (pugi::xml_node child :
+			  def.child("body").children("description")) {
 				const u16string& msg = fromUtf8(xml_raw_cdata(child));
 				const Lang& lang = child.attribute("xml:lang").value();
-				for (pugi::xml_node e: def.child("ids").children("e")) {
+				for (pugi::xml_node e : def.child("ids").children("e")) {
 					const auto& errtype = fromUtf8(e.attribute("id").value());
-					auto &langmsgs = msgs[lang].first;
+					auto& langmsgs = msgs[lang].first;
 					if (langmsgs.find(errtype) != langmsgs.end()) {
 						langmsgs[errtype].second = msg;
-					} else {
+					}
+					else {
 						// No <title> for this language, fallback to <description>:
 						langmsgs[errtype] = std::make_pair(msg, msg);
 					}
-                                }
-				for (pugi::xml_node re: def.child("ids").children("re")) {
+				}
+				for (pugi::xml_node re : def.child("ids").children("re")) {
 					const auto& rstr = re.attribute("v").value();
-					auto &langmsgs = regexes[lang];
+					auto& langmsgs = regexes[lang];
 					if (langmsgs.find(rstr) != langmsgs.end()) {
 						langmsgs[rstr].second = msg;
 					}
@@ -139,35 +143,40 @@ const MsgMap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& re
 					}
 				}
 			}
-                        for (const auto &langres : regexes) {
-				const Lang &lang = langres.first;
-				for (const auto &rstrmsg : langres.second) {
+			for (const auto& langres : regexes) {
+				const Lang& lang = langres.first;
+				for (const auto& rstrmsg : langres.second) {
 					std::basic_regex<char> r(rstrmsg.first);
-					msgs[lang].second.push_back(std::make_pair(r, rstrmsg.second));
+					msgs[lang].second.push_back(
+					  std::make_pair(r, rstrmsg.second));
 				}
 			}
 		}
-                // <error>'s
-		for (pugi::xml_node error: doc.child("errors").children("error")) {
+		// <error>'s
+		for (pugi::xml_node error : doc.child("errors").children("error")) {
 			const auto& errtype = fromUtf8(error.attribute("id").value());
 			// For all <title>'s and <description>'s, add the <error id> attribute:
-			for (pugi::xml_node child: error.child("header").children("title")) {
+			for (pugi::xml_node child :
+			  error.child("header").children("title")) {
 				// child_value assumes we only ever have one PCDATA element here:
 				const auto& msg = fromUtf8(xml_raw_cdata(child));
 				const auto& lang = child.attribute("xml:lang").value();
 				auto& langmsgs = msgs[lang].first;
-				if(langmsgs.count(errtype) != 0) {
-					std::cerr << "divvun-suggest: WARNING: Duplicate <title>'s for " << error.attribute("id").value() << std::endl;
+				if (langmsgs.count(errtype) != 0) {
+					std::cerr
+					  << "divvun-suggest: WARNING: Duplicate <title>'s for "
+					  << error.attribute("id").value() << std::endl;
 				}
 				langmsgs[errtype] = make_pair(msg, msg);
 			}
-			for (pugi::xml_node child: error.child("body").children("description")) {
+			for (pugi::xml_node child :
+			  error.child("body").children("description")) {
 				const auto& msg = fromUtf8(xml_raw_cdata(child));
 				const auto& lang = child.attribute("xml:lang").value();
 				auto& langmsgs = msgs[lang].first;
-				if(langmsgs.find(errtype) != langmsgs.end()) {
+				if (langmsgs.find(errtype) != langmsgs.end()) {
 					langmsgs[errtype].second = msg;
-                                }
+				}
 				else {
 					// No <title> for this language, fallback to <description>:
 					langmsgs[errtype] = std::make_pair(msg, msg);
@@ -176,7 +185,8 @@ const MsgMap readMessagesXml(pugi::xml_document& doc, pugi::xml_parse_result& re
 		}
 	}
 	else {
-		std::cerr << "(buffer):" << result.offset << " ERROR: " << result.description() << "\n";
+		std::cerr << "(buffer):" << result.offset
+		          << " ERROR: " << result.description() << "\n";
 	}
 	return msgs;
 }
@@ -209,9 +219,9 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 	Reading r;
 	const auto& lemma_beg = line.find("\"");
 	const auto& lemma_end = line.find("\" ", lemma_beg);
-	const auto& lemma = line.substr(lemma_beg + 1, lemma_end-lemma_beg-1);
-	const auto& tags = line.substr(lemma_end+2);
-	StringVec gentags;	// tags we generate with
+	const auto& lemma = line.substr(lemma_beg + 1, lemma_end - lemma_beg - 1);
+	const auto& tags = line.substr(lemma_end + 2);
+	StringVec gentags; // tags we generate with
 	r.id = 0; // CG-3 id's start at 1, should be safe. Want sum types :-/
 	r.wf = "";
 	r.suggest = false || generate_all_readings;
@@ -219,82 +229,87 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 	r.added = NotAdded;
 	r.link = false;
 	r.fixedcase = false;
-	for(auto& tag : allmatches(tags, CG_TAGS_RE)) { // proc_tags
+	for (auto& tag : allmatches(tags, CG_TAGS_RE)) { // proc_tags
 		std::match_results<const char*> result;
 		std::regex_match(tag.c_str(), result, CG_TAG_TYPE);
 		if (result.empty()) {
 			gentags.push_back(tag);
 		}
-		else if(result[2].length() != 0) {
-			if(tag == "&SUGGEST") {
+		else if (result[2].length() != 0) {
+			if (tag == "&SUGGEST") {
 				r.suggest = true;
 			}
-			else if(tag == "&SUGGESTWF") {
+			else if (tag == "&SUGGESTWF") {
 				r.suggestwf = true;
 			}
-			else if(tag == "&ADDED" || tag == "&ADDED-AFTER-BLANK") {
+			else if (tag == "&ADDED" || tag == "&ADDED-AFTER-BLANK") {
 				r.added = AddedAfterBlank;
 			}
-			else if(tag == "&ADDED-BEFORE-BLANK") {
+			else if (tag == "&ADDED-BEFORE-BLANK") {
 				r.added = AddedBeforeBlank;
 			}
-			else if(tag == "&LINK") {
+			else if (tag == "&LINK") {
 				r.link = true;
 			}
 			else {
 				r.errtypes.insert(fromUtf8(result[2]));
 			}
 		}
-		else if(result[3].length() != 0 && result[4].length() != 0) {
+		else if (result[3].length() != 0 && result[4].length() != 0) {
 			try {
 				rel_id target = stoi(result[4]);
 				auto rel_name = result[3];
 				r.rels[rel_name] = target;
 			}
-			catch(...) {
-				std::cerr << "divvun-suggest: WARNING: Couldn't parse relation target integer" << std::endl;
+			catch (...) {
+				std::cerr << "divvun-suggest: WARNING: Couldn't parse "
+				             "relation target integer"
+				          << std::endl;
 			}
 		}
-		else if(result[5].length() != 0) {
+		else if (result[5].length() != 0) {
 			try {
 				r.id = stoi(result[5]);
 			}
-			catch(...) {
-				std::cerr << "divvun-suggest: WARNING: Couldn't parse ID integer" << std::endl;
+			catch (...) {
+				std::cerr
+				  << "divvun-suggest: WARNING: Couldn't parse ID integer"
+				  << std::endl;
 			}
 		}
-		else if(result[6].length() != 0) {
+		else if (result[6].length() != 0) {
 			r.wf = result[6];
 		}
-		else if(result[7].length() != 0) {
+		else if (result[7].length() != 0) {
 			r.fixedcase = true;
 		}
-		else if(result[8].length() != 0) {
-//            std::cerr << "divvun-suggest: WARNING: Broken MWE wordform in analyses: " << result[8] << std::endl;
-//            this breaks something hard to debug but cannot remember what..?
+		else if (result[8].length() != 0) {
+			//            std::cerr << "divvun-suggest: WARNING: Broken MWE wordform in analyses: " << result[8] << std::endl;
+			//            this breaks something hard to debug but cannot remember what..?
 			r.wf = result[8];
 		}
 	}
 	const auto& tagsplus = join(gentags, "+");
-	r.ana = lemma+"+"+tagsplus;
-	if(r.suggestwf) {
+	r.ana = lemma + "+" + tagsplus;
+	if (r.suggestwf) {
 		r.sforms.emplace_back(r.wf);
 	}
 	return r;
 };
 
-const Reading proc_reading(const hfst::HfstTransducer& t, const string& line, bool generate_all_readings) {
+const Reading proc_reading(const hfst::HfstTransducer& t, const string& line,
+  bool generate_all_readings) {
 	stringstream ss(line);
 	string subline;
 	std::deque<Reading> subs;
-	while(std::getline(ss, subline, '\n')){
+	while (std::getline(ss, subline, '\n')) {
 		subs.push_front(proc_subreading(subline, generate_all_readings));
 	}
 	Reading r;
 	const size_t n_subs = subs.size();
-	for(size_t i = 0; i < n_subs; ++i) {
+	for (size_t i = 0; i < n_subs; ++i) {
 		const auto& sub = subs[i];
-		r.ana += sub.ana + (i+1 == n_subs ? "" : "#");
+		r.ana += sub.ana + (i + 1 == n_subs ? "" : "#");
 		r.errtypes.insert(sub.errtypes.begin(), sub.errtypes.end());
 		r.rels.insert(sub.rels.begin(), sub.rels.end());
 		// higher sub can override id if set; doesn't seem like cg3 puts ids on them though
@@ -307,17 +322,17 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const string& line, bo
 		r.wf = r.wf.empty() ? sub.wf : r.wf;
 		r.fixedcase |= sub.fixedcase;
 	}
-	if(r.suggest) {
+	if (r.suggest) {
 		const HfstPaths1L paths(t.lookup_fd({ r.ana }, -1, 10.0));
-		for(auto& p : *paths) {
+		for (auto& p : *paths) {
 			stringstream form;
-			for(auto& symbol : p.second) {
-				if(!hfst::FdOperation::is_diacritic(symbol)) {
+			for (auto& symbol : p.second) {
+				if (!hfst::FdOperation::is_diacritic(symbol)) {
 					form << symbol;
 				}
 			}
-                        r.sforms.emplace_back(form.str());
-                }
+			r.sforms.emplace_back(form.str());
+		}
 	}
 	return r;
 }
@@ -326,16 +341,12 @@ bool cohort_empty(const Cohort& c) {
 	return c.form.empty();
 }
 
-const Cohort DEFAULT_COHORT = {
-	{}, 0, 0, {}, {}, NotAdded
-};
+const Cohort DEFAULT_COHORT = { {}, 0, 0, {}, {}, NotAdded };
 
 // https://stackoverflow.com/a/1464684/69663
 template<class Iterator>
-Iterator Dedupe(Iterator first, Iterator last)
-{
-	while (first != last)
-	{
+Iterator Dedupe(Iterator first, Iterator last) {
+	while (first != last) {
 		Iterator next(first);
 		last = std::remove(++next, last, *first);
 		first = next;
@@ -343,29 +354,32 @@ Iterator Dedupe(Iterator first, Iterator last)
 	return last;
 }
 
-void rel_on_match(const relations& rels,
-		  const std::basic_regex<char>& name,
-		  const Sentence& sentence,
-		  const std::function<void(const string& relname, size_t i_t, const Cohort& trg)>& fn) {
-	for(const auto& rel: rels) {
+void rel_on_match(const relations& rels, const std::basic_regex<char>& name,
+  const Sentence& sentence,
+  const std::function<void(
+    const string& relname, size_t i_t, const Cohort& trg)>& fn) {
+	for (const auto& rel : rels) {
 		std::match_results<const char*> result;
 		std::regex_match(rel.first.c_str(), result, name);
-		if(result.empty()) { // Other relation
+		if (result.empty()) { // Other relation
 			continue;
 		}
 		const auto& target_id = rel.second;
-		if(sentence.ids_cohorts.find(target_id) == sentence.ids_cohorts.end()) {
-			std::cerr << "divvun-suggest: WARNING: Couldn't find relation target for " << rel.first << ":" << rel.second << std::endl;
+		if (sentence.ids_cohorts.find(target_id) ==
+		    sentence.ids_cohorts.end()) {
+			std::cerr
+			  << "divvun-suggest: WARNING: Couldn't find relation target for "
+			  << rel.first << ":" << rel.second << std::endl;
 			continue;
 		}
 		const auto& i_t = sentence.ids_cohorts.at(target_id);
-		if(i_t >= sentence.cohorts.size()) {
-			std::cerr << "divvun-suggest: WARNING: Couldn't find relation target for " << rel.first << ":" << rel.second << std::endl;
+		if (i_t >= sentence.cohorts.size()) {
+			std::cerr
+			  << "divvun-suggest: WARNING: Couldn't find relation target for "
+			  << rel.first << ":" << rel.second << std::endl;
 			continue;
 		}
-		fn(rel.first,
-		   i_t,
-		   sentence.cohorts.at(i_t));
+		fn(rel.first, i_t, sentence.cohorts.at(i_t));
 	}
 }
 
@@ -386,12 +400,11 @@ void rel_on_match(const relations& rels,
 vector<Reading> readings_with_errtype(const Cohort& trg, const ErrId& err_id) {
 	vector<Reading> filtered(trg.readings.size());
 	auto it = std::copy_if(trg.readings.begin(), trg.readings.end(),
-			       filtered.begin(),
-			       [&](const Reading& tr) {
-				       return tr.errtypes.find(err_id) != tr.errtypes.end();
-			       });
+	  filtered.begin(), [&](const Reading& tr) {
+		  return tr.errtypes.find(err_id) != tr.errtypes.end();
+	  });
 	filtered.resize(std::distance(filtered.begin(), it));
-	if(filtered.empty()) {
+	if (filtered.empty()) {
 		vector<Reading> unfiltered(trg.readings);
 		return unfiltered;
 	}
@@ -406,8 +419,7 @@ bool both_spaces(char16_t lhs, char16_t rhs) {
 
 u16string normalise_rep(const u16string& rep) {
 	auto str = rep;
-	str.erase(std::unique(str.begin(), str.end(), both_spaces),
-		  str.end());
+	str.erase(std::unique(str.begin(), str.end(), both_spaces), str.end());
 	return str;
 }
 
@@ -416,44 +428,45 @@ u16string normalise_rep(const u16string& rep) {
  * (underline), along with a replacement suggestion (or Nothing() if
  * given bad data).
  */
-variant<Nothing, pair<pair<size_t, size_t>, u16string>>
-proc_LEFT_RIGHT(const ErrId& err_id,
-		const size_t src_id,
-		const Sentence& sentence,
-		const u16string& text,
-		size_t beg, // mut: We may return an altered version of beg
-		size_t end, // mut: We may return an altered version of end
-		const string& relname,
-		const size_t i_t,
-		const Cohort& trg) {
-	if(sentence.ids_cohorts.find(src_id) == sentence.ids_cohorts.end()) {
-		std::cerr << "divvun-suggest: WARNING: Saw &" << relname << " on cohort with id 0" << std::endl;
+variant<Nothing, pair<pair<size_t, size_t>, u16string>> proc_LEFT_RIGHT(
+  const ErrId& err_id, const size_t src_id, const Sentence& sentence,
+  const u16string& text,
+  size_t beg, // mut: We may return an altered version of beg
+  size_t end, // mut: We may return an altered version of end
+  const string& relname, const size_t i_t, const Cohort& trg) {
+	if (sentence.ids_cohorts.find(src_id) == sentence.ids_cohorts.end()) {
+		std::cerr << "divvun-suggest: WARNING: Saw &" << relname
+		          << " on cohort with id 0" << std::endl;
 		return Nothing();
 	}
 	const auto& i_c = sentence.ids_cohorts.at(src_id);
-	if(i_c >= sentence.cohorts.size()) {
-		std::cerr << "divvun-suggest: WARNING: Internal error (unexpected i_c" << i_c << " >= sentence.cohorts.size())" << std::endl;
+	if (i_c >= sentence.cohorts.size()) {
+		std::cerr << "divvun-suggest: WARNING: Internal error (unexpected i_c"
+		          << i_c << " >= sentence.cohorts.size())" << std::endl;
 		return Nothing();
 	}
 	std::map<size_t, u16string> add; // position in text:cohort id in Sentence
 	// Loop from the leftmost to the rightmost of source and target cohorts:
-	size_t left  = i_c < i_t ? i_c + 1 : i_t;
+	size_t left = i_c < i_t ? i_c + 1 : i_t;
 	size_t right = i_c < i_t ? i_t + 1 : i_c;
-	for(size_t i = left; i < right; ++i) {
+	for (size_t i = left; i < right; ++i) {
 		const auto& trg = sentence.cohorts[i];
 
 		const auto treadings = readings_with_errtype(trg, err_id);
-		for(const auto& tr: treadings) {
+		for (const auto& tr : treadings) {
 			size_t addstart = trg.pos;
-			if(tr.added == AddedBeforeBlank) {
-				if(i == 0) {
-					std::cerr << "divvun-suggest: WARNING: Saw &ADDED-BEFORE-BLANK on initial word, ignoring" << std::endl;
+			if (tr.added == AddedBeforeBlank) {
+				if (i == 0) {
+					std::cerr
+					  << "divvun-suggest: WARNING: Saw &ADDED-BEFORE-BLANK on "
+					     "initial word, ignoring"
+					  << std::endl;
 					continue;
 				}
-				const auto& pretrg = sentence.cohorts[i-1];
+				const auto& pretrg = sentence.cohorts[i - 1];
 				addstart = pretrg.pos + pretrg.form.size();
 			}
-			if(tr.added != NotAdded) {
+			if (tr.added != NotAdded) {
 				add[addstart] = trg.form;
 			}
 			beg = std::min(beg, addstart);
@@ -461,50 +474,49 @@ proc_LEFT_RIGHT(const ErrId& err_id,
 		}
 	}
 	u16string repform = text.substr(beg, end - beg); // mut
-	for(auto it = add.rbegin(); it != add.rend(); ++it) {
+	for (auto it = add.rbegin(); it != add.rend(); ++it) {
 		size_t at = it->first - beg;
-		if(at >= repform.size()) {
-			std::cerr << "divvun-suggest: WARNING: Internal error (trying to splice into pos " << at << " of repform)" << std::endl;
+		if (at >= repform.size()) {
+			std::cerr << "divvun-suggest: WARNING: Internal error (trying to "
+			             "splice into pos "
+			          << at << " of repform)" << std::endl;
 			continue;
 		}
 		repform = repform.substr(0, at) + it->second + repform.substr(at);
 	}
-	return std::make_pair(std::make_pair(beg, end),
-			      normalise_rep(repform));
+	return std::make_pair(std::make_pair(beg, end), normalise_rep(repform));
 }
 
 variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
-					   const Cohort& c,
-					   const Sentence& sentence,
-					   const u16string& text)
-{
+  const Cohort& c, const Sentence& sentence, const u16string& text) {
 	if (cohort_empty(c) || c.added) {
 		return Nothing();
 	}
-    else if (ignores.find(err_id) != ignores.end()) {
-        return Nothing();
-    }
-    else if (!includes.empty() && includes.find(err_id) == includes.end()) {
-        return Nothing();
-    }
+	else if (ignores.find(err_id) != ignores.end()) {
+		return Nothing();
+	}
+	else if (!includes.empty() && includes.find(err_id) == includes.end()) {
+		return Nothing();
+	}
 	// Begin set msg:
 	Msg msg;
-	for(const auto& mlang : sortedmsglangs) {
-		if(msg.second.empty() && mlang != locale) {
-			std::cerr << "divvun-suggest: WARNING: No <description> for " << json::str(err_id) << " in xml:lang '" << locale << "', trying '" << mlang << "'" << std::endl;
+	for (const auto& mlang : sortedmsglangs) {
+		if (msg.second.empty() && mlang != locale) {
+			std::cerr << "divvun-suggest: WARNING: No <description> for "
+			          << json::str(err_id) << " in xml:lang '" << locale
+			          << "', trying '" << mlang << "'" << std::endl;
 		}
 		const auto& lmsgs = msgs.at(mlang);
-		if(lmsgs.first.count(err_id) != 0) {
+		if (lmsgs.first.count(err_id) != 0) {
 			msg = lmsgs.first.at(err_id);
 		}
 		else {
-			for(const auto& p : lmsgs.second) {
+			for (const auto& p : lmsgs.second) {
 				std::match_results<const char*> result;
 				const auto& et = toUtf8(err_id.c_str());
 				std::regex_match(et.c_str(), result, p.first);
-				if(!result.empty()
-				   && // Only consider full matches:
-				   result.position(0) == 0 && result.suffix().length() == 0) {
+				if (!result.empty() && // Only consider full matches:
+				    result.position(0) == 0 && result.suffix().length() == 0) {
 					msg = p.second;
 					break;
 					// TODO: cache results? but then no more constness:
@@ -512,29 +524,31 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 				}
 			}
 		}
-		if(!msg.second.empty()) {
+		if (!msg.second.empty()) {
 			break;
 		}
 	}
-	if(msg.second.empty()) {
-		std::cerr << "divvun-suggest: WARNING: No <description> for " << json::str(err_id) << " in any xml:lang" << std::endl;
+	if (msg.second.empty()) {
+		std::cerr << "divvun-suggest: WARNING: No <description> for "
+		          << json::str(err_id) << " in any xml:lang" << std::endl;
 		msg.second = err_id;
 	}
-	if(msg.first.empty()) {
+	if (msg.first.empty()) {
 		msg.first = err_id;
 	}
 	// TODO: Make suitable structure on creating MsgMap instead?
 	replaceAll(msg.first, u"$1", c.form);
 	replaceAll(msg.second, u"$1", c.form);
-	for(const auto& r: c.readings) {
-		if((!r.errtypes.empty()) && r.errtypes.find(err_id) == r.errtypes.end()) {
+	for (const auto& r : c.readings) {
+		if ((!r.errtypes.empty()) &&
+		    r.errtypes.find(err_id) == r.errtypes.end()) {
 			continue; // there is some other error on this reading
 		}
 		rel_on_match(r.rels, MSG_TEMPLATE_REL, sentence,
-			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
-				     replaceAll(msg.first, fromUtf8(relname.c_str()), trg.form);
-				     replaceAll(msg.second, fromUtf8(relname.c_str()), trg.form);
-			     });
+		  [&](const string& relname, size_t i_t, const Cohort& trg) {
+			  replaceAll(msg.first, fromUtf8(relname.c_str()), trg.form);
+			  replaceAll(msg.second, fromUtf8(relname.c_str()), trg.form);
+		  });
 	}
 	// End set msg
 	// Begin set beg, end, form, rep:
@@ -542,62 +556,67 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 	auto end = c.pos + c.form.size();
 	UStringVector rep;
 	const Casing inputCasing = getCasing(toUtf8(c.form));
-	for(const auto& r: c.readings) {
-		if((!r.errtypes.empty()) && r.errtypes.find(err_id) == r.errtypes.end()) {
+	for (const auto& r : c.readings) {
+		if ((!r.errtypes.empty()) &&
+		    r.errtypes.find(err_id) == r.errtypes.end()) {
 			continue; // there is some other error on this reading
 		}
 		// If there are LEFT/RIGHT added relations, add suggestions with those concatenated to our form
 		// TODO: What about our current suggestions of the same error tag? Currently just using wordform
 		Casing underlineCasing = inputCasing;
 		rel_on_match(r.rels, LEFT_RIGHT_REL, sentence,
-			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
-				     proc_LEFT_RIGHT(err_id, c.id, sentence, text, beg, end, relname, i_t, trg).match(
-					     []  (Nothing) {},
-					     [&] (pair<pair<size_t, size_t>, u16string> p)   {
-						     beg = p.first.first;
-						     end = p.first.second;
-						     rep.push_back(p.second);
-						     underlineCasing = getCasing(toUtf8(p.second));
-					     });
-			     });
-		for(const auto& s: r.sforms) {
-			rep.push_back(fromUtf8(withCasing(r.fixedcase, underlineCasing, s)));
+		  [&](const string& relname, size_t i_t, const Cohort& trg) {
+			  proc_LEFT_RIGHT(
+			    err_id, c.id, sentence, text, beg, end, relname, i_t, trg)
+			    .match([](Nothing) {},
+			      [&](pair<pair<size_t, size_t>, u16string> p) {
+				      beg = p.first.first;
+				      end = p.first.second;
+				      rep.push_back(p.second);
+				      underlineCasing = getCasing(toUtf8(p.second));
+			      });
+		  });
+		for (const auto& s : r.sforms) {
+			rep.push_back(
+			  fromUtf8(withCasing(r.fixedcase, underlineCasing, s)));
 		}
 		std::map<size_t, size_t> deleted;
 		rel_on_match(r.rels, DELETE_REL, sentence,
-			     [&] (const string& relname, size_t i_t, const Cohort& trg) {
-				     if(c.errtypes.size() > 1) {
-					     // Only treat delete relations into targets that have a reading with the same error type
-					     // (Unfortunately, CG3 can't do relations from reading to reading, but requiring the same error type lets us work around that)
-					     auto found = std::find_if(trg.readings.begin(), trg.readings.end(),
-								       [&](const Reading& tr) -> bool {
-									       return tr.errtypes.find(err_id) != tr.errtypes.end();
-								       });
-					     if(found == trg.readings.end()) {
-						     return;
-					     }
-				     }
-				     size_t del_beg = trg.pos;
-				     size_t del_end = del_beg + trg.form.size();
-				     // Expand (unless we've already expanded more in that direction):
-				     if(trg.pos < beg) {
-					     beg = trg.pos;
-				     }
-				     else if(del_end > end) {
-					     end = del_end;
-				     }
-				     if(trg.pos < c.pos && text.substr(del_end, 1) == u" ") { // trim right if left
-					     ++del_end;
-				     }
-				     if(trg.pos > c.pos && text.substr(del_beg - 1, 1) == u" ") { // trim left if right
-					     --del_beg;
-				     }
-				     deleted[del_beg] = del_end - del_beg;
-			     });
-		if(!deleted.empty()) {
+		  [&](const string& relname, size_t i_t, const Cohort& trg) {
+			  if (c.errtypes.size() > 1) {
+				  // Only treat delete relations into targets that have a reading with the same error type
+				  // (Unfortunately, CG3 can't do relations from reading to reading, but requiring the same error type lets us work around that)
+				  auto found = std::find_if(trg.readings.begin(),
+				    trg.readings.end(), [&](const Reading& tr) -> bool {
+					    return tr.errtypes.find(err_id) != tr.errtypes.end();
+				    });
+				  if (found == trg.readings.end()) {
+					  return;
+				  }
+			  }
+			  size_t del_beg = trg.pos;
+			  size_t del_end = del_beg + trg.form.size();
+			  // Expand (unless we've already expanded more in that direction):
+			  if (trg.pos < beg) {
+				  beg = trg.pos;
+			  }
+			  else if (del_end > end) {
+				  end = del_end;
+			  }
+			  if (trg.pos < c.pos &&
+			      text.substr(del_end, 1) == u" ") { // trim right if left
+				  ++del_end;
+			  }
+			  if (trg.pos > c.pos &&
+			      text.substr(del_beg - 1, 1) == u" ") { // trim left if right
+				  --del_beg;
+			  }
+			  deleted[del_beg] = del_end - del_beg;
+		  });
+		if (!deleted.empty()) {
 			auto repform = text.substr(beg, end - beg);
 			// go from end of ordered map so we can chop off without indices changing:
-			for(auto it = deleted.rbegin(); it != deleted.rend(); ++it) {
+			for (auto it = deleted.rbegin(); it != deleted.rend(); ++it) {
 				auto del_beg = it->first - beg;
 				auto del_len = it->second;
 				repform = repform.erase(del_beg, del_len);
@@ -606,25 +625,16 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 		}
 	}
 	auto form = text.substr(beg, end - beg);
-	rep.erase(std::remove_if(rep.begin(),
-				 rep.end(),
-				 [&](const u16string& r) { return r == form; }),
-		  rep.end());
-	rep.erase(Dedupe(rep.begin(), rep.end()),
-		  rep.end());
-	if(!rep.empty()) {
-		replaceAll(msg.first,  u"€1", rep[0]);
+	rep.erase(std::remove_if(rep.begin(), rep.end(),
+	            [&](const u16string& r) { return r == form; }),
+	  rep.end());
+	rep.erase(Dedupe(rep.begin(), rep.end()), rep.end());
+	if (!rep.empty()) {
+		replaceAll(msg.first, u"€1", rep[0]);
 		replaceAll(msg.second, u"€1", rep[0]);
-        }
-        // End set beg, end, form, rep
-	return Err {
-		form,
-		beg,
-		end,
-		err_id,
-		msg,
-		rep
-	};
+	}
+	// End set beg, end, form, rep
+	return Err{ form, beg, end, err_id, msg, rep };
 }
 
 /**
@@ -632,13 +642,12 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
  * apertium-deformatter), turn \n into literal newline, unescape all
  * other escaped chars.
  */
-const string clean_blank(const string& raw)
-{
+const string clean_blank(const string& raw) {
 	bool escaped = false;
 	std::ostringstream text;
-	for(const auto& c: raw) {
-		if(escaped) {
-			if(c == 'n') {
+	for (const auto& c : raw) {
+		if (escaped) {
+			if (c == 'n') {
 				// hfst-tokenize escapes newlines like this; make
 				// them literal before jsoning
 				text << '\n';
@@ -650,10 +659,10 @@ const string clean_blank(const string& raw)
 			escaped = false;
 		}
 		// Skip the superblank delimiters
-		else if(c == '\\') {
+		else if (c == '\\') {
 			escaped = true;
 		}
-		else if(c != '[' && c != ']') {
+		else if (c != '[' && c != ']') {
 			text << c;
 			escaped = false;
 		}
@@ -662,7 +671,8 @@ const string clean_blank(const string& raw)
 }
 
 
-Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const MsgMap& msgs, bool generate_all_readings) {
+Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t,
+  const MsgMap& msgs, bool generate_all_readings) {
 	size_t pos = 0;
 	Cohort c = DEFAULT_COHORT;
 	Sentence sentence;
@@ -670,33 +680,37 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 
 	string line;
 	string readinglines;
-	std::getline(is, line);	// TODO: Why do I need at least one getline before os<< after flushing?
+	std::getline(is,
+	  line); // TODO: Why do I need at least one getline before os<< after flushing?
 	do {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 
-		if(!readinglines.empty() && (result.empty() || result[3].length() <= 1)) {
-			const auto& reading = proc_reading(t, readinglines, generate_all_readings);
+		if (!readinglines.empty() &&
+		    (result.empty() || result[3].length() <= 1)) {
+			const auto& reading =
+			  proc_reading(t, readinglines, generate_all_readings);
 			readinglines = "";
-			c.errtypes.insert(reading.errtypes.begin(),
-					  reading.errtypes.end());
-                        if (reading.id != 0) {
+			c.errtypes.insert(
+			  reading.errtypes.begin(), reading.errtypes.end());
+			if (reading.id != 0) {
 				c.id = reading.id;
 			}
-                        c.added = reading.added == NotAdded ? c.added : reading.added;
+			c.added = reading.added == NotAdded ? c.added : reading.added;
 			c.readings.push_back(reading);
 		}
 
-		if (!result.empty() && ((result[2].length() != 0) // wordform or blank: reset Cohort
-					|| result[6].length() != 0)) {
+		if (!result.empty() &&
+		    ((result[2].length() != 0) // wordform or blank: reset Cohort
+		      || result[6].length() != 0)) {
 			c.pos = pos;
-			if(!cohort_empty(c)) {
+			if (!cohort_empty(c)) {
 				sentence.cohorts.push_back(c);
-				if(c.id != 0) {
+				if (c.id != 0) {
 					sentence.ids_cohorts[c.id] = sentence.cohorts.size() - 1;
 				}
 			}
-			if(!c.added) {
+			if (!c.added) {
 				pos += c.form.size();
 				sentence.text << toUtf8(c.form);
 			}
@@ -706,29 +720,29 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 		if (!result.empty() && result[2].length() != 0) { // wordform
 			c.form = fromUtf8(result[2]);
 		}
-		else if(!result.empty() && result[3].length() != 0) { // reading
+		else if (!result.empty() && result[3].length() != 0) { // reading
 			readinglines += line + "\n";
 		}
-		else if(!result.empty() && result[6].length() != 0) { // blank
+		else if (!result.empty() && result[6].length() != 0) { // blank
 			const auto blank = clean_blank(result[6]);
 			pos += fromUtf8(blank).size();
 			sentence.text << blank;
 		}
-		else if(!result.empty() && result[7].length() != 0) { // flush
+		else if (!result.empty() && result[7].length() != 0) { // flush
 			sentence.runstate = flushing;
 			break;
 		}
 		else {
 			// Blank lines without the prefix don't go into text output!
 		}
-	} while(std::getline(is, line));
+	} while (std::getline(is, line));
 
-	if(!readinglines.empty()) {
-		const auto& reading = proc_reading(t, readinglines, generate_all_readings);
+	if (!readinglines.empty()) {
+		const auto& reading =
+		  proc_reading(t, readinglines, generate_all_readings);
 		readinglines = "";
-		c.errtypes.insert(reading.errtypes.begin(),
-				  reading.errtypes.end());
-		if(reading.id != 0) {
+		c.errtypes.insert(reading.errtypes.begin(), reading.errtypes.end());
+		if (reading.id != 0) {
 			c.id = reading.id;
 		}
 		c.added = reading.added == NotAdded ? c.added : reading.added;
@@ -736,27 +750,25 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t, const Msg
 	}
 
 	c.pos = pos;
-	if(!cohort_empty(c)) {
+	if (!cohort_empty(c)) {
 		sentence.cohorts.push_back(c);
-		if(c.id != 0) {
+		if (c.id != 0) {
 			sentence.ids_cohorts[c.id] = sentence.cohorts.size() - 1;
 		}
 	}
-	if(!c.added) {
+	if (!c.added) {
 		pos += c.form.size();
 		sentence.text << toUtf8(c.form);
 	}
 	return sentence;
 }
 
-bool compareByBeg(const Err &a, const Err &b)
-{
-    return a.beg < b.beg;
+bool compareByBeg(const Err& a, const Err& b) {
+	return a.beg < b.beg;
 }
 
-bool compareByEnd(const Err &a, const Err &b)
-{
-    return a.end < b.end;
+bool compareByEnd(const Err& a, const Err& b) {
+	return a.end < b.end;
 }
 
 /**
@@ -782,7 +794,7 @@ bool compareByEnd(const Err &a, const Err &b)
  */
 void expand_errs(vector<Err>& errs, const u16string& text) {
 	const auto n = errs.size();
-	if(n < 2) {
+	if (n < 2) {
 		return;
 	}
 	// First expand "backwards" towards errors with lower beg's:
@@ -790,17 +802,16 @@ void expand_errs(vector<Err>& errs, const u16string& text) {
 	// this.beg against the set of lower beg, and filter out
 	// those that have a lower end than this.beg (or the exact same beg)
 	std::sort(errs.begin(), errs.end(), compareByBeg);
-	for(size_t i = 1; i < n; ++i) {
+	for (size_t i = 1; i < n; ++i) {
 		auto& e = errs[i]; // mut
-		for(size_t j = 0; j < i; ++j) {
+		for (size_t j = 0; j < i; ++j) {
 			const auto& f = errs[j];
-			if(f.beg < e.beg &&
-			   f.end >= e.beg) {
+			if (f.beg < e.beg && f.end >= e.beg) {
 				const auto len = e.beg - f.beg;
 				const auto& add = text.substr(f.beg, len);
 				e.form = add + e.form;
 				e.beg = e.beg - len;
-				for(auto& r : e.rep) {
+				for (auto& r : e.rep) {
 					r = add + r;
 				}
 			}
@@ -808,17 +819,16 @@ void expand_errs(vector<Err>& errs, const u16string& text) {
 	}
 	// Then expand "forwards" towards errors with higher end's:
 	std::sort(errs.begin(), errs.end(), compareByEnd);
-	for(size_t i = n - 1; i > 0; --i) {
-		auto& e = errs[i-1]; // mut
-		for(size_t j = n; j > i; --j) {
-			const auto& f = errs[j-1];
-			if(f.end > e.end &&
-			   f.beg <= e.end) {
+	for (size_t i = n - 1; i > 0; --i) {
+		auto& e = errs[i - 1]; // mut
+		for (size_t j = n; j > i; --j) {
+			const auto& f = errs[j - 1];
+			if (f.end > e.end && f.beg <= e.end) {
 				const auto len = f.end - e.end;
 				const auto& add = text.substr(e.end, len);
 				e.form = e.form + add;
 				e.end = e.end + len;
-				for(auto& r : e.rep) {
+				for (auto& r : e.rep) {
 					r = r + add;
 				}
 			}
@@ -826,75 +836,68 @@ void expand_errs(vector<Err>& errs, const u16string& text) {
 	}
 }
 
-vector<Err> Suggest::mk_errs(const Sentence &sentence) {
+vector<Err> Suggest::mk_errs(const Sentence& sentence) {
 	const auto& text = fromUtf8(sentence.text.str());
 	vector<Err> errs;
-	for(const auto& c : sentence.cohorts) {
+	for (const auto& c : sentence.cohorts) {
 		std::map<ErrId, vector<size_t>> c_errs;
-		for(size_t i = 0; i < c.readings.size(); ++i) {
+		for (size_t i = 0; i < c.readings.size(); ++i) {
 			const auto& r = c.readings[i];
-			if(r.link) {
+			if (r.link) {
 				continue;
 			}
-			for(const auto& e : r.errtypes) {
+			for (const auto& e : r.errtypes) {
 				c_errs[e].push_back(i);
 			}
 		}
-		for(const auto& e : c_errs) {
-			if(e.first.empty()) {
+		for (const auto& e : c_errs) {
+			if (e.first.empty()) {
 				continue;
 			}
-			cohort_errs(e.first, c, sentence, text).match(
-				[]  (Nothing) {},
-				[&] (Err e)   { errs.push_back(e); });
+			cohort_errs(e.first, c, sentence, text)
+			  .match([](Nothing) {}, [&](Err e) { errs.push_back(e); });
 		}
 	}
 	expand_errs(errs, text);
 	return errs;
 }
 
-vector<Err> Suggest::run_errs(std::istream& is)
-{
+vector<Err> Suggest::run_errs(std::istream& is) {
 	try {
 		auto _old = std::locale::global(std::locale(""));
 	}
-	catch (const std::runtime_error& e)
-	{
-		std::cerr << "WARNING: Couldn't set global locale \"\" (locale-specific native environment): " << e.what() << std::endl;
+	catch (const std::runtime_error& e) {
+		std::cerr << "WARNING: Couldn't set global locale \"\" "
+		             "(locale-specific native environment): "
+		          << e.what() << std::endl;
 	}
 	return mk_errs(run_sentence(is, *generator, msgs, generate_all_readings));
 }
 
 
-RunState Suggest::run_json(std::istream& is, std::ostream& os)
-{
+RunState Suggest::run_json(std::istream& is, std::ostream& os) {
 	json::sanity_test();
-	Sentence sentence = run_sentence(is, *generator, msgs, generate_all_readings);
+	Sentence sentence =
+	  run_sentence(is, *generator, msgs, generate_all_readings);
 
 	// All processing done, output:
-	os << "{"
-	   << json::key(u"errs")
-	   << "[";
+	os << "{" << json::key(u"errs") << "[";
 	bool wantsep = false;
 	vector<Err> errs = mk_errs(sentence);
-	for(const auto& e : errs) {
-		if(wantsep) {
+	for (const auto& e : errs) {
+		if (wantsep) {
 			os << ",";
 		}
-		os << "[" << json::str(e.form)
-		   << "," << std::to_string(e.beg)
-		   << "," << std::to_string(e.end)
-		   << "," << json::str(e.err)
-		   << "," << json::str(e.msg.second)
-		   << "," << json::str_arr(e.rep)
-		   << "," << json::str(e.msg.first)
-		   << "]";
+		os << "[" << json::str(e.form) << "," << std::to_string(e.beg) << ","
+		   << std::to_string(e.end) << "," << json::str(e.err) << ","
+		   << json::str(e.msg.second) << "," << json::str_arr(e.rep) << ","
+		   << json::str(e.msg.first) << "]";
 		wantsep = true;
 	}
 	os << "]"
 	   << "," << json::key(u"text") << json::str(fromUtf8(sentence.text.str()))
 	   << "}";
-	if(sentence.runstate == flushing) {
+	if (sentence.runstate == flushing) {
 		os << '\0';
 		os.flush();
 		os.clear();
@@ -902,32 +905,32 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os)
 	return sentence.runstate;
 }
 
-RunState Suggest::run_autocorrect(std::istream& is, std::ostream& os)
-{
+RunState Suggest::run_autocorrect(std::istream& is, std::ostream& os) {
 	json::sanity_test();
-	Sentence sentence = run_sentence(is, *generator, msgs, generate_all_readings);
+	Sentence sentence =
+	  run_sentence(is, *generator, msgs, generate_all_readings);
 	vector<Err> errs = mk_errs(sentence);
 
 	size_t offset = 0;
 	u16string text = fromUtf8(sentence.text.str());
-	for(const auto& e : errs) {
-		if(e.beg > offset) {
+	for (const auto& e : errs) {
+		if (e.beg > offset) {
 			os << toUtf8(text.substr(offset, e.beg - offset));
 		}
 		bool printed = false;
-		for(const auto& r : e.rep) {
+		for (const auto& r : e.rep) {
 			os << toUtf8(r);
 			printed = true;
 			break;
 		}
-		if(!printed) {
+		if (!printed) {
 			os << toUtf8(e.form);
 		}
 		offset = e.end;
 	}
 	os << toUtf8(text.substr(offset));
 
-	if(sentence.runstate == flushing) {
+	if (sentence.runstate == flushing) {
 		os << '\0';
 		os.flush();
 		os.clear();
@@ -936,55 +939,59 @@ RunState Suggest::run_autocorrect(std::istream& is, std::ostream& os)
 }
 
 
-void print_cg_reading(const Casing& inputCasing, const string& readinglines, std::ostream& os, const hfst::HfstTransducer& t, bool generate_all_readings) {
+void print_cg_reading(const Casing& inputCasing, const string& readinglines,
+  std::ostream& os, const hfst::HfstTransducer& t,
+  bool generate_all_readings) {
 	os << readinglines;
 	const auto& reading = proc_reading(t, readinglines, generate_all_readings);
-	if(reading.suggest) {
+	if (reading.suggest) {
 		// std::cerr << "\033[1;35mreading.suggest=\t" << reading.suggest << "\033[0m" << std::endl;
 		const auto& ana = reading.ana;
 		const auto& formv = reading.sforms;
-		if(formv.empty()) {
-			os << ana << "\t" << "?" << std::endl;
+		if (formv.empty()) {
+			os << ana << "\t"
+			   << "?" << std::endl;
 		}
 		else {
 			StringVector casedforms;
-			for(const auto& s : formv) {
+			for (const auto& s : formv) {
 				casedforms.push_back(
-					withCasing(reading.fixedcase, inputCasing, s));
+				  withCasing(reading.fixedcase, inputCasing, s));
 			}
 			os << ana << "\t" << join(casedforms, ",") << std::endl;
 		}
 	}
 	else {
-		for(const auto& e : reading.errtypes) {
+		for (const auto& e : reading.errtypes) {
 			os << toUtf8(e) << std::endl;
 		}
 	}
-
 }
 
-void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, bool generate_all_readings)
-{
+void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
+  bool generate_all_readings) {
 	// Simple debug function; only casing+subreading state kept between lines
 	string readinglines;
 	Casing inputCasing;
-	for (string line;std::getline(is, line);) {
+	for (string line; std::getline(is, line);) {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 
-		if(!readinglines.empty() && (result.empty() || result[3].length() <= 1)) {
-			print_cg_reading(inputCasing, readinglines, os, t, generate_all_readings);
+		if (!readinglines.empty() &&
+		    (result.empty() || result[3].length() <= 1)) {
+			print_cg_reading(
+			  inputCasing, readinglines, os, t, generate_all_readings);
 			readinglines = "";
 		}
 
-		if(!result.empty() && result[3].length() != 0) {
+		if (!result.empty() && result[3].length() != 0) {
 			readinglines += line + "\n";
 		}
-		else if(!result.empty() && result[2].length() != 0) {
+		else if (!result.empty() && result[2].length() != 0) {
 			inputCasing = getCasing(result[2]);
 			os << line << std::endl;
 		}
-		else if(!result.empty() && result[7].length() != 0) {
+		else if (!result.empty() && result[7].length() != 0) {
 			// TODO: Can we ever get a flush in the middle of readings?
 			os.flush();
 			os << line << std::endl;
@@ -993,75 +1000,72 @@ void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t, b
 			os << line << std::endl;
 		}
 	}
-	if(!readinglines.empty()) {
-		print_cg_reading(inputCasing, readinglines, os, t, generate_all_readings);
+	if (!readinglines.empty()) {
+		print_cg_reading(
+		  inputCasing, readinglines, os, t, generate_all_readings);
 	}
 }
 
-void Suggest::run(std::istream& is, std::ostream& os, RunMode mode)
-{
+void Suggest::run(std::istream& is, std::ostream& os, RunMode mode) {
 	try {
 		auto _old = std::locale::global(std::locale(""));
 	}
-	catch (const std::runtime_error& e)
-	{
-		std::cerr << "WARNING: Couldn't set global locale \"\" (locale-specific native environment): " << e.what() << std::endl;
+	catch (const std::runtime_error& e) {
+		std::cerr << "WARNING: Couldn't set global locale \"\" "
+		             "(locale-specific native environment): "
+		          << e.what() << std::endl;
 	}
-	switch(mode) {
-		case RunJson:
-			while(run_json(is, os) == flushing);
-			break;
-		case RunAutoCorrect:
-			while(run_autocorrect(is, os) == flushing);
-			break;
-		case RunCG:
-			run_cg(is, os, *generator, generate_all_readings); // ignores ignores
-			break;
+	switch (mode) {
+	case RunJson:
+		while (run_json(is, os) == flushing)
+			;
+		break;
+	case RunAutoCorrect:
+		while (run_autocorrect(is, os) == flushing)
+			;
+		break;
+	case RunCG:
+		run_cg(is, os, *generator, generate_all_readings); // ignores ignores
+		break;
 	}
 }
 
 SortedMsgLangs sortMessageLangs(const MsgMap& msgs, const string& prefer) {
 	SortedMsgLangs s;
-	if(msgs.count(prefer) != 0) {
+	if (msgs.count(prefer) != 0) {
 		s.push_back(prefer);
 	}
-	for(const auto& lm : msgs) {
-		if(lm.first != prefer) {
+	for (const auto& lm : msgs) {
+		if (lm.first != prefer) {
 			s.push_back(lm.first);
 		}
 	}
 	return s;
 }
 
-Suggest::Suggest (const hfst::HfstTransducer* generator_, divvun::MsgMap msgs_, const string& locale_, bool verbose, bool genall)
-	: msgs(msgs_)
-	, locale(locale_)
-	, sortedmsglangs(sortMessageLangs(msgs, locale))
-	, generator(generator_)
-	, generate_all_readings(genall)
-{
-}
-Suggest::Suggest (const string& gen_path, const string& msg_path, const string& locale_, bool verbose, bool genall)
-	: msgs(readMessages(msg_path))
-	, locale(locale_)
-	, sortedmsglangs(sortMessageLangs(msgs, locale))
-	, generator(readTransducer(gen_path))
-	, generate_all_readings(genall)
-{
-}
-Suggest::Suggest (const string& gen_path, const string& locale_, bool verbose)
-	: locale(locale_)
-	, generator(readTransducer(gen_path))
-{
-}
+Suggest::Suggest(const hfst::HfstTransducer* generator_, divvun::MsgMap msgs_,
+  const string& locale_, bool verbose, bool genall)
+  : msgs(msgs_)
+  , locale(locale_)
+  , sortedmsglangs(sortMessageLangs(msgs, locale))
+  , generator(generator_)
+  , generate_all_readings(genall) {}
+Suggest::Suggest(const string& gen_path, const string& msg_path,
+  const string& locale_, bool verbose, bool genall)
+  : msgs(readMessages(msg_path))
+  , locale(locale_)
+  , sortedmsglangs(sortMessageLangs(msgs, locale))
+  , generator(readTransducer(gen_path))
+  , generate_all_readings(genall) {}
+Suggest::Suggest(const string& gen_path, const string& locale_, bool verbose)
+  : locale(locale_)
+  , generator(readTransducer(gen_path)) {}
 
-void Suggest::setIgnores(const std::set<ErrId>& ignores_)
-{
+void Suggest::setIgnores(const std::set<ErrId>& ignores_) {
 	ignores = ignores_;
 }
 
-void Suggest::setIncludes(const std::set<ErrId>& includes_)
-{
+void Suggest::setIncludes(const std::set<ErrId>& includes_) {
 	includes = includes_;
 }
 
