@@ -239,6 +239,7 @@ class SuggestCmd: public PipeCmd {
 		vector<Err> run_errs(stringstream& input) const;
 		~SuggestCmd() override = default;
 		void setIgnores(const std::set<ErrId>& ignores);
+		void setIncludes(const std::set<ErrId>& includes);
 		const MsgMap& getMsgs();
 	private:
 		unique_ptr<Suggest> suggest;
@@ -318,6 +319,7 @@ class Pipeline {
         const bool trace;
 		// Preferences:
 		void setIgnores(const std::set<ErrId>& ignores);
+		void setIncludes(const std::set<ErrId>& includes);
 		const LocalisedPrefs prefs;
 	private:
 		vector<unique_ptr<PipeCmd>> cmds;

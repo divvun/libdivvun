@@ -478,9 +478,15 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 					   const Sentence& sentence,
 					   const u16string& text)
 {
-	if(cohort_empty(c) || c.added || ignores.find(err_id) != ignores.end()) {
+	if (cohort_empty(c) || c.added) {
 		return Nothing();
 	}
+    else if (ignores.find(err_id) != ignores.end()) {
+        return Nothing();
+    }
+    else if (!includes.empty() && includes.find(err_id) == includes.end()) {
+        return Nothing();
+    }
 	// Begin set msg:
 	Msg msg;
 	for(const auto& mlang : sortedmsglangs) {
@@ -1052,6 +1058,11 @@ Suggest::Suggest (const string& gen_path, const string& locale_, bool verbose)
 void Suggest::setIgnores(const std::set<ErrId>& ignores_)
 {
 	ignores = ignores_;
+}
+
+void Suggest::setIncludes(const std::set<ErrId>& includes_)
+{
+	includes = includes_;
 }
 
 }

@@ -189,6 +189,10 @@ void SuggestCmd::setIgnores(const std::set<ErrId>& ignores)
 {
 	suggest->setIgnores(ignores);
 }
+void SuggestCmd::setIncludes(const std::set<ErrId>& includes)
+{
+	suggest->setIncludes(includes);
+}
 const MsgMap& SuggestCmd::getMsgs()
 {
 	return suggest->msgs;
@@ -487,7 +491,20 @@ void Pipeline::setIgnores(const std::set<ErrId>& ignores) {
 		suggestcmd->setIgnores(ignores);
 	}
 	else if(!ignores.empty()) {
-		throw std::runtime_error("libdivvun: ERROR: Can't set ignores when last command of pipeline is not a SuggestCmd");
+		throw std::runtime_error("libdivvun: ERROR: Can't set ignores "
+                                 "when last command of pipeline is not "
+                                 "a SuggestCmd");
+	}
+}
+
+void Pipeline::setIncludes(const std::set<ErrId>& includes) {
+	if(suggestcmd != nullptr) {
+		suggestcmd->setIncludes(includes);
+	}
+	else if(!includes.empty()) {
+		throw std::runtime_error("libdivvun: ERROR: Can't set includes "
+                                 "when last command of pipeline is not "
+                                 "a SuggestCmd");
 	}
 }
 

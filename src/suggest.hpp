@@ -204,6 +204,7 @@ class Suggest {
 
 		vector<Err> run_errs(std::istream& is);
 		void setIgnores(const std::set<ErrId>& ignores);
+		void setIncludes(const std::set<ErrId>& includes);
 
 		static const MsgMap readMessages(const string& file);
 		static const MsgMap readMessages(const char* buff, const size_t size);
@@ -216,6 +217,7 @@ class Suggest {
 		RunState run_autocorrect(std::istream& is, std::ostream& os);
 		std::unique_ptr<const hfst::HfstTransducer> generator;
 		std::set<ErrId> ignores;
+		std::set<ErrId> includes;
 		bool generate_all_readings = false;
 
 		/**
