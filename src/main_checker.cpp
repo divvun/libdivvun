@@ -16,7 +16,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#  include <config.h>
+#	include <config.h>
 #endif
 
 #include "checker.hpp"
@@ -24,32 +24,36 @@
 #include "version.hpp"
 #include "cxxopts.hpp"
 
-using divvun::variant;
+using divvun::fromUtf8;
 using divvun::Nothing;
 using divvun::Pipeline;
 using divvun::toUtf8;
-using divvun::fromUtf8;
+using divvun::variant;
 
 
-variant<int, Pipeline> getPipelineXml(const std::string& path, const variant<Nothing, std::u16string>& mpipename, bool verbose) {
+variant<int, Pipeline> getPipelineXml(const std::string& path,
+  const variant<Nothing, std::u16string>& mpipename, bool verbose) {
 	const std::unique_ptr<divvun::PipeSpec> spec(new divvun::PipeSpec(path));
-	std::u16string pipename = mpipename.match(
-		[&](Nothing) { return spec->default_pipe; },
-		[](std::u16string s) { return s; });
-	if(spec->pnodes.find(pipename) == spec->pnodes.end()) {
-		std::cerr << "divvun-checker: ERROR: Couldn't find pipe " << toUtf8(pipename) << " in " << path << std::endl;
+	std::u16string pipename =
+	  mpipename.match([&](Nothing) { return spec->default_pipe; },
+	    [](std::u16string s) { return s; });
+	if (spec->pnodes.find(pipename) == spec->pnodes.end()) {
+		std::cerr << "divvun-checker: ERROR: Couldn't find pipe "
+		          << toUtf8(pipename) << " in " << path << std::endl;
 		return EXIT_FAILURE;
 	}
 	return Pipeline(spec, pipename, verbose);
 }
 
-variant<int, Pipeline> getPipelineAr(const std::string& path, const variant<Nothing, std::u16string>& mpipename, bool verbose) {
+variant<int, Pipeline> getPipelineAr(const std::string& path,
+  const variant<Nothing, std::u16string>& mpipename, bool verbose) {
 	const auto& ar_spec = divvun::readArPipeSpec(path);
-	std::u16string pipename = mpipename.match(
-		[&](Nothing) { return ar_spec->spec->default_pipe; },
-		[](std::u16string s) { return s; });
-	if(ar_spec->spec->pnodes.find(pipename) == ar_spec->spec->pnodes.end()) {
-		std::cerr << "divvun-checker: ERROR: Couldn't find pipe " << toUtf8(pipename) << " in " << path << std::endl;
+	std::u16string pipename =
+	  mpipename.match([&](Nothing) { return ar_spec->spec->default_pipe; },
+	    [](std::u16string s) { return s; });
+	if (ar_spec->spec->pnodes.find(pipename) == ar_spec->spec->pnodes.end()) {
+		std::cerr << "divvun-checker: ERROR: Couldn't find pipe "
+		          << toUtf8(pipename) << " in " << path << std::endl;
 		return EXIT_FAILURE;
 	}
 	return Pipeline(ar_spec, pipename, verbose);
@@ -57,8 +61,10 @@ variant<int, Pipeline> getPipelineAr(const std::string& path, const variant<Noth
 
 int printNamesXml(const std::string& path, bool verbose) {
 	const std::unique_ptr<divvun::PipeSpec> spec(new divvun::PipeSpec(path));
-	std::cout << "Please specify a pipeline variant with the -n/--variant option. Available variants in pipespec:" << std::endl;
-	for(const auto& p : spec->pnodes) {
+	std::cout << "Please specify a pipeline variant with the -n/--variant "
+	             "option. Available variants in pipespec:"
+	          << std::endl;
+	for (const auto& p : spec->pnodes) {
 		const auto& name = toUtf8(p.first.c_str());
 		std::cout << name << std::endl;
 	}
@@ -67,8 +73,10 @@ int printNamesXml(const std::string& path, bool verbose) {
 
 int printNamesAr(const std::string& path, bool verbose) {
 	const auto& ar_spec = divvun::readArPipeSpec(path);
-	std::cout << "Please specify a pipeline variant with the -n/--variant option. Available variants in archive:" << std::endl;
-	for(const auto& p : ar_spec->spec->pnodes) {
+	std::cout << "Please specify a pipeline variant with the -n/--variant "
+	             "option. Available variants in archive:"
+	          << std::endl;
+	for (const auto& p : ar_spec->spec->pnodes) {
 		const auto& name = toUtf8(p.first.c_str());
 		std::cout << name << std::endl;
 	}
@@ -88,48 +96,57 @@ int run(Pipeline& pipeline) {
 void printPrefs(const Pipeline& pipeline) {
 	using namespace divvun;
 	std::cout << "== Available preferences ==" << std::endl;
-	for(const auto& lp : pipeline.prefs) {
+	for (const auto& lp : pipeline.prefs) {
 		const Lang& lang = lp.first;
-		std::cout << std::endl << "=== with messages localised for '" << lang << "' ===" << std::endl;
+		std::cout << std::endl
+		          << "=== with messages localised for '" << lang
+		          << "' ===" << std::endl;
 		const Prefs& prefs = lp.second;
 		std::cout << "==== Toggles: ====" << std::endl;
-		for(const auto& id : prefs.toggleIds) {
-			std::cout << "- [ ] " << toUtf8(id.first) << " \t" << toUtf8(id.second.first) << std::endl;
+		for (const auto& id : prefs.toggleIds) {
+			std::cout << "- [ ] " << toUtf8(id.first) << " \t"
+			          << toUtf8(id.second.first) << std::endl;
 		}
-		for(const auto& re : prefs.toggleRes) {
-			std::cout << "- [ ] [regex] \t" << toUtf8(re.second.first) << std::endl;
+		for (const auto& re : prefs.toggleRes) {
+			std::cout << "- [ ] [regex] \t" << toUtf8(re.second.first)
+			          << std::endl;
 		}
 		std::cout << "==== Options: ====" << std::endl;
-		for(const Option& o : prefs.options) {
+		for (const Option& o : prefs.options) {
 			std::cout << "- " << o.name << " (" << o.type << "):" << std::endl;
-			for(const auto& c : o.choices) {
-				std::cout << "- ( ) " << toUtf8(c.first) << " \t" << toUtf8(c.second.first) << std::endl;
+			for (const auto& c : o.choices) {
+				std::cout << "- ( ) " << toUtf8(c.first) << " \t"
+				          << toUtf8(c.second.first) << std::endl;
 			}
 		}
 	}
 }
 
-int main(int argc, char ** argv)
-{
-	try
-	{
-		cxxopts::Options options(argv[0], " - run a grammar checker on plain text");
+int main(int argc, char** argv) {
+	try {
+		cxxopts::Options options(
+		  argv[0], " - run a grammar checker on plain text");
 
-		options.add_options()
-			("s,spec", "Pipeline XML specification", cxxopts::value<std::string>(), "FILE")
-			("a,archive", "Zipped pipeline archive of language data", cxxopts::value<std::string>(), "FILE")
-			("l,language", "Language to use (in case no FILE arguments given)", cxxopts::value<std::string>(), "LANG")
-			("n,variant", "Name of the pipeline variant", cxxopts::value<std::string>(), "NAME")
-			("I,ignore", "Comma-separated list of error tags to ignore (see -p for possible values)", cxxopts::value<std::string>(), "TAGS")
-			("i,input", "Input file (UNIMPLEMENTED, stdin for now)", cxxopts::value<std::string>(), "FILE")
-			("o,output", "Output file (UNIMPLEMENTED, stdout for now)", cxxopts::value<std::string>(), "FILE")
-			("z,null-flush", "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 when format is json).")
-			("p,preferences", "Print the preferences defined by the given pipeline")
-			("v,verbose", "Be verbose")
-			("t,trace", "Be verbose")
-			("V,version", "Version information")
-			("h,help", "Print help")
-			;
+		options.add_options()("s,spec", "Pipeline XML specification",
+		  cxxopts::value<std::string>(),
+		  "FILE")("a,archive", "Zipped pipeline archive of language data",
+		  cxxopts::value<std::string>(), "FILE")("l,language",
+		  "Language to use (in case no FILE arguments given)",
+		  cxxopts::value<std::string>(), "LANG")("n,variant",
+		  "Name of the pipeline variant", cxxopts::value<std::string>(),
+		  "NAME")("I,ignore",
+		  "Comma-separated list of error tags to ignore (see -p for possible "
+		  "values)",
+		  cxxopts::value<std::string>(),
+		  "TAGS")("i,input", "Input file (UNIMPLEMENTED, stdin for now)",
+		  cxxopts::value<std::string>(),
+		  "FILE")("o,output", "Output file (UNIMPLEMENTED, stdout for now)",
+		  cxxopts::value<std::string>(), "FILE")("z,null-flush",
+		  "(Ignored, we always flush on <STREAMCMD:FLUSH>, outputting \\0 "
+		  "when format is json).")("p,preferences",
+		  "Print the preferences defined by the given pipeline")(
+		  "v,verbose", "Be verbose")("t,trace", "Be verbose")(
+		  "V,version", "Version information")("h,help", "Print help");
 
 		std::vector<std::string> pos = {
 			// "spec",
@@ -141,127 +158,141 @@ int main(int argc, char ** argv)
 		options.parse_positional(pos);
 		options.parse(argc, argv);
 
-		if(argc > 1) {
-			std::cout << options.help({""}) << std::endl;
-			std::cerr << argv[0] << " ERROR: got " << argc-1+pos.size() <<" arguments; expected only " << pos.size() << std::endl;
+		if (argc > 1) {
+			std::cout << options.help({ "" }) << std::endl;
+			std::cerr << argv[0] << " ERROR: got " << argc - 1 + pos.size()
+			          << " arguments; expected only " << pos.size()
+			          << std::endl;
 			return EXIT_SUCCESS;
 		}
 
-		if (options.count("help"))
-		{
-			std::cout << options.help({""}) << std::endl;
+		if (options.count("help")) {
+			std::cout << options.help({ "" }) << std::endl;
 			return EXIT_SUCCESS;
 		}
 
-		if (options.count("version"))
-		{
+		if (options.count("version")) {
 			divvun::print_version(argv[0]);
-			return(EXIT_SUCCESS);
+			return (EXIT_SUCCESS);
 		}
 
 		bool verbose = options.count("v");
 		bool trace = options.count("t");
 
 		auto ignores = std::set<divvun::ErrId>();
-		if(options.count("ignore")) {
-			for(const auto& ignore : divvun::split(options["ignore"].as<std::string>(), ',')) {
+		if (options.count("ignore")) {
+			for (const auto& ignore :
+			  divvun::split(options["ignore"].as<std::string>(), ',')) {
 				ignores.insert(fromUtf8(ignore));
 			}
 		}
 
-		if(options.count("spec")) {
-			if(options.count("archive") + options.count("language")) {
-				std::cerr << argv[0] << " ERROR: only use one of --spec/--archive/--language" << std::endl;
+		if (options.count("spec")) {
+			if (options.count("archive") + options.count("language")) {
+				std::cerr
+				  << argv[0]
+				  << " ERROR: only use one of --spec/--archive/--language"
+				  << std::endl;
 			}
 			const auto& specfile = options["spec"].as<std::string>();
-			if(verbose) {
+			if (verbose) {
 				std::cerr << "Reading specfile " << specfile << std::endl;
 			}
 			variant<Nothing, std::u16string> pipename = Nothing();
-			if(options.count("variant")) {
+			if (options.count("variant")) {
 				pipename = fromUtf8(options["variant"].as<std::string>());
 			}
-			return getPipelineXml(specfile, pipename, verbose).match(
-				[]       (int r) { return r; },
-				[&](Pipeline& p) {
-					p.setIgnores(ignores);
-					if(options.count("preferences")) {
-						printPrefs(p);
-					}
-					else {
-						run(p);
-					}
-					return EXIT_SUCCESS;
-				});
+			return getPipelineXml(specfile, pipename, verbose)
+			  .match([](int r) { return r; },
+			    [&](Pipeline& p) {
+				    p.setIgnores(ignores);
+				    if (options.count("preferences")) {
+					    printPrefs(p);
+				    }
+				    else {
+					    run(p);
+				    }
+				    return EXIT_SUCCESS;
+			    });
 		}
-		else if(options.count("archive")) {
-			if(options.count("language")) {
-				std::cerr << argv[0] << " ERROR: only use one of --spec/--archive/--language" << std::endl;
+		else if (options.count("archive")) {
+			if (options.count("language")) {
+				std::cerr
+				  << argv[0]
+				  << " ERROR: only use one of --spec/--archive/--language"
+				  << std::endl;
 			}
 			const auto& archive = options["archive"].as<std::string>();
-			if(verbose) {
-				std::cerr << "Reading zipped archive file " << archive << std::endl;
+			if (verbose) {
+				std::cerr << "Reading zipped archive file " << archive
+				          << std::endl;
 			}
 			variant<Nothing, std::u16string> pipename = Nothing();
-			if(options.count("variant")) {
+			if (options.count("variant")) {
 				pipename = fromUtf8(options["variant"].as<std::string>());
 			}
-			return getPipelineAr(archive, pipename, verbose).match(
-				[]       (int r) { return r; },
-				[&](Pipeline& p) {
-					p.setIgnores(ignores);
-					if(options.count("preferences")) {
-						printPrefs(p);
-					}
-					else {
-						run(p);
-					}
-					return EXIT_SUCCESS;
-				});
+			return getPipelineAr(archive, pipename, verbose)
+			  .match([](int r) { return r; },
+			    [&](Pipeline& p) {
+				    p.setIgnores(ignores);
+				    if (options.count("preferences")) {
+					    printPrefs(p);
+				    }
+				    else {
+					    run(p);
+				    }
+				    return EXIT_SUCCESS;
+			    });
 		}
 		else if (options.count("language")) {
 			const auto& lang = options["language"].as<std::string>();
 			const auto& langs = divvun::listLangs();
 			if (langs.find(lang) == langs.end() || langs.at(lang).size() < 1) {
-				std::cerr << argv[0] << " ERROR: couldn't find language " << lang << " in any of the search paths:" << std::endl;
-				for(const auto& p : divvun::searchPaths()) {
+				std::cerr << argv[0] << " ERROR: couldn't find language "
+				          << lang
+				          << " in any of the search paths:" << std::endl;
+				for (const auto& p : divvun::searchPaths()) {
 					std::cerr << p << std::endl;
 				}
 				return EXIT_FAILURE;
 			}
-			const auto& archive = langs.at(lang)[0]; // TODO: prioritise userdirs
-			if(verbose) {
-				std::cerr << "Reading zipped archive file " << archive << std::endl;
+			const auto& archive =
+			  langs.at(lang)[0]; // TODO: prioritise userdirs
+			if (verbose) {
+				std::cerr << "Reading zipped archive file " << archive
+				          << std::endl;
 			}
 			variant<Nothing, std::u16string> pipename = Nothing();
-			if(options.count("variant")) {
+			if (options.count("variant")) {
 				pipename = fromUtf8(options["variant"].as<std::string>());
 			}
-			return getPipelineAr(archive, pipename, verbose).match(
-				[]       (int r) { return r; },
-				[&](Pipeline& p) {
-					p.setIgnores(ignores);
-					if(options.count("preferences")) {
-						printPrefs(p);
-					}
-					else {
-						run(p);
-					}
-					return EXIT_SUCCESS;
-				});
+			return getPipelineAr(archive, pipename, verbose)
+			  .match([](int r) { return r; },
+			    [&](Pipeline& p) {
+				    p.setIgnores(ignores);
+				    if (options.count("preferences")) {
+					    printPrefs(p);
+				    }
+				    else {
+					    run(p);
+				    }
+				    return EXIT_SUCCESS;
+			    });
 		}
 		else {
-			std::cerr << argv[0] << " ERROR: expecting one of --spec/--archive/--language (see --help)" << std::endl;
+			std::cerr << argv[0]
+			          << " ERROR: expecting one of "
+			             "--spec/--archive/--language (see --help)"
+			          << std::endl;
 			return EXIT_FAILURE;
 		}
 	}
-	catch (const cxxopts::OptionException& e)
-	{
-		std::cerr << argv[0] << " ERROR: couldn't parse options: " << e.what() << std::endl;
+	catch (const cxxopts::OptionException& e) {
+		std::cerr << argv[0] << " ERROR: couldn't parse options: " << e.what()
+		          << std::endl;
 		return EXIT_FAILURE;
 	}
-	catch (const std::runtime_error& e)
-	{
+	catch (const std::runtime_error& e) {
 		std::cerr << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
