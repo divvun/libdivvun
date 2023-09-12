@@ -94,6 +94,9 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 		}
 		else if ((!result.empty()) && (result[4].length() != 0)) {
 			string outstring = string(result[0]);
+			auto tabstart = outstring.find("\t");
+			auto tabend = outstring.find("\"");
+			auto tabs = outstring.substr(tabstart, tabend);
 			string lemma = result[4];
 			if (tags.empty()) {
 				os << outstring << std::endl;
@@ -263,10 +266,9 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 							}
 						}
 					}
-					// XXX: count some tabs
-					os << "\t\"" << newlemma << "\"" << reanal << " \"" << phon
-					   << "\"phon" << std::endl;
-					os << "\t" << result[0] << std::endl;
+					os << tabs << "\"" << newlemma << "\"" << reanal << " \""
+					   << phon << "\"phon"
+					   << " " << lemma << "oldlemma" << std::endl;
 				} // for each expansion
 			}     // if expand
 			else {
