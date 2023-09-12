@@ -85,7 +85,6 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 		// 4: lemma
 		// 5: syntag
 		//
-		//
 		if ((!result.empty()) && (result[2].length() != 0)) {
 			if (verbose) {
 				std::cout << "New surface form: " << result[2] << std::endl;
@@ -95,6 +94,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 		}
 		else if ((!result.empty()) && (result[4].length() != 0)) {
 			string outstring = string(result[0]);
+			string lemma = result[4];
 			if (tags.empty()) {
 				os << outstring << std::endl;
 			}
@@ -142,8 +142,11 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 					std::cout << "Using MIDTAPE: " << surf << std::endl;
 				}
 			}
-			else if (verbose) {
-				std::cout << "Using surf: " << surf << std::endl;
+			else {
+				surf = lemma.substr(1, lemma.length() - 2);
+				if (verbose) {
+					std::cout << "Using lemma: " << surf << std::endl;
+				}
 			}
 			if (expand) {
 				// 1. apply expansions from normaliser
@@ -260,6 +263,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 							}
 						}
 					}
+					// XXX: count some tabs
 					os << "\t\"" << newlemma << "\"" << reanal << " \"" << phon
 					   << "\"phon" << std::endl;
 					os << "\t" << result[0] << std::endl;
