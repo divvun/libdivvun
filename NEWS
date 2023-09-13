@@ -2,6 +2,13 @@
 
 For more details see the git log.
 
+## Notable changes in 0.3.11
+
+* package name is now libdivvun
+* normaliser doesn't add subreadings
+
 ## Notable changes in 0.3.10
 
 * `divvun-phon` and `divvun-normalise` tools for TTS
+
+<!-- vim: set ft=markdown: -->
