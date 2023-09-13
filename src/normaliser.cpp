@@ -114,8 +114,8 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 			// try find existing ",,,"phon tag or a alt surf. "<>"
 			auto phonend = outstring.find("\"phon");
 			auto phonstart = phonend;
-			auto midtend = outstring.find("\"MIDTAPE");
-			auto midtstart = phonend;
+			//auto midtend = outstring.find("\"MIDTAPE");
+			//auto midtstart = phonend;
 			auto altsurfstart = outstring.find("\"<", 3);
 			auto altsurfend = outstring.find(">\"", 3);
 			if ((altsurfstart != std::string::npos) &&
@@ -136,7 +136,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 					std::cout << "Using Phon(?): " << surf << std::endl;
 				}
 			}
-			else if (midtstart != std::string::npos) {
+			/*else if (midtstart != std::string::npos) {
 				midtstart = outstring.rfind("\"", midtend - 1);
 				surf =
 				  outstring.substr(midtstart + 1, midtend - midtstart - 1);
@@ -144,7 +144,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 				if (verbose) {
 					std::cout << "Using MIDTAPE: " << surf << std::endl;
 				}
-			}
+			}*/
 			else {
 				surf = lemma.substr(1, lemma.length() - 2);
 				if (verbose) {
