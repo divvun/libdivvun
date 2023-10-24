@@ -175,8 +175,8 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 					std::string newlemma = form.str();
 					std::string reanal = result[5].str();
 					// 2. generate specific form wuth new lemma
-					std::stringstream regen;
-					regen << form.str();
+					std::string regen = form.str();
+					std::stringstream current_token;
 					bool in_quot = false;
 					bool in_at = false;
 					bool in_bracket = false;
@@ -199,18 +199,28 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 						else if (c == '>') {
 							in_bracket = false;
 						}
+						else if (c == '#') {
+							// in_deps = true;
+							break;
+						}
 						else if (c == ' ') {
-							regen << "+";
+							auto t = current_token.str();
+							if (t.find("/") == string::npos) {
+								regen += current_token.str();
+							}
+							current_token.str("");
+							current_token << "+";
 							in_at = false;
 						}
 						else if (in_quot || in_at || in_bracket) {
 							continue;
 						}
 						else {
-							regen << c;
+							current_token << c;
 						}
 					}
-					auto s = regen.str();
+					regen += current_token.str();
+					auto s = regen;
 					auto p = s.find("++");
 					while (p != std::string::npos) {
 						s.replace(p, 2, "+");
@@ -219,7 +229,8 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 					if (s.compare(s.length() - 1, 1, "+") == 0) {
 						s = s.substr(0, s.length() - 1);
 					}
-					std::vector<std::string> removables{ "+ABBR", "+Cmpnd" };
+					std::vector<std::string> removables{ "+ABBR", "+Cmpnd",
+						"+Err/Orth" };
 					for (auto r : removables) {
 						p = s.find(r);
 						while (p != std::string::npos) {
