@@ -238,6 +238,13 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 							p = s.find(r);
 						}
 					}
+					for (auto tag : tags) {
+						p = s.find("+" + tag);
+						while (p != std::string::npos) {
+							s.replace(p, tag.length() + 1, "");
+							p = s.find(tag);
+						}
+					}
 					if (verbose) {
 						std::cout << "2. looking up regenerating: " << s
 						          << std::endl;
