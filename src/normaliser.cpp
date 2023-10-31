@@ -174,8 +174,12 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 					std::string phon = form.str();
 					std::string newlemma = form.str();
 					std::string reanal = result[5].str();
-					// 2. generate specific form wuth new lemma
+					// 2. generate specific form with new lemma
 					std::string regen = form.str();
+					if (verbose) {
+						std::cout << "2.a Using normalised form: " << regen
+						          << std::endl;
+					}
 					std::stringstream current_token;
 					bool in_quot = false;
 					bool in_at = false;
@@ -246,11 +250,12 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 						}
 					}
 					if (verbose) {
-						std::cout << "2. looking up regenerating: " << s
+						std::cout << "2.b regenerating lookup: " << s
 						          << std::endl;
 					}
 					const HfstPaths1L regenerations(
 					  generator->lookup_fd(s, -1, 2.0));
+					bool regenerated = false;
 					for (auto& rg : *regenerations) {
 						std::stringstream regen;
 						for (auto& reg : rg.second) {
@@ -259,34 +264,67 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 							}
 						}
 						phon = regen.str();
+						regenerated = true;
+						if (verbose) {
+							std::cout << "3. reanalysing: " << phon
+							          << std::endl;
+						}
+						const HfstPaths1L reanalyses(
+						  sanalyser->lookup_fd(phon, -1, 2.0));
+						for (auto& ra : *reanalyses) {
+							std::stringstream reform;
+							for (auto& res : ra.second) {
+								if (!hfst::FdOperation::is_diacritic(res)) {
+									reform << res;
+								}
+							}
+							if (reform.str().find("+Cmp") ==
+							    std::string::npos) {
+								reanal = reform.str();
+								p = reanal.find("+");
+								reanal = reanal.substr(p, reanal.length());
+								p = reanal.find("+");
+								while (p != std::string::npos) {
+									reanal.replace(p, 1, " ");
+									p = reanal.find("+", p);
+								}
+							}
+							os << tabs << "\"" << newlemma << "\"" << reanal
+							   << " \"" << phon << "\"phon"
+							   << " " << lemma << "oldlemma" << std::endl;
+						}
 					}
-					if (verbose) {
-						std::cout << "3. looking up reanalysing: " << phon
-						          << std::endl;
-					}
-					const HfstPaths1L reanalyses(
-					  sanalyser->lookup_fd(phon, -1, 2.0));
-					for (auto& ra : *reanalyses) {
-						std::stringstream reform;
-						for (auto& res : ra.second) {
-							if (!hfst::FdOperation::is_diacritic(res)) {
-								reform << res;
+					if (!regenerated) {
+						if (verbose) {
+							std::cout
+							  << "3. Couldn't regenerate, reanalysing lemma: "
+							  << phon << std::endl;
+						}
+						const HfstPaths1L reanalyses(
+						  sanalyser->lookup_fd(phon, -1, 2.0));
+						for (auto& ra : *reanalyses) {
+							std::stringstream reform;
+							for (auto& res : ra.second) {
+								if (!hfst::FdOperation::is_diacritic(res)) {
+									reform << res;
+								}
+							}
+							if (reform.str().find("+Cmp") ==
+							    std::string::npos) {
+								reanal = reform.str();
+								p = reanal.find("+");
+								reanal = reanal.substr(p, reanal.length());
+								p = reanal.find("+");
+								while (p != std::string::npos) {
+									reanal.replace(p, 1, " ");
+									p = reanal.find("+", p);
+								}
 							}
 						}
-						if (reform.str().find("+Cmp") == std::string::npos) {
-							reanal = reform.str();
-							p = reanal.find("+");
-							reanal = reanal.substr(p, reanal.length());
-							p = reanal.find("+");
-							while (p != std::string::npos) {
-								reanal.replace(p, 1, " ");
-								p = reanal.find("+", p);
-							}
-						}
+						os << tabs << "\"" << newlemma << "\"" << reanal
+						   << " \"" << phon << "\"phon"
+						   << " " << lemma << "oldlemma" << std::endl;
 					}
-					os << tabs << "\"" << newlemma << "\"" << reanal << " \""
-					   << phon << "\"phon"
-					   << " " << lemma << "oldlemma" << std::endl;
 				} // for each expansion
 			}     // if expand
 			else {
