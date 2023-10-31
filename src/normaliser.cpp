@@ -320,10 +320,10 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 									p = reanal.find("+", p);
 								}
 							}
+							os << tabs << "\"" << newlemma << "\"" << reanal
+							   << " \"" << phon << "\"phon"
+							   << " " << lemma << "oldlemma" << std::endl;
 						}
-						os << tabs << "\"" << newlemma << "\"" << reanal
-						   << " \"" << phon << "\"phon"
-						   << " " << lemma << "oldlemma" << std::endl;
 					}
 				} // for each expansion
 			}     // if expand
