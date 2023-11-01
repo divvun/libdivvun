@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2015-2021, Kevin Brubeck Unhammer <unhammer@fsfe.org>
+* Copyright (C) 2015-2023, Kevin Brubeck Unhammer <unhammer@fsfe.org>
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -331,6 +331,7 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const string& line,
 					form << symbol;
 				}
 			}
+			// std::cerr << "\033[1;32msuggest form.str()=" << form.str() << "\twf:" << r.wf << "\033[0m" << std::endl;
 			r.sforms.emplace_back(form.str());
 		}
 	}
@@ -355,9 +356,10 @@ Iterator Dedupe(Iterator first, Iterator last) {
 }
 
 void rel_on_match(const relations& rels, const std::basic_regex<char>& name,
-  const Sentence& sentence,
-  const std::function<void(
-    const string& relname, size_t i_t, const Cohort& trg)>& fn) {
+		  const Sentence& sentence,
+		  const std::function<void(const string& relname,
+					   size_t i_t,
+					   const Cohort& trg)>& fn) {
 	for (const auto& rel : rels) {
 		std::match_results<const char*> result;
 		std::regex_match(rel.first.c_str(), result, name);
@@ -396,6 +398,8 @@ void rel_on_match(const relations& rels, const std::basic_regex<char>& name,
  * people write CG rules that delete the &COERROR readings or similar –
  * we don't want to fail to find the cohort that's supposed to be
  * underlined in that case.
+ *
+ * TODO: return references, not copies
  */
 vector<Reading> readings_with_errtype(const Cohort& trg, const ErrId& err_id) {
 	vector<Reading> filtered(trg.readings.size());
@@ -417,10 +421,32 @@ bool both_spaces(char16_t lhs, char16_t rhs) {
 	return (lhs == rhs) && (lhs == u' ');
 }
 
-u16string normalise_rep(const u16string& rep) {
-	auto str = rep;
-	str.erase(std::unique(str.begin(), str.end(), both_spaces), str.end());
-	return str;
+/**
+ * beg is the index into the whole text where in_rep starts
+ */
+u16string mk_repform(const u16string& in_rep, const size_t beg, std::map<pair<size_t, size_t>, pair<u16string, Reading>>& add) {
+	u16string rep = in_rep; // copy it!
+	for (auto it = add.rbegin(); it != add.rend(); ++it) {
+		// std::cerr << "\033[1;36mrep=\t" << toUtf8(rep) << "\033[0m" ;
+		// std::cerr << "\033[1;31mit->second.first=\t" << toUtf8(it->second.first) << "\033[0m" ;
+		// std::cerr << "\033[1;35m\tbeg=\t" << beg << "\tit->first.first:"<< it->first.first<<"\tit->first.second:"<< it->first.second<< "\033[0m" << std::endl;
+		size_t splice_beg = it->first.first - beg;
+		size_t splice_end = it->first.second - beg;
+		if (splice_beg > rep.size()) {
+			std::cerr << "divvun-suggest: WARNING: Internal error (trying to "
+				     "splice into pos " << splice_beg << " of rep)" << std::endl;
+			continue;
+		}
+		u16string& trg_rep = it->second.first; // Fall back to the word form of target if no suggest form
+		Reading& tr = it->second.second;
+		for(const auto& s : tr.sforms) {
+			trg_rep = fromUtf8(s); // just take the first match; TODO: include all possibilities
+		}
+		rep = rep.substr(0, splice_beg) + trg_rep + rep.substr(splice_end);
+		// std::cerr << "\033[1;36mrep after=\t" << toUtf8(rep) << "\033[0m" << std::endl;
+	}
+	rep.erase(std::unique(rep.begin(), rep.end(), both_spaces), rep.end());
+	return rep;
 }
 
 /*
@@ -428,12 +454,17 @@ u16string normalise_rep(const u16string& rep) {
  * (underline), along with a replacement suggestion (or Nothing() if
  * given bad data).
  */
-variant<Nothing, pair<pair<size_t, size_t>, u16string>> proc_LEFT_RIGHT(
+variant<Nothing, pair<pair<size_t, size_t>, UStringVector>> proc_LEFT_RIGHT(
+  const Reading& r,
   const ErrId& err_id, const size_t src_id, const Sentence& sentence,
   const u16string& text,
   size_t beg, // mut: We may return an altered version of beg
   size_t end, // mut: We may return an altered version of end
   const string& relname, const size_t i_t, const Cohort& trg) {
+	const size_t orig_beg = beg;
+	const size_t orig_end = end;
+	// std::cerr << "\033[1;35mi_t=\t" << i_t << "\033[0m" << std::endl;
+	// std::cerr << "\033[1;35mrelname=\t" << relname << "\033[0m" << std::endl;
 	if (sentence.ids_cohorts.find(src_id) == sentence.ids_cohorts.end()) {
 		std::cerr << "divvun-suggest: WARNING: Saw &" << relname
 		          << " on cohort with id 0" << std::endl;
@@ -444,17 +475,20 @@ variant<Nothing, pair<pair<size_t, size_t>, u16string>> proc_LEFT_RIGHT(
 		std::cerr << "divvun-suggest: WARNING: Internal error (unexpected i_c"
 		          << i_c << " >= sentence.cohorts.size())" << std::endl;
 		return Nothing();
+
 	}
-	std::map<size_t, u16string> add; // position in text:cohort id in Sentence
+	std::map<pair<size_t, size_t>, pair<u16string, Reading>> add; // position in text:cohort in Sentence
 	// Loop from the leftmost to the rightmost of source and target cohorts:
 	size_t left = i_c < i_t ? i_c + 1 : i_t;
 	size_t right = i_c < i_t ? i_t + 1 : i_c;
 	for (size_t i = left; i < right; ++i) {
+		// std::cerr << "\033[1;35mi=\t" << i << "\033[0m" << std::endl;
 		const auto& trg = sentence.cohorts[i];
 
-		const auto treadings = readings_with_errtype(trg, err_id);
-		for (const auto& tr : treadings) {
-			size_t addstart = trg.pos;
+		const vector<Reading> treadings = readings_with_errtype(trg, err_id);
+		for (const Reading& tr : treadings) {
+			size_t splice_beg = trg.pos;
+			size_t splice_end = trg.pos + trg.form.size();
 			if (tr.added == AddedBeforeBlank) {
 				if (i == 0) {
 					std::cerr
@@ -464,27 +498,29 @@ variant<Nothing, pair<pair<size_t, size_t>, u16string>> proc_LEFT_RIGHT(
 					continue;
 				}
 				const auto& pretrg = sentence.cohorts[i - 1];
-				addstart = pretrg.pos + pretrg.form.size();
+				splice_beg = pretrg.pos + pretrg.form.size();
 			}
-			if (tr.added != NotAdded) {
-				add[addstart] = trg.form;
+			if(tr.added != NotAdded) { // ie. if Added, don't replace existing form:
+				splice_end = splice_beg;
 			}
-			beg = std::min(beg, addstart);
-			end = std::max(end, addstart + trg.form.size());
+			add[std::make_pair(splice_beg, splice_end)] = make_pair(trg.form, tr);
+			beg = std::min(beg, splice_beg);
+			end = std::max(end, splice_end);
 		}
 	}
-	u16string repform = text.substr(beg, end - beg); // mut
-	for (auto it = add.rbegin(); it != add.rend(); ++it) {
-		size_t at = it->first - beg;
-		if (at >= repform.size()) {
-			std::cerr << "divvun-suggest: WARNING: Internal error (trying to "
-			             "splice into pos "
-			          << at << " of repform)" << std::endl;
-			continue;
-		}
-		repform = repform.substr(0, at) + it->second + repform.substr(at);
+	vector<u16string> reps;
+	// TODO: apply input casing, normal method finds casing from possibly left-added repform and does
+	// underlineCasing = getCasing(toUtf8(repform));
+	// fromUtf8(withCasing(r.fixedcase, underlineCasing, s))
+	if(r.sforms.empty()) {
+		reps.push_back(mk_repform(text.substr(beg, end - beg), beg, add));
 	}
-	return std::make_pair(std::make_pair(beg, end), normalise_rep(repform));
+	else for(const auto& s : r.sforms) {
+		add[std::make_pair(orig_beg, orig_end)] = make_pair(fromUtf8(s), r);
+		u16string rep = mk_repform(text.substr(beg, end - beg), beg, add);
+		reps.push_back(rep);
+	}
+	return std::make_pair(std::make_pair(beg, end), reps);
 }
 
 variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
@@ -556,29 +592,34 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id,
 	auto end = c.pos + c.form.size();
 	UStringVector rep;
 	const Casing inputCasing = getCasing(toUtf8(c.form));
-	for (const auto& r : c.readings) {
+	for (const Reading& r : c.readings) {
 		if ((!r.errtypes.empty()) &&
 		    r.errtypes.find(err_id) == r.errtypes.end()) {
 			continue; // there is some other error on this reading
 		}
+		// std::cerr << "\033[1;34mend=\t" << end << " before for form " << toUtf8(c.form) << "\033[0m" << std::endl;
 		// If there are LEFT/RIGHT added relations, add suggestions with those concatenated to our form
 		// TODO: What about our current suggestions of the same error tag? Currently just using wordform
 		Casing underlineCasing = inputCasing;
+		bool seen_leftright = false;
 		rel_on_match(r.rels, LEFT_RIGHT_REL, sentence,
 		  [&](const string& relname, size_t i_t, const Cohort& trg) {
+			  seen_leftright = true;
 			  proc_LEFT_RIGHT(
-			    err_id, c.id, sentence, text, beg, end, relname, i_t, trg)
-			    .match([](Nothing) {},
-			      [&](pair<pair<size_t, size_t>, u16string> p) {
+			    r, err_id, c.id, sentence, text, beg, end, relname, i_t, trg)
+			    .match(
+				   [ ](Nothing) {},
+				   [&](pair<pair<size_t, size_t>, UStringVector> p) {
 				      beg = p.first.first;
 				      end = p.first.second;
-				      rep.push_back(p.second);
-				      underlineCasing = getCasing(toUtf8(p.second));
+				      rep.insert(rep.end(), p.second.begin(), p.second.end());
 			      });
 		  });
-		for (const auto& s : r.sforms) {
-			rep.push_back(
-			  fromUtf8(withCasing(r.fixedcase, underlineCasing, s)));
+		// std::cerr << "\033[1;34mend=\t" << end << " after\033[0m" << std::endl;
+		if(!seen_leftright) {
+			for (const auto& s : r.sforms) {
+				rep.push_back(fromUtf8(withCasing(r.fixedcase, underlineCasing, s)));
+			}
 		}
 		std::map<size_t, size_t> deleted;
 		rel_on_match(r.rels, DELETE_REL, sentence,

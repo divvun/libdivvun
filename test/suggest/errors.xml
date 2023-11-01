@@ -180,7 +180,7 @@
       <description xml:lang="se">Ii leat sátnelisttus</description>
     </body>
   </error>
-
+ 
   <error id="space-before-punct-mark">
     <header>
       <title xml:lang="en">Space errors</title>
@@ -189,6 +189,17 @@
     <body>
       <description xml:lang="en">There is a space in front of the punctuation mark "$1"</description>
       <description xml:lang="se">Lea gaska "$1" ovddas</description>
+    </body>
+  </error>
+
+  <error id="syn-phrasal-verb">
+    <header>
+      <title xml:lang="en">Syntactic error</title>
+      <title xml:lang="se">Cealkkameattáhus</title>
+    </header>
+    <body>
+      <description xml:lang="en">The word "$1" exists in the dictionary, but means something different in this context.</description>
+      <description xml:lang="se">"$1" maŋis galggašii leat blah</description>
     </body>
   </error>
 
