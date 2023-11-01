@@ -1011,6 +1011,16 @@ This makes the system more robust in case the speller lexicon differs
 from the regular suggestion generator, and saves some duplicate work.
 
 ** Summary of special tags and relations
+
+CG lets you define all kinds of new tags and relation-names and within
+CG you are free to make your own conventions as to what they mean.
+However, in the Divvun grammar checker system, certain CG tags and
+relation-names have special meanings to the rest of the system. Below
+is a summary of the special tags/relations and their uses. In
+addition, note that all divvun error tags need to start with the =&=
+character, but apart from that are free to name errors as long as they
+don't conflict with the below special tags.
+
 *** Tags
 
 - =&SUGGEST= on a reading means that =divvun-suggest= should try to
