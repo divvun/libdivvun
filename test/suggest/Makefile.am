@@ -65,6 +65,8 @@ EXTRA_DIST=generator.strings run run-flushing run-genall validate\
 		   expected.superblanks.json  \
 		   expected.tabs.err  \
 		   expected.tabs.json  \
+		   expected.taopp.err  \
+		   expected.taopp.json  \
 		   expected.utf16.err  \
 		   expected.utf16.json  \
 		   expected.wfcasingright.err  \
@@ -101,6 +103,7 @@ EXTRA_DIST=generator.strings run run-flushing run-genall validate\
 		   input.suggestwf-spaces.cg  \
 		   input.superblanks.cg  \
 		   input.tabs.cg  \
+		   input.taopp.cg  \
 		   input.utf16.cg  \
 		   input.wfcasingright.cg  \
 		   invalid.xml
