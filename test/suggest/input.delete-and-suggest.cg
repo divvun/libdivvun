@@ -1,5 +1,5 @@
 "<dego>"
-	"dego" CS <W:0> @CNP &syn-not-dego &LINK ID:11
+	"dego" CS <W:0> @CNP &syn-not-dego &COERROR ID:11
 : 
 "<lávvomuorran>"
 	"lávvomuorra" N Sem/Dummytag Ess <W:0> @COMP-CS< &syn-not-dego R:DELETE1:11

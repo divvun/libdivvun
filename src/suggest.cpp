@@ -248,7 +248,7 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 			else if (tag == "&ADDED-BEFORE-BLANK") {
 				r.added = AddedBeforeBlank;
 			}
-			else if (tag == "&LINK") {
+			else if (tag == "&LINK" || tag == "&COERROR") { // &LINK kept for backward-compatibility
 				r.link = true;
 			}
 			else {
@@ -393,7 +393,7 @@ void rel_on_match(const relations& rels, const std::basic_regex<char>& name,
  * error types.
  *
  * The reason we fallback to all the readings is that some times
- * people write CG rules that delete the &LINK readings or similar –
+ * people write CG rules that delete the &COERROR readings or similar –
  * we don't want to fail to find the cohort that's supposed to be
  * underlined in that case.
  */
