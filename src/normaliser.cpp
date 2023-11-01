@@ -98,7 +98,9 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 			auto tabend = outstring.find("\"");
 			auto tabs = outstring.substr(tabstart, tabend);
 			string lemma = result[4];
+			bool everythinghasfailed = true;
 			if (tags.empty()) {
+				everythinghasfailed = false;
 				os << outstring << std::endl;
 			}
 			bool expand = false;
@@ -176,6 +178,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 					std::string reanal = result[5].str();
 					// 2. generate specific form with new lemma
 					std::string regen = form.str();
+					std::string regentags = "";
 					if (verbose) {
 						std::cout << "2.a Using normalised form: " << regen
 						          << std::endl;
@@ -210,7 +213,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 						else if (c == ' ') {
 							auto t = current_token.str();
 							if (t.find("/") == string::npos) {
-								regen += current_token.str();
+								regentags += current_token.str();
 							}
 							current_token.str("");
 							current_token << "+";
@@ -223,8 +226,8 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 							current_token << c;
 						}
 					}
-					regen += current_token.str();
-					auto s = regen;
+					regentags += current_token.str();
+					auto s = regentags;
 					auto p = s.find("++");
 					while (p != std::string::npos) {
 						s.replace(p, 2, "+");
@@ -249,12 +252,19 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 							p = s.find(tag);
 						}
 					}
+					regentags = s;
+					regen += s;
+					p = regentags.find("+");
+					while (p != std::string::npos) {
+						regentags.replace(p, 1, " ");
+						p = regentags.find("+", p);
+					}
 					if (verbose) {
-						std::cout << "2.b regenerating lookup: " << s
+						std::cout << "2.b regenerating lookup: " << regen
 						          << std::endl;
 					}
 					const HfstPaths1L regenerations(
-					  generator->lookup_fd(s, -1, 2.0));
+					  generator->lookup_fd(regen, -1, 2.0));
 					bool regenerated = false;
 					for (auto& rg : *regenerations) {
 						std::stringstream regen;
@@ -289,16 +299,33 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 									p = reanal.find("+", p);
 								}
 							}
-							os << tabs << "\"" << newlemma << "\"" << reanal
-							   << " \"" << phon << "\"phon"
-							   << " " << lemma << "oldlemma" << std::endl;
-						}
-					}
+							if (reanal.find(regentags) == std::string::npos) {
+								if (verbose) {
+									std::cout << "couldn't match " << reanal
+									          << " and " << regentags
+									          << std::endl;
+									os << ";" << tabs << "\"" << newlemma
+									   << "\"" << reanal << " \"" << phon
+									   << "\"phon"
+									   << " " << lemma << "oldlemma"
+									   << " NORMALISER_REMOVE:notagmatches1"
+									   << std::endl;
+								}
+							}
+							else {
+								everythinghasfailed = false;
+								os << tabs << "\"" << newlemma << "\""
+								   << reanal << " \"" << phon << "\"phon"
+								   << " " << lemma << "oldlemma";
+								os << std::endl;
+							}
+						} // for each reanalysis
+					}     // for each regeneration
 					if (!regenerated) {
 						if (verbose) {
-							std::cout
-							  << "3. Couldn't regenerate, reanalysing lemma: "
-							  << phon << std::endl;
+							std::cout << "3. Couldn't regenerate, "
+							             "reanalysing lemma: "
+							          << phon << std::endl;
 						}
 						const HfstPaths1L reanalyses(
 						  sanalyser->lookup_fd(phon, -1, 2.0));
@@ -320,13 +347,20 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 									p = reanal.find("+", p);
 								}
 							}
-							os << tabs << "\"" << newlemma << "\"" << reanal
-							   << " \"" << phon << "\"phon"
-							   << " " << lemma << "oldlemma" << std::endl;
+							if (verbose) {
+								os << ";" << tabs << "\"" << newlemma << "\""
+								   << reanal << " \"" << phon << "\"phon"
+								   << " " << lemma << "oldlemma"
+								   << " NORMALISER_REMOVE:notgenerated"
+								   << std::endl;
+							}
 						}
 					}
 				} // for each expansion
-			}     // if expand
+				if (everythinghasfailed) {
+					os << result[0] << std::endl;
+				}
+			} // if expand
 			else {
 				if (verbose) {
 					std::cout << "No expansion tags in" << std::endl;
