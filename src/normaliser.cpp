@@ -187,6 +187,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 					bool in_quot = false;
 					bool in_at = false;
 					bool in_bracket = false;
+					bool in_suffix = false;
 					for (auto& c : result[0].str()) {
 						if (c == '\t') {
 							continue;
@@ -196,6 +197,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 						}
 						else if (in_quot && (c == '"')) {
 							in_quot = false;
+							in_suffix = true;
 						}
 						else if (c == '@') {
 							in_at = true;
@@ -211,7 +213,18 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 							break;
 						}
 						else if (c == ' ') {
+							if (in_suffix) {
+								in_suffix = false;
+								current_token << "+";
+								continue;
+							}
 							auto t = current_token.str();
+							if ((t.find("SELECT:") != string::npos) ||
+							    (t.find("MAP:") != string::npos) ||
+							    (t.find("SETPARENT:") != string::npos)) {
+								current_token.str("");
+								break;
+							}
 							if (t.find("/") == string::npos) {
 								regentags += current_token.str();
 							}
@@ -219,7 +232,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 							current_token << "+";
 							in_at = false;
 						}
-						else if (in_quot || in_at || in_bracket) {
+						else if (in_quot || in_at || in_bracket || in_suffix) {
 							continue;
 						}
 						else {
