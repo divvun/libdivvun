@@ -340,14 +340,20 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 							             "reanalysing lemma: "
 							          << phon << std::endl;
 						}
+						bool reanalysisfailed = true;
 						const HfstPaths1L reanalyses(
 						  sanalyser->lookup_fd(phon, -1, 2.0));
 						for (auto& ra : *reanalyses) {
+							reanalysisfailed = false;
 							std::stringstream reform;
 							for (auto& res : ra.second) {
 								if (!hfst::FdOperation::is_diacritic(res)) {
 									reform << res;
 								}
+							}
+							if (verbose) {
+								std::cout << "3.a got: " << reform.str()
+								          << std::endl;
 							}
 							if (reform.str().find("+Cmp") ==
 							    std::string::npos) {
@@ -360,17 +366,28 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 									p = reanal.find("+", p);
 								}
 							}
+							everythinghasfailed = false;
+							os << tabs << "\"" << newlemma << "\"" << reanal
+							   << " \"" << phon << "\"phon"
+							   << " " << lemma << "oldlemma" << std::endl;
+						}
+						if (reanalysisfailed) {
 							if (verbose) {
-								os << ";" << tabs << "\"" << newlemma << "\""
-								   << reanal << " \"" << phon << "\"phon"
-								   << " " << lemma << "oldlemma"
-								   << " NORMALISER_REMOVE:notgenerated"
-								   << std::endl;
+								std::cout << "3.b no analyses either... "
+								          << std::endl;
 							}
+							everythinghasfailed = false;
+							os << tabs << "\"" << newlemma << "\"" << reanal
+							   << " \"" << phon << "\"phon"
+							   << " " << lemma << "oldlemma" << std::endl;
 						}
 					}
 				} // for each expansion
 				if (everythinghasfailed) {
+					if (verbose) {
+						std::cout << "no usable results, printing source:"
+						          << std::endl;
+					}
 					os << result[0] << std::endl;
 				}
 			} // if expand
