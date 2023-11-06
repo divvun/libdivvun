@@ -17,48 +17,51 @@
 
 #pragma once
 #ifndef a0d6827329788a87_NORMALISER_HPP
-#define a0d6827329788a87_NORMALISER_HPP
+#	define a0d6827329788a87_NORMALISER_HPP
 
-#include <locale>
-#include <vector>
-#include <string>
-#include <regex>
-#include <unordered_map>
-#include <exception>
+#	include <locale>
+#	include <vector>
+#	include <string>
+#	include <regex>
+#	include <unordered_map>
+#	include <exception>
 
 // divvun-gramcheck:
-#include "util.hpp"
-#include "hfst_util.hpp"
+#	include "util.hpp"
+#	include "hfst_util.hpp"
 // hfst:
-#include <hfst/implementations/optimized-lookup/pmatch.h>
-#include <hfst/implementations/optimized-lookup/pmatch_tokenize.h>
+#	include <hfst/implementations/optimized-lookup/pmatch.h>
+#	include <hfst/implementations/optimized-lookup/pmatch_tokenize.h>
 // variants:
-#include "mapbox/variant.hpp"
+#	include "mapbox/variant.hpp"
 
 namespace divvun {
 
 using std::string;
-using std::vector;
 using std::unique_ptr;
+using std::vector;
 
 class Normaliser {
-    public:
-        Normaliser(const hfst::HfstTransducer* normaliser,
-                   const hfst::HfstTransducer* generator,
-                   const hfst::HfstTransducer* sanalyser,
-                   const hfst::HfstTransducer* danalyser,
-                   const vector<string>& tags, bool verbose);
-        Normaliser(const string& normaliser, const string& generator,
-                   const string& sanalyser, const string& danalyser,
-                   const vector<string>& tags, bool verbose);
-        /*const*/ void run(std::istream& is, std::ostream& os);
-    private:
-        unique_ptr<const hfst::HfstTransducer> normaliser;
-        unique_ptr<const hfst::HfstTransducer> generator;
-        unique_ptr<const hfst::HfstTransducer> sanalyser;
-        unique_ptr<const hfst::HfstTransducer> danalyser;
-        vector<string> tags;
-        bool verbose;
+public:
+	Normaliser(const hfst::HfstTransducer* normaliser,
+	  const hfst::HfstTransducer* generator,
+	  const hfst::HfstTransducer* sanalyser,
+	  const hfst::HfstTransducer* danalyser, const vector<string>& tags,
+	  bool verbose, bool trace, bool debug);
+	Normaliser(const string& normaliser, const string& generator,
+	  const string& sanalyser, const string& danalyser,
+	  const vector<string>& tags, bool verbose, bool trace, bool debug);
+	/*const*/ void run(std::istream& is, std::ostream& os);
+
+private:
+	unique_ptr<const hfst::HfstTransducer> normaliser;
+	unique_ptr<const hfst::HfstTransducer> generator;
+	unique_ptr<const hfst::HfstTransducer> sanalyser;
+	unique_ptr<const hfst::HfstTransducer> danalyser;
+	vector<string> tags;
+	bool verbose;
+	bool trace;
+	bool debug;
 };
 
 }

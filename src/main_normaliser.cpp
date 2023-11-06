@@ -16,133 +16,126 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#  include <config.h>
+#	include <config.h>
 #endif
 
 #include "normaliser.hpp"
 #include "version.hpp"
 #include "cxxopts.hpp"
 
-int main(int argc, char ** argv)
-{
-	try
-	{
-		cxxopts::Options options(argv[0],
-                                 "BIN - use FSTs to normalise and expand text for TTS");
+int main(int argc, char** argv) {
+	try {
+		cxxopts::Options options(
+		  argv[0], "BIN - use FSTs to normalise and expand text for TTS");
 
-		options.add_options()
-			("a,surface-analyser", "FST for surface analysis",
-             cxxopts::value<std::string>(), "BIN")
-			("n,normaliser", "FST for normalisation",
-             cxxopts::value<std::string>(), "BIN")
-			("d,deep-analyser", "FST for deep analysis (UNIMPLEMENTED)",
-             cxxopts::value<std::string>(), "BIN")
-			("i,input", "Input file (UNIMPLEMENTED, stdin for now)",
-             cxxopts::value<std::string>(), "FILE")
-			("o,output", "Output file (UNIMPLEMENTED, stdout for now)",
-             cxxopts::value<std::string>(), "FILE")
-			("g,generator", "FST for generations",
-             cxxopts::value<std::string>(), "BIN")
-			("t,tags", "limit tags to expand",
-             cxxopts::value<std::vector<std::string>>(), "TAGS")
-			("v,verbose", "Be verbose")
-			("V,version", "Version information")
-			("h,help", "Print help")
-			;
+		options.add_options()("a,surface-analyser", "FST for surface analysis",
+		  cxxopts::value<std::string>(), "BIN")("n,normaliser",
+		  "FST for normalisation", cxxopts::value<std::string>(),
+		  "BIN")("d,deep-analyser", "FST for deep analysis (UNIMPLEMENTED)",
+		  cxxopts::value<std::string>(),
+		  "BIN")("i,input", "Input file (UNIMPLEMENTED, stdin for now)",
+		  cxxopts::value<std::string>(),
+		  "FILE")("o,output", "Output file (UNIMPLEMENTED, stdout for now)",
+		  cxxopts::value<std::string>(), "FILE")("g,generator",
+		  "FST for generations", cxxopts::value<std::string>(),
+		  "BIN")("t,tags", "limit tags to expand",
+		  cxxopts::value<std::vector<std::string>>(), "TAGS")("v,verbose",
+		  "Be verbose")("D,debug", "Be debugsy")("T,trace", "Be tracy")(
+		  "V,version", "Version information")("h,help", "Print help");
 
-		std::vector<std::string> pos = {
-			"normaliser",
-			"input",
-			"output"
-		};
+		std::vector<std::string> pos = { "normaliser", "input", "output" };
 		options.parse_positional(pos);
 		options.parse(argc, argv);
 
-		if(argc > pos.size()) {
-			std::cout << options.help({""}) << std::endl;
-			std::cerr << argv[0] << " ERROR: got " << argc-1+pos.size() <<
-              " arguments; expected only " << pos.size() << std::endl;
-			return(EXIT_FAILURE);
+		if (argc > pos.size()) {
+			std::cout << options.help({ "" }) << std::endl;
+			std::cerr << argv[0] << " ERROR: got " << argc - 1 + pos.size()
+			          << " arguments; expected only " << pos.size()
+			          << std::endl;
+			return (EXIT_FAILURE);
 		}
 
-		if (options.count("help"))
-		{
-			std::cout << options.help({""}) << std::endl;
-			return(EXIT_SUCCESS);
+		if (options.count("help")) {
+			std::cout << options.help({ "" }) << std::endl;
+			return (EXIT_SUCCESS);
 		}
 
-		if (options.count("version"))
-		{
+		if (options.count("version")) {
 			divvun::print_version(argv[0]);
-			return(EXIT_SUCCESS);
+			return (EXIT_SUCCESS);
 		}
 
-		if (!options.count("normaliser"))
-		{
-			std::cout << options.help({""}) << std::endl;
-			std::cerr << argv[0] <<
-              " ERROR: expected --normaliser option" << std::endl;
-			return(EXIT_FAILURE);
+		if (!options.count("normaliser")) {
+			std::cout << options.help({ "" }) << std::endl;
+			std::cerr << argv[0] << " ERROR: expected --normaliser option"
+			          << std::endl;
+			return (EXIT_FAILURE);
 		}
-		if (!options.count("generator"))
-		{
-			std::cout << options.help({""}) << std::endl;
-			std::cerr << argv[0] <<
-              " ERROR: expected --generator option" << std::endl;
-			return(EXIT_FAILURE);
+		if (!options.count("generator")) {
+			std::cout << options.help({ "" }) << std::endl;
+			std::cerr << argv[0] << " ERROR: expected --generator option"
+			          << std::endl;
+			return (EXIT_FAILURE);
 		}
-		if (!options.count("surface-analyser"))
-		{
-			std::cout << options.help({""}) << std::endl;
-			std::cerr << argv[0] <<
-              " ERROR: expected --surface-analyser option." << std::endl;
-			return(EXIT_FAILURE);
+		if (!options.count("surface-analyser")) {
+			std::cout << options.help({ "" }) << std::endl;
+			std::cerr << argv[0]
+			          << " ERROR: expected --surface-analyser option."
+			          << std::endl;
+			return (EXIT_FAILURE);
 		}
-		if (!options.count("tags"))
-		{
-			std::cerr << argv[0] <<
-              " WARNING: expected at least one --tags option." << std::endl;
+		if (!options.count("tags")) {
+			std::cerr << argv[0]
+			          << " WARNING: expected at least one --tags option."
+			          << std::endl;
 		}
 		const auto& verbose = options.count("verbose");
-        if (verbose) {
-            std::cout << "Being verbose." << std::endl;
-        }
+		const auto& debug = options.count("debug");
+		const auto& trace = options.count("trace");
+		if (verbose) {
+			std::cout << "Being verbose." << std::endl;
+		}
+		if (trace) {
+			std::cout << "Printing traces." << std::endl;
+		}
+		if (debug) {
+			std::cout << "Printing debugs." << std::endl;
+		}
 		const auto& sanalyser = options["surface-analyser"].as<std::string>();
 		if (verbose) {
-            std::cout << "Surface analyser set to: " << sanalyser << std::endl;
-        }
-        const auto& normaliserfile = options["normaliser"].as<std::string>();
+			std::cout << "Surface analyser set to: " << sanalyser << std::endl;
+		}
+		const auto& normaliserfile = options["normaliser"].as<std::string>();
 		if (verbose) {
-            std::cout << "Normaliser set to: " << normaliserfile << std::endl;
-        }
+			std::cout << "Normaliser set to: " << normaliserfile << std::endl;
+		}
 		const auto& generator = options["generator"].as<std::string>();
 		if (verbose) {
-            std::cout << "Generator set to: " << generator << std::endl;
-        }
+			std::cout << "Generator set to: " << generator << std::endl;
+		}
 		const auto& danalyser = options["deep-analyser"].as<std::string>();
 		if (verbose) {
-            std::cout << "Deep analyser set to: " << danalyser << std::endl;
-        }
-        const auto& tags =  options["tags"].as<std::vector<std::string>>();
+			std::cout << "Deep analyser set to: " << danalyser << std::endl;
+		}
+		const auto& tags = options["tags"].as<std::vector<std::string>>();
 		if (verbose) {
-            std::cout << "Tags set to: ";
-            for (auto tag : tags) {
-                std::cout << tag << " ";
-            }
-            std::cout << std::endl;
-        }
-        auto normaliser = divvun::Normaliser(normaliserfile, generator,
-                                             sanalyser, danalyser,
-                                             tags, verbose);
-        normaliser.run(std::cin, std::cout);
+			std::cout << "Tags set to: ";
+			for (auto tag : tags) {
+				std::cout << tag << " ";
+			}
+			std::cout << std::endl;
+		}
+		auto normaliser = divvun::Normaliser(normaliserfile, generator,
+		  sanalyser, danalyser, tags, verbose, trace, debug);
+		normaliser.run(std::cin, std::cout);
 	}
-	catch (const cxxopts::OptionException& e)
-	{
-		std::cerr << argv[0] << " ERROR: couldn't parse options: " << e.what() << std::endl;
-		return(EXIT_FAILURE);
+	catch (const cxxopts::OptionException& e) {
+		std::cerr << argv[0] << " ERROR: couldn't parse options: " << e.what()
+		          << std::endl;
+		return (EXIT_FAILURE);
 	}
-    catch (FunctionNotImplementedException& fnie) {
-        std::cerr << "Some needed lookup not supported, maybe automata are " <<
-          "not in hfstol format." << std::endl;
-    }
+	catch (FunctionNotImplementedException& fnie) {
+		std::cerr << "Some needed lookup not supported, maybe automata are "
+		          << "not in hfstol format." << std::endl;
+	}
 }

@@ -23,20 +23,31 @@ Normaliser::Normaliser(const hfst::HfstTransducer* normaliser_,
   const hfst::HfstTransducer* generator_,
   const hfst::HfstTransducer* sanalyser_,
   const hfst::HfstTransducer* danalyser_, const vector<string>& tags_,
-  bool verbose_)
+  bool verbose_, bool trace_, bool debug_)
   : normaliser(normaliser_)
   , generator(generator_)
   , sanalyser(sanalyser_)
   , danalyser(danalyser_)
   , tags(tags_)
-  , verbose(verbose_) {}
+  , verbose(verbose_)
+  , trace(trace_)
+  , debug(debug_) {}
 
 Normaliser::Normaliser(const string& normaliser_, const string& generator_,
   const string& sanalyser_, const string& danalyser_,
-  const vector<string>& tags_, bool verbose_) {
+  const vector<string>& tags_, bool verbose_, bool trace_, bool debug_) {
+	debug = debug_;
+	verbose = verbose_;
+	trace = trace_;
 	if (verbose_) {
 		std::cout << "Reading files: " << std::endl;
 		std::cout << "* " << normaliser_ << std::endl;
+		if (trace_) {
+			std::cout << "Printing traces" << std::endl;
+		}
+		if (debug_) {
+			std::cout << "Printing debugs" << std::endl;
+		}
 	}
 	if (normaliser_ != "") {
 		normaliser = std::unique_ptr<const hfst::HfstTransducer>(
@@ -65,7 +76,7 @@ Normaliser::Normaliser(const string& normaliser_, const string& generator_,
 	}
 	if (verbose_) {
 		std::cout << "expanding tags: ";
-		for (auto tag : tags) {
+		for (auto tag : tags_) {
 			std::cout << tag << " ";
 		}
 		std::cout << std::endl;
@@ -86,7 +97,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 		// 5: syntag
 		//
 		if ((!result.empty()) && (result[2].length() != 0)) {
-			if (verbose) {
+			if (debug) {
 				std::cout << "New surface form: " << result[2] << std::endl;
 			}
 			surf = result[2];
@@ -106,7 +117,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 			bool expand = false;
 			for (auto tag : tags) {
 				if (outstring.find(tag) != std::string::npos) {
-					if (verbose) {
+					if (debug) {
 						std::cout << "Expanding because of " << tag
 						          << std::endl;
 					}
@@ -124,7 +135,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 			    (altsurfend != std::string::npos)) {
 				surf = outstring.substr(
 				  altsurfstart + 2, altsurfend - altsurfstart - 2);
-				if (verbose) {
+				if (debug) {
 					std::cout << "Using re-analysed surface form: " << surf
 					          << std::endl;
 				}
@@ -134,7 +145,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 				surf =
 				  outstring.substr(phonstart + 1, phonend - phonstart - 1);
 				outstring = outstring.replace(phonstart, phonend, "");
-				if (verbose) {
+				if (debug) {
 					std::cout << "Using Phon(?): " << surf << std::endl;
 				}
 			}
@@ -149,19 +160,20 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 			}*/
 			else {
 				surf = lemma.substr(1, lemma.length() - 2);
-				if (verbose) {
+				if (debug) {
 					std::cout << "Using lemma: " << surf << std::endl;
+					std::cout << "DEBUG: " << debug << std::endl;
 				}
 			}
 			if (expand) {
 				// 1. apply expansions from normaliser
-				if (verbose) {
+				if (debug) {
 					std::cout << "1. looking up normaliser" << std::endl;
 				}
 				const HfstPaths1L expansions(
 				  normaliser->lookup_fd(surf, -1, 2.0));
 				if (expansions->empty()) {
-					if (verbose) {
+					if (debug) {
 						std::cout << "Normaliser results empty." << std::endl;
 					}
 					os << result[0] << std::endl;
@@ -179,7 +191,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 					// 2. generate specific form with new lemma
 					std::string regen = form.str();
 					std::string regentags = "";
-					if (verbose) {
+					if (debug) {
 						std::cout << "2.a Using normalised form: " << regen
 						          << std::endl;
 					}
@@ -272,7 +284,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 						regentags.replace(p, 1, " ");
 						p = regentags.find("+", p);
 					}
-					if (verbose) {
+					if (debug) {
 						std::cout << "2.b regenerating lookup: " << regen
 						          << std::endl;
 					}
@@ -288,7 +300,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 						}
 						phon = regen.str();
 						regenerated = true;
-						if (verbose) {
+						if (debug) {
 							std::cout << "3. reanalysing: " << phon
 							          << std::endl;
 						}
@@ -313,10 +325,12 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 								}
 							}
 							if (reanal.find(regentags) == std::string::npos) {
-								if (verbose) {
+								if (debug) {
 									std::cout << "couldn't match " << reanal
 									          << " and " << regentags
 									          << std::endl;
+								}
+								if (trace) {
 									os << ";" << tabs << "\"" << newlemma
 									   << "\"" << reanal << " \"" << phon
 									   << "\"phon"
@@ -335,7 +349,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 						} // for each reanalysis
 					}     // for each regeneration
 					if (!regenerated) {
-						if (verbose) {
+						if (debug) {
 							std::cout << "3. Couldn't regenerate, "
 							             "reanalysing lemma: "
 							          << phon << std::endl;
@@ -351,7 +365,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 									reform << res;
 								}
 							}
-							if (verbose) {
+							if (debug) {
 								std::cout << "3.a got: " << reform.str()
 								          << std::endl;
 							}
@@ -372,7 +386,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 							   << " " << lemma << "oldlemma" << std::endl;
 						}
 						if (reanalysisfailed) {
-							if (verbose) {
+							if (debug) {
 								std::cout << "3.b no analyses either... "
 								          << std::endl;
 							}
@@ -384,7 +398,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 					}
 				} // for each expansion
 				if (everythinghasfailed) {
-					if (verbose) {
+					if (debug) {
 						std::cout << "no usable results, printing source:"
 						          << std::endl;
 					}
@@ -392,14 +406,14 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 				}
 			} // if expand
 			else {
-				if (verbose) {
+				if (debug) {
 					std::cout << "No expansion tags in" << std::endl;
 				}
 				os << result[0] << std::endl;
 			}
 		}
 		else {
-			if (verbose) {
+			if (debug) {
 				std::cout << "Probably not cg formatted stuff: " << std::endl;
 			}
 			os << result[0] << std::endl;

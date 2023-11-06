@@ -62,11 +62,11 @@ NormaliseCmd::NormaliseCmd(const hfst::HfstTransducer* normaliser_,
   const hfst::HfstTransducer* generator, const hfst::HfstTransducer* analyser,
   const vector<string>& tags, bool verbose)
   : normaliser(new divvun::Normaliser(
-      normaliser_, generator, analyser, NULL, tags, verbose)) {}
+      normaliser_, generator, analyser, NULL, tags, verbose, false, false)) {}
 NormaliseCmd::NormaliseCmd(const string& normaliser_, const string& generator,
   const string& analyser, const vector<string>& tags, bool verbose)
   : normaliser(new divvun::Normaliser(
-      normaliser_, generator, analyser, "", tags, verbose)) {}
+      normaliser_, generator, analyser, "", tags, verbose, false, false)) {}
 
 void NormaliseCmd::run(stringstream& input, stringstream& output) const {
 	normaliser->run(input, output);
