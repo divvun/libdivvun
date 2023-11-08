@@ -718,14 +718,15 @@ etc.
 
 In South Sámi sometimes phrasal verbs are used (due to a literal translation from Scandinavian languages) 
 where the verb alone already expresses the concept. 
-This is the case for "tjuedtjelh bæjjese" (verb + adverb) meaning stand.up up. 
+This is the case for "tjuedtjelh bæjjese" (verb + adverb) meaning "stand.up up". 
 With the following rule we first annotate the error and then delete the adverb "bæjjese".
 
 
 #+begin_src cg
-ADD (&syn-delete-adv-phrasal-verb) TARGET (Adv) IF (0 ("bæjjese")) (-1 ("tjuedtjielidh")) ;
+ADD (&syn-delete-adv-phrasal-verb) TARGET (V) IF (0 ("tjuedtjielidh") OR ("fulkedh")) (*0 ("bæjjese") BARRIER (*) - Pcle) ;
+ADD (&syn-delete-adv-phrasal-verb) TARGET (Adv) IF (0 ("bæjjese")) (*0 ("tjuedtjielidh") OR ("fulkedh") BARRIER (*) - Pcle) ;
 
-ADDRELATION (DELETE1) (V &syn-delete-adv-phrasal-verb) TO (1 Adv &syn-delete-adv-phrasal-verb)
+ADDRELATION (DELETE1) (V &syn-delete-adv-phrasal-verb) TO (*0 (Adv &syn-delete-adv-phrasal-verb) BARRIER (*) - Pcle) ;
 #+end_src
 
 -----
