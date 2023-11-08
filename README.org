@@ -418,7 +418,7 @@ suggestions, annotating valency, disambiguation and splitting
 multiwords, or annotating surrounding whitespace.
 
 Below we go through some of the different parts of the checker, using
-the Giellatekno/Divvun North Saami package (from
+the Giellatekno/Divvun North Sámi package (from
 https://victorio.uit.no/langtech/trunk/langs/sme/) as an example.
 
 ** XML pipeline specification
@@ -500,7 +500,7 @@ This is what happens when text is sent through the =smegram= pipeline:
 
 The program =divvun-gen-sh= in this package creates shell scripts from
 the specification that you can use to test your grammar checker. In
-the North Saami checker, these should appear in
+the North Sámi checker, these should appear in
 =tools/grammarcheckers/modes= when you type =make=, but you can also
 create a single script for the above pipeline manually. If we do
 =divvun-gen-sh -s pipespec.xml -n smegram > test.sh= with the above
@@ -630,7 +630,7 @@ optimized lookup format.
 
 ** Simple grammarchecker.cg3 rules
 
-In our North Saami checker, the
+In our North Sámi checker, the
 #+begin_src xml
 <cg><arg n="grammarchecker.bin"></cg>
 #+end_src
@@ -717,14 +717,15 @@ You may delete more words from the same suggestion using =DELETE2=
 etc.
 
 In South Sámi sometimes phrasal verbs are used (due to a literal translation from Scandinavian languages) 
-where the verb alone already expresses the concept. This is the case for "tjuedtjelh bæjjese" (verb + adverb) meaning stand.up up. 
+where the verb alone already expresses the concept. 
+This is the case for "tjuedtjelh bæjjese" (verb + adverb) meaning stand.up up. 
 With the following rule we first annotate the error and then delete the adverb "bæjjese".
 
 
 #+begin_src cg
-ADD:xsyn-delete-adv-phrasal-verb (&syn-delete-adv-phrasal-verb) TARGET (Adv) IF (0 ("bæjjese")) (-1 ("tjuedtjielidh")) ;
+ADD (&syn-delete-adv-phrasal-verb) TARGET (Adv) IF (0 ("bæjjese")) (-1 ("tjuedtjielidh")) ;
 
-ADDRELATION:xsyn-delete-adv-phrasal-verb (DELETE1) (V &syn-delete-adv-phrasal-verb) TO (1 Adv &syn-delete-adv-phrasal-verb)
+ADDRELATION (DELETE1) (V &syn-delete-adv-phrasal-verb) TO (1 Adv &syn-delete-adv-phrasal-verb)
 #+end_src
 
 -----
