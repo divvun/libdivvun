@@ -729,7 +729,7 @@ ADD (&syn-delete-adv-phrasal-verb) TARGET (Adv) IF (0 ("bæjjese")) (*0 ("tjuedt
 ADDRELATION (DELETE1) (V &syn-delete-adv-phrasal-verb) TO (*0 (Adv &syn-delete-adv-phrasal-verb) BARRIER (*) - Pcle) ;
 #+end_src
 
------
+** Alternative suggestions for complex errors altering different parts of the error
 
 However, some times you have several possible suggestions on the same
 word, which might partially overlap. For example, you might also have
@@ -741,6 +741,16 @@ word, which might partially overlap. For example, you might also have
 
 where you want to keep the suggestions for =&one-word-too-many=
 separate from the suggestions for =&other-error=.
+
+#+begin_src cg
+Dåaktere veanhta dïhte aktem aajla-hirremem åtneme, dan åvteste tjarke svæjmadi jïh 
+{ij mujhti} satne lij vaedtsieminie skuvleste gåatan.
+#+end_src
+
+In this sentence for sma there are two alternative suggestions:
+- one regarding the second cohort only -- =mujhti > mujhtieh=
+- the other one regarding both cohorts -- =ij mujhti > idtji mujhtieh=
+
 
 Unfortunately, relations in CG are cohort-to-cohort, not
 reading-to-reading. The workaround is to put the error tag also on the
