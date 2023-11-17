@@ -162,7 +162,6 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 				surf = lemma.substr(1, lemma.length() - 2);
 				if (debug) {
 					std::cout << "Using lemma: " << surf << std::endl;
-					std::cout << "DEBUG: " << debug << std::endl;
 				}
 			}
 			if (expand) {
@@ -380,10 +379,28 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 									p = reanal.find("+", p);
 								}
 							}
-							everythinghasfailed = false;
-							os << tabs << "\"" << newlemma << "\"" << reanal
-							   << " \"" << phon << "\"phon"
-							   << " " << lemma << "oldlemma" << std::endl;
+							if (reanal.find(regentags) == std::string::npos) {
+								if (debug) {
+									std::cout << "couldn't match " << reanal
+									          << " and " << regentags
+									          << std::endl;
+								}
+								if (trace) {
+									os << ";" << tabs << "\"" << newlemma
+									   << "\"" << reanal << " \"" << phon
+									   << "\"phon"
+									   << " " << lemma << "oldlemma"
+									   << " NORMALISER_REMOVE:notagmatches2"
+									   << std::endl;
+								}
+							}
+							else {
+								everythinghasfailed = false;
+								os << tabs << "\"" << newlemma << "\""
+								   << reanal << " \"" << phon << "\"phon"
+								   << " " << lemma << "oldlemma";
+								os << std::endl;
+							}
 						}
 						if (reanalysisfailed) {
 							if (debug) {
