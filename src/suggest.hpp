@@ -68,7 +68,7 @@ inline string xml_raw_cdata(const pugi::xml_node& label) {
 }
 #	endif
 
-enum RunState { flushing, eof };
+enum RunState { Flushing, Eof };
 
 enum RunMode { RunCG, RunJson, RunAutoCorrect };
 
@@ -168,6 +168,7 @@ struct Reading {
 	Added added = NotAdded;
 	bool fixedcase =
 	  false; // don't change casing on suggestions if we have this tag
+	string line;	// The (unchanged) input lines which created this Reading
 };
 
 struct Cohort {
@@ -177,6 +178,7 @@ struct Cohort {
 	vector<Reading> readings;
 	std::set<u16string> errtypes;
 	Added added;
+	string raw_pre_blank; // blank before cohort, in CG stream format (initial colon, brackets, escaped newlines)
 };
 
 using CohortMap = std::unordered_map<rel_id, size_t>;
@@ -188,7 +190,19 @@ struct Sentence {
 	// std::basic_ostringstream<char16_t> text;
 	std::ostringstream text;
 	RunState runstate;
+	string raw_final_blank; // blank after last cohort, in CG stream format (initial colon, brackets, escaped newlines)
 };
+
+enum FlushOn { Nul, NulAndDelimiters };
+
+// Default value for Suggest.delimiters:
+inline const std::set<u16string> defaultDelimiters() {
+	return {
+		u".",
+		u"?",
+		u"!"
+	};
+}
 
 class Suggest {
 public:
@@ -216,9 +230,13 @@ private:
 	  sortedmsglangs; // invariant: contains all and only the keys of msgs
 	RunState run_json(std::istream& is, std::ostream& os);
 	RunState run_autocorrect(std::istream& is, std::ostream& os);
+	RunState run_cg(std::istream& is, std::ostream& os);
+	Sentence run_sentence(std::istream& is, FlushOn flush_on);
 	std::unique_ptr<const hfst::HfstTransducer> generator;
 	std::set<ErrId> ignores;
 	std::set<ErrId> includes;
+	std::set<u16string> delimiters; // run_sentence(NulAndDelimiters) will return after seeing a cohort with one of these forms
+	size_t hard_limit = 500;	// run_sentence(NulAndDelimiters) will always flush after seeing this many cohorts
 	bool generate_all_readings = false;
 
 	/**
