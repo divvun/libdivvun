@@ -19,8 +19,6 @@
 
 namespace divvun {
 
-const std::basic_regex<char> DELIMITERS("^[.!?]$");
-
 const std::basic_regex<char> CG_TAGS_RE("\"[^\"]*\"S?|[^ ]+");
 
 // Anything *not* matched by CG_TAG_TYPE is sent to the generator.
@@ -297,7 +295,7 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 	return r;
 };
 
-const Reading proc_reading(const hfst::HfstTransducer& t, const string& line,
+const Reading proc_reading(const hfst::HfstTransducer& generator, const string& line,
   bool generate_all_readings) {
 	stringstream ss(line);
 	string subline;
@@ -306,6 +304,7 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const string& line,
 		subs.push_front(proc_subreading(subline, generate_all_readings));
 	}
 	Reading r;
+	r.line = line;
 	const size_t n_subs = subs.size();
 	for (size_t i = 0; i < n_subs; ++i) {
 		const auto& sub = subs[i];
@@ -323,7 +322,7 @@ const Reading proc_reading(const hfst::HfstTransducer& t, const string& line,
 		r.fixedcase |= sub.fixedcase;
 	}
 	if (r.suggest) {
-		const HfstPaths1L paths(t.lookup_fd({ r.ana }, -1, 10.0));
+		const HfstPaths1L paths(generator.lookup_fd({ r.ana }, -1, 10.0));
 		for (auto& p : *paths) {
 			stringstream form;
 			for (auto& symbol : p.second) {
@@ -702,25 +701,25 @@ const string clean_blank(const string& raw) {
 }
 
 
-Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t,
-  const MsgMap& msgs, bool generate_all_readings) {
+Sentence Suggest::run_sentence(std::istream& is, FlushOn flush_on) {
 	size_t pos = 0;
 	Cohort c = DEFAULT_COHORT;
 	Sentence sentence;
-	sentence.runstate = eof;
+	sentence.runstate = Eof;
 
 	string line;
+	string raw_blank;	// for CG output format
 	string readinglines;
 	std::getline(is,
-	  line); // TODO: Why do I need at least one getline before os<< after flushing?
+		     line); // TODO: Why do I need at least one getline before os<< after flushing?
 	do {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
 
-		if (!readinglines.empty() &&
+		if (!readinglines.empty() && // Reached end of readings
 		    (result.empty() || result[3].length() <= 1)) {
 			const auto& reading =
-			  proc_reading(t, readinglines, generate_all_readings);
+			  proc_reading(*generator, readinglines, generate_all_readings);
 			readinglines = "";
 			c.errtypes.insert(
 			  reading.errtypes.begin(), reading.errtypes.end());
@@ -729,6 +728,16 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t,
 			}
 			c.added = reading.added == NotAdded ? c.added : reading.added;
 			c.readings.push_back(reading);
+			if(flush_on == NulAndDelimiters) {
+				if (delimiters.find(c.form) != delimiters.end()) {
+					sentence.runstate = Flushing;
+				}
+				if (sentence.cohorts.size () >= hard_limit) {
+					// We only respect hard_limit when flushing on delimiters (for the Nul only case we assume the calling API ensures requests are of reasonable size)
+					std::cerr << "divvun-suggest: WARNING: Hard limit of " << hard_limit << " cohorts reached - forcing break." << std::endl;
+					sentence.runstate = Flushing;
+				}
+			}
 		}
 
 		if (!result.empty() &&
@@ -736,6 +745,8 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t,
 		      || result[6].length() != 0)) {
 			c.pos = pos;
 			if (!cohort_empty(c)) {
+				std::swap(c.raw_pre_blank, raw_blank);
+				raw_blank.clear();
 				sentence.cohorts.push_back(c);
 				if (c.id != 0) {
 					sentence.ids_cohorts[c.id] = sentence.cohorts.size() - 1;
@@ -755,22 +766,27 @@ Sentence run_sentence(std::istream& is, const hfst::HfstTransducer& t,
 			readinglines += line + "\n";
 		}
 		else if (!result.empty() && result[6].length() != 0) { // blank
+			raw_blank.append(line);
 			const auto blank = clean_blank(result[6]);
 			pos += fromUtf8(blank).size();
 			sentence.text << blank;
 		}
 		else if (!result.empty() && result[7].length() != 0) { // flush
-			sentence.runstate = flushing;
-			break;
+			sentence.runstate = Flushing;
 		}
 		else {
 			// Blank lines without the prefix don't go into text output!
 		}
+		if(sentence.runstate == Flushing) {
+			break;
+		}
 	} while (std::getline(is, line));
+
+	sentence.raw_final_blank = raw_blank;
 
 	if (!readinglines.empty()) {
 		const auto& reading =
-		  proc_reading(t, readinglines, generate_all_readings);
+		  proc_reading(*generator, readinglines, generate_all_readings);
 		readinglines = "";
 		c.errtypes.insert(reading.errtypes.begin(), reading.errtypes.end());
 		if (reading.id != 0) {
@@ -898,18 +914,17 @@ vector<Err> Suggest::run_errs(std::istream& is) {
 		auto _old = std::locale::global(std::locale(""));
 	}
 	catch (const std::runtime_error& e) {
-		std::cerr << "WARNING: Couldn't set global locale \"\" "
+		std::cerr << "divvun-suggest: WARNING: Couldn't set global locale \"\" "
 		             "(locale-specific native environment): "
 		          << e.what() << std::endl;
 	}
-	return mk_errs(run_sentence(is, *generator, msgs, generate_all_readings));
+	return mk_errs(run_sentence(is, FlushOn::Nul));
 }
 
 
 RunState Suggest::run_json(std::istream& is, std::ostream& os) {
 	json::sanity_test();
-	Sentence sentence =
-	  run_sentence(is, *generator, msgs, generate_all_readings);
+	Sentence sentence = run_sentence(is, FlushOn::Nul);
 
 	// All processing done, output:
 	os << "{" << json::key(u"errs") << "[";
@@ -928,7 +943,7 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os) {
 	os << "]"
 	   << "," << json::key(u"text") << json::str(fromUtf8(sentence.text.str()))
 	   << "}";
-	if (sentence.runstate == flushing) {
+	if (sentence.runstate == Flushing) {
 		os << '\0';
 		os.flush();
 		os.clear();
@@ -939,7 +954,7 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os) {
 RunState Suggest::run_autocorrect(std::istream& is, std::ostream& os) {
 	json::sanity_test();
 	Sentence sentence =
-	  run_sentence(is, *generator, msgs, generate_all_readings);
+	  run_sentence(is, FlushOn::Nul);
 	vector<Err> errs = mk_errs(sentence);
 
 	size_t offset = 0;
@@ -961,7 +976,7 @@ RunState Suggest::run_autocorrect(std::istream& is, std::ostream& os) {
 	}
 	os << toUtf8(text.substr(offset));
 
-	if (sentence.runstate == flushing) {
+	if (sentence.runstate == Flushing) {
 		os << '\0';
 		os.flush();
 		os.clear();
@@ -998,42 +1013,42 @@ void print_cg_reading(const Casing& inputCasing, const string& readinglines,
 	}
 }
 
-void run_cg(std::istream& is, std::ostream& os, const hfst::HfstTransducer& t,
-  bool generate_all_readings) {
-	// Simple debug function; only casing+subreading state kept between lines
-	string readinglines;
-	Casing inputCasing;
-	for (string line; std::getline(is, line);) {
-		std::match_results<const char*> result;
-		std::regex_match(line.c_str(), result, CG_LINE);
+RunState Suggest::run_cg(std::istream& is, std::ostream& os) {
+	Sentence sentence = run_sentence(is, FlushOn::NulAndDelimiters);
+	vector<Err> errs = mk_errs(sentence);
+	for (const Cohort& cohort : sentence.cohorts) {
+		if (!cohort.raw_pre_blank.empty()) {
+			os << cohort.raw_pre_blank << std::endl;
+		}
+		os << "\"<" << toUtf8(cohort.form) << ">\"" << std::endl;
+		for (const Reading& reading : cohort.readings) {
+			os << reading.line; // includes final newline
 
-		if (!readinglines.empty() &&
-		    (result.empty() || result[3].length() <= 1)) {
-			print_cg_reading(
-			  inputCasing, readinglines, os, t, generate_all_readings);
-			readinglines = "";
-		}
+			// TODO:
+			if (reading.suggest) {
+				const auto& ana = reading.ana;
+				const auto& formv = reading.sforms;
+				if (formv.empty()) {
+					os << ana << "\t"
+					<< "?" << std::endl;
+				}
+				else {
+					// TODO: get cased forms from errs
+					os << ana << "\t" << join(formv, ",") << std::endl;
+				}
+			}
+			else {
+				for (const auto& e : reading.errtypes) {
+					os << toUtf8(e) << std::endl;
+				}
+			}
 
-		if (!result.empty() && result[3].length() != 0) {
-			readinglines += line + "\n";
-		}
-		else if (!result.empty() && result[2].length() != 0) {
-			inputCasing = getCasing(result[2]);
-			os << line << std::endl;
-		}
-		else if (!result.empty() && result[7].length() != 0) {
-			// TODO: Can we ever get a flush in the middle of readings?
-			os.flush();
-			os << line << std::endl;
-		}
-		else {
-			os << line << std::endl;
 		}
 	}
-	if (!readinglines.empty()) {
-		print_cg_reading(
-		  inputCasing, readinglines, os, t, generate_all_readings);
+	if (!sentence.raw_final_blank.empty()) {
+		os << sentence.raw_final_blank << std::endl;
 	}
+	return sentence.runstate;
 }
 
 void Suggest::run(std::istream& is, std::ostream& os, RunMode mode) {
@@ -1041,21 +1056,22 @@ void Suggest::run(std::istream& is, std::ostream& os, RunMode mode) {
 		auto _old = std::locale::global(std::locale(""));
 	}
 	catch (const std::runtime_error& e) {
-		std::cerr << "WARNING: Couldn't set global locale \"\" "
+		std::cerr << "divvun-suggest: WARNING: Couldn't set global locale \"\" "
 		             "(locale-specific native environment): "
 		          << e.what() << std::endl;
 	}
 	switch (mode) {
 	case RunJson:
-		while (run_json(is, os) == flushing)
+		while (run_json(is, os) == Flushing)
 			;
 		break;
 	case RunAutoCorrect:
-		while (run_autocorrect(is, os) == flushing)
+		while (run_autocorrect(is, os) == Flushing)
 			;
 		break;
 	case RunCG:
-		run_cg(is, os, *generator, generate_all_readings); // ignores ignores
+		while (run_cg(is, os) == Flushing)
+			;
 		break;
 	}
 }
@@ -1079,6 +1095,7 @@ Suggest::Suggest(const hfst::HfstTransducer* generator_, divvun::MsgMap msgs_,
   , locale(locale_)
   , sortedmsglangs(sortMessageLangs(msgs, locale))
   , generator(generator_)
+  , delimiters(defaultDelimiters())
   , generate_all_readings(genall) {}
 Suggest::Suggest(const string& gen_path, const string& msg_path,
   const string& locale_, bool verbose, bool genall)
@@ -1086,10 +1103,12 @@ Suggest::Suggest(const string& gen_path, const string& msg_path,
   , locale(locale_)
   , sortedmsglangs(sortMessageLangs(msgs, locale))
   , generator(readTransducer(gen_path))
+  , delimiters(defaultDelimiters())
   , generate_all_readings(genall) {}
 Suggest::Suggest(const string& gen_path, const string& locale_, bool verbose)
   : locale(locale_)
-  , generator(readTransducer(gen_path)) {}
+  , generator(readTransducer(gen_path))
+  , delimiters(defaultDelimiters()) {}
 
 void Suggest::setIgnores(const std::set<ErrId>& ignores_) {
 	ignores = ignores_;
