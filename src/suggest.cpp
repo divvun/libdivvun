@@ -807,6 +807,8 @@ Sentence Suggest::run_sentence(std::istream& is, FlushOn flush_on) {
 		pos += c.form.size();
 		sentence.text << toUtf8(c.form);
 	}
+
+	sentence.errs = mk_errs(sentence);
 	return sentence;
 }
 
@@ -850,15 +852,15 @@ void expand_errs(vector<Err>& errs, const u16string& text) {
 	// those that have a lower end than this.beg (or the exact same beg)
 	std::sort(errs.begin(), errs.end(), compareByBeg);
 	for (size_t i = 1; i < n; ++i) {
-		auto& e = errs[i]; // mut
+		Err& e = errs[i]; // mut
 		for (size_t j = 0; j < i; ++j) {
-			const auto& f = errs[j];
+			const Err& f = errs[j];
 			if (f.beg < e.beg && f.end >= e.beg) {
-				const auto len = e.beg - f.beg;
-				const auto& add = text.substr(f.beg, len);
+				const size_t len = e.beg - f.beg;
+				const u16string& add = text.substr(f.beg, len);
 				e.form = add + e.form;
 				e.beg = e.beg - len;
-				for (auto& r : e.rep) {
+				for (u16string& r : e.rep) {
 					r = add + r;
 				}
 			}
@@ -867,15 +869,15 @@ void expand_errs(vector<Err>& errs, const u16string& text) {
 	// Then expand "forwards" towards errors with higher end's:
 	std::sort(errs.begin(), errs.end(), compareByEnd);
 	for (size_t i = n - 1; i > 0; --i) {
-		auto& e = errs[i - 1]; // mut
+		Err& e = errs[i - 1]; // mut
 		for (size_t j = n; j > i; --j) {
 			const auto& f = errs[j - 1];
 			if (f.end > e.end && f.beg <= e.end) {
-				const auto len = f.end - e.end;
-				const auto& add = text.substr(e.end, len);
+				const size_t len = f.end - e.end;
+				const u16string& add = text.substr(e.end, len);
 				e.form = e.form + add;
 				e.end = e.end + len;
-				for (auto& r : e.rep) {
+				for (u16string& r : e.rep) {
 					r = r + add;
 				}
 			}
@@ -883,21 +885,20 @@ void expand_errs(vector<Err>& errs, const u16string& text) {
 	}
 }
 
-vector<Err> Suggest::mk_errs(const Sentence& sentence) {
+vector<Err> Suggest::mk_errs(Sentence& sentence) {
 	const auto& text = fromUtf8(sentence.text.str());
 	vector<Err> errs;
-	for (const auto& c : sentence.cohorts) {
-		std::map<ErrId, vector<size_t>> c_errs;
+	for (Cohort& c : sentence.cohorts) {
 		for (size_t i = 0; i < c.readings.size(); ++i) {
-			const auto& r = c.readings[i];
+			const Reading& r = c.readings[i];
 			if (r.link) {
 				continue;
 			}
-			for (const auto& e : r.errtypes) {
-				c_errs[e].push_back(i);
+			for (const u16string& errtype : r.errtypes) {
+				c.errs[errtype].push_back(i);
 			}
 		}
-		for (const auto& e : c_errs) {
+		for (const auto& e : c.errs) {
 			if (e.first.empty()) {
 				continue;
 			}
@@ -918,7 +919,7 @@ vector<Err> Suggest::run_errs(std::istream& is) {
 		             "(locale-specific native environment): "
 		          << e.what() << std::endl;
 	}
-	return mk_errs(run_sentence(is, FlushOn::Nul));
+	return run_sentence(is, FlushOn::Nul).errs;
 }
 
 
@@ -929,8 +930,7 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os) {
 	// All processing done, output:
 	os << "{" << json::key(u"errs") << "[";
 	bool wantsep = false;
-	vector<Err> errs = mk_errs(sentence);
-	for (const auto& e : errs) {
+	for (const auto& e : sentence.errs) {
 		if (wantsep) {
 			os << ",";
 		}
@@ -953,13 +953,11 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os) {
 
 RunState Suggest::run_autocorrect(std::istream& is, std::ostream& os) {
 	json::sanity_test();
-	Sentence sentence =
-	  run_sentence(is, FlushOn::Nul);
-	vector<Err> errs = mk_errs(sentence);
+	Sentence sentence = run_sentence(is, FlushOn::Nul);
 
 	size_t offset = 0;
 	u16string text = fromUtf8(sentence.text.str());
-	for (const auto& e : errs) {
+	for (const auto& e : sentence.errs) {
 		if (e.beg > offset) {
 			os << toUtf8(text.substr(offset, e.beg - offset));
 		}
@@ -984,38 +982,8 @@ RunState Suggest::run_autocorrect(std::istream& is, std::ostream& os) {
 	return sentence.runstate;
 }
 
-
-void print_cg_reading(const Casing& inputCasing, const string& readinglines,
-  std::ostream& os, const hfst::HfstTransducer& t,
-  bool generate_all_readings) {
-	os << readinglines;
-	const auto& reading = proc_reading(t, readinglines, generate_all_readings);
-	if (reading.suggest) {
-		const auto& ana = reading.ana;
-		const auto& formv = reading.sforms;
-		if (formv.empty()) {
-			os << ana << "\t"
-			   << "?" << std::endl;
-		}
-		else {
-			StringVector casedforms;
-			for (const auto& s : formv) {
-				casedforms.push_back(
-				  withCasing(reading.fixedcase, inputCasing, s));
-			}
-			os << ana << "\t" << join(casedforms, ",") << std::endl;
-		}
-	}
-	else {
-		for (const auto& e : reading.errtypes) {
-			os << toUtf8(e) << std::endl;
-		}
-	}
-}
-
 RunState Suggest::run_cg(std::istream& is, std::ostream& os) {
 	Sentence sentence = run_sentence(is, FlushOn::NulAndDelimiters);
-	vector<Err> errs = mk_errs(sentence);
 	for (const Cohort& cohort : sentence.cohorts) {
 		if (!cohort.raw_pre_blank.empty()) {
 			os << cohort.raw_pre_blank << std::endl;

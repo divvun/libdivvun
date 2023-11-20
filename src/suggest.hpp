@@ -156,18 +156,15 @@ inline std::string withCasing(
 struct Reading {
 	bool suggest = false;
 	string ana; // for generating suggestions from this reading
-	std::set<u16string>
-	  errtypes; // the error tag(s) (without leading ampersand)
+	std::set<u16string> errtypes; // the error tag(s) (without leading ampersand)
 	StringVector sforms;
 	relations rels; // rels[relname] = target.id
 	rel_id id = 0;  // id is 0 if unset, otherwise the relation id of this word
 	string wf;	// tag of type "wordform"S for use with &SUGGESTWF
 	bool suggestwf = false;
-	bool link =
-	  false; // cohorts that are not the "core" of the underline never become Err's; message template offsets refer to the cohort of the Err
+	bool link = false; // cohorts that are not the "core" of the underline never become Err's; message template offsets refer to the cohort of the Err
 	Added added = NotAdded;
-	bool fixedcase =
-	  false; // don't change casing on suggestions if we have this tag
+	bool fixedcase = false; // don't change casing on suggestions if we have this tag
 	string line;	// The (unchanged) input lines which created this Reading
 };
 
@@ -179,6 +176,7 @@ struct Cohort {
 	std::set<u16string> errtypes;
 	Added added;
 	string raw_pre_blank; // blank before cohort, in CG stream format (initial colon, brackets, escaped newlines)
+	std::map<ErrId, vector<size_t>> errs;
 };
 
 using CohortMap = std::unordered_map<rel_id, size_t>;
@@ -191,6 +189,7 @@ struct Sentence {
 	std::ostringstream text;
 	RunState runstate;
 	string raw_final_blank; // blank after last cohort, in CG stream format (initial colon, brackets, escaped newlines)
+	vector<Err> errs;
 };
 
 enum FlushOn { Nul, NulAndDelimiters };
@@ -251,7 +250,8 @@ private:
 	variant<Nothing, Err> cohort_errs(const ErrId& ErrId, const Cohort& c,
 	  const Sentence& sentence, const u16string& text);
 
-	vector<Err> mk_errs(const Sentence& sentence);
+	// This alters the Cohort's of the Sentence by filling the `errs` vector.
+	vector<Err> mk_errs(Sentence& sentence);
 };
 
 }
