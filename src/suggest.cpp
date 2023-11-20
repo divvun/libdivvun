@@ -984,15 +984,22 @@ RunState Suggest::run_autocorrect(std::istream& is, std::ostream& os) {
 
 RunState Suggest::run_cg(std::istream& is, std::ostream& os) {
 	Sentence sentence = run_sentence(is, FlushOn::NulAndDelimiters);
+	size_t prev_err_start = 0;
+	string colour_cur = "\033[35m";
+	string colour_alt = "\033[36m";
 	for (const Cohort& cohort : sentence.cohorts) {
 		if (!cohort.raw_pre_blank.empty()) {
 			os << cohort.raw_pre_blank << std::endl;
 		}
 		os << "\"<" << toUtf8(cohort.form) << ">\"";
+		if(cohort.errs.size() > 0) { os << "\t"; }
 		for(const Err& err: cohort.errs) {
+			if(prev_err_start != err.beg) {
+				std::swap(colour_cur, colour_alt);
+			}
 			os << "\t\033[0;31m\033[4m" << toUtf8(err.form) << "\033[0m";
 			for(const auto& rep : err.rep) {
-				os << "\t\033[0;32m\033[3m" << toUtf8(rep) << "\033[0m";
+				os << "\t🖝  \033[0;32m\033[3m" << toUtf8(rep) << "\033[0m";
 			}
 		}
 		os << std::endl;
@@ -1003,8 +1010,7 @@ RunState Suggest::run_cg(std::istream& is, std::ostream& os) {
 				const auto& ana = reading.ana;
 				const auto& formv = reading.sforms;
 				if (formv.empty()) {
-					os << ana << "\t"
-					<< "?" << std::endl;
+					os << ana << "\t" << "\033[1m?\033[0m" << std::endl;
 				}
 				else {
 					// TODO: get cased forms from errs
