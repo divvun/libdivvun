@@ -808,7 +808,7 @@ Sentence Suggest::run_sentence(std::istream& is, FlushOn flush_on) {
 		sentence.text << toUtf8(c.form);
 	}
 
-	sentence.errs = mk_errs(sentence);
+	mk_errs(sentence);
 	return sentence;
 }
 
@@ -885,29 +885,29 @@ void expand_errs(vector<Err>& errs, const u16string& text) {
 	}
 }
 
-vector<Err> Suggest::mk_errs(Sentence& sentence) {
-	const auto& text = fromUtf8(sentence.text.str());
-	vector<Err> errs;
+void Suggest::mk_errs(Sentence& sentence) {
+	const u16string& text = fromUtf8(sentence.text.str());
 	for (Cohort& c : sentence.cohorts) {
+		std::set<ErrId> c_errtypes;
 		for (size_t i = 0; i < c.readings.size(); ++i) {
 			const Reading& r = c.readings[i];
 			if (r.link) {
 				continue;
 			}
-			for (const u16string& errtype : r.errtypes) {
-				c.errs[errtype].push_back(i);
-			}
+			c_errtypes.insert(r.errtypes.begin(), r.errtypes.end());
 		}
-		for (const auto& e : c.errs) {
-			if (e.first.empty()) {
+		for (const auto& errtype : c_errtypes) {
+			if (errtype.empty()) {
 				continue;
 			}
-			cohort_errs(e.first, c, sentence, text)
-			  .match([](Nothing) {}, [&](Err e) { errs.push_back(e); });
+			cohort_errs(errtype, c, sentence, text)
+			  .match([](Nothing) {}, [&](Err err) {
+				c.errs.push_back(err);
+				sentence.errs.push_back(err);
+			});
 		}
 	}
-	expand_errs(errs, text);
-	return errs;
+	expand_errs(sentence.errs, text);
 }
 
 vector<Err> Suggest::run_errs(std::istream& is) {
@@ -988,10 +988,16 @@ RunState Suggest::run_cg(std::istream& is, std::ostream& os) {
 		if (!cohort.raw_pre_blank.empty()) {
 			os << cohort.raw_pre_blank << std::endl;
 		}
-		os << "\"<" << toUtf8(cohort.form) << ">\"" << std::endl;
+		os << "\"<" << toUtf8(cohort.form) << ">\"";
+		for(const Err& err: cohort.errs) {
+			os << "\t\033[0;31m\033[4m" << toUtf8(err.form) << "\033[0m";
+			for(const auto& rep : err.rep) {
+				os << "\t\033[0;32m\033[3m" << toUtf8(rep) << "\033[0m";
+			}
+		}
+		os << std::endl;
 		for (const Reading& reading : cohort.readings) {
 			os << reading.line; // includes final newline
-
 			// TODO:
 			if (reading.suggest) {
 				const auto& ana = reading.ana;
@@ -1010,7 +1016,6 @@ RunState Suggest::run_cg(std::istream& is, std::ostream& os) {
 					os << toUtf8(e) << std::endl;
 				}
 			}
-
 		}
 	}
 	if (!sentence.raw_final_blank.empty()) {
