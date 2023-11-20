@@ -1,7 +1,0 @@
-"<ta>"
-	"ta" V Inf <W:0> @V &syn-phrasal-verb ID:1
-	"spille" V Inf <W:0> @V &syn-phrasal-verb &SUGGEST ID:1 R:RIGHT:2
-: 
-"<opp>"
-	"opp" Adv <W:0> @Adv &syn-phrasal-verb ID:2 &COERROR
-	"inn" Adv <W:0> @Adv &syn-phrasal-verb &SUGGEST ID:2 &COERROR

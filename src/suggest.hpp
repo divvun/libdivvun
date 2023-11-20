@@ -176,7 +176,7 @@ struct Cohort {
 	std::set<u16string> errtypes;
 	Added added;
 	string raw_pre_blank; // blank before cohort, in CG stream format (initial colon, brackets, escaped newlines)
-	std::map<ErrId, vector<size_t>> errs;
+	vector<Err> errs;
 };
 
 using CohortMap = std::unordered_map<rel_id, size_t>;
@@ -251,7 +251,7 @@ private:
 	  const Sentence& sentence, const u16string& text);
 
 	// This alters the Cohort's of the Sentence by filling the `errs` vector.
-	vector<Err> mk_errs(Sentence& sentence);
+	void mk_errs(Sentence& sentence);
 };
 
 }
