@@ -705,7 +705,7 @@ without the target of the =DELETE1= relation.
 
 #+begin_src cg
   ADD (&one-word-too-many) KeepThisWord;
-  ADDRELATION (DELETE1) KeepThisWord TO (-1 DeleteThisWord);
+  ADDRELATION (DELETE1) DeleteThisWord TO (-1 KeepThisWord);
 #+end_src
 
 The cohort matching =KeepThisWord= is now the central one of the
