@@ -27,6 +27,13 @@ AS_CASE([$HFST_CFLAGS],
 PKG_CHECK_MODULES([CG3], [cg3 >= 1.1.2.12361])
 CXXFLAGS="$CXXFLAGS $CG3_CFLAGS"
 
+
+PKG_CHECK_MODULES([PUGIXML], [pugixml >= 1.14])
+CXXFLAGS="$CXXFLAGS $PUGIXML_CFLAGS"
+
+PKG_CHECK_MODULES([ICUUC], [icu-uc >= 73.0])
+CXXFLAGS="$CXXFLAGS $ICUUC_CFLAGS"
+
 AX_CHECK_COMPILE_FLAG([-Wall], [], AC_MSG_ERROR([compiler doesn't accept -Wall - check config.log]))
 
 AX_CHECK_COMPILE_FLAG([-fstack-protector-strong], [CXXFLAGS="$CXXFLAGS -fstack-protector-strong"])
@@ -50,20 +57,20 @@ AX_CHECK_COMPILE_FLAG([-std=c++17], [CXXFLAGS="$CXXFLAGS -std=c++17"], [
 dnl ==================
 dnl Checks for pugixml
 dnl ==================
-AC_ARG_ENABLE([xml],
-              AS_HELP_STRING([--disable-xml],
-                             [Disable errors.xml parsing (no longer requiring pugixml library) @<:@default=check@:>@]),
-              [enable_xml=$enableval],
-              [enable_xml=check])
-AS_IF([test "x$enable_xml" != xno],
-      [AC_CHECK_HEADERS([pugixml.hpp])
-       AS_IF([test x"$ac_cv_header_pugixml_hpp" = "xyes"],
-             [AC_CHECK_LIB([pugixml], [main])], dnl TODO: fail if this test fails (no libpugixml.so)
-             [AC_MSG_ERROR([cannot find pugixml library (use --disable-xml if you don't want to parse error.xml messages and don't need --enable-checker)])])
-       PUGIXML_LIBS="-lpugixml"
-       AC_SUBST(PUGIXML_LIBS)
-       enable_xml=yes])
-AM_CONDITIONAL([HAVE_LIBPUGIXML], [test x"$PUGIXML_LIBS" != x])
+dnl AC_ARG_ENABLE([xml],
+dnl               AS_HELP_STRING([--disable-xml],
+dnl                              [Disable errors.xml parsing (no longer requiring pugixml library) @<:@default=check@:>@]),
+dnl               [enable_xml=$enableval],
+dnl               [enable_xml=check])
+dnl AS_IF([test "x$enable_xml" != xno],
+dnl       [AC_CHECK_HEADERS([pugixml.hpp])
+dnl        AS_IF([test x"$ac_cv_header_pugixml_hpp" = "xyes"],
+dnl              [AC_CHECK_LIB([pugixml], [main])], dnl TODO: fail if this test fails (no libpugixml.so)
+dnl              [AC_MSG_ERROR([cannot find pugixml library (use --disable-xml if you don't want to parse error.xml messages and don't need --enable-checker)])])
+dnl        PUGIXML_LIBS="-lpugixml"
+dnl        AC_SUBST(PUGIXML_LIBS)
+dnl        enable_xml=yes])
+AM_CONDITIONAL([HAVE_LIBPUGIXML], [test x"" == x])
 
 
 dnl ==================
