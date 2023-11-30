@@ -665,7 +665,14 @@ in the right order for generation to work.
 ** More complex grammarchecker.cg3 rules (spanning over several words)
 
 The error is considered to have a central part and one or more less central parts.
-The less central parts need the =&COERROR= tag if all parts are to be underlined as one error.
+The less central parts need the =&COERROR= tag (without numbering) if all parts are to be underlined as one error. The words can be adjacent. If there are words in between that are not part of the error, they are still underlined.
+
+In the first line of the following example only "soaitá" and "boađán" are part of the error and are underlined. However, if "mun" ("I") is inserted in between then it is also underlined. 
+
+#+begin_src xml
+Mun soaitá boađán. `Maybe I come.'
+Soaitá mun boađán. `Maybe I come.'
+#+end_src
 
 You can refer to the word form of the "central" cohort of the error
 using =$1= in errors.xml, e.g.
@@ -731,7 +738,7 @@ ADDRELATION (DELETE1) (V &syn-delete-adv-phrasal-verb) TO (*0 (Adv &syn-delete-a
 
 ** Alternative suggestions for complex errors altering different parts of the error
 
-However, some times you have several possible suggestions on the same
+However, sometimes you have several possible suggestions on the same
 word, which might partially overlap. For example, you might also have
 
 #+begin_src cg
@@ -741,6 +748,19 @@ word, which might partially overlap. For example, you might also have
 
 where you want to keep the suggestions for =&one-word-too-many=
 separate from the suggestions for =&other-error=.
+Each suggestion for an error with several parts requires that all parts receive the same error tag and the less central parts receive the &COERROR tag. In the following case there are two possible corrections.
+
+#+begin_src cg
+  Soaitá boađán.
+
+  Soaittán boahtit.
+  Kánske boađán.
+#+end_src
+
+The alternative corrections have different central parts of the error.
+In the first case both parts are changed. The first part ("soaitá" 3.Sg.) is changed to "soaittán" (1.Sg.) based on the person and number of the second word ("boađán" 1.Sg.). Subsequently "boađán" (1.Sg.) is changed to "boahtit" (infinitive).
+Alternatively, only the first part is changed and the second part remains unchanged. In this case we can change the "soaitá" (3.Sg.) to the adverb "kánske".
+This requires that the error receives two error tags for the parts that are two be changed, i.e. =&msyn-kánske= to "soaitá" and =&msyn-fin_fin-fin_inf to both "soaitá" and "boađán"=.
 
 #+begin_src cg
 Dåaktere veanhta dïhte aktem aajla-hirremem åtneme, dan åvteste tjarke svæjmadi jïh 
