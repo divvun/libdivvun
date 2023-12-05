@@ -73,19 +73,25 @@ void NormaliseCmd::run(stringstream& input, stringstream& output) const {
 }
 
 
-CGCmd::CGCmd(const char* buff, const size_t size, bool verbose)
+CGCmd::CGCmd(const char* buff, const size_t size, bool verbose, bool trace)
   : grammar(cg3_grammar_load_buffer(buff, size))
   , applicator(cg3_applicator_create(grammar.get())) {
 	if (!grammar) {
 		throw std::runtime_error("libdivvun: ERROR: Couldn't load CG grammar");
 	}
+	if(trace) {
+	  cg3_applicator_setflags(applicator.get(), CG3F_TRACE);
+	}
 }
-CGCmd::CGCmd(const string& path, bool verbose)
+CGCmd::CGCmd(const string& path, bool verbose, bool trace)
   : grammar(cg3_grammar_load(path.c_str()))
   , applicator(cg3_applicator_create(grammar.get())) {
 	if (!grammar) {
 		throw std::runtime_error(
 		  ("libdivvun: ERROR: Couldn't load CG grammar " + path).c_str());
+	}
+	if(trace) {
+	  cg3_applicator_setflags(applicator.get(), CG3F_TRACE);
 	}
 }
 void CGCmd::run(stringstream& input, stringstream& output) const {
@@ -224,9 +230,9 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec,
 			cmds.emplace_back(s);
 		}
 		else if (name == u"cg") {
-			ArEntryHandler<CGCmd*> f = [verbose](const string& ar_path,
+			ArEntryHandler<CGCmd*> f = [verbose, trace](const string& ar_path,
 			                             const void* buff, const size_t size) {
-				return new CGCmd((char*)buff, size, verbose);
+			  return new CGCmd((char*)buff, size, verbose, trace);
 			};
 			CGCmd* s =
 			  readArchiveExtract(ar_spec->ar_path, args["grammar"], f);
@@ -367,7 +373,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec,
 			  new TokenizeCmd(args["tokenizer"], weight_classes, verbose));
 		}
 		else if (name == u"cg") {
-			cmds.emplace_back(new CGCmd(args["grammar"], verbose));
+			cmds.emplace_back(new CGCmd(args["grammar"], verbose, trace));
 		}
 		else if (name == u"cgspell") {
 #ifdef HAVE_CGSPELL

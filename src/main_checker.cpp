@@ -32,7 +32,9 @@ using divvun::variant;
 
 
 variant<int, Pipeline> getPipelineXml(const std::string& path,
-  const variant<Nothing, std::u16string>& mpipename, bool verbose) {
+				      const variant<Nothing, std::u16string>& mpipename,
+				      bool verbose,
+				      bool trace) {
 	const std::unique_ptr<divvun::PipeSpec> spec(new divvun::PipeSpec(path));
 	std::u16string pipename =
 	  mpipename.match([&](Nothing) { return spec->default_pipe; },
@@ -42,11 +44,13 @@ variant<int, Pipeline> getPipelineXml(const std::string& path,
 		          << toUtf8(pipename) << " in " << path << std::endl;
 		return EXIT_FAILURE;
 	}
-	return Pipeline(spec, pipename, verbose);
+	return Pipeline(spec, pipename, verbose, trace);
 }
 
 variant<int, Pipeline> getPipelineAr(const std::string& path,
-  const variant<Nothing, std::u16string>& mpipename, bool verbose) {
+				     const variant<Nothing, std::u16string>& mpipename,
+				     bool verbose,
+				     bool trace) {
 	const auto& ar_spec = divvun::readArPipeSpec(path);
 	std::u16string pipename =
 	  mpipename.match([&](Nothing) { return ar_spec->spec->default_pipe; },
@@ -56,7 +60,7 @@ variant<int, Pipeline> getPipelineAr(const std::string& path,
 		          << toUtf8(pipename) << " in " << path << std::endl;
 		return EXIT_FAILURE;
 	}
-	return Pipeline(ar_spec, pipename, verbose);
+	return Pipeline(ar_spec, pipename, verbose, trace);
 }
 
 int printNamesXml(const std::string& path, bool verbose) {
@@ -217,7 +221,7 @@ int main(int argc, char** argv) {
 			if (options.count("variant")) {
 				pipename = fromUtf8(options["variant"].as<std::string>());
 			}
-			return getPipelineXml(specfile, pipename, verbose)
+			return getPipelineXml(specfile, pipename, verbose, trace)
 			  .match([](int r) { return r; },
 			    [&](Pipeline& p) {
 				    p.setIgnores(ignores);
@@ -246,7 +250,7 @@ int main(int argc, char** argv) {
 			if (options.count("variant")) {
 				pipename = fromUtf8(options["variant"].as<std::string>());
 			}
-			return getPipelineAr(archive, pipename, verbose)
+			return getPipelineAr(archive, pipename, verbose, trace)
 			  .match([](int r) { return r; },
 			    [&](Pipeline& p) {
 				    p.setIgnores(ignores);
@@ -282,7 +286,7 @@ int main(int argc, char** argv) {
 			if (options.count("variant")) {
 				pipename = fromUtf8(options["variant"].as<std::string>());
 			}
-			return getPipelineAr(archive, pipename, verbose)
+			return getPipelineAr(archive, pipename, verbose, trace)
 			  .match([](int r) { return r; },
 			    [&](Pipeline& p) {
 				    p.setIgnores(ignores);

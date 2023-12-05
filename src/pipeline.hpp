@@ -169,8 +169,8 @@ private:
 class CGCmd : public PipeCmd {
 public:
 	/* Assumes cg3_init has been called already */
-	CGCmd(const char* buff, const size_t size, bool verbose);
-	CGCmd(const string& path, bool verbose);
+	CGCmd(const char* buff, const size_t size, bool verbose, bool trace);
+	CGCmd(const string& path, bool verbose, bool trace);
 	void run(stringstream& input, stringstream& output) const override;
 	~CGCmd() override = default;
 
@@ -332,11 +332,11 @@ private:
 	SuggestCmd* suggestcmd;
 	// "Real" constructors here since we can't init const members in constructor bodies:
 	static Pipeline mkPipeline(const unique_ptr<PipeSpec>& spec,
-	  const u16string& pipename, bool verbose, bool trace = false);
+	  const u16string& pipename, bool verbose, bool trace);
 	static Pipeline mkPipeline(const unique_ptr<ArPipeSpec>& spec,
-	  const u16string& pipename, bool verbose, bool trace = false);
+	  const u16string& pipename, bool verbose, bool trace);
 	Pipeline(LocalisedPrefs prefs, vector<unique_ptr<PipeCmd>> cmds,
-	  SuggestCmd* suggestcmd, bool verbose, bool trace = false);
+	  SuggestCmd* suggestcmd, bool verbose, bool trace);
 };
 
 } // namespace divvun
