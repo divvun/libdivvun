@@ -427,7 +427,6 @@ u16string mk_repform(const u16string& in_rep, const size_t beg, std::map<pair<si
 	for (auto it = add.rbegin(); it != add.rend(); ++it) {
 		size_t splice_beg = it->first.first - beg;
 		size_t splice_end = it->first.second - beg;
-		if (splice_beg > rep.size()) {
 		if (splice_beg > rep.size() || splice_end > rep.size()) {
 			std::cerr << "divvun-suggest: WARNING: Internal error (trying to "
 				     "splice into pos " << std::max(splice_beg, splice_end) << " of rep)" << std::endl;
