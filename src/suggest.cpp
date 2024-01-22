@@ -999,7 +999,7 @@ RunState Suggest::run_cg(std::istream& is, std::ostream& os) {
 			}
 			os << "\t\033[0;31m\033[4m" << toUtf8(err.form) << "\033[0m";
 			for(const auto& rep : err.rep) {
-				os << "\t🖝  \033[0;32m\033[3m" << toUtf8(rep) << "\033[0m";
+				os << "\t→  \033[0;32m\033[3m" << toUtf8(rep) << "\033[0m";
 			}
 		}
 		os << std::endl;
