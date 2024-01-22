@@ -1136,7 +1136,8 @@ don't conflict with the below special tags.
 ### Relations
 
 -   `LEFT` and `RIGHT` are used to extend the underline to added
-    cohorts; see [Adding words](#orgb76a5c9):
+    cohorts; see [Adding words](#orgb76a5c9) and
+    [Adding literal word forms, altering existing wordforms](#orge23663a).
     `LEFT` if the added word is to the left of the error tag, `RIGHT` if the added word is to the right of the error tag.
 -   `DELETE1`, `DELETE2` etc. (but not just `DELETE` without a number) are used to say that a word in the
     context of this error should be deleted in the suggestion. See [Deleting words](#org4d2c8ef).
