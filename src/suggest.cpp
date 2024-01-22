@@ -340,7 +340,7 @@ bool cohort_empty(const Cohort& c) {
 	return c.form.empty();
 }
 
-const Cohort DEFAULT_COHORT = { {}, 0, 0, {}, {}, NotAdded };
+const Cohort DEFAULT_COHORT = { {}, 0, 0, {}, {}, NotAdded, {} };
 
 // https://stackoverflow.com/a/1464684/69663
 template<class Iterator>
@@ -717,7 +717,7 @@ Sentence Suggest::run_sentence(std::istream& is, FlushOn flush_on) {
 		std::regex_match(line.c_str(), result, CG_LINE);
 
 		if (!readinglines.empty() && // Reached end of readings
-		    (result.empty() || result[3].length() <= 1)) {
+		    (result.empty() || (result[3].length() <= 1 && result[8].length() <= 1))) {
 			const auto& reading =
 			  proc_reading(*generator, readinglines, generate_all_readings);
 			readinglines = "";
@@ -773,6 +773,9 @@ Sentence Suggest::run_sentence(std::istream& is, FlushOn flush_on) {
 		}
 		else if (!result.empty() && result[7].length() != 0) { // flush
 			sentence.runstate = Flushing;
+		}
+		else if (!result.empty() && result[8].length() != 0) { // traced removed reading
+			c.trace_removed_readings += line + "\n";
 		}
 		else {
 			// Blank lines without the prefix don't go into text output!
@@ -1023,6 +1026,7 @@ RunState Suggest::run_cg(std::istream& is, std::ostream& os) {
 				}
 			}
 		}
+		os << cohort.trace_removed_readings;
 	}
 	if (!sentence.raw_final_blank.empty()) {
 		os << sentence.raw_final_blank << std::endl;

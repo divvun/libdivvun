@@ -177,6 +177,7 @@ struct Cohort {
 	Added added;
 	string raw_pre_blank; // blank before cohort, in CG stream format (initial colon, brackets, escaped newlines)
 	vector<Err> errs;
+	string trace_removed_readings; // lines prefixed with `;` by `vislcg3 -t`
 };
 
 using CohortMap = std::unordered_map<rel_id, size_t>;
