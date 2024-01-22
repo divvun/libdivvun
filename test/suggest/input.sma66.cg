@@ -1,0 +1,12 @@
+"<beapmoeh>"
+	"beapmoe" N Sem/Food Pl Nom <W:0.0> <sma> &LINK &space-before-punct-mark ID:1
+: 
+"<.>"
+	"." CLB <W:0.0> <SpaceBeforePunctMark> <NoSpaceAfterPunctMark> <NoSpaceAfterPunctMark> <SpaceBeforePunctMark> &space-before-punct-mark &no-space-after-punct-mark ID:2 R:RIGHT:4 R:LEFT:1
+	"." CLB <W:0.0> <SpaceBeforePunctMark> <NoSpaceAfterPunctMark> <NoSpaceAfterPunctMark> <SpaceBeforePunctMark> "<. (>" &no-space-after-punct-mark &SUGGESTWF ID:2 R:RIGHT:4 R:LEFT:1
+	"." CLB <W:0.0> <SpaceBeforePunctMark> <NoSpaceAfterPunctMark> <NoSpaceAfterPunctMark> <SpaceBeforePunctMark> "<beapmoeh.>" &space-before-punct-mark &SUGGESTWF ID:2 R:RIGHT:4 R:LEFT:1
+
+"<(>"
+	"(" PUNCT LEFT <W:0.0> <NoSpaceBeforeParenBeg> <sma> &LINK &no-space-after-punct-mark ID:4
+:\n
+

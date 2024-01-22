@@ -1,0 +1,3 @@
+divvun-suggest: WARNING: No <description> for "no-space-after-punct-mark" in xml:lang 'se', trying 'en'
+divvun-suggest: WARNING: No <description> for "no-space-after-punct-mark" in any xml:lang
+divvun-suggest: WARNING: Internal error (trying to splice into pos 8 of rep)
