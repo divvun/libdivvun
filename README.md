@@ -1136,9 +1136,9 @@ don't conflict with the below special tags.
 ### Relations
 
 -   `LEFT` and `RIGHT` are used to extend the underline to added
-    cohorts; see [Adding words](#orgb76a5c9) and
-    .
--   `DELETE1` (and `DELETE2` etc.) are used to say that a word in the
+    cohorts; see [Adding words](#orgb76a5c9):
+    `LEFT` if the added word is to the left of the error tag, `RIGHT` if the added word is to the right of the error tag.
+-   `DELETE1`, `DELETE2` etc. (but not just `DELETE` without a number) are used to say that a word in the
     context of this error should be deleted in the suggestion. See [Deleting words](#org4d2c8ef).
 -   `$2` (and `$3` etc.) are used to make wordforms in the context
     available to human-readable error messages in `errors.xml`. Note
