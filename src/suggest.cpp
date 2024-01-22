@@ -77,7 +77,7 @@ const std::basic_regex<char> CG_TAG_TYPE(
 const std::basic_regex<char> MSG_TEMPLATE_REL("^[$][0-9]+$");
 const std::basic_regex<char> LEFT_RIGHT_REL(
   "^(LEFT|RIGHT)$"); // cohort added to the left/right
-const std::basic_regex<char> DELETE_REL("^DELETE[0-9]+");
+const std::basic_regex<char> DELETE_REL("^DELETE[0-9]*");
 
 enum LineType { WordformL, ReadingL, BlankL };
 
