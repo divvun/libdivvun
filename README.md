@@ -731,14 +731,17 @@ In the first line of the following example only "soaitá" and "boađán" are par
     Soaitá mun boađán. `Maybe I come.'
 
 You can refer to the word form of the "central" cohort of the error
-using `$1` in errors.xml, e.g.
+using `$1` in errors.source.xml, e.g.
 
     <description xml:lang="en">The word "$1" seems to be in the wrong case.</description>
 
 You can refer to the word form of the first correction / suggestion
-using `€1` in errors.xml, e.g.
+using `€1` in errors.source.xml, e.g.
 
     <description xml:lang="en">Please don't write "$1", it sounds much nicer if you use "€1" instead.</description>
+
+    - $1 - reference to error
+    - €1 - reference to suggestion
 
 ---
 
@@ -762,12 +765,12 @@ that covers both those words, where the suggestion is the same string
 without the target of the `DELETE1` relation.
 
     ADD (&one-word-too-many) KeepThisWord;
-    ADDRELATION (DELETE1) DeleteThisWord TO (-1 KeepThisWord);
+    ADDRELATION (DELETE1) KeepThisWord TO (-1 DeleteThisWord);
 
 The cohort matching `KeepThisWord` is now the central one of the
 error, so if e.g. `errors.xml` uses templates like
 
-    Don't use "$2" before "$1"
+    Don't use "$2" before using "$1"
 
 the word form of `KeepThisWord` will be substituted for `$1`.
 
