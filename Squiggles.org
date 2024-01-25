@@ -15,19 +15,19 @@ ADD:no-space-after-punct (&no-space-after-punct-mark) TARGET (<NoSpaceAfterPunct
       (NEGATE 0 (A Arab))
       (NEGATE 0 Sem/Sign LINK 1 Sem/Sign LINK 1 Sem/Sur) ;
 
-# 2. Add error tag + &COERROR on the following word (part 1 of extending the blue underline to the following word):
-ADD:no-space-after-punct-link (&no-space-after-punct-mark &COERROR) TARGET (*)
-   IF (T:prevWordCrossSent LINK 0 (&no-space-after-punct-mark) LINK NOT 0 (&COERROR)) ;
+# 2. Add error tag + COERROR on the following word (part 1 of extending the blue underline to the following word):
+ADD:no-space-after-punct-link (&no-space-after-punct-mark COERROR) TARGET (*)
+   IF (T:prevWordCrossSent LINK 0 (&no-space-after-punct-mark) LINK NOT 0 (COERROR)) ;
 
 # 3. Add RIGHT relation on the punctuation (part 2 of extending the blue underline to the following word,
 #    also ensures that the correction will replace the word, not be appended to it):
-ADDRELATION:no-space-after-punct-rel (RIGHT) (&COERROR)
+ADDRELATION:no-space-after-punct-rel (RIGHT) (COERROR)
    FROM (T:prevWordCrossSent LINK 0 (<NoSpaceAfterPunctMark>)) ;
 
 # 4. Add suggestions
 COPY:no-space-after-punct-sugg ("<$1 $2>"v &SUGGESTWF) TARGET ("<(.*)>"r &no-space-after-punct-mark)
    IF (T:nextWordCrossSent LINK 0 ("<(.*)>"r))
-      (NOT 0 (&COERROR) OR (&SUGGESTWF));
+      (NOT 0 (COERROR) OR (&SUGGESTWF));
 #+END_SRC
 
 We'd like to be able to *just* put error tags (1. above) and
@@ -80,7 +80,7 @@ Currently, it's possible to delete a cohort with e.g.
 #+BEGIN_SRC cg
 ADD (&errortag) word-to-keep IF (…);
 ADDRELATION (DELETE1) (&errortag) TO (2 word-to-be-deleted);
-ADD (&COERROR &errortag) word-to-be-deleted IF (1 word-to-keep);
+ADD (COERROR &errortag) word-to-be-deleted IF (1 word-to-keep);
 #+END_SRC
 
 and =divvun-suggest= will automatically expand the error context to
@@ -88,7 +88,7 @@ include the word to be deleted (in the above case, three words will be
 marked). No rules in the current sme grammarchecker.cg3 expand the
 squiggle further for deletions.
 
-Can we do without the =&COERROR &errortag= on the word-to-be-deleted? The
+Can we do without the =COERROR &errortag= on the word-to-be-deleted? The
 reason it's there is in case of mutually exclusive overlapping errors,
 e.g. "dego lávvomuorran" has the suggestions
 
@@ -111,7 +111,7 @@ ADDRELATION (LEFT) (&dasa-before-fs) TO (-1 (&ADDED)) ;
 #+END_SRC
 
 No rules in the current sme grammarchecker.cg3 expand the squiggle
-further for added cohorts. The addition rules don't use =&COERROR=, but
+further for added cohorts. The addition rules don't use =COERROR=, but
 perhaps if one were correcting "lávvomuorra" into mutually exclusive
 "dego lávvomuorra" or "lávvomuorran" this would be needed?
 
@@ -123,7 +123,7 @@ there real examples that wouldn't be solved with just new readings?
 *** Adding spaces
 
 The punctuation rules are where the pain is felt the most. We could do
-without the =ADD (&COERROR &errortag)= and =ADDRELATION (RIGHT)= in the
+without the =ADD (COERROR &errortag)= and =ADDRELATION (RIGHT)= in the
 example from before if we didn't have to expand the squiggle to the
 next word in CG:
 
@@ -171,7 +171,7 @@ space-separated substring before and after, giving
 
 Spaces don't have cohorts, so we can't =&DELETE= them. But we could
 have a special tag understood by =divvun-suggest= for deleting spaces,
-which would remove the need for =&COERROR= rules and relations:
+which would remove the need for =COERROR= rules and relations:
 
 #+BEGIN_SRC cg
 COPY:space-after-openparen-sugg (&DELETESPACE-RIGHT) TARGET ("(" &space-after-openparen);

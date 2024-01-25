@@ -4,5 +4,5 @@
 	"lávvomuorra" N Sem/Dummytag Sg Nom <W:0> @COMP-CS< &syn-dego-nom R:DELETE1:14 &SUGGEST
 : 
 "<dego>"
-	"dego" CS <W:0> @CNP &syn-not-dego &COERROR ID:14
+	"dego" CS <W:0> @CNP &syn-not-dego COERROR ID:14
 :</p>

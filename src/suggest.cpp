@@ -230,7 +230,10 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 	for (auto& tag : allmatches(tags, CG_TAGS_RE)) { // proc_tags
 		std::match_results<const char*> result;
 		std::regex_match(tag.c_str(), result, CG_TAG_TYPE);
-		if (result.empty()) {
+		if (tag == "COERROR") {
+			r.link = true;
+		}
+		else if (result.empty()) {
 			gentags.push_back(tag);
 		}
 		else if (result[2].length() != 0) {
@@ -393,7 +396,7 @@ void rel_on_match(const relations& rels, const std::basic_regex<char>& name,
  * error types.
  *
  * The reason we fallback to all the readings is that some times
- * people write CG rules that delete the &COERROR readings or similar –
+ * people write CG rules that delete the COERROR readings or similar –
  * we don't want to fail to find the cohort that's supposed to be
  * underlined in that case.
  *

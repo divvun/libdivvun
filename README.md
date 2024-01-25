@@ -723,7 +723,7 @@ in the right order for generation to work.
 ## More complex grammarchecker.cg3 rules (spanning over several words)
 
 The error is considered to have a central part and one or more less central parts.
-The less central parts need the `&COERROR` tag (without numbering) if all parts are to be underlined as one error. The words can be adjacent. If there are words in between that are not part of the error, they are still underlined.
+The less central parts need the `COERROR` tag (without numbering) if all parts are to be underlined as one error. The words can be adjacent. If there are words in between that are not part of the error, they are still underlined.
 
 In the first line of the following example only "soaitá" and "boađán" are part of the error and are underlined. However, if "mun" ("I") is inserted in between then it is also underlined. 
 
@@ -800,7 +800,7 @@ word, which might partially overlap. For example, you might also have
 
 where you want to keep the suggestions for `&one-word-too-many`
 separate from the suggestions for `&other-error`.
-Each suggestion for an error with several parts requires that all parts receive the same error tag and the less central parts receive the &COERROR tag. In the following case there are two possible corrections.
+Each suggestion for an error with several parts requires that all parts receive the same error tag and the less central parts receive the COERROR tag. In the following case there are two possible corrections.
 
     Soaitá boađán.
     
@@ -822,12 +822,12 @@ In this sentence for sma there are two alternative suggestions:
 
 Unfortunately, relations in CG are cohort-to-cohort, not
 reading-to-reading. The workaround is to put the error tag also on the
-relation target (the word to be deleted), along with the `&COERROR` tag
+relation target (the word to be deleted), along with the `COERROR` tag
 to say that this is not the central word of the error:
 
-    ADD (&COERROR &one-word-too-many) DeleteThisWord IF (1 KeepThisWord);
+    ADD (COERROR &one-word-too-many) DeleteThisWord IF (1 KeepThisWord);
 
-Without `&COERROR`, this would be treated as a separate error, while
+Without `COERROR`, this would be treated as a separate error, while
 without `&one-word-too-many`, we would suggest deleting this word in
 the suggestions for `&other-error` too.
 
@@ -856,7 +856,7 @@ error to the added word:
     ADDRELATION (LEFT) (&msyn-valency-go-not-fs) TO (-1 (&ADDED)) ;
 
 Because of `&ADDED`, `divvun-suggest` will treat this as a non-central
-word of the error (just like with the `&COERROR` tag).
+word of the error (just like with the `COERROR` tag).
 
 Note that we include the space in the wordform, and we put it at the
 *end* of the wordform. This is because vislcg3 always adds new cohorts
@@ -908,12 +908,12 @@ but that will
 
 Instead, let's extend the underline to the following word:
 
-    ADD (&no-space-after-punct-mark &COERROR)
+    ADD (&no-space-after-punct-mark COERROR)
         TARGET (*)
         IF (-1 (<NoSpaceAfterPunctMark>))
         ;
     ADDRELATION (RIGHT) (&no-space-after-punct-mark)
-        TO (1 (&COERROR) LINK 0 (&no-space-after-punct-mark))
+        TO (1 (COERROR) LINK 0 (&no-space-after-punct-mark))
         ;
 
 Every error needs a "central" cohort, even if it involves several
@@ -922,7 +922,7 @@ correctly. It doesn't matter which one you pick, as long as you pick
 one. Here we've picked the comma to be central, while the following
 word is a "link" word. In the above rules,
 
--   The `&COERROR` tag says that the following word is just a part of the
+-   The `COERROR` tag says that the following word is just a part of the
     error, not the central cohort.
 -   The `RIGHT` relation says that this is one big error, not two
     separate ones.
@@ -932,7 +932,7 @@ Then we can add a suggestion that puts a space between the forms:
     COPY:no-space-after-punct ("<$1 $2>"v &SUGGESTWF)
         TARGET ("<(.*)>"r &no-space-after-punct-mark)
         IF (1 ("<(.*)>"r))
-           (NOT 0 (&COERROR))
+           (NOT 0 (COERROR))
         ;
 
 This uses vislcg3's [variable strings / varstrings](http://beta.visl.sdu.dk/cg3/chunked/tags.html#variable-strings) to create the
@@ -943,7 +943,7 @@ appear in the sentence. If the rule referred to the preceding word
 with `(-1 ("<(.*)>"r))`, you'd probably want the suggestion to be `<$2
 $1>`.
 
-We also make sure we don't put a suggestion-tag on the `&COERROR` cohort
+We also make sure we don't put a suggestion-tag on the `COERROR` cohort
 (here the word `<ja>`), which would lead to some strange suggestions
 since it is already part of the suggestion-tag on the comma `<,>`
 cohort.
@@ -958,7 +958,7 @@ Now the output is
             "," CLB <NoSpaceAfterPunctMark> &no-space-after-punct-mark ID:3 R:RIGHT:4
             "," CLB <NoSpaceAfterPunctMark> "<, ja>" &no-space-after-punct-mark &SUGGESTWF ID:3 R:RIGHT:4
     "<ja>"
-            "ja" CC @CNP &COERROR &no-space-after-punct-mark ID:4
+            "ja" CC @CNP COERROR &no-space-after-punct-mark ID:4
 
 or, in JSON format:
 
@@ -1115,9 +1115,9 @@ don't conflict with the below special tags.
     See [Including spelling errors](#org26182db).
 -   `<spelled>` is added by `divvun-cgspell` to any suggestions it
     makes. See [Including spelling errors](#org26182db).
--   `&COERROR` makes a cohort non-central in that error, see [Deleting words](#org4d2c8ef).
+-   `COERROR` makes a cohort non-central in that error, see [Deleting words](#org4d2c8ef).
     (For backwards-compatibility with older grammar checker files,
-    `&LINK` also has the same meaning as `&COERROR`, though this is
+    `&LINK` also has the same meaning as `COERROR`, though this is
     deprecated and at some point `&LINK` may be fully removed)
 -   `&ADDED` means this cohort was added (typically with `ADDCOHORT`)
     and should be a part of the suggestion for the error. It will appear

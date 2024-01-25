@@ -11,7 +11,7 @@
 	"bálvalus" N Sem/Act Pl Nom <W:10.0000000000> @<SUBJ
 		"neahtis" A Sem/Hum Attr Cmp/Cit Cmp/Hyph Cmp <W:10.0000000000>
 "<,>"
-	"," CLB &doublespace &COERROR ID:5
+	"," CLB &doublespace COERROR ID:5
 :  
 "<vel>"
 	"vel" IJ
