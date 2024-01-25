@@ -162,7 +162,7 @@ struct Reading {
 	rel_id id = 0;  // id is 0 if unset, otherwise the relation id of this word
 	string wf;	// tag of type "wordform"S for use with &SUGGESTWF
 	bool suggestwf = false;
-	bool link = false; // cohorts that are not the "core" of the underline never become Err's; message template offsets refer to the cohort of the Err
+	bool coerror = false; // cohorts that are not the "core" of the underline never become Err's; message template offsets refer to the cohort of the Err
 	Added added = NotAdded;
 	bool fixedcase = false; // don't change casing on suggestions if we have this tag
 	string line;	// The (unchanged) input lines which created this Reading

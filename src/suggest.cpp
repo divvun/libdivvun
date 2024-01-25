@@ -225,13 +225,13 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 	r.suggest = false || generate_all_readings;
 	r.suggestwf = false;
 	r.added = NotAdded;
-	r.link = false;
+	r.coerror = false;
 	r.fixedcase = false;
 	for (auto& tag : allmatches(tags, CG_TAGS_RE)) { // proc_tags
 		std::match_results<const char*> result;
 		std::regex_match(tag.c_str(), result, CG_TAG_TYPE);
 		if (tag == "COERROR") {
-			r.link = true;
+			r.coerror = true;
 		}
 		else if (result.empty()) {
 			gentags.push_back(tag);
@@ -250,7 +250,7 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 				r.added = AddedBeforeBlank;
 			}
 			else if (tag == "&LINK" || tag == "&COERROR") { // &LINK kept for backward-compatibility
-				r.link = true;
+				r.coerror = true;
 			}
 			else {
 				r.errtypes.insert(fromUtf8(result[2]));
@@ -318,7 +318,7 @@ const Reading proc_reading(const hfst::HfstTransducer& generator, const string& 
 		r.id = (r.id == 0 ? sub.id : r.id);
 		r.suggest = r.suggest || sub.suggest || generate_all_readings;
 		r.suggestwf = r.suggestwf || sub.suggestwf;
-		r.link = r.link || sub.link;
+		r.coerror = r.coerror || sub.coerror;
 		r.added = r.added == NotAdded ? sub.added : r.added;
 		r.sforms.insert(r.sforms.end(), sub.sforms.begin(), sub.sforms.end());
 		r.wf = r.wf.empty() ? sub.wf : r.wf;
@@ -897,7 +897,7 @@ void Suggest::mk_errs(Sentence& sentence) {
 		std::set<ErrId> c_errtypes;
 		for (size_t i = 0; i < c.readings.size(); ++i) {
 			const Reading& r = c.readings[i];
-			if (r.link) {
+			if (r.coerror) {
 				continue;
 			}
 			c_errtypes.insert(r.errtypes.begin(), r.errtypes.end());
