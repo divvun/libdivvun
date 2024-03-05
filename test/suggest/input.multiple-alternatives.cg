@@ -2,7 +2,7 @@
 	"mun" Pron Sem/Hum Pers Sg1 Nom <W:0.0> <firstCohort> @SUBJ> ID:1
 : 
 "<soaitá>"
-	"soaitit" <mv> V <copula> <DE-Ill-Plc> <AktioEss> <Inf> IV Ind Prs Sg3 <W:0.0> @+FMAINV &syn-soahtit-vfin+inf ID:2
+	"soaitit" <mv> V <copula> <DE-Ill-Plc> <AktioEss> <Inf> IV Ind Prs Sg3 <W:0.0> @+FMAINV &syn-soahtit-vfin+inf ID:2 R:RIGHT:3
 	"soaitit" <mv> V <copula> <DE-Ill-Plc> <AktioEss> <Inf> IV Ind Prs <W:0.0> @+FMAINV Sg1 &syn-soahtit-vfin+inf &SUGGEST ID:2 R:RIGHT:3
 	"kánske" Adv &syn-kánske &SUGGEST ID:2 R:RIGHT:3
 : 

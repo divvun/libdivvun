@@ -82,6 +82,21 @@
     </body>
   </error>
 
+  <error id="msyn-sme_interference_neg">
+    <header>
+      <title xml:lang="en">sme interference neg</title>
+      <title xml:lang="se">davvi interference neg</title>
+      <references> <ref n=""/></references>
+    </header>
+    <body>
+      <description xml:lang="en">sme interference neg</description>
+      <description xml:lang="se">davvi interference neg</description>
+    <examples>
+      <ex xml:lang="se">Dat ij vuojnnum nav gåk galgaj → Dat ittjij vuojnnu nav gåk galgaj</ex>
+    </examples>
+    </body>
+  </error>
+
 
   <error id="msyn-valency-acc">
     <header>

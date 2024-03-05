@@ -80,6 +80,9 @@ old/
 /test/checker/run.spell.trs
 /test/checker/run.spell.log
 /test/checker/run.archive.trs
+/test/checker/output.workingdir.json
+/test/checker/run.workingdir.trs
+/test/checker/run.workingdir.log
 
 /test/cgspell/analyser.hfst
 /test/cgspell/analyser.hfstol
@@ -150,4 +153,3 @@ compile_commands.json
 /test/suggest/run-flushing
 
 /python/python_divvun_gramcheck.egg-info/
-

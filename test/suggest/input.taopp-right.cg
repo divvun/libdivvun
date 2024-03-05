@@ -3,7 +3,7 @@
 	"bokte" Po <W:0> @<ADVL &SUGGEST #1->1
 : 
 "<ta>"
-	"ta" V Inf <W:0> @V &syn-phrasal-verb ID:2
+	"ta" V Inf <W:0> @V &syn-phrasal-verb ID:2 R:RIGHT:3
 	"spille" V Inf <W:0> @V &syn-phrasal-verb &SUGGEST ID:2 R:RIGHT:3
 : 
 "<opp>"

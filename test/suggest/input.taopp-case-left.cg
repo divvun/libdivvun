@@ -1,8 +1,7 @@
-"<badjel>"
-	"badjel" Po <W:0> @<ADVL &lex-bokte-not-badjel #1->1
-	"bokte" Po <W:0> @<ADVL &SUGGEST #1->1
+"<.>"
+	"." PUNCT
 : 
-"<ta>"
+"<Ta>"
 	"ta" V Inf <W:0> @V &syn-phrasal-verb ID:2 COERROR
 	"spille" V Inf <W:0> @V &syn-phrasal-verb &SUGGEST ID:2 COERROR
 : 
@@ -13,4 +12,4 @@
 "<badjel>"
 	"badjel" Po <W:0> @<ADVL &lex-bokte-not-badjel #4->4
 	"bokte" Po <W:0> @<ADVL &SUGGEST #4->4
-: 
+:
