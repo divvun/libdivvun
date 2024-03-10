@@ -474,9 +474,17 @@ variant<Nothing, pair<pair<size_t, size_t>, UStringVector>> proc_LEFT_RIGHT(
 	}
 	std::map<pair<size_t, size_t>, pair<u16string, Reading>> add; // position in text:cohort in Sentence
 	// Loop from the leftmost to the rightmost of source and target cohorts:
-	size_t left = i_c < i_t ? i_c + 1 : i_t;
-	size_t right = i_c < i_t ? i_t + 1 : i_c;
-	for (size_t i = left; i < right; ++i) {
+	size_t left = i_c < i_t ? i_c : i_t;
+	size_t right = i_c < i_t ? i_t : i_c;
+	std::cerr << "\033[1;35merr_id=\t" << toUtf8(err_id) << "\033[0m" << std::endl;
+	std::cerr << "\033[1;33mr.id=\t" << r.id << "\033[0m" << std::endl;
+	std::cerr << "\033[1;33msrc_id=\t" << src_id << "\033[0m" << std::endl;
+	std::cerr << "\033[1;33mi_c=\t" << i_c << "\033[0m" << std::endl;
+	std::cerr << "\033[1;33mi_t=\t" << i_t << "\033[0m" << std::endl;
+	std::cerr << "\033[1;33mleft=\t" << left << "\033[0m" << std::endl;
+	std::cerr << "\033[1;33mright=\t" << right << "\033[0m" << std::endl;
+	UStringVector reps2 = {u""};
+	for (size_t i = left; i <= right; ++i) {
 		const auto& trg = sentence.cohorts[i];
 
 		const vector<Reading> treadings = readings_with_errtype(trg, err_id);
@@ -501,6 +509,32 @@ variant<Nothing, pair<pair<size_t, size_t>, UStringVector>> proc_LEFT_RIGHT(
 			beg = std::min(beg, splice_beg);
 			end = std::max(end, splice_end);
 		}
+
+		std::cerr << "\033[1;34mi=\t" << i << "\033[0m" << std::endl;
+		std::cerr << "\033[1;34mtrg.form=\t" << toUtf8(trg.form) << "\033[0m" << std::endl;
+		std::cerr << "\033[1;34mtrg.id=\t" << trg.id << "\033[0m" << std::endl;
+		UStringVector trg_sf;
+		for(const Reading& tr: trg.readings) {
+			std::cerr << "\t\033[1;35mr.wf='" << tr.wf << "'\033[0m";
+			std::cerr << "\t\033[0;35mr.coerror=" << tr.coerror << "\033[0m";
+			std::cerr << "\t\033[0;35mr.suggestwf=" << tr.suggestwf << "\033[0m";
+			std::cerr << "\t\033[0;35mr.suggest=" << tr.suggest << "\033[0m" << "\t" << tr.line;
+			for(const auto& sf : tr.sforms) {
+				trg_sf.push_back(fromUtf8(sf));
+				std::cerr << "\t\t\033[1;36msform=\t" << sf << "\033[0m" << std::endl;
+			}
+		}
+		UStringVector reps3;
+		for(auto& rep: reps2) {
+			u16string blank = u" "; // TODO: text.substr(splice_beg, splice_end) respecting AddedBeforeBlank
+			if(trg_sf.empty()) {
+				reps3.push_back(rep + blank + trg.form);
+			}
+			else for(const auto& sf : trg_sf) {
+				reps3.push_back(rep + blank + sf);
+			}
+		}
+		reps2.swap(reps3);
 	}
 	vector<u16string> reps;
 	// TODO: apply input casing, normal method finds casing from possibly left-added repform and does
@@ -513,6 +547,9 @@ variant<Nothing, pair<pair<size_t, size_t>, UStringVector>> proc_LEFT_RIGHT(
 		add[std::make_pair(orig_beg, orig_end)] = make_pair(fromUtf8(s), r);
 		u16string rep = mk_repform(text.substr(beg, end - beg), beg, add);
 		reps.push_back(rep);
+	}
+	for (const auto& sf : reps2) {
+		std::cerr << "\033[1;35mreps2 sf=\t" << toUtf8(sf) << "\033[0m" << std::endl;
 	}
 	return std::make_pair(std::make_pair(beg, end), reps);
 }
