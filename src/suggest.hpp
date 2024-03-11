@@ -230,8 +230,7 @@ public:
 	const string locale;
 
 private:
-	const SortedMsgLangs
-	  sortedmsglangs; // invariant: contains all and only the keys of msgs
+	const SortedMsgLangs sortedmsglangs; // invariant: contains all and only the keys of msgs
 	RunState run_json(std::istream& is, std::ostream& os);
 	RunState run_autocorrect(std::istream& is, std::ostream& os);
 	RunState run_cg(std::istream& is, std::ostream& os);
@@ -242,6 +241,7 @@ private:
 	std::set<u16string> delimiters; // run_sentence(NulAndDelimiters) will return after seeing a cohort with one of these forms
 	size_t hard_limit = 500;	// run_sentence(NulAndDelimiters) will always flush after seeing this many cohorts
 	bool generate_all_readings = false;
+	bool verbose = false;
 
 	/**
 	  * For a single cohort, if it has errors, creates the

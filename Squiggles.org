@@ -25,6 +25,21 @@ New design:
   readings. The co&errtag is only needed if we have alternatives of
   different errtypes in the same span.
 
+Changes required in cg3 files:
+
+- If your're doing SUGGESTWF to replace a form in the context, you
+  need to add a DELETE relation to that cohort. Ie. this works:
+
+"<ovddasvástadus>"
+        "ovddasvástádus" Err/Orth-a-á N <BE-Ill-Any> Sem/Perc-emo Sg Nom <W:0.0> @<SUBJ #6->6 ID:6
+:
+"<.>"
+        "." CLB <W:0.0> <SpaceBeforePunctMark> &space-before-punct-mark #7->7 ID:7 R:LEFT:6 R:DELETE:6
+        "." CLB <W:0.0> <SpaceBeforePunctMark> "ovddasvástadus."S &space-before-punct-mark &SUGGESTWF #7->7 ID:7 R:LEFT:6 R:DELETE:6
+
+while if you forget the DELETE, the suggestion will be
+="ovddasvástadus ovddasvástadus."=.
+
 
 ** The problem
 

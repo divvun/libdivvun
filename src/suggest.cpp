@@ -553,7 +553,8 @@ variant<Nothing, pair<pair<size_t, size_t>, UStringVector>> build_squiggle_repla
   const size_t orig_beg,
   const size_t orig_end,
   const size_t i_left,
-  const size_t i_right)
+  const size_t i_right,
+  bool verbose)
 {
 	size_t beg = orig_beg;
 	size_t end = orig_end;
@@ -564,30 +565,35 @@ variant<Nothing, pair<pair<size_t, size_t>, UStringVector>> build_squiggle_repla
 		  });
 	std::map<pair<size_t, size_t>, pair<u16string, Reading>> add; // position in text:cohort in Sentence
 	// Loop from the leftmost to the rightmost of source and target cohorts:
-//	std::cerr << "\033[1;35merr_id=\t" << toUtf8(err_id) << "\033[0m" << std::endl;
-//	std::cerr << "\033[1;33mr.id=\t" << r.id << "\033[0m" << std::endl;
-//	std::cerr << "\033[1;33msrc.id=\t" << src.id << "\033[0m" << std::endl;
-//	std::cerr << "\033[1;33mi_c=\t" << i_c << "\033[0m" << std::endl;
-//	std::cerr << "\033[1;33mleft=\t" << i_left << "\033[0m" << std::endl;
-//	std::cerr << "\033[1;33mright=\t" << i_right << "\033[0m" << std::endl;
+if(verbose)	std::cerr << "\033[1;31merr_id=\t" << toUtf8(err_id) << "\033[0m" << std::endl;
+if(verbose)	std::cerr << "\033[1;33mr.id=\t" << r.id << "\033[0m" << std::endl;
+if(verbose)	std::cerr << "\033[1;33msrc.id=\t" << src.id << "\033[0m" << std::endl;
+if(verbose)	std::cerr << "\033[1;33mi_c=\t" << i_c << "\033[0m" << std::endl;
+if(verbose)	std::cerr << "\033[1;33mleft=\t" << i_left << "\033[0m" << std::endl;
+if(verbose)	std::cerr << "\033[1;33mright=\t" << i_right << "\033[0m" << std::endl;
 	UStringVector reps = {u""};
 	for (size_t i = i_left; i <= i_right; ++i) {
 		const auto& trg = sentence.cohorts[i];
 		Casing casing = getCasing(toUtf8(trg.form));
 
-//		std::cerr << "\033[1;34mi=\t" << i << "\033[0m" << std::endl;
-//		std::cerr << "\033[1;34mtrg.form=\t" << toUtf8(trg.form) << "\033[0m" << std::endl;
-//		std::cerr << "\033[1;34mtrg.id=\t" << trg.id << "\033[0m" << std::endl;
+if(verbose)		std::cerr << "\033[1;34mi=\t" << i << "\033[0m" << std::endl;
+if(verbose)		std::cerr << "\033[1;34mtrg.form=\t" << toUtf8(trg.form) << "\033[0m" << std::endl;
+if(verbose)		std::cerr << "\033[1;34mtrg.id=\t" << trg.id << "\033[0m" << std::endl;
 
 		UStringVector rep_this_trg;
 		const bool del = do_delete(trg, err_id, src.errtypes, deletions);
 		if (del) {
 			rep_this_trg.push_back(u"");
-//			std::cerr << "\t\t\033[1;36mdelete=\t" << toUtf8(trg.form) << "\033[0m" << std::endl;
+if(verbose)			std::cerr << "\t\t\033[1;36mdelete=\t" << toUtf8(trg.form) << "\033[0m" << std::endl;
 		}
 
+		bool added_before_blank = false;
 		for (const Reading& tr : readings_with_errtype(trg, err_id)) {
-//			std::cerr << "\033[1;32mtr.line=\t" << tr.line << "\033[0m" << std::endl;
+if(verbose)			std::cerr << "\033[1;32mtr.line=\t" << tr.line << "\033[0m" << std::endl;
+
+			if(tr.added == AddedBeforeBlank) {
+				added_before_blank = true;
+			}
 
 			// Update beg/end:
 			size_t splice_beg = trg.pos;
@@ -609,25 +615,34 @@ variant<Nothing, pair<pair<size_t, size_t>, UStringVector>> build_squiggle_repla
 			beg = std::min(beg, splice_beg);
 			end = std::max(end, splice_end);
 
-//			std::cerr << "\t\033[1;35mr.wf='" << tr.wf << "'\033[0m";
-//			std::cerr << "\t\033[0;35mr.coerror=" << tr.coerror << "\033[0m";
-//			std::cerr << "\t\033[0;35mr.suggestwf=" << tr.suggestwf << "\033[0m";
-//			std::cerr << "\t\033[0;35mr.suggest=" << tr.suggest << "\033[0m" << "\t" << tr.line;
+if(verbose)			std::cerr << "\t\033[1;35mr.wf='" << tr.wf << "'\033[0m";
+if(verbose)			std::cerr << "\t\033[0;35mr.coerror=" << tr.coerror << "\033[0m";
+if(verbose)			std::cerr << "\t\033[0;35mr.suggestwf=" << tr.suggestwf << "\033[0m";
+if(verbose)			std::cerr << "\t\033[0;35mr.suggest=" << tr.suggest << "\033[0m" << "\t" << tr.line;
 			if(!del) for(const auto& sf : tr.sforms) {
 				// Prepend blank unless at left edge:
-				auto blank = i == i_left
-					     ? ""
-					     : clean_blank(trg.raw_pre_blank);
-				// TODO: any interaction with Added/AddedBeforeBlank here?
-				rep_this_trg.push_back(fromUtf8(blank + withCasing(tr.fixedcase, casing, sf)));
-//				std::cerr << "\t\t\033[1;36msform=\t" << sf << "\033[0m" << std::endl;
+				auto pre_blank = i == i_left
+						 ? ""
+						 : clean_blank(trg.raw_pre_blank);
+				auto post_blank = added_before_blank
+						  ? clean_blank(trg.raw_pre_blank)
+						  : "";
+				rep_this_trg.push_back(fromUtf8(pre_blank + withCasing(tr.fixedcase, casing, sf) + post_blank));
+if(verbose)				std::cerr << "\t\t\033[1;36msform=\t" << sf << "\033[0m" << std::endl;
 			}
 		}
 
 		UStringVector reps_next;
 		for(auto& rep: reps) {
 			if(rep_this_trg.empty()) {
-				reps_next.push_back(rep + trg.form);
+				// Prepend blank unless at left edge:
+				auto pre_blank = i == i_left
+						 ? ""
+						 : clean_blank(trg.raw_pre_blank);
+				auto post_blank = added_before_blank
+						  ? clean_blank(trg.raw_pre_blank)
+						  : "";
+				reps_next.push_back(rep + trg.form + fromUtf8(post_blank));
 			}
 			else for(const auto& form : rep_this_trg) {
 				reps_next.push_back(rep + form);
@@ -635,7 +650,7 @@ variant<Nothing, pair<pair<size_t, size_t>, UStringVector>> build_squiggle_repla
 		}
 		reps.swap(reps_next);
 	}
-//	for (const auto& sf : reps) { std::cerr << "\033[1;35mreps2 sf=\t" << toUtf8(sf) << "\033[0m" << std::endl; }
+if(verbose)	for (const auto& sf : reps) { std::cerr << "\033[1;35mreps2 sf=\t" << toUtf8(sf) << "\033[0m" << std::endl; }
 	return std::make_pair(std::make_pair(beg, end), reps);
 }
 
@@ -714,7 +729,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id, size_t i_c,
 		// If there are LEFT/RIGHT added relations, add suggestions with those concatenated to our form
 		// TODO: What about our current suggestions of the same error tag? Currently just using wordform
 		const auto squiggle = squiggle_bounds(r.rels, sentence, i_c, c);
-		build_squiggle_replacement(r, err_id, i_c, c, sentence, beg, end, squiggle.first, squiggle.second)
+		build_squiggle_replacement(r, err_id, i_c, c, sentence, beg, end, squiggle.first, squiggle.second, verbose)
 			    .match(
 				   [ ](Nothing) {},
 				   [&](pair<pair<size_t, size_t>, UStringVector> p) {
@@ -974,7 +989,7 @@ void Suggest::mk_errs(Sentence& sentence) {
 		std::set<ErrId> c_errtypes;
 		for (size_t i = 0; i < c.readings.size(); ++i) {
 			const Reading& r = c.readings[i];
-			if (r.coerror) {
+			if (r.coerror) { // TODO: needed?
 				continue;
 			}
 			c_errtypes.insert(r.errtypes.begin(), r.errtypes.end());
@@ -1153,25 +1168,28 @@ SortedMsgLangs sortMessageLangs(const MsgMap& msgs, const string& prefer) {
 }
 
 Suggest::Suggest(const hfst::HfstTransducer* generator_, divvun::MsgMap msgs_,
-  const string& locale_, bool verbose, bool genall)
+		 const string& locale_, bool verbose_, bool genall)
   : msgs(msgs_)
   , locale(locale_)
   , sortedmsglangs(sortMessageLangs(msgs, locale))
   , generator(generator_)
   , delimiters(defaultDelimiters())
-  , generate_all_readings(genall) {}
+  , generate_all_readings(genall)
+  , verbose(verbose_) {}
 Suggest::Suggest(const string& gen_path, const string& msg_path,
-  const string& locale_, bool verbose, bool genall)
+  const string& locale_, bool verbose_, bool genall)
   : msgs(readMessages(msg_path))
   , locale(locale_)
   , sortedmsglangs(sortMessageLangs(msgs, locale))
   , generator(readTransducer(gen_path))
   , delimiters(defaultDelimiters())
-  , generate_all_readings(genall) {}
-Suggest::Suggest(const string& gen_path, const string& locale_, bool verbose)
+  , generate_all_readings(genall)
+  , verbose(verbose_) {}
+Suggest::Suggest(const string& gen_path, const string& locale_, bool verbose_)
   : locale(locale_)
   , generator(readTransducer(gen_path))
-  , delimiters(defaultDelimiters()) {}
+  , delimiters(defaultDelimiters())
+  , verbose(verbose_) {}
 
 void Suggest::setIgnores(const std::set<ErrId>& ignores_) {
 	ignores = ignores_;

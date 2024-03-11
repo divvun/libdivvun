@@ -3,6 +3,6 @@
 	"ovddasvástádus" N <BE-Ill-Any> Sem/Perc-emo Sg Nom <W:0.0> @<SUBJ &typo &SUGGEST #6->6 ID:6
 : 
 "<.>"
-	"." CLB <W:0.0> <SpaceBeforePunctMark> &space-before-punct-mark #7->7 ID:7 R:LEFT:6
-	"." CLB <W:0.0> <SpaceBeforePunctMark> "ovddasvástadus."S &space-before-punct-mark &SUGGESTWF #7->7 ID:7 R:LEFT:6
+	"." CLB <W:0.0> <SpaceBeforePunctMark> &space-before-punct-mark #7->7 ID:7 R:LEFT:6 R:DELETE:6
+	"." CLB <W:0.0> <SpaceBeforePunctMark> "ovddasvástadus."S &space-before-punct-mark &SUGGESTWF #7->7 ID:7 R:LEFT:6 R:DELETE:6
 :\n
