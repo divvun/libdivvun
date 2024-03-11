@@ -8,9 +8,9 @@
 "<vuojnnum>"
 	"vuojnnet" N <smj> <smj> Sg Nom <W:0.0> ID:3
 	"vuojnnet" V IV Actio Nom <W:0.0> @X ID:3
-	"vuojnnet" V IV PrfPrc <W:0.0> @-FMAINV COERROR &msyn-sme_interference_neg ID:3
-	"vuojnnet" V COERROR Der/PassS V IV Ind ConNeg &SUGGEST ID:3
+	"vuojnnet" V IV PrfPrc <W:0.0> @-FMAINV COERROR CO&msyn-sme_interference_neg ID:3
+	"vuojnnet" V COERROR CO&msyn-sme_interference_neg Der/PassS V IV Ind ConNeg &SUGGEST ID:3
 	"vuojnnut" Ex/V IV Der/NomAct N <smj> <smj> Sg Nom <W:0.0> ID:3
 	"vuojnnut" V IV Actio Nom <W:0.0> @X ID:3
-	"vuojnnut" V IV PrfPrc <W:0.0> @-FMAINV COERROR &msyn-sme_interference_neg ID:3
+	"vuojnnut" V IV PrfPrc <W:0.0> @-FMAINV COERROR CO&msyn-sme_interference_neg ID:3
 : 

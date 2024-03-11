@@ -1,5 +1,31 @@
 #+TITLE: Underlines without CG
 
+
+New design:
+- There is no COERROR tag, but we may use a co&errtag tag to match up
+  with &errtag
+- The left/right relations only set the outer limits of the error
+- We can use left/right simply to expand the marked region – don't
+  require matching &errtags there
+- Instead of working on indices into =text=, we reconstruct
+  replacements using forms/sforms (and =Cohort= pre-blanks).
+- When we have an R:DELETE from a reading with &errtag, we simply
+  ensure that whenever we reconstruct the replacement, we skip any
+  readings marked as delete (there is no separate loop to go through
+  replacements) – but if there are multiple source-cohort error tags,
+  we require that the deletion target has co&errtag, so we only delete
+  when errtags match.
+- By default, the form is used to reconstruct the replacement. So if
+  we have the sentence "et fint tur" where "fint" is the &errtype
+  TARGET, LEFT is "et" and RIGHT is "tur", the "default" replacement
+  if there were no &SUGGEST's would be the input "et fint tur", but
+  presumably we have sforms on the first two words, giving "en fin
+  tur". Here, "et" ideally has a reading with both &SUGGEST and
+  co&errtag, but if it does not, then we look for &SUGGEST from all
+  readings. The co&errtag is only needed if we have alternatives of
+  different errtypes in the same span.
+
+
 ** The problem
 
 Defining underlines/squiggles/error context in CG is hard to
@@ -99,6 +125,13 @@ where we don't want to suggest "lávvomuorra" (both deletion *and* case
 change would make it ungrammatical again), so we mark the deletion as
 "belonging to" the delete-reading, so it doesn't get mixed up with the
 case-change-reading.
+
+If the DELETE1 relation was from a single reading with an errtag, then
+only the replacement matching that source reading could be connected
+to the the deletion. But CG always adds the relation to all readings
+even if your rule specifies just one, meaning we do need to add tags
+=COERROR &errortag= on the relation target to avoid it being deleted
+from the other suggestion.
 
 *** Adding cohorts
 

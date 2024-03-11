@@ -153,10 +153,13 @@ inline std::string withCasing(
 	return input;
 }
 
+const string clean_blank(const string& raw);
+
 struct Reading {
 	bool suggest = false;
 	string ana; // for generating suggestions from this reading
 	std::set<u16string> errtypes; // the error tag(s) (without leading ampersand)
+	std::set<u16string> coerrtypes; // the COERROR error tag(s) (without leading ampersand)
 	StringVector sforms;
 	relations rels; // rels[relname] = target.id
 	rel_id id = 0;  // id is 0 if unset, otherwise the relation id of this word
@@ -170,10 +173,11 @@ struct Reading {
 
 struct Cohort {
 	u16string form;
-	size_t pos;
-	rel_id id;
+	size_t pos;		// position in text
+	rel_id id;		// CG relation id
 	vector<Reading> readings;
-	std::set<u16string> errtypes;
+	std::set<u16string> errtypes;   // the error tag(s) of all readings (without leading ampersand)
+	std::set<u16string> coerrtypes; // the COERROR error tag(s) of all readings (without leading ampersand)
 	Added added;
 	string raw_pre_blank; // blank before cohort, in CG stream format (initial colon, brackets, escaped newlines)
 	vector<Err> errs;
@@ -184,7 +188,7 @@ using CohortMap = std::unordered_map<rel_id, size_t>;
 
 struct Sentence {
 	vector<Cohort> cohorts;
-	CohortMap ids_cohorts;
+	CohortMap ids_cohorts;	// mapping from cohort relation id's to their position in Sentence.cohort vector
 	// TODO: can we make this an encoded stringstream? would avoid a lot of from/to_bytes calls
 	// std::basic_ostringstream<char16_t> text;
 	std::ostringstream text;
@@ -240,21 +244,20 @@ private:
 	bool generate_all_readings = false;
 
 	/**
-		 * For a single cohort, if it has errors, creates the
-		 * user-readable Msg (in the preferred language,
-		 * inserting the right word forms in the template),
-		 * and finds the indices of the error underline, as
-		 * well as the form of that substring, and expands the
-		 * error replacements until they cover the beg/end
-		 * part of the text.
-                 */
-	variant<Nothing, Err> cohort_errs(const ErrId& ErrId, const Cohort& c,
-	  const Sentence& sentence, const u16string& text);
+	  * For a single cohort, if it has errors, creates the
+	  * user-readable Msg (in the preferred language,
+	  * inserting the right word forms in the template),
+	  * and finds the indices of the error underline, as
+	  * well as the form of that substring, and expands the
+	  * error replacements until they cover the beg/end
+	  * part of the text.
+          */
+	variant<Nothing, Err> cohort_errs(const ErrId& ErrId, size_t i_c,
+	  const Cohort& c, const Sentence& sentence, const u16string& text);
 
 	// This alters the Cohort's of the Sentence by filling the `errs` vector.
 	void mk_errs(Sentence& sentence);
 };
-
 }
 
 #endif
