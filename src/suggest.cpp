@@ -572,6 +572,7 @@ if(verbose)	std::cerr << "\033[1;33mi_c=\t" << i_c << "\033[0m" << std::endl;
 if(verbose)	std::cerr << "\033[1;33mleft=\t" << i_left << "\033[0m" << std::endl;
 if(verbose)	std::cerr << "\033[1;33mright=\t" << i_right << "\033[0m" << std::endl;
 	UStringVector reps = {u""};
+	string prev_added_before_blank = "";
 	for (size_t i = i_left; i <= i_right; ++i) {
 		const auto& trg = sentence.cohorts[i];
 		Casing casing = getCasing(toUtf8(trg.form));
@@ -579,6 +580,7 @@ if(verbose)	std::cerr << "\033[1;33mright=\t" << i_right << "\033[0m" << std::en
 if(verbose)		std::cerr << "\033[1;34mi=\t" << i << "\033[0m" << std::endl;
 if(verbose)		std::cerr << "\033[1;34mtrg.form=\t" << toUtf8(trg.form) << "\033[0m" << std::endl;
 if(verbose)		std::cerr << "\033[1;34mtrg.id=\t" << trg.id << "\033[0m" << std::endl;
+if(verbose)		std::cerr << "\033[1;35mtrg.raw_pre_blank=\t'" << trg.raw_pre_blank << "'\033[0m" << std::endl;
 
 		UStringVector rep_this_trg;
 		const bool del = do_delete(trg, err_id, src.errtypes, deletions);
@@ -590,11 +592,6 @@ if(verbose)			std::cerr << "\t\t\033[1;36mdelete=\t" << toUtf8(trg.form) << "\03
 		bool added_before_blank = false;
 		for (const Reading& tr : readings_with_errtype(trg, err_id)) {
 if(verbose)			std::cerr << "\033[1;32mtr.line=\t" << tr.line << "\033[0m" << std::endl;
-
-			if(tr.added == AddedBeforeBlank) {
-				added_before_blank = true;
-			}
-
 			// Update beg/end:
 			size_t splice_beg = trg.pos;
 			size_t splice_end = trg.pos + trg.form.size();
@@ -621,35 +618,38 @@ if(verbose)			std::cerr << "\t\033[0;35mr.suggestwf=" << tr.suggestwf << "\033[0
 if(verbose)			std::cerr << "\t\033[0;35mr.suggest=" << tr.suggest << "\033[0m" << "\t" << tr.line;
 			if(!del) for(const auto& sf : tr.sforms) {
 				// Prepend blank unless at left edge:
-				auto pre_blank = i == i_left
+				auto pre_blank = i == i_left || added_before_blank
 						 ? ""
-						 : clean_blank(trg.raw_pre_blank);
-				auto post_blank = added_before_blank
-						  ? clean_blank(trg.raw_pre_blank)
-						  : "";
-				rep_this_trg.push_back(fromUtf8(pre_blank + withCasing(tr.fixedcase, casing, sf) + post_blank));
+						 : clean_blank(prev_added_before_blank + trg.raw_pre_blank);
+				// auto post_blank = tr.added_before_blank
+				// 		  ? clean_blank(trg.raw_pre_blank)
+				// 		  : "";
+				// rep_this_trg.push_back(fromUtf8(pre_blank + withCasing(tr.fixedcase, casing, sf) + post_blank));
+				rep_this_trg.push_back(fromUtf8(pre_blank + withCasing(tr.fixedcase, casing, sf)));
 if(verbose)				std::cerr << "\t\t\033[1;36msform=\t" << sf << "\033[0m" << std::endl;
 			}
-		}
+
+			if(tr.added == AddedBeforeBlank) {
+				added_before_blank = true;
+			}
+		} // end for readings of target
 
 		UStringVector reps_next;
 		for(auto& rep: reps) {
 			if(rep_this_trg.empty()) {
 				// Prepend blank unless at left edge:
-				auto pre_blank = i == i_left
+				auto pre_blank = i == i_left || added_before_blank
 						 ? ""
-						 : clean_blank(trg.raw_pre_blank);
-				auto post_blank = added_before_blank
-						  ? clean_blank(trg.raw_pre_blank)
-						  : "";
-				reps_next.push_back(rep + trg.form + fromUtf8(post_blank));
+						 : clean_blank(prev_added_before_blank + trg.raw_pre_blank);
+				reps_next.push_back(rep + fromUtf8(pre_blank) + trg.form);
 			}
 			else for(const auto& form : rep_this_trg) {
 				reps_next.push_back(rep + form);
 			}
 		}
 		reps.swap(reps_next);
-	}
+		prev_added_before_blank = added_before_blank ? trg.raw_pre_blank : "";
+	} // end for target cohorts
 if(verbose)	for (const auto& sf : reps) { std::cerr << "\033[1;35mreps2 sf=\t" << toUtf8(sf) << "\033[0m" << std::endl; }
 	return std::make_pair(std::make_pair(beg, end), reps);
 }
