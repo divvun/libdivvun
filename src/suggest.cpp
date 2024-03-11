@@ -573,15 +573,16 @@ variant<Nothing, pair<pair<size_t, size_t>, UStringVector>> build_squiggle_repla
 	UStringVector reps = {u""};
 	for (size_t i = i_left; i <= i_right; ++i) {
 		const auto& trg = sentence.cohorts[i];
+		Casing casing = getCasing(toUtf8(trg.form));
 
 //		std::cerr << "\033[1;34mi=\t" << i << "\033[0m" << std::endl;
 //		std::cerr << "\033[1;34mtrg.form=\t" << toUtf8(trg.form) << "\033[0m" << std::endl;
 //		std::cerr << "\033[1;34mtrg.id=\t" << trg.id << "\033[0m" << std::endl;
 
-		UStringVector trg_sf;
+		UStringVector rep_this_trg;
 		const bool del = do_delete(trg, err_id, src.errtypes, deletions);
 		if (del) {
-			trg_sf.push_back(u"");
+			rep_this_trg.push_back(u"");
 //			std::cerr << "\t\t\033[1;36mdelete=\t" << toUtf8(trg.form) << "\033[0m" << std::endl;
 		}
 
@@ -618,28 +619,23 @@ variant<Nothing, pair<pair<size_t, size_t>, UStringVector>> build_squiggle_repla
 					     ? ""
 					     : clean_blank(trg.raw_pre_blank);
 				// TODO: any interaction with Added/AddedBeforeBlank here?
-				trg_sf.push_back(fromUtf8(blank + sf));
+				rep_this_trg.push_back(fromUtf8(blank + withCasing(tr.fixedcase, casing, sf)));
 //				std::cerr << "\t\t\033[1;36msform=\t" << sf << "\033[0m" << std::endl;
 			}
 		}
 
 		UStringVector reps_next;
 		for(auto& rep: reps) {
-			if(trg_sf.empty()) {
+			if(rep_this_trg.empty()) {
 				reps_next.push_back(rep + trg.form);
 			}
-			else for(const auto& sf : trg_sf) {
-				reps_next.push_back(rep + sf);
+			else for(const auto& form : rep_this_trg) {
+				reps_next.push_back(rep + form);
 			}
 		}
 		reps.swap(reps_next);
 	}
-	// TODO: apply input casing, normal method finds casing from possibly left-added repform and does
-	// underlineCasing = getCasing(toUtf8(repform));
-	// fromUtf8(withCasing(r.fixedcase, underlineCasing, s))
-	for (const auto& sf : reps) {
-//		std::cerr << "\033[1;35mreps2 sf=\t" << toUtf8(sf) << "\033[0m" << std::endl;
-	}
+//	for (const auto& sf : reps) { std::cerr << "\033[1;35mreps2 sf=\t" << toUtf8(sf) << "\033[0m" << std::endl; }
 	return std::make_pair(std::make_pair(beg, end), reps);
 }
 
@@ -711,14 +707,12 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id, size_t i_c,
 	auto beg = c.pos;
 	auto end = c.pos + c.form.size();
 	UStringVector rep;
-	const Casing inputCasing = getCasing(toUtf8(c.form));
 	for (const Reading& r : c.readings) {
 		if(r.errtypes.find(err_id) == r.errtypes.end()) {
 			continue; // We consider sforms of &SUGGEST readings in build_squiggle_replacement
 		}
 		// If there are LEFT/RIGHT added relations, add suggestions with those concatenated to our form
 		// TODO: What about our current suggestions of the same error tag? Currently just using wordform
-		Casing underlineCasing = inputCasing;
 		const auto squiggle = squiggle_bounds(r.rels, sentence, i_c, c);
 		build_squiggle_replacement(r, err_id, i_c, c, sentence, beg, end, squiggle.first, squiggle.second)
 			    .match(
