@@ -578,7 +578,6 @@ if(verbose)	std::cerr << "\033[1;33mright=\t" << i_right << "\033[0m" << std::en
 	UStringVector reps = {u""};
 	UStringVector reps_suggestwf = {}; // If we're doing SUGGESTWF, we ignore reps
 	string prev_added_before_blank = "";
-	bool prev_deleted = false;
 	for (size_t i = i_left; i <= i_right; ++i) {
 		const auto& trg = sentence.cohorts[i];
 		Casing casing = getCasing(toUtf8(trg.form));
@@ -643,9 +642,6 @@ if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std
 			auto pre_blank = i == i_left || added_before_blank
 					 ? ""
 					 : clean_blank(prev_added_before_blank + trg.raw_pre_blank);
-			if(prev_deleted && pre_blank == " ") {
-				pre_blank = "";
-			}
 			if(rep_this_trg.empty()) {
 				reps_next.push_back(rep + fromUtf8(pre_blank) + trg.form);
 			}
@@ -655,9 +651,13 @@ if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std
 		}
 		reps.swap(reps_next);
 		prev_added_before_blank = added_before_blank ? trg.raw_pre_blank : "";
-		prev_deleted = del;
 	} // end for target cohorts
 if(verbose)	for (const auto& sf : reps) { std::cerr << "\033[1;35mreps sf=\t'" << toUtf8(sf) << "'\033[0m\t" << beg << "," << end << std::endl; }
+	// We never want to add whitespace to ends of suggestions (typically deleted words)
+	for(auto& rep: reps) {
+		rep.erase(1 + rep.find_last_not_of(' '));
+		rep.erase(0, rep.find_first_not_of(' '));
+	}
 	return std::make_pair(std::make_pair(beg, end),
 			      reps_suggestwf.empty() ? reps : reps_suggestwf);
 }
