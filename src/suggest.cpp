@@ -512,30 +512,6 @@ bool both_spaces(char16_t lhs, char16_t rhs) {
 	return (lhs == rhs) && (lhs == u' ');
 }
 
-/**
- * beg is the index into the whole text where in_rep starts
- */
-u16string mk_repform(const u16string& in_rep, const size_t beg, std::map<pair<size_t, size_t>, pair<u16string, Reading>>& add) {
-	u16string rep = in_rep; // copy it!
-	for (auto it = add.rbegin(); it != add.rend(); ++it) {
-		size_t splice_beg = it->first.first - beg;
-		size_t splice_end = it->first.second - beg;
-		if (splice_beg > rep.size() || splice_end > rep.size()) {
-			std::cerr << "divvun-suggest: WARNING: Internal error (trying to "
-				     "splice into pos " << std::max(splice_beg, splice_end) << " of rep)" << std::endl;
-			continue;
-		}
-		u16string& trg_rep = it->second.first; // Fall back to the word form of target if no suggest form
-		Reading& tr = it->second.second;
-		for(const auto& s : tr.sforms) {
-			trg_rep = fromUtf8(s); // just take the first match; TODO: include all possibilities
-		}
-		rep = rep.substr(0, splice_beg) + trg_rep + rep.substr(splice_end);
-	}
-	rep.erase(std::unique(rep.begin(), rep.end(), both_spaces), rep.end());
-	return rep;
-}
-
 /*
  * Return possibly altered beg/end indices for the Err coverage
  * (underline), along with a replacement suggestion (or Nothing() if
@@ -650,7 +626,9 @@ if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std
 	} // end for target cohorts
 if(verbose)	for (const auto& sf : reps) { std::cerr << "\033[1;35mreps sf=\t'" << toUtf8(sf) << "'\033[0m\t" << beg << "," << end << std::endl; }
 	// We never want to add whitespace to ends of suggestions (typically deleted words)
+	// and we never want double spaces in suggestions
 	for(auto& rep: reps) {
+		rep.erase(std::unique(rep.begin(), rep.end(), both_spaces), rep.end()); // remove double spaces
 		rep.erase(1 + rep.find_last_not_of(' '));
 		rep.erase(0, rep.find_first_not_of(' '));
 	}
