@@ -572,13 +572,14 @@ if(verbose)	std::cerr << "\033[1;33mi_c=\t" << i_c << "\033[0m" << std::endl;
 if(verbose)	std::cerr << "\033[1;33mleft=\t" << i_left << "\033[0m" << std::endl;
 if(verbose)	std::cerr << "\033[1;33mright=\t" << i_right << "\033[0m" << std::endl;
 	UStringVector reps = {u""};
+	UStringVector reps_suggestwf = {}; // If we're doing SUGGESTWF, we ignore reps
 	string prev_added_before_blank = "";
 	for (size_t i = i_left; i <= i_right; ++i) {
 		const auto& trg = sentence.cohorts[i];
 		Casing casing = getCasing(toUtf8(trg.form));
 
 if(verbose)		std::cerr << "\033[1;34mi=\t" << i << "\033[0m" << std::endl;
-if(verbose)		std::cerr << "\033[1;34mtrg.form=\t" << toUtf8(trg.form) << "\033[0m" << std::endl;
+if(verbose)		std::cerr << "\033[1;34mtrg.form=\t'" << toUtf8(trg.form) << "'\033[0m" << std::endl;
 if(verbose)		std::cerr << "\033[1;34mtrg.id=\t" << trg.id << "\033[0m" << std::endl;
 if(verbose)		std::cerr << "\033[1;35mtrg.raw_pre_blank=\t'" << trg.raw_pre_blank << "'\033[0m" << std::endl;
 
@@ -621,12 +622,12 @@ if(verbose)			std::cerr << "\t\033[0;35mr.suggest=" << tr.suggest << "\033[0m" <
 				auto pre_blank = i == i_left || added_before_blank
 						 ? ""
 						 : clean_blank(prev_added_before_blank + trg.raw_pre_blank);
-				// auto post_blank = tr.added_before_blank
-				// 		  ? clean_blank(trg.raw_pre_blank)
-				// 		  : "";
-				// rep_this_trg.push_back(fromUtf8(pre_blank + withCasing(tr.fixedcase, casing, sf) + post_blank));
 				rep_this_trg.push_back(fromUtf8(pre_blank + withCasing(tr.fixedcase, casing, sf)));
-if(verbose)				std::cerr << "\t\t\033[1;36msform=\t" << sf << "\033[0m" << std::endl;
+				if (i == i_c && tr.suggestwf) {
+					// Drop pre-blank for suggestwf
+					reps_suggestwf.push_back(fromUtf8(withCasing(tr.fixedcase, casing, sf)));
+				}
+if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std::endl;
 			}
 
 			if(tr.added == AddedBeforeBlank) {
@@ -650,8 +651,9 @@ if(verbose)				std::cerr << "\t\t\033[1;36msform=\t" << sf << "\033[0m" << std::
 		reps.swap(reps_next);
 		prev_added_before_blank = added_before_blank ? trg.raw_pre_blank : "";
 	} // end for target cohorts
-if(verbose)	for (const auto& sf : reps) { std::cerr << "\033[1;35mreps2 sf=\t" << toUtf8(sf) << "\033[0m" << std::endl; }
-	return std::make_pair(std::make_pair(beg, end), reps);
+if(verbose)	for (const auto& sf : reps) { std::cerr << "\033[1;35mreps sf=\t'" << toUtf8(sf) << "'\033[0m\t" << beg << "," << end << std::endl; }
+	return std::make_pair(std::make_pair(beg, end),
+			      reps_suggestwf.empty() ? reps : reps_suggestwf);
 }
 
 variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id, size_t i_c,
@@ -943,6 +945,7 @@ void expand_errs(vector<Err>& errs, const u16string& text) {
 	if (n < 2) {
 		return;
 	}
+	for (const auto& e : errs) { for(const auto& rep: e.rep) std::cerr << "\033[0;35mbefore rep=\t'" << toUtf8(rep) << "'\033[0m\t" << e.beg << "," << e.end << std::endl; }
 	// First expand "backwards" towards errors with lower beg's:
 	// Since we sort errs by beg, we only have to compare
 	// this.beg against the set of lower beg, and filter out
@@ -1032,10 +1035,15 @@ RunState Suggest::run_json(std::istream& is, std::ostream& os) {
 		if (wantsep) {
 			os << ",";
 		}
-		os << "[" << json::str(e.form) << "," << std::to_string(e.beg) << ","
-		   << std::to_string(e.end) << "," << json::str(e.err) << ","
-		   << json::str(e.msg.second) << "," << json::str_arr(e.rep) << ","
-		   << json::str(e.msg.first) << "]";
+		os << "["
+		   << json::str(e.form) << ","
+		   << std::to_string(e.beg) << ","
+		   << std::to_string(e.end) << ","
+		   << json::str(e.err) << ","
+		   << json::str(e.msg.second) << ","
+		   << json::str_arr(e.rep) << ","
+		   << json::str(e.msg.first)
+		   << "]";
 		wantsep = true;
 	}
 	os << "]"
