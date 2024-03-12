@@ -398,37 +398,33 @@ void rel_on_match(const relations& rels, const std::basic_regex<char>& name,
 }
 
 const std::pair<size_t, size_t> squiggle_bounds(const relations& rels,
-			     const Sentence& sentence,
-			     const size_t& i_fallback,
-			     const Cohort& fallback) {
-	rel_id left = fallback.id;
-	rel_id right = fallback.id;
+						const Sentence& sentence,
+						const size_t& i_fallback,
+						const Cohort& fallback) {
+	size_t left = i_fallback;
+	size_t right = i_fallback;
 	// If we have several relation targets, prefer leftmost if LEFT, rightmost if RIGHT:
 	rel_on_match(rels, LEFT_RIGHT_DELETE_REL, sentence,
-		  [&](const string& relname, size_t i_t, const Cohort& trg) {
-			  if(i_t < i_fallback) {
-				  left = trg.id;
-			  }
-			  if(i_t > i_fallback) {
-				  right = trg.id;
-			  }
-		  });
-	// return sentence.cohorts[sentence.ids_cohorts[best]] – with error checking:
-	if (left != fallback.id && sentence.ids_cohorts.find(left) == sentence.ids_cohorts.end()) {
-		std::cerr << "divvun-suggest: WARNING: Couldn't find relation target " << left << std::endl;
-		return std::make_pair(i_fallback, i_fallback);
+		     [&](const string& relname, size_t i_trg, const Cohort& trg) {
+			     if(trg.id == 0) {
+				     return; // unexpected, CG should always give id's to relation targets
+			     }
+			     if(i_trg < left) {
+				     left = i_trg;
+			     }
+			     if(i_trg > right) {
+				     right = i_trg;
+			     }
+		     });
+	if (left < 0) {
+		std::cerr << "divvun-suggest: WARNING: Left underline boundary relation target " << left << " out of bounds " << std::endl;
+		left = 0;
 	}
-	if (right != fallback.id && sentence.ids_cohorts.find(right) == sentence.ids_cohorts.end()) {
-		std::cerr << "divvun-suggest: WARNING: Couldn't find relation target " << right << std::endl;
-		return std::make_pair(i_fallback, i_fallback);
+	if (right >= sentence.cohorts.size()) {
+		std::cerr << "divvun-suggest: WARNING: Right underline relation target " << right << " out of bounds " << std::endl;
+		right = sentence.cohorts.size() - 1;
 	}
-	const size_t i_left = left == fallback.id ? i_fallback : sentence.ids_cohorts.at(left);
-	const size_t i_right = right == fallback.id ? i_fallback : sentence.ids_cohorts.at(right);
-	if (i_left < 0 || i_right >= sentence.cohorts.size()) {
-		std::cerr << "divvun-suggest: WARNING: Couldn't find relation target(s) " << left << "/" << right << std::endl;
-		return std::make_pair(i_fallback, i_fallback);
-	}
-	return std::make_pair(i_left, i_right);
+	return std::make_pair(left, right);
 }
 
 
