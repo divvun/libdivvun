@@ -1,29 +1,43 @@
 #+TITLE: Underlines without CG
 
 
-New design:
-- There is no COERROR tag, but we may use a co&errtag tag to match up
-  with &errtag
-- The left/right relations only set the outer limits of the error
-- We can use left/right simply to expand the marked region – don't
-  require matching &errtags there
-- Instead of working on indices into =text=, we reconstruct
-  replacements using forms/sforms (and =Cohort= pre-blanks).
-- When we have an R:DELETE from a reading with &errtag, we simply
-  ensure that whenever we reconstruct the replacement, we skip any
-  readings marked as delete (there is no separate loop to go through
-  replacements) – but if there are multiple source-cohort error tags,
-  we require that the deletion target has co&errtag, so we only delete
-  when errtags match.
-- By default, the form is used to reconstruct the replacement. So if
-  we have the sentence "et fint tur" where "fint" is the &errtype
-  TARGET, LEFT is "et" and RIGHT is "tur", the "default" replacement
-  if there were no &SUGGEST's would be the input "et fint tur", but
-  presumably we have sforms on the first two words, giving "en fin
-  tur". Here, "et" ideally has a reading with both &SUGGEST and
-  co&errtag, but if it does not, then we look for &SUGGEST from all
-  readings. The co&errtag is only needed if we have alternatives of
-  different errtypes in the same span.
+The new design:
+
+- Instead of =COERROR= tag, we preferably use a =co&errtag= tag to
+  match related reading with =&errtag= (for backwards compatibility,
+  the =COERROR= tag is still recognised – it has the effect of
+  blocking that cohort as being taken as a "main" cohort of the error,
+  but doesn't help with matching up readings in case of several
+  conflicting error types)
+
+- The =LEFT/RIGHT= relations (also =DELETE=) are used to expand the
+  underline of the error, to include several cohorts in one
+  replacement suggestion. We expand the underline until it matches the
+  relation targets that are furthest away. A matching =&errtag= isn't
+  strictly needed here, unless we can have several error types and
+  need to keep replacements separate.
+
+- When we have a =DELETE= relation from a reading with an =&errtag=
+  and there are be multiple source-cohort error tags, the deletion
+  target needs to have a =co&errtag=, so that we only delete in the
+  replacement for =&errtag= (not from the replacements for
+  =&other-errtag=).
+
+- By default, a cohort's word form is used to construct the
+  replacement. So if we have the sentence "we was" where "was" is
+  /central/ and tagged =&typo=, and there's a =LEFT= relation to "we",
+  then the default replacement if there were no =&SUGGEST= tags would
+  simply be the input "we was" (which would be filtered out since it's
+  equal, giving no suggestions). If we have a =&SUGGEST= readings
+  we→he then we get a "he was" suggestion. But perhaps we also have a
+  =&SUGGEST= for was→are for the possible replacment "we are" (tagged
+  =&agr=) – but we don't want both of these to apply at the same time
+  giving *"we is". In this case, we need to ensure we have
+  disambiguating =co&errtype= tags on the =&SUGGEST= readings. T
+  
+  we also have =&SUGGEST= and co&errtag, but if it does not, then we
+  look for &SUGGEST from all readings. The co&errtag is only needed if
+  we have alternatives of different errtypes in the same span.
 
 One exception: &SUGGESTWF is currently used to mean that the whole
 left/right should be replaced by what's in &SUGGESTWF. In order to not

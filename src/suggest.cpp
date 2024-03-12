@@ -447,18 +447,28 @@ const std::pair<size_t, size_t> squiggle_bounds(const relations& rels,
 vector<Reading> readings_with_errtype(const Cohort& trg, const ErrId& err_id, bool applies_deletion) {
 	vector<Reading> filtered(trg.readings.size());
 	auto it = std::copy_if(trg.readings.begin(), trg.readings.end(),
-	  filtered.begin(), [&](const Reading& tr) {
-		bool has_errtag = tr.errtypes.find(err_id) != tr.errtypes.end()
-			    || tr.coerrtypes.find(err_id) != tr.coerrtypes.end();
-		bool applies_change = tr.added != NotAdded
-			    || !tr.sforms.empty()
-		            || applies_deletion;
-		return has_errtag && applies_change;
-	  });
+			       filtered.begin(),
+			       [&](const Reading& tr) {
+				       bool has_our_errtag = tr.errtypes.find(err_id) != tr.errtypes.end()
+							     || tr.coerrtypes.find(err_id) != tr.coerrtypes.end();
+				       bool applies_change = tr.added != NotAdded
+							     || !tr.sforms.empty()
+							     || applies_deletion;
+				       return has_our_errtag && applies_change;
+			       });
 	filtered.resize(std::distance(filtered.begin(), it));
 	if (filtered.empty()) {
-		vector<Reading> unfiltered(trg.readings);
-		return unfiltered;
+		vector<Reading> not_just_other_errtype(trg.readings.size());
+		auto it = std::copy_if(trg.readings.begin(), trg.readings.end(),
+				       not_just_other_errtype.begin(),
+				       [&](const Reading& tr) {
+					       bool has_our_errtag = tr.errtypes.find(err_id) != tr.errtypes.end()
+								     || tr.coerrtypes.find(err_id) != tr.coerrtypes.end();
+					       bool no_errtags = tr.errtypes.empty() && tr.coerrtypes.empty();
+					       return no_errtags || has_our_errtag;
+				       });
+		not_just_other_errtype.resize(std::distance(not_just_other_errtype.begin(), it));
+		return not_just_other_errtype;
 	}
 	else {
 		return filtered;
