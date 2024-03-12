@@ -448,14 +448,15 @@ const std::pair<size_t, size_t> squiggle_bounds(const relations& rels,
  *
  * TODO: return references, not copies
  */
-vector<Reading> readings_with_errtype(const Cohort& trg, const ErrId& err_id) {
+vector<Reading> readings_with_errtype(const Cohort& trg, const ErrId& err_id, bool applies_deletion) {
 	vector<Reading> filtered(trg.readings.size());
 	auto it = std::copy_if(trg.readings.begin(), trg.readings.end(),
 	  filtered.begin(), [&](const Reading& tr) {
 		bool has_errtag = tr.errtypes.find(err_id) != tr.errtypes.end()
 			    || tr.coerrtypes.find(err_id) != tr.coerrtypes.end();
 		bool applies_change = tr.added != NotAdded
-			    || !tr.sforms.empty();
+			    || !tr.sforms.empty()
+		            || applies_deletion;
 		return has_errtag && applies_change;
 	  });
 	filtered.resize(std::distance(filtered.begin(), it));
@@ -559,13 +560,16 @@ variant<Nothing, pair<pair<size_t, size_t>, UStringVector>> build_squiggle_repla
 	size_t beg = orig_beg;
 	size_t end = orig_end;
 	std::set<rel_id> deletions;
+	bool src_applies_deletion = false;
 	rel_on_match(r.rels, DELETE_REL, sentence,
 		  [&](const string& relname, size_t i_t, const Cohort& trg) {
 			  deletions.insert(trg.id);
+			  if(trg.errtypes.find(err_id) != trg.errtypes.end()) { src_applies_deletion = true; }
+			  if(trg.coerrtypes.find(err_id) != trg.coerrtypes.end()) { src_applies_deletion = true; }
 		  });
 	std::map<pair<size_t, size_t>, pair<u16string, Reading>> add; // position in text:cohort in Sentence
 	// Loop from the leftmost to the rightmost of source and target cohorts:
-if(verbose)	std::cerr << "\033[1;31merr_id=\t" << toUtf8(err_id) << "\033[0m" << std::endl;
+if(verbose)	std::cerr << "\033[1;31m=== err_id=\t" << toUtf8(err_id) << " ===\033[0m" << std::endl;
 if(verbose)	std::cerr << "\033[1;33mr.id=\t" << r.id << "\033[0m" << std::endl;
 if(verbose)	std::cerr << "\033[1;33msrc.id=\t" << src.id << "\033[0m" << std::endl;
 if(verbose)	std::cerr << "\033[1;33mi_c=\t" << i_c << "\033[0m" << std::endl;
@@ -574,6 +578,7 @@ if(verbose)	std::cerr << "\033[1;33mright=\t" << i_right << "\033[0m" << std::en
 	UStringVector reps = {u""};
 	UStringVector reps_suggestwf = {}; // If we're doing SUGGESTWF, we ignore reps
 	string prev_added_before_blank = "";
+	bool prev_deleted = false;
 	for (size_t i = i_left; i <= i_right; ++i) {
 		const auto& trg = sentence.cohorts[i];
 		Casing casing = getCasing(toUtf8(trg.form));
@@ -591,7 +596,8 @@ if(verbose)			std::cerr << "\t\t\033[1;36mdelete=\t" << toUtf8(trg.form) << "\03
 		}
 
 		bool added_before_blank = false;
-		for (const Reading& tr : readings_with_errtype(trg, err_id)) {
+		bool applies_deletion = trg.id == src.id && src_applies_deletion;
+		for (const Reading& tr : readings_with_errtype(trg, err_id, applies_deletion)) {
 if(verbose)			std::cerr << "\033[1;32mtr.line=\t" << tr.line << "\033[0m" << std::endl;
 			// Update beg/end:
 			size_t splice_beg = trg.pos;
@@ -637,6 +643,9 @@ if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std
 			auto pre_blank = i == i_left || added_before_blank
 					 ? ""
 					 : clean_blank(prev_added_before_blank + trg.raw_pre_blank);
+			if(prev_deleted && pre_blank == " ") {
+				pre_blank = "";
+			}
 			if(rep_this_trg.empty()) {
 				reps_next.push_back(rep + fromUtf8(pre_blank) + trg.form);
 			}
@@ -646,6 +655,7 @@ if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std
 		}
 		reps.swap(reps_next);
 		prev_added_before_blank = added_before_blank ? trg.raw_pre_blank : "";
+		prev_deleted = del;
 	} // end for target cohorts
 if(verbose)	for (const auto& sf : reps) { std::cerr << "\033[1;35mreps sf=\t'" << toUtf8(sf) << "'\033[0m\t" << beg << "," << end << std::endl; }
 	return std::make_pair(std::make_pair(beg, end),
