@@ -6,6 +6,12 @@ if test -z "$srcdir" ; then
 fi
 set -u
 
+have_jq=false
+command -V jq &>/dev/null && have_jq=true
+jq_sort () {
+    jq -S '{errs:.errs|sort,text}' "$@"
+}
+
 #cd "$(dirname "$0")" || exit 1
 
 declare -i fail=0
@@ -17,6 +23,9 @@ for input in "$srcdir"/input.*.cg; do
                           > output"${base}"json \
                           2>output"${base}"err
     if ! diff "$srcdir"/expected"${base}"json output"${base}"json; then
+        if $have_jq; then
+            diff -u <(jq_sort "$srcdir"/expected"${base}"json) <(jq_sort output"${base}"json)
+        fi
         echo "stdout differs for ${base}"
         (( fail++ ))
     fi
