@@ -618,13 +618,9 @@ if(verbose)			std::cerr << "\t\033[0;35mr.coerror=" << tr.coerror << "\033[0m";
 if(verbose)			std::cerr << "\t\033[0;35mr.suggestwf=" << tr.suggestwf << "\033[0m";
 if(verbose)			std::cerr << "\t\033[0;35mr.suggest=" << tr.suggest << "\033[0m" << "\t" << tr.line;
 			if(!del) for(const auto& sf : tr.sforms) {
-				// Prepend blank unless at left edge:
-				auto pre_blank = i == i_left || added_before_blank
-						 ? ""
-						 : clean_blank(prev_added_before_blank + trg.raw_pre_blank);
-				rep_this_trg.push_back(fromUtf8(pre_blank + withCasing(tr.fixedcase, casing, sf)));
+				rep_this_trg.push_back(fromUtf8(withCasing(tr.fixedcase, casing, sf)));
 				if (i == i_c && tr.suggestwf) {
-					// Drop pre-blank for suggestwf
+					// TODO: apply casing or not to suggestwf?
 					reps_suggestwf.push_back(fromUtf8(withCasing(tr.fixedcase, casing, sf)));
 				}
 if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std::endl;
@@ -637,15 +633,15 @@ if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std
 
 		UStringVector reps_next;
 		for(auto& rep: reps) {
+			// Prepend blank unless at left edge:
+			auto pre_blank = i == i_left || added_before_blank
+					 ? ""
+					 : clean_blank(prev_added_before_blank + trg.raw_pre_blank);
 			if(rep_this_trg.empty()) {
-				// Prepend blank unless at left edge:
-				auto pre_blank = i == i_left || added_before_blank
-						 ? ""
-						 : clean_blank(prev_added_before_blank + trg.raw_pre_blank);
 				reps_next.push_back(rep + fromUtf8(pre_blank) + trg.form);
 			}
 			else for(const auto& form : rep_this_trg) {
-				reps_next.push_back(rep + form);
+				reps_next.push_back(rep + fromUtf8(pre_blank) + form);
 			}
 		}
 		reps.swap(reps_next);
@@ -880,8 +876,6 @@ Sentence Suggest::run_sentence(std::istream& is, FlushOn flush_on) {
 		}
 	} while (std::getline(is, line));
 
-	sentence.raw_final_blank = raw_blank;
-
 	if (!readinglines.empty()) {
 		const auto& reading =
 		  proc_reading(*generator, readinglines, generate_all_readings);
@@ -897,6 +891,8 @@ Sentence Suggest::run_sentence(std::istream& is, FlushOn flush_on) {
 
 	c.pos = pos;
 	if (!cohort_empty(c)) {
+		std::swap(c.raw_pre_blank, raw_blank);
+		raw_blank.clear();
 		sentence.cohorts.push_back(c);
 		if (c.id != 0) {
 			sentence.ids_cohorts[c.id] = sentence.cohorts.size() - 1;
@@ -906,6 +902,7 @@ Sentence Suggest::run_sentence(std::istream& is, FlushOn flush_on) {
 		pos += c.form.size();
 		sentence.text << toUtf8(c.form);
 	}
+	sentence.raw_final_blank = raw_blank;
 
 	mk_errs(sentence);
 	return sentence;
@@ -945,7 +942,6 @@ void expand_errs(vector<Err>& errs, const u16string& text) {
 	if (n < 2) {
 		return;
 	}
-	for (const auto& e : errs) { for(const auto& rep: e.rep) std::cerr << "\033[0;35mbefore rep=\t'" << toUtf8(rep) << "'\033[0m\t" << e.beg << "," << e.end << std::endl; }
 	// First expand "backwards" towards errors with lower beg's:
 	// Since we sort errs by beg, we only have to compare
 	// this.beg against the set of lower beg, and filter out
