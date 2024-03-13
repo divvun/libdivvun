@@ -999,7 +999,7 @@ Then we can add a suggestion that puts a space between the forms:
     COPY:no-space-after-punct ("<$1 $2>"v &SUGGESTWF)
         TARGET ("<(.*)>"r &no-space-after-punct-mark)
         IF (1 ("<(.*)>"r))
-           (NOT 0 (COERROR))
+           (NOT 0 (co&no-space-after-punct-mark))
         ;
 
 This uses vislcg3's [variable strings / varstrings](http://beta.visl.sdu.dk/cg3/chunked/tags.html#variable-strings) to create the
@@ -1026,7 +1026,7 @@ Now the output is
             "," CLB <NoSpaceAfterPunctMark> &no-space-after-punct-mark ID:3 R:RIGHT:4
             "," CLB <NoSpaceAfterPunctMark> "<, ja>" &no-space-after-punct-mark &SUGGESTWF ID:3 R:RIGHT:4
     "<ja>"
-            "ja" CC @CNP COERROR &no-space-after-punct-mark ID:4
+            "ja" CC @CNP co&no-space-after-punct-mark ID:4
 
 or, in JSON format:
 
@@ -1157,6 +1157,8 @@ from the regular suggestion generator, and saves some duplicate work.
 
 ## How underlines and replacements are built
 
+<a id="orgb25740d"></a>
+
 The `LEFT/RIGHT` relations (also `DELETE`) are used to expand the
 underline of the error, to include several cohorts in one replacement
 suggestion. We expand the underline until it matches the relation
@@ -1215,8 +1217,6 @@ other words. (If we ever change how this works, we will have to first
 update many existing CG3 rules.)
 
 
-<a id="orgb25740d"></a>
-
 ## Summary of special tags and relations
 
 CG lets you define all kinds of new tags and relation-names and within
@@ -1245,10 +1245,11 @@ don't conflict with the below special tags.
     See [Including spelling errors](#org26182db).
 -   `<spelled>` is added by `divvun-cgspell` to any suggestions it
     makes. See [Including spelling errors](#org26182db).
--   `COERROR` makes a cohort non-central in that error, see [Deleting words](#org4d2c8ef).
-    (For backwards-compatibility with older grammar checker files,
-    `&LINK` also has the same meaning as `COERROR`, though this is
-    deprecated and at some point `&LINK` may be fully removed)
+-   `co&` is a tag prefix – `co&` marks a reading as a non-central
+    part of the underline of `&errtag`, see [Deleting words](#org4d2c8ef)
+    and related sections. (You may also see `COERROR &errtag` or `&LINK
+    &errtag` in older rules; this was the old way of writing
+    `co&errtag`.)
 -   `&ADDED` means this cohort was added (typically with `ADDCOHORT`)
     and should be a part of the suggestion for the error. It will appear
     after the blank of the preceding cohort, and will not be the central
