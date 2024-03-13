@@ -578,45 +578,44 @@ if(verbose)			std::cerr << "\t\t\033[1;36mdelete=\t" << toUtf8(trg.form) << "\03
 
 		bool added_before_blank = false;
 		bool applies_deletion = trg.id == src.id && src_applies_deletion;
+		size_t trg_beg = trg.pos;
+		size_t trg_end = trg.pos + trg.form.size();
 		for (const Reading& tr : readings_with_errtype(trg, err_id, applies_deletion)) {
 if(verbose)			std::cerr << "\033[1;32mtr.line=\t" << tr.line << "\033[0m" << std::endl;
 			// Update beg/end:
-			size_t splice_beg = trg.pos;
-			size_t splice_end = trg.pos + trg.form.size();
 			if (tr.added == AddedBeforeBlank) {
 				if (i == 0) {
-					std::cerr
-					  << "divvun-suggest: WARNING: Saw &ADDED-BEFORE-BLANK on "
-					     "initial word, ignoring"
-					  << std::endl;
+					std::cerr << "divvun-suggest: WARNING: Saw &ADDED-BEFORE-BLANK on initial word, ignoring" << std::endl;
 					continue;
 				}
 				const auto& pretrg = sentence.cohorts[i - 1];
-				splice_beg = pretrg.pos + pretrg.form.size();
+				trg_beg = pretrg.pos + pretrg.form.size();
+				added_before_blank = true;
 			}
-			if(tr.added != NotAdded) { // ie. if Added, don't replace existing form:
-				splice_end = splice_beg;
+			if(tr.added != NotAdded) { // Don't replace existing form if Added/AddedBeforeBlank
+				trg_end = trg_beg;
 			}
-			beg = std::min(beg, splice_beg);
-			end = std::max(end, splice_end);
-
 if(verbose)			std::cerr << "\t\033[1;35mr.wf='" << tr.wf << "'\033[0m";
 if(verbose)			std::cerr << "\t\033[0;35mr.coerror=" << tr.coerror << "\033[0m";
 if(verbose)			std::cerr << "\t\033[0;35mr.suggestwf=" << tr.suggestwf << "\033[0m";
 if(verbose)			std::cerr << "\t\033[0;35mr.suggest=" << tr.suggest << "\033[0m" << "\t" << tr.line;
+			// Collect SUGGEST/SUGGESTWF:
 			if(!del) for(const auto& sf : tr.sforms) {
 				rep_this_trg.push_back(fromUtf8(withCasing(tr.fixedcase, casing, sf)));
-				if (i == i_c && tr.suggestwf) {
-					// TODO: apply casing or not to suggestwf?
-					reps_suggestwf.push_back(fromUtf8(withCasing(tr.fixedcase, casing, sf)));
+				if (tr.suggestwf) {
+					if (i == i_c) {
+						// TODO: Apply casing or not to suggestwf?
+						reps_suggestwf.push_back(fromUtf8(withCasing(tr.fixedcase, casing, sf)));
+					}
+					else {
+						std::cerr << "divvun-suggest: WARNING: Saw &SUGGESTWF on non-central (co-)cohort, ignoring" << std::endl;
+					}
 				}
 if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std::endl;
 			}
-
-			if(tr.added == AddedBeforeBlank) {
-				added_before_blank = true;
-			}
 		} // end for readings of target
+		beg = std::min(beg, trg_beg);
+		end = std::max(end, trg_end);
 
 		UStringVector reps_next;
 		for(auto& rep: reps) {
@@ -634,7 +633,6 @@ if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std
 		reps.swap(reps_next);
 		prev_added_before_blank = added_before_blank ? trg.raw_pre_blank : "";
 	} // end for target cohorts
-if(verbose)	for (const auto& sf : reps) { std::cerr << "\033[1;35mreps sf=\t'" << toUtf8(sf) << "'\033[0m\t" << beg << "," << end << std::endl; }
 	// We never want to add whitespace to ends of suggestions (typically deleted words)
 	// and we never want double spaces in suggestions
 	for(auto& rep: reps) {
@@ -642,6 +640,7 @@ if(verbose)	for (const auto& sf : reps) { std::cerr << "\033[1;35mreps sf=\t'" <
 		rep.erase(1 + rep.find_last_not_of(' '));
 		rep.erase(0, rep.find_first_not_of(' '));
 	}
+if(verbose)	for (const auto& sf : reps) { std::cerr << "\033[1;35mreps sf=\t'" << toUtf8(sf) << "'\033[0m\t" << beg << "," << end << std::endl; }
 	return std::make_pair(std::make_pair(beg, end),
 			      reps_suggestwf.empty() ? reps : reps_suggestwf);
 }
