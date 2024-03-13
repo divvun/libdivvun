@@ -30,7 +30,8 @@
     7.  [Adding words](#orgb76a5c9)
     8.  [Adding literal word forms, altering existing wordforms](#orge23663a)
     9.  [Including spelling errors](#org26182db)
-    10. [Summary of special tags and relations](#orgb55740d)
+    10. [How underlines and replacements are built](#orgb25740d)
+    11. [Summary of special tags and relations](#orgb55740d)
         1.  [Tags](#org67d1b58)
         2.  [Relations](#orga4550ed)
 11. [Troubleshooting](#orge03c2e9)
@@ -722,10 +723,27 @@ in the right order for generation to work.
 
 ## More complex grammarchecker.cg3 rules (spanning over several words)
 
-The error is considered to have a central part and one or more less central parts.
-The less central parts need the `COERROR` tag (without numbering) if all parts are to be underlined as one error. The words can be adjacent. If there are words in between that are not part of the error, they are still underlined.
+The error is considered to have a central part and one or more less
+central parts (parts here being CG cohorts).
 
-In the first line of the following example only "soaitá" and "boađán" are part of the error and are underlined. However, if "mun" ("I") is inserted in between then it is also underlined. 
+The central part needs the error tag, e.g. `&real-hallan` in
+the above simple example.
+
+If there are several different ways of correcting an error, you may
+also need to add "co-error tags" to the non-central parts to
+disambiguate the replacements – see the below section on [Alternative
+suggestions for complex errors altering different parts of the
+error](#orgb76a5c9) for details on this.
+
+The non-central parts need to be referred to by a relation named
+`LEFT` or `RIGHT` or `DELETE` from the central part, if all all parts
+are to be underlined as one error. The words can be adjacent. If there
+are words in between that are not part of the error, they are still
+underlined.
+
+In the first line of the following example only "soaitá" and "boađán"
+are part of the error and are underlined. However, if "mun" ("I") is
+inserted in between then it is also underlined.
 
     Mun soaitá boađán. `Maybe I come.'
     Soaitá mun boađán. `Maybe I come.'
@@ -765,7 +783,7 @@ that covers both those words, where the suggestion is the same string
 without the target of the `DELETE1` relation.
 
     ADD (&one-word-too-many) KeepThisWord;
-    ADDRELATION (DELETE1) KeepThisWord TO (-1 DeleteThisWord);
+    ADDRELATION (DELETE1 $2) KeepThisWord TO (-1 DeleteThisWord);
 
 The cohort matching `KeepThisWord` is now the central one of the
 error, so if e.g. `errors.xml` uses templates like
@@ -774,17 +792,24 @@ error, so if e.g. `errors.xml` uses templates like
 
 the word form of `KeepThisWord` will be substituted for `$1`.
 
-You may delete more words from the same suggestion using `DELETE2`
-etc.
+A real example from North Sámi is the error "dego lávvomuorran" where
+we want to delete the word "dego" from the suggestion and keep
+"lávvomuorran" (the central word, `$1` in `errors.xml`):
 
-In South Sámi sometimes phrasal verbs are used (due to a literal translation from Scandinavian languages) 
-where the verb alone already expresses the concept. 
-This is the case for "tjuedtjelh bæjjese" (verb + adverb) meaning "stand.up up". 
-With the following rule we first annotate the error and then delete the adverb "bæjjese".
+    ADD (&syn-not-dego)      TARGET Ess IF (-1 ("dego")) ;
+    ADDRELATION (DELETE1 $2) TARGET (&syn-not-dego) TO (-1 ("dego"));
+
+You may delete more words from the same cohort using `DELETE2` etc.
+
+In South Sámi sometimes phrasal verbs are used (due to a literal
+translation from Scandinavian languages) where the verb alone already
+expresses the concept. This is the case for "tjuedtjelh bæjjese"
+(verb + adverb) meaning "stand.up up". With the following rule we
+first annotate the error and then delete the adverb "bæjjese".
 
     ADD (&syn-delete-adv-phrasal-verb) TARGET (V) IF (0 ("tjuedtjielidh") OR ("fulkedh")) (*0 ("bæjjese") BARRIER (*) - Pcle) ;
     ADD (&syn-delete-adv-phrasal-verb) TARGET (Adv) IF (0 ("bæjjese")) (*0 ("tjuedtjielidh") OR ("fulkedh") BARRIER (*) - Pcle) ;
-    
+
     ADDRELATION (DELETE1) (V &syn-delete-adv-phrasal-verb) TO (*0 (Adv &syn-delete-adv-phrasal-verb) BARRIER (*) - Pcle) ;
 
 
@@ -792,53 +817,95 @@ With the following rule we first annotate the error and then delete the adverb "
 
 ## Alternative suggestions for complex errors altering different parts of the error
 
-However, sometimes you have several possible suggestions on the same
-word, which might partially overlap. For example, you might also have
+Sometimes you have several possible suggestions on the same word,
+which might partially overlap. For example, the simple deletion
+example from above might also have an alternative interpretation where
+instead of deleting the word "dego" to the left, we should change the
+case of the word "lávvomuorran" from essive to nominative case:
 
-    ADD (&other-error) KeepThisWord;
-    COPY (Nom &other-error) EXCEPT (Acc) TARGET (&other-error) ;
+    ADD (&syn-dego-nom) TARGET Ess IF (-1 ("dego"));
+    COPY (Sg Nom &SUGGEST) EXCEPT (Ess) TARGET (&syn-dego-nom) ;
 
-where you want to keep the suggestions for `&one-word-too-many`
-separate from the suggestions for `&other-error`.
-Each suggestion for an error with several parts requires that all parts receive the same error tag and the less central parts receive the COERROR tag. In the following case there are two possible corrections.
+Here we want to keep the suggestions for `&syn-dego-nom` separate from
+the suggestions for `&syn-not-dego` – in particular, we don't want to
+include a suggestion where we *both* delete and change cases at the
+same time. But if we use the above rules, CG gives us this output:
+
+    "<dego>"
+            "dego" CS @CNP ID:11
+    :
+    "<lávvomuorran>"
+             "lávvomuorra" N Ess @COMP-CS< &syn-not-dego ID:12 R:DELETE1:11
+             "lávvomuorra" N Sg Nom @COMP-CS< &syn-dego-nom ID:12 R:DELETE1:11 &SUGGEST
+
+Notice how the DELETE relation is on both readings, and also how how
+the relation target id (`11`) refers to a cohort, not a reading of a
+cohort. There is no way from this output to know that "dego" should
+not also be deleted from the `&SUGGEST` reading.
+
+So when there are such multiple alternative interpretations for errors
+spanning multiple words, the less central parts ("dego" above) need a
+"co-error tag" (using `co&` as a prefix instead of `&`) to say which
+error tag goes with which non-central reading.
+
+    ADD (co&syn-not-dego) ("dego") IF (1 (&syn-not-dego));
+
+Without the `co`, this would be treated as a separate error, while
+without `&syn-not-dego`, we would suggest deleting this word in
+the suggestions for `&syn-dego-nom` too.
+
+By using `co&error-tags`, we can have multiple alternative
+interpretations of an error, while avoiding generating bad
+combinations. In the following case:
 
     Soaitá boađán.
-    
+
+there are two possible corrections:
+
     Soaittán boahtit.
     Kánske boađán.
 
 The alternative corrections have different central parts of the error.
-In the first case both parts are changed. The first part ("soaitá" 3.Sg.) is changed to "soaittán" (1.Sg.) based on the person and number of the second word ("boađán" 1.Sg.). Subsequently "boađán" (1.Sg.) is changed to "boahtit" (infinitive).
-Alternatively, only the first part is changed and the second part remains unchanged. In this case we can change the "soaitá" (3.Sg.) to the adverb "kánske".
-This requires that the error receives two error tags for the parts that are two be changed, i.e. `&msyn-kánske` to "soaitá" and `&msyn-fin_fin-fin_inf to both "soaitá" and "boađán"`.
+In the first case both parts are changed. The first part ("soaitá"
+3.Sg.) is changed to "soaittán" (1.Sg.) based on the person and number
+of the second word ("boađán" 1.Sg.). Subsequently "boađán" (1.Sg.) is
+changed to "boahtit" (infinitive). Alternatively, only the first part
+is changed and the second part remains unchanged. In this case we can
+change the "soaitá" (3.Sg.) to the adverb "kánske".
 
-    Dåaktere veanhta dïhte aktem aajla-hirremem åtneme, dan åvteste tjarke svæjmadi jïh 
+As usual, this requires `&SUGGEST` readings for the parts that are two
+be changed, and one unique error tag for each interpretation, ie.
+`&msyn-kánske` for the "Kánske boađán" correction and
+`&msyn-fin_fin-fin_inf` for the "Soaittán boahtit" correction.
+
+We also need relations `LEFT/RIGHT` from the central cohort carrying
+the error tag to ensure both words are underlined. Again, if we say
+that the correction "boahtit" has a relation to the correction
+"Soaittán", CG only knows that there's a relation between the words,
+not between the individual readings. In order to match
+readings-to-readings, we use the (co-)error tags to match up. If we
+chose the first word (input form "Soaitá") to be the central cohort,
+and had the error tag `&msyn-kánske` on the suggestion for "Kánske",
+then we would add a relation `RIGHT` to the second word (input form
+"boađán") and add the co-error tag `co&msyn-kánske` to the correct
+reading of that word (in this case the reading that does *not* suggest
+a change).
+
+By adding `co&msyn-kánske` etc., we avoid generating silly suggestion
+combinations like *"Kánske boahtit" or *"Soaittán boađán".
+
+Another example:
+
+    Dåaktere veanhta dïhte aktem aajla-hirremem åtneme, dan åvteste tjarke svæjmadi jïh
     {ij mujhti} satne lij vaedtsieminie skuvleste gåatan.
 
-In this sentence for sma there are two alternative suggestions:
+In this sentence in South Sámi there are two alternative suggestions:
 
 -   one regarding the second cohort only &#x2013; `mujhti > mujhtieh`
 -   the other one regarding both cohorts &#x2013; `ij mujhti > idtji mujhtieh`
 
-Unfortunately, relations in CG are cohort-to-cohort, not
-reading-to-reading. The workaround is to put the error tag also on the
-relation target (the word to be deleted), along with the `COERROR` tag
-to say that this is not the central word of the error:
-
-    ADD (COERROR &one-word-too-many) DeleteThisWord IF (1 KeepThisWord);
-
-Without `COERROR`, this would be treated as a separate error, while
-without `&one-word-too-many`, we would suggest deleting this word in
-the suggestions for `&other-error` too.
-
-Similarly, the `&SUGGEST` reading for the `&other-error` retains the
-`&other-error` tag, which avoids generating that suggestion for the
-`&one-word-too-many` error.
-
-A real example of this in the North Sámi checker is the error
-`dego lávvomuorran`, which has the suggestions `lávvomuorran` or `dego
-lávvomuorra` – one error type alters just the form, and one removes
-just the preceding word.
+Here too, we need to ensure that there are `co&errortags` to match
+relations to readings.
 
 
 <a id="orgb76a5c9"></a>
@@ -856,7 +923,7 @@ error to the added word:
     ADDRELATION (LEFT) (&msyn-valency-go-not-fs) TO (-1 (&ADDED)) ;
 
 Because of `&ADDED`, `divvun-suggest` will treat this as a non-central
-word of the error (just like with the `COERROR` tag).
+word of the error (just like with `co&` tags).
 
 Note that we include the space in the wordform, and we put it at the
 *end* of the wordform. This is because vislcg3 always adds new cohorts
@@ -908,12 +975,12 @@ but that will
 
 Instead, let's extend the underline to the following word:
 
-    ADD (&no-space-after-punct-mark COERROR)
+    ADD (co&no-space-after-punct-mark)
         TARGET (*)
         IF (-1 (<NoSpaceAfterPunctMark>))
         ;
     ADDRELATION (RIGHT) (&no-space-after-punct-mark)
-        TO (1 (COERROR) LINK 0 (&no-space-after-punct-mark))
+        TO (1 (co&no-space-after-punct-mark))
         ;
 
 Every error needs a "central" cohort, even if it involves several
@@ -922,7 +989,7 @@ correctly. It doesn't matter which one you pick, as long as you pick
 one. Here we've picked the comma to be central, while the following
 word is a "link" word. In the above rules,
 
--   The `COERROR` tag says that the following word is just a part of the
+-   The `co&` tag says that the following word is just a part of the
     error, not the central cohort.
 -   The `RIGHT` relation says that this is one big error, not two
     separate ones.
@@ -943,10 +1010,11 @@ appear in the sentence. If the rule referred to the preceding word
 with `(-1 ("<(.*)>"r))`, you'd probably want the suggestion to be `<$2
 $1>`.
 
-We also make sure we don't put a suggestion-tag on the `COERROR` cohort
-(here the word `<ja>`), which would lead to some strange suggestions
-since it is already part of the suggestion-tag on the comma `<,>`
-cohort.
+We don't put a suggestion-tag on the `co&` cohort (here the word
+`<ja>`), which would lead to some strange suggestions since it is
+already part of the suggestion-tag on the comma `<,>` cohort. See
+[How underlines and replacements are built](#orgb25740d) for more
+on the relationship between `&SUGGESTWF` and replacements.
 
 Now the output is
 
@@ -1063,8 +1131,8 @@ underlines and actually show the suggestions, add a rule like
 to the grammar checker CG. The reason we add `&SUGGESTWF` and not
 `&SUGGEST` is that we're using the wordform-tag directly as the
 suggestion, and not sending each analysis through the generator (as
-`&SUGGEST` would do). So if, after disambiguation and grammarchecker
-CG's, we had
+`&SUGGEST` would do). See also the next section on how replacements
+are built. So if, after disambiguation and grammarchecker CG's, we had
 
     "<coffes>"
             "coffee" N Pl <W:37.3018> <WA:17.3018> <spelled> "<coffees>" &typo &SUGGESTWF
@@ -1086,6 +1154,68 @@ from the regular suggestion generator, and saves some duplicate work.
 
 
 <a id="orgb55740d"></a>
+
+## How underlines and replacements are built
+
+The `LEFT/RIGHT` relations (also `DELETE`) are used to expand the
+underline of the error, to include several cohorts in one replacement
+suggestion. We expand the underline until it matches the relation
+targets that are furthest away, so if you have several such relation
+targets to the left of the central cohort, the underline expands to
+the leftmost one.
+
+A matching `co&errtag` isn't strictly needed on the non-central word,
+but is recommended in case we can have several error types and need to
+keep replacements separate (to avoid silly combinations of
+suggestions).
+
+When we have a `DELETE` relation from a reading with an `&errtag` and
+there are be multiple source-cohort error tags, the deletion target
+needs to have a `co&errtag`, so that we only delete in the replacement
+for `&errtag` (not from the replacements for `&other-errtag`). See the
+section on [Alternative suggestions for complex errors altering
+different parts of the error](#orge26043f) for more info on this.
+
+By default, *a cohort's word form is used to construct the
+replacement*. So if we have the sentence "we was" where "was" is
+**central** and tagged `&typo`, and there's a `LEFT` relation to "we",
+then the default replacement if there were no `&SUGGEST` tags would
+simply be the input "we was" (which would be filtered out since it's
+equal, giving no suggestions).
+
+If we now add a `&SUGGEST` reading on "we" that generates "he" then we
+get a "he was" suggestion. `&SUGGEST` readings with matching
+(co-)error tags are prioritised over input word form.
+
+If we also have a `&SUGGEST` for was→are for the possible replacment
+"we are" (tagged `&agr`) – now we don't want both of these to apply at
+the same time giving *"we is". In this case, we need to ensure we have
+disambiguating `co&errtype` tags on the `&SUGGEST` readings. The
+following CG parse:
+
+    "<we>"
+        "we" Prn &agr                 ID:1 R:RIGHT:2
+        "he" Prn &SUGGEST co&agr-typo ID:1 R:RIGHT:2
+    : 
+    "<was>"
+        "be" V 3Sg &agr-typo       ID:2 R:LEFT:1
+        "be" V 3Pl co&agr &SUGGEST ID:2 R:LEFT:1
+
+will give us all and only the suggestions we want ("he was" and "we
+were", but not *"he were").
+
+There is one exception to the above principles; for
+backwards-compatibility, `&SUGGESTWF` is still used to mean that the
+whole underline should be replaced by what's in `&SUGGESTWF`. This
+means that if you combine `&SUGGESTWF` with `RIGHT/LEFT`, you will not
+automatically get the word form for the relation target(s) in your
+replacement, you have to construct the whole replacement yourself.
+This also means you cannot combine `&SUGGESTWF` with `&SUGGEST` on
+other words. (If we ever change how this works, we will have to first
+update many existing CG3 rules.)
+
+
+<a id="orgb25740d"></a>
 
 ## Summary of special tags and relations
 
