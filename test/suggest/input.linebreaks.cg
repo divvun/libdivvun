@@ -7,7 +7,7 @@
 : 
 "<liegga riikii>"
 	"lieggariika" §TH §LO N Sem/Plc Sg Ill Err/SpaceCmp <W:0> @<ADVL &msyn-compound #3->2
-	"lieggariika" §TH §LO N Sem/Plc Sg Ill <W:0> @<ADVL &SUGGEST #3->2
+	"lieggariika" §TH §LO N Sem/Plc Sg Ill <W:0> @<ADVL SUGGEST #3->2
 "<.>"
 	"." CLB <W:0> #4->4
 :\n

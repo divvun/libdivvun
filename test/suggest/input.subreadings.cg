@@ -11,17 +11,17 @@
 		"eallát" V IV Der/muš N Cmp/SgGen Cmp <W:10.0000000000>
 	"vallji" N Sem/State Sg Nom <W:10.0000000000> @HNOUN
 		"eallát" V IV Der/muš N Cmp/SgNom Cmp <W:10.0000000000>
-	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &msyn-compound &SUGGEST
+	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &msyn-compound SUGGEST
 		"eallit" V IV Der/muš N Cmp/SgGen Cmp <W:10.0000000000>
-	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &msyn-compound &SUGGEST
+	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &msyn-compound SUGGEST
 		"eallit" V IV Der/muš N Cmp/SgNom Cmp <W:10.0000000000>
-	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &msyn-compound &SUGGEST
+	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &msyn-compound SUGGEST
 		"eallámuš" N Sem/Dummytag Cmp/SgGen Cmp <W:10.0000000000>
-	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &msyn-compound &SUGGEST
+	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &msyn-compound SUGGEST
 		"eallámuš" N Sem/Dummytag Cmp/SgNom Cmp <W:10.0000000000>
-	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &msyn-compound &SUGGEST
+	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &msyn-compound SUGGEST
 		"eallát" V IV Der/muš N Cmp/SgGen Cmp <W:10.0000000000>
-	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &msyn-compound &SUGGEST
+	"vallji" Sem/State <W:10.0000000000> @HNOUN N Sg Ill &msyn-compound SUGGEST
 		"eallát" V IV Der/muš N Cmp/SgNom Cmp <W:10.0000000000>
 :\n
 

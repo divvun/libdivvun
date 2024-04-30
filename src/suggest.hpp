@@ -174,7 +174,7 @@ struct Reading {
 	StringVector sforms;
 	relations rels; // rels[relname] = target.id
 	rel_id id = 0;  // id is 0 if unset, otherwise the relation id of this word
-	string wf;	// tag of type "wordform"S for use with &SUGGESTWF
+	string wf;	// tag of type "wordform"S for use with SUGGESTWF
 	bool suggestwf = false;
 	bool coerror = false; // cohorts that are not the "core" of the underline never become Err's; message template offsets refer to the cohort of the Err
 	Added added = NotAdded;

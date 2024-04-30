@@ -1308,7 +1308,7 @@ LIST &corr-no-missing-argument = &corr-no-missing-argument ;
 
 	# suggestions of forms to be generated
 	
-LIST &SUGGEST = &SUGGEST ;
+LIST SUGGEST = SUGGEST ;
 LIST &DELETE = &DELETE ;
 
 # &err-spellingerror    	spellingerror word is not in lexicon

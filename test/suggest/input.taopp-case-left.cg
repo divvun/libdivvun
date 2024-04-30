@@ -3,13 +3,13 @@
 : 
 "<Ta>"
 	"ta" V Inf <W:0> @V &syn-phrasal-verb ID:2 COERROR
-	"spille" V Inf <W:0> @V &syn-phrasal-verb &SUGGEST ID:2 COERROR
+	"spille" V Inf <W:0> @V &syn-phrasal-verb SUGGEST ID:2 COERROR
 : 
 "<opp>"
 	"opp" Adv <W:0> @Adv &syn-phrasal-verb ID:3 R:LEFT:2
-	"inn" Adv <W:0> @Adv &syn-phrasal-verb &SUGGEST ID:3 R:LEFT:2
+	"inn" Adv <W:0> @Adv &syn-phrasal-verb SUGGEST ID:3 R:LEFT:2
 : 
 "<badjel>"
 	"badjel" Po <W:0> @<ADVL &lex-bokte-not-badjel #4->4
-	"bokte" Po <W:0> @<ADVL &SUGGEST #4->4
+	"bokte" Po <W:0> @<ADVL SUGGEST #4->4
 :

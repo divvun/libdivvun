@@ -3,4 +3,4 @@
 : 
 "<lávvomuorran>"
 	"lávvomuorra" N Sem/Dummytag Ess <W:0> @COMP-CS< &syn-not-dego R:DELETE1:11
-	"lávvomuorra" N Sem/Dummytag Sg Nom <W:0> @COMP-CS< &syn-dego-nom R:DELETE1:11 &SUGGEST
+	"lávvomuorra" N Sem/Dummytag Sg Nom <W:0> @COMP-CS< &syn-dego-nom R:DELETE1:11 SUGGEST

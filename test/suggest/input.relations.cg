@@ -1,7 +1,7 @@
 "<sáhti>"
 	"sáhttit" V <TH-Acc-Obj><XT-Acc-Measure> <DE-Ill-Plc> <Inf> IV VGen <W:0> &syn-Du3-not-Foc #11->11 ID:11 R:foo:12 ADD:10472:syn-Du3-not-Foc ADDRELATION(foo):10473 syn-Du3-not-Foc
-	"sáhttit" V <TH-Acc-Obj><XT-Acc-Measure> <DE-Ill-Plc> <Inf> IV <W:0> Ind Prs Du3 &SUGGEST #11->11 ID:11 R:foo:12 COPY:10474:syn-Du3-not-Foc
-	"sáhttit" V IV Ind Prs Du3 &SUGGEST #4->4
+	"sáhttit" V <TH-Acc-Obj><XT-Acc-Measure> <DE-Ill-Plc> <Inf> IV <W:0> Ind Prs Du3 SUGGEST #11->11 ID:11 R:foo:12 COPY:10474:syn-Du3-not-Foc
+	"sáhttit" V IV Ind Prs Du3 SUGGEST #4->4
 :
 "<ba>"
 	"ba" Pcle <W:0> @PCLE MAP:15565:r16 #12->12 ID:12

@@ -234,17 +234,17 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 		if (tag == "COERROR") {
 			r.coerror = true;
 		}
+		else if (tag == "&SUGGEST" || tag == "SUGGEST") { // &SUGGEST kept for backward-compatibility
+				r.suggest = true;
+		}
+		else if (tag == "&SUGGESTWF" || tag == "SUGGESTWF") { // &SUGGESTWF kept for backward-compatibility
+				r.suggestwf = true;
+		}
 		else if (result.empty()) {
 			gentags.push_back(tag);
 		}
 		else if (result[2].length() != 0) {
-			if (tag == "&SUGGEST") {
-				r.suggest = true;
-			}
-			else if (tag == "&SUGGESTWF") {
-				r.suggestwf = true;
-			}
-			else if (tag == "&ADDED" || tag == "&ADDED-AFTER-BLANK") {
+			if (tag == "&ADDED" || tag == "&ADDED-AFTER-BLANK") {
 				r.added = AddedAfterBlank;
 			}
 			else if (tag == "&ADDED-BEFORE-BLANK") {
@@ -612,7 +612,7 @@ if(verbose)			std::cerr << "\t\033[0;35mr.suggest=" << tr.suggest << "\033[0m" <
 						reps_suggestwf.push_back(fromUtf8(withCasing(tr.fixedcase, casing, sf)));
 					}
 					else {
-						std::cerr << "divvun-suggest: WARNING: Saw &SUGGESTWF on non-central (co-)cohort, ignoring" << std::endl;
+						std::cerr << "divvun-suggest: WARNING: Saw SUGGESTWF on non-central (co-)cohort, ignoring" << std::endl;
 					}
 				}
 if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std::endl;
@@ -719,7 +719,7 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id, size_t i_c,
 	UStringVector rep;
 	for (const Reading& r : c.readings) {
 		if(r.errtypes.find(err_id) == r.errtypes.end()) {
-			continue; // We consider sforms of &SUGGEST readings in build_squiggle_replacement
+			continue; // We consider sforms of SUGGEST readings in build_squiggle_replacement
 		}
 		// If there are LEFT/RIGHT added relations, add suggestions with those concatenated to our form
 		// TODO: What about our current suggestions of the same error tag? Currently just using wordform

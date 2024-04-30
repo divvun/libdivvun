@@ -13,8 +13,8 @@
 : 
 "<girjii>"
 	"girje" §TH §RE N Sem/Ani Sg Ill <W:0> @<ADVL &real-girjji #5->4 ADD:3983:girjji SUBSTITUTE:8565 SUBSTITUTE:8717 ADD:3983:girjji
-	"girji" Sem/Ani <W:0> @<ADVL §TH §RE N Sg Gen &SUGGEST #5->4 COPY:3984:real-girjjii SUBSTITUTE:8565 SUBSTITUTE:8717 SETPARENT:8880 SETPARENT:8880
-	"girji" §TH §RE Sem/Ani <W:0> @<ADVL N Sg Gen &SUGGEST #5->4 COPY:3984:real-girjjii
+	"girji" Sem/Ani <W:0> @<ADVL §TH §RE N Sg Gen SUGGEST #5->4 COPY:3984:real-girjjii SUBSTITUTE:8565 SUBSTITUTE:8717 SETPARENT:8880 SETPARENT:8880
+	"girji" §TH §RE Sem/Ani <W:0> @<ADVL N Sg Gen SUGGEST #5->4 COPY:3984:real-girjjii
 "<,>"
 	"," CLB <W:0> #6->6
 : 
@@ -28,6 +28,6 @@
 :\n
 "<Girjii>"
 	"girje" §TH §RE N Sem/Ani Sg Ill <W:0> @<ADVL &real-override #5->4 ADD:3983:girjji SUBSTITUTE:8565 SUBSTITUTE:8717 ADD:3983:girjji
-	"girji" Sem/Ani <W:0> @<ADVL §TH §RE N Sg Gen &SUGGEST #5->4 COPY:3984:real-girjjii SUBSTITUTE:8565 SUBSTITUTE:8717 SETPARENT:8880 SETPARENT:8880
-	"girji" §TH §RE Sem/Ani <W:0> @<ADVL N Sg Gen &SUGGEST #5->4 COPY:3984:real-girjjii
+	"girji" Sem/Ani <W:0> @<ADVL §TH §RE N Sg Gen SUGGEST #5->4 COPY:3984:real-girjjii SUBSTITUTE:8565 SUBSTITUTE:8717 SETPARENT:8880 SETPARENT:8880
+	"girji" §TH §RE Sem/Ani <W:0> @<ADVL N Sg Gen SUGGEST #5->4 COPY:3984:real-girjjii
 :\n

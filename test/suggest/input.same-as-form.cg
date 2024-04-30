@@ -9,8 +9,8 @@
 : 
 "<badjel>"
 	"badjel" Po <W:0> @<ADVL &lex-bokte-not-badjel #4->4
-	"badjel" Po <W:0> @<ADVL &SUGGEST #4->4
-	"bokte" Po <W:0> @<ADVL &SUGGEST #4->4
+	"badjel" Po <W:0> @<ADVL SUGGEST #4->4
+	"bokte" Po <W:0> @<ADVL SUGGEST #4->4
 "<.>"
 	"." CLB <W:0> #5->5
 :\n

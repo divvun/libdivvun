@@ -708,11 +708,11 @@ interface.
 
 We can add a suggestion as well with a `COPY` rule:
 
-    COPY:msyn-hallan (Inf &SUGGEST) EXCEPT (Imprt Pl1 Dial/-KJ) TARGET (Imprt Pl1 Dial/-KJ &real-hallan) ;
+    COPY:msyn-hallan (Inf SUGGEST) EXCEPT (Imprt Pl1 Dial/-KJ) TARGET (Imprt Pl1 Dial/-KJ &real-hallan) ;
 
 This creates a new reading where the tags `Imprt Pl1 Dial/-KJ` have
-been changed into `Inf &SUGGEST` (and other tags are unchanged). The
-`&SUGGEST` tag is necessary to get `divvun-suggest` (the `<suggest>`
+been changed into `Inf SUGGEST` (and other tags are unchanged). The
+`SUGGEST` tag is necessary to get `divvun-suggest` (the `<suggest>`
 module) to try to generate a form from that reading. It is smart
 enough to skip things like weights, tracing and syntax tags when
 trying to suggest, but all morphological tags need to be correct and
@@ -824,7 +824,7 @@ instead of deleting the word "dego" to the left, we should change the
 case of the word "lávvomuorran" from essive to nominative case:
 
     ADD (&syn-dego-nom) TARGET Ess IF (-1 ("dego"));
-    COPY (Sg Nom &SUGGEST) EXCEPT (Ess) TARGET (&syn-dego-nom) ;
+    COPY (Sg Nom SUGGEST) EXCEPT (Ess) TARGET (&syn-dego-nom) ;
 
 Here we want to keep the suggestions for `&syn-dego-nom` separate from
 the suggestions for `&syn-not-dego` – in particular, we don't want to
@@ -836,12 +836,12 @@ same time. But if we use the above rules, CG gives us this output:
     :
     "<lávvomuorran>"
              "lávvomuorra" N Ess @COMP-CS< &syn-not-dego ID:12 R:DELETE1:11
-             "lávvomuorra" N Sg Nom @COMP-CS< &syn-dego-nom ID:12 R:DELETE1:11 &SUGGEST
+             "lávvomuorra" N Sg Nom @COMP-CS< &syn-dego-nom ID:12 R:DELETE1:11 SUGGEST
 
 Notice how the DELETE relation is on both readings, and also how how
 the relation target id (`11`) refers to a cohort, not a reading of a
 cohort. There is no way from this output to know that "dego" should
-not also be deleted from the `&SUGGEST` reading.
+not also be deleted from the `SUGGEST` reading.
 
 So when there are such multiple alternative interpretations for errors
 spanning multiple words, the less central parts ("dego" above) need a
@@ -873,7 +873,7 @@ changed to "boahtit" (infinitive). Alternatively, only the first part
 is changed and the second part remains unchanged. In this case we can
 change the "soaitá" (3.Sg.) to the adverb "kánske".
 
-As usual, this requires `&SUGGEST` readings for the parts that are two
+As usual, this requires `SUGGEST` readings for the parts that are two
 be changed, and one unique error tag for each interpretation, ie.
 `&msyn-kánske` for the "Kánske boađán" correction and
 `&msyn-fin_fin-fin_inf` for the "Soaittán boahtit" correction.
@@ -966,7 +966,7 @@ Then you can first of all turn that blanktag tag into an error tag with
 
 Now, we could just suggest a wordform on the comma and call it a day:
 
-    COPY ("<, >" &SUGGESTWF) TARGET ("," &no-space-after-punct-mark) ;
+    COPY ("<, >" SUGGESTWF) TARGET ("," &no-space-after-punct-mark) ;
 
 but that will
 
@@ -996,7 +996,7 @@ word is a "link" word. In the above rules,
 
 Then we can add a suggestion that puts a space between the forms:
 
-    COPY:no-space-after-punct ("<$1 $2>"v &SUGGESTWF)
+    COPY:no-space-after-punct ("<$1 $2>"v SUGGESTWF)
         TARGET ("<(.*)>"r &no-space-after-punct-mark)
         IF (1 ("<(.*)>"r))
            (NOT 0 (co&no-space-after-punct-mark))
@@ -1014,7 +1014,7 @@ We don't put a suggestion-tag on the `co&` cohort (here the word
 `<ja>`), which would lead to some strange suggestions since it is
 already part of the suggestion-tag on the comma `<,>` cohort. See
 [How underlines and replacements are built](#orgb25740d) for more
-on the relationship between `&SUGGESTWF` and replacements.
+on the relationship between `SUGGESTWF` and replacements.
 
 Now the output is
 
@@ -1024,7 +1024,7 @@ Now the output is
             "3" Num Arab Sg Ill Attr @HNOUN
     "<,>"
             "," CLB <NoSpaceAfterPunctMark> &no-space-after-punct-mark ID:3 R:RIGHT:4
-            "," CLB <NoSpaceAfterPunctMark> "<, ja>" &no-space-after-punct-mark &SUGGESTWF ID:3 R:RIGHT:4
+            "," CLB <NoSpaceAfterPunctMark> "<, ja>" &no-space-after-punct-mark SUGGESTWF ID:3 R:RIGHT:4
     "<ja>"
             "ja" CC @CNP co&no-space-after-punct-mark ID:4
 
@@ -1126,17 +1126,17 @@ Note that the readings added by the speller don't include any error
 tags (tags with `&` in front). To turn these readings into error
 underlines and actually show the suggestions, add a rule like
 
-    ADD (&typo &SUGGESTWF) (<spelled>) ;
+    ADD (&typo SUGGESTWF) (<spelled>) ;
 
-to the grammar checker CG. The reason we add `&SUGGESTWF` and not
-`&SUGGEST` is that we're using the wordform-tag directly as the
+to the grammar checker CG. The reason we add `SUGGESTWF` and not
+`SUGGEST` is that we're using the wordform-tag directly as the
 suggestion, and not sending each analysis through the generator (as
-`&SUGGEST` would do). See also the next section on how replacements
+`SUGGEST` would do). See also the next section on how replacements
 are built. So if, after disambiguation and grammarchecker CG's, we had
 
     "<coffes>"
-            "coffee" N Pl <W:37.3018> <WA:17.3018> <spelled> "<coffees>" &typo &SUGGESTWF
-            "coffer" N Pl <W:39.1010> <WA:17.3018> <spelled> "<coffers>" &typo &SUGGESTWF
+            "coffee" N Pl <W:37.3018> <WA:17.3018> <spelled> "<coffees>" &typo SUGGESTWF
+            "coffer" N Pl <W:39.1010> <WA:17.3018> <spelled> "<coffers>" &typo SUGGESTWF
 
 then the final `divvun-suggest` step would simply use the contents of
 the tags
@@ -1181,38 +1181,38 @@ different parts of the error](#orge26043f) for more info on this.
 By default, *a cohort's word form is used to construct the
 replacement*. So if we have the sentence "we was" where "was" is
 **central** and tagged `&typo`, and there's a `LEFT` relation to "we",
-then the default replacement if there were no `&SUGGEST` tags would
+then the default replacement if there were no `SUGGEST` tags would
 simply be the input "we was" (which would be filtered out since it's
 equal, giving no suggestions).
 
-If we now add a `&SUGGEST` reading on "we" that generates "he" then we
-get a "he was" suggestion. `&SUGGEST` readings with matching
+If we now add a `SUGGEST` reading on "we" that generates "he" then we
+get a "he was" suggestion. `SUGGEST` readings with matching
 (co-)error tags are prioritised over input word form.
 
-If we also have a `&SUGGEST` for was→are for the possible replacment
+If we also have a `SUGGEST` for was→are for the possible replacment
 "we are" (tagged `&agr`) – now we don't want both of these to apply at
 the same time giving *"we is". In this case, we need to ensure we have
-disambiguating `co&errtype` tags on the `&SUGGEST` readings. The
+disambiguating `co&errtype` tags on the `SUGGEST` readings. The
 following CG parse:
 
     "<we>"
         "we" Prn &agr                 ID:1 R:RIGHT:2
-        "he" Prn &SUGGEST co&agr-typo ID:1 R:RIGHT:2
+        "he" Prn SUGGEST co&agr-typo ID:1 R:RIGHT:2
     : 
     "<was>"
         "be" V 3Sg &agr-typo       ID:2 R:LEFT:1
-        "be" V 3Pl co&agr &SUGGEST ID:2 R:LEFT:1
+        "be" V 3Pl co&agr SUGGEST ID:2 R:LEFT:1
 
 will give us all and only the suggestions we want ("he was" and "we
 were", but not *"he were").
 
 There is one exception to the above principles; for
-backwards-compatibility, `&SUGGESTWF` is still used to mean that the
-whole underline should be replaced by what's in `&SUGGESTWF`. This
-means that if you combine `&SUGGESTWF` with `RIGHT/LEFT`, you will not
+backwards-compatibility, `SUGGESTWF` is still used to mean that the
+whole underline should be replaced by what's in `SUGGESTWF`. This
+means that if you combine `SUGGESTWF` with `RIGHT/LEFT`, you will not
 automatically get the word form for the relation target(s) in your
 replacement, you have to construct the whole replacement yourself.
-This also means you cannot combine `&SUGGESTWF` with `&SUGGEST` on
+This also means you cannot combine `SUGGESTWF` with `SUGGEST` on
 other words. (If we ever change how this works, we will have to first
 update many existing CG3 rules.)
 
@@ -1233,10 +1233,10 @@ don't conflict with the below special tags.
 
 ### Tags
 
--   `&SUGGEST` on a reading means that `divvun-suggest` should try to
+-   `SUGGEST` on a reading means that `divvun-suggest` should try to
     generate this reading into a form for suggestions, using the
     generator FST. See [Simple grammarchecker.cg3 rules](#org0955ce1).
--   `&SUGGESTWF` on a reading means that `divvun-suggest` should use the
+-   `SUGGESTWF` on a reading means that `divvun-suggest` should use the
     reading's wordform-tag (e.g. a tag like
     
         "<Cupertino>"
