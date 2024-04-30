@@ -889,7 +889,19 @@ and had the error tag `&msyn-kánske` on the suggestion for "Kánske",
 then we would add a relation `RIGHT` to the second word (input form
 "boađán") and add the co-error tag `co&msyn-kánske` to the correct
 reading of that word (in this case the reading that does *not* suggest
-a change).
+a change). So the CG output after grammar checker should contain:
+
+```
+"<Soaitá>"
+	"soaitit" V IV Ind Prs Sg3 &syn-soahtit-vfin+inf   ID:2 R:RIGHT:3
+	"soaitit" V IV Ind Prs Sg1 &syn-soahtit-vfin+inf   ID:2 R:RIGHT:3 SUGGEST
+	"kánske"  Adv              &syn-kánske             ID:2 R:RIGHT:3 SUGGEST
+: 
+"<boađán>"
+	"boahtit" V IV Ind Prs Sg1                         ID:3
+	"boahtit" V IV Ind Prs Sg1 co&syn-kánske           ID:3 SUGGEST
+	"boahtit" V IV Inf         co&syn-soahtit-vfin+inf ID:3 SUGGEST
+```
 
 By adding `co&msyn-kánske` etc., we avoid generating silly suggestion
 combinations like *"Kánske boahtit" or *"Soaittán boađán".
