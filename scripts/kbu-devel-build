@@ -12,7 +12,7 @@ export VERBOSE=1
 
 bake () {
     if command -V bear &>/dev/null; then
-        bear make "$@"
+        bear -- make "$@"
     else
         make "$@"
     fi
