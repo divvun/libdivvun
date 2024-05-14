@@ -2,14 +2,14 @@
 	"mun" Pron Sem/Hum Pers Sg1 Nom <W:0.0> <firstCohort> @SUBJ> ID:1
 : 
 "<soaitá>"
-	"soaitit" <mv> V <copula> <DE-Ill-Plc> <AktioEss> <Inf> IV Ind Prs Sg3 <W:0.0> @+FMAINV &syn-soahtit-vfin+inf ID:2
-	"soaitit" <mv> V <copula> <DE-Ill-Plc> <AktioEss> <Inf> IV Ind Prs <W:0.0> @+FMAINV Sg1 &syn-soahtit-vfin+inf SUGGEST ID:2 COERROR
+	"soaitit" <mv> V <copula> <DE-Ill-Plc> <AktioEss> <Inf> IV Ind Prs Sg3 <W:0.0> @+FMAINV &syn-soahtit-vfin+inf ID:2 R:RIGHT:3
+	"soaitit" <mv> V <copula> <DE-Ill-Plc> <AktioEss> <Inf> IV Ind Prs <W:0.0> @+FMAINV Sg1 co&syn-soahtit-vfin+inf SUGGEST ID:2 R:RIGHT:3
 	"kánske" Adv &syn-kánske SUGGEST ID:2 R:RIGHT:3
 : 
 "<boađán>"
-	"boahtit" <mv> V <ala-V> <rasta> <badjel> <birra> <atnui> <sisa> <guossái> <veahkkin> <BE-Ill-Ani><veahkkin> <johtui> <IN-Com-Veh> <SO-luhtte-Ani> <DE-Ill-Plc> <DE-sisa-Build> <DE-lusa-Ani> <PT-Gen-Plc><DE-Ill-Any> <PT-Gen-Plc> <PT-rastá-Plc> <PT-meaddel-Plc> <PT-čađa-Plc> <PT-bokte-Plc> <SO-Loc-*Ani><DE-Ill-*Ani> <SO-Loc-*Ani> <CO-mielde-Ani> <DE-Ill-Plc><PU-Inf> <BE-Ill-Ani><PU-Ess-Any> <PU-Inf> <TH-Acc-Any><MA-Ill-áigi> <RO-Ess-Any> <Inf> IV Ind Prs Sg1 <W:0.0> @+FMAINV ID:3
-	"boahtit" V IV Inf &syn-soahtit-vfin+inf SUGGEST ID:3 R:LEFT:2
-	"boahtit" V IV Ind Prs Sg1 &syn-kánske SUGGEST COERROR ID:3
+	"boahtit" <mv> V <ala-V> <rasta> <badjel> <birra> <atnui> <sisa> <guossái> <veahkkin> <BE-Ill-Ani><veahkkin> <johtui> <IN-Com-Veh> <SO-luhtte-Ani> <DE-Ill-Plc> <DE-sisa-Build> <DE-lusa-Ani> <PT-Gen-Plc><DE-Ill-Any> <PT-Gen-Plc> <PT-rastá-Plc> <PT-meaddel-Plc> <PT-čađa-Plc> <PT-bokte-Plc> <SO-Loc-*Ani><DE-Ill-*Ani> <SO-Loc-*Ani> <CO-mielde-Ani> <DE-Ill-Plc><PU-Inf> <BE-Ill-Ani><PU-Ess-Any> <PU-Inf> <TH-Acc-Any><MA-Ill-áigi> <RO-Ess-Any> <Inf> IV Ind Prs Sg1 <W:0.0> @+FMAINV &syn-soahtit-vfin+inf ID:3 R:LEFT:2
+	"boahtit" V IV Inf co&syn-soahtit-vfin+inf SUGGEST ID:3 R:LEFT:2
+	"boahtit" V IV Ind Prs Sg1 co&syn-kánske SUGGEST ID:3 R:LEFT:2
 
 # > soaittán (V Sg1) boahtit (Inf)
 # > kánske (Adv) boađán (V Sg1)

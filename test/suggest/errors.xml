@@ -56,6 +56,17 @@
     </body>
   </error>
 
+  <error id="msyn-numphrase-sggen">
+    <header>
+      <title xml:lang="en">Numeralphrase should be in genitive case</title>
+      <title xml:lang="se">Tállabáhko ij la rievtes hámen</title>
+    </header>
+    <body>
+      <description xml:lang="en">Long descriprion for the word "$1"</description>
+      <description xml:lang="se">Substantiiva "$1", tállabáhko "$2", valla demonstratiiva "$3" la boasto hámen</description>
+    </body>
+  </error>
+
   <error id="punct-rihkku">
     <header>
       <title xml:lang="en">Missing comma</title>

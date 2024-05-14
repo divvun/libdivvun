@@ -3,7 +3,7 @@
 import libdivvun
 
 spec = libdivvun.ArCheckerSpec("sme.zcheck")
-smegram = spec.getChecker("smegram", True)
+smegram = spec.getChecker(pipename="smegram", verbose=True)
 
 
 def test(got, want):

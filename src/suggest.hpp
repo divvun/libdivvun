@@ -195,6 +195,21 @@ struct Cohort {
 	string trace_removed_readings; // lines prefixed with `;` by `vislcg3 -t`
 };
 
+/*
+ * Move tag from errtypes to coerrtypes if it exists in source.errtypes
+ */
+inline void demote_error_to_coerror(const Cohort& source, std::set<u16string>& errtypes, std::set<u16string>& coerrtypes) {
+	for(auto it = errtypes.begin(); it != errtypes.end();) {
+		if(source.errtypes.find(*it) != source.errtypes.end()) {
+			coerrtypes.insert(*it);
+			it = errtypes.erase(it);
+		}
+		else {
+			++it;
+		}
+	}
+}
+
 using CohortMap = std::unordered_map<rel_id, size_t>;
 
 struct Sentence {

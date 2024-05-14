@@ -980,6 +980,28 @@ void expand_errs(vector<Err>& errs, const u16string& text) {
 
 void Suggest::mk_errs(Sentence& sentence) {
 	const u16string& text = fromUtf8(sentence.text.str());
+	// Preprocessing, demote target &error to co&error:
+	// Sometimes input has &errortag on relation targets instead of
+	// co&errortag. We allow that, but we should then treat it as a
+	// co&errortag (since the relation source is the "main" error):
+	for (size_t i_c = 0; i_c < sentence.cohorts.size(); i_c++) {
+		Cohort& source = sentence.cohorts[i_c];
+		for(const auto& r: source.readings) {
+			std::set<int> targets;
+			rel_on_match(r.rels, LEFT_RIGHT_DELETE_REL, sentence,
+				     [&](const string&, size_t i_trg, const Cohort&) {
+					     targets.insert(i_trg);
+				     });
+			for(int i_t : targets) {
+				auto& target = sentence.cohorts.at(i_t);
+				demote_error_to_coerror(source, target.errtypes, target.coerrtypes);
+				for(Reading& tr : target.readings) {
+					demote_error_to_coerror(source, tr.errtypes, tr.coerrtypes);
+				}
+			}
+		}
+	}
+	// Now actually find and mark up all the errors and suggestions:
 	for (size_t i_c = 0; i_c < sentence.cohorts.size(); i_c++) {
 		Cohort& c = sentence.cohorts[i_c];
 		std::set<ErrId> c_errtypes;
@@ -1001,6 +1023,7 @@ void Suggest::mk_errs(Sentence& sentence) {
 			});
 		}
 	}
+	// Postprocessing for overlapping errors:
 	expand_errs(sentence.errs, text);
 }
 

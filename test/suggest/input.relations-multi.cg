@@ -1,11 +1,11 @@
 "<dá>"
-	"dát" Pron <smj> <smj> Dem Pl Nom <W:0.0> SUBSTITUTE:4209 SUBSTITUTE:4208 COERROR &msyn-numphrase-sgill ID:21
-	"dát" Pron <smj> <smj> Dem <W:0.0> SUBSTITUTE:4209 SUBSTITUTE:4208 COERROR Sg Ill Attr SUGGEST ID:21
+	"dát" Pron <smj> <smj> Dem Pl Nom <W:0.0> SUBSTITUTE:4209 SUBSTITUTE:4208 &msyn-numphrase-sgill ID:21
+	"dát" Pron <smj> <smj> Dem <W:0.0> SUBSTITUTE:4209 SUBSTITUTE:4208 Sg Ill Attr SUGGEST ID:21
 : 
 "<guokta>"
-	"guokta" Num Sg Acc <W:0.0> COERROR &msyn-numphrase-sgill ID:22
-	"guokta" Num <W:0.0> COERROR Sg Gen SUGGEST ID:22
-	"guokta" Num Sg Nom <W:0.0> COERROR &msyn-numphrase-sgill ID:22
+	"guokta" Num Sg Acc <W:0.0> &msyn-numphrase-sgill ID:22
+	"guokta" Num Sg Gen <W:0.0> co&msyn-numphrase-sgill SUGGEST ID:22
+	"guokta" Num Sg Nom <W:0.0> &msyn-numphrase-sgill ID:22
 : 
 "<ássjijda>"
 	"ássje" N <smj> <smj> Sem/Semcon Pl Ill <W:0.0> SUBSTITUTE:4202 SUBSTITUTE:4201 &msyn-numphrase-sgill ID:23 R:$3:21 R:$2:22 R:LEFT:21 R:LEFT:22
