@@ -920,6 +920,58 @@ Here too, we need to ensure that there are `co&errortags` to match
 relations to readings.
 
 
+## Avoiding mismatched words in multiple suggestions on ambiguous readings
+
+In the sentence "Sámegiellaåhpadus vatteduvvá skåvlåjn 7 fylkajn ja aj gålmån priváhta skåvlåjn." from Lule Saami, the "7 fylkajn" should either be "7:n fylkan" (both words Sg Ine, error tag &msyn-numphrase-sgine) or "7:jn fylkajn" (both words Sg Com, error tag &msyn-numphrase-sgcom). The erroneous input looks like
+
+```
+"<7>"
+        "7" Num Arab Sg Nom
+        "7" Num Arab Sg Ine Attr
+        "7" Num Arab Sg Ill Attr
+        "7" Num Arab Sg Gen
+        "7" Num Arab Sg Ela Attr
+        "7" A Arab Ord Attr CLBfinal
+:
+"<fylkajn>"
+        "fylkka" v1 N Sem/Org Sg Com
+        "fylkka" v1 N Sem/Org Pl Ine
+:
+```
+
+on the way into the grammar checker. For each error tag, we add, copy and substitute, e.g.
+
+```
+ADD (&msyn-numphrase-sgcom) TARGET (Num Sg Gen) OR (Num Pl Nom) OR (Num Sg Nom) OR (Num Sg Com) OR ("moadda" Indef Acc) OR (Num Arab) IF …
+# and other add rules
+COPY (Sg Com SUGGEST) EXCEPT (Sg Com) OR (Pl Ine) TARGET (&msyn-numphrase-sgcom) ;
+SUBSTITUTE (&msyn-numphrase-sgcom) (co&msyn-numphrase-sgcom) TARGET (SUGGEST);
+```
+
+The error is ambiguous, with two possible suggestions. We want to keep
+these apart, but when CG runs the rule section for the second time,
+the `ADD` rule for the `sgine` suggestion may land on the reading that
+was copied in from the `sgcom` suggestion (now substituted to
+`co&msyn-numphrase-sgcom`), mixing the error tags:
+
+```
+        "7" Num Arab co&msyn-numphrase-sgcom Sg Ine SUGGEST co&msyn-numphrase-sgine
+```
+This will lead to mismatched suggestions like "*7:n fylkajn".
+
+To prevent this, we can take advantage of the fact that Constraint
+Grammar will not `ADD` anything to a reading that has had a `MAP` rule
+applied. We can do this right after the SUBSTITUTE rule:
+
+```diff
+ ADD (&msyn-numphrase-sgcom) TARGET (Num Sg Gen) OR (Num Pl Nom) OR (Num Sg Nom) OR (Num Sg Com) OR ("moadda" Indef Acc) OR (Num Arab) IF …
+ # and other add rules
+ COPY (Sg Com SUGGEST) EXCEPT (Sg Com) OR (Pl Ine) TARGET (&msyn-numphrase-sgcom) ;
+ SUBSTITUTE (&msyn-numphrase-sgcom) (co&msyn-numphrase-sgcom) TARGET (SUGGEST);
++MAP:LOCK_READING (SUGGEST) (SUGGEST);
+```
+
+
 <a id="orgb76a5c9"></a>
 
 ## Adding words
