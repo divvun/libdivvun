@@ -33,6 +33,7 @@ const std::basic_regex<char> CG_TAG_TYPE(
   "|(<fixedcase>)"   // Group 7: Fixed Casing
   "|\"<([^>]+)>\""   // Group 8: Broken word-form from MWE-split
   "|[cC][oO]&(.+)"   // Group 9: COERROR errtype (for example co&err-agr)
+  "|DELETE"          // Shorthand for delete relation to self
   "|@"               // Syntactic tag
   "|Sem/"            // Semantic tag
   "|§"               // Semantic role
@@ -228,10 +229,11 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 	r.added = NotAdded;
 	r.coerror = false;
 	r.fixedcase = false;
+	bool delete_self = false; // may be changed by DELETE tag, but need to know id to set the relation
 	for (auto& tag : allmatches(tags, CG_TAGS_RE)) { // proc_tags
 		std::match_results<const char*> result;
 		std::regex_match(tag.c_str(), result, CG_TAG_TYPE);
-		if (tag == "COERROR") {
+		if (tag == "COERROR") { // COERROR kept for backward-compatibility
 			r.coerror = true;
 		}
 		else if (tag == "&SUGGEST" || tag == "SUGGEST") { // &SUGGEST kept for backward-compatibility
@@ -256,6 +258,9 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 			else {
 				r.errtypes.insert(fromUtf8(result[2]));
 			}
+		}
+		else if (tag == "DELETE") { // Shorthand: the tag DELETE means R:DELETE:id_of_this_cohort
+			delete_self = true;
 		}
 		else if (result[3].length() != 0 && result[4].length() != 0) {
 			try {
@@ -293,6 +298,9 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 		else if (result[9].length() != 0) {
 			r.coerrtypes.insert(fromUtf8(result[9]));
 		}
+	}
+	if(delete_self) {
+		r.rels.insert({"DELETE", r.id});
 	}
 	const auto& tagsplus = join(gentags, "+");
 	r.ana = lemma + "+" + tagsplus;

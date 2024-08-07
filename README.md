@@ -26,12 +26,13 @@
     3.  [Simple grammarchecker.cg3 rules](#org0955ce1)
     4.  [More complex grammarchecker.cg3 rules (spanning over several words)](#org6b5053d)
     5.  [Deleting words](#org4d2c8ef)
-    6.  [Alternative suggestions for complex errors altering different parts of the error](#orge26043f)
-    7.  [Adding words](#orgb76a5c9)
-    8.  [Adding literal word forms, altering existing wordforms](#orge23663a)
-    9.  [Including spelling errors](#org26182db)
-    10. [How underlines and replacements are built](#orgb25740d)
-    11. [Summary of special tags and relations](#orgb55740d)
+    6.  [Moving words](#orge2f043f)
+    7.  [Alternative suggestions for complex errors altering different parts of the error](#orge26043f)
+    8.  [Adding words](#orgb76a5c9)
+    9.  [Adding literal word forms, altering existing wordforms](#orge23663a)
+    10.  [Including spelling errors](#org26182db)
+    11. [How underlines and replacements are built](#orgb25740d)
+    12. [Summary of special tags and relations](#orgb55740d)
         1.  [Tags](#org67d1b58)
         2.  [Relations](#orga4550ed)
 11. [Troubleshooting](#orge03c2e9)
@@ -811,6 +812,55 @@ first annotate the error and then delete the adverb "bæjjese".
     ADD (&syn-delete-adv-phrasal-verb) TARGET (Adv) IF (0 ("bæjjese")) (*0 ("tjuedtjielidh") OR ("fulkedh") BARRIER (*) - Pcle) ;
 
     ADDRELATION (DELETE1) (V &syn-delete-adv-phrasal-verb) TO (*0 (Adv &syn-delete-adv-phrasal-verb) BARRIER (*) - Pcle) ;
+
+
+If you want to delete the "central" error-marked word itself, you can
+add a relation from the cohort to itself:
+
+    ADD (&superfluous) ("prior") IF (1 ("experience")) ;
+    ADDRELATION (DELETE1) TARGET (&superfluous) TO (0 (*));
+
+There is also a shorthand for this situation, the *tag* `DELETE` has
+the same effect as a DELETE *relation* to itself:
+
+    ADD (DELETE) TARGET (&superfluous);
+
+<a id="orge2f043f"></a>
+
+## Moving words
+
+This `DELETE` tag mentioned above is also useful when moving a word as
+part of a suggestion – here we copy (split) the cohort, move the one
+copy (tagged `&ADDED`) and `DELETE` the other. As an example, let's
+correct the Norwegian word order from
+
+    I dag eg til skulen gjekk.
+
+to
+
+    I dag gjekk eg til skulen.
+
+We'll target the verb "gjekk", split it (making two copies), and move
+one copy back before the subject (after the adverb), and mark the
+other copy for deletion:
+
+    ADD &syn-wordorder TARGET fv IF (*-1 Adv LINK 1 Subj) ;  # etc other conditions
+
+    SPLITCOHORT (
+        "<$1>"v "$1"v * &ADDED co&syn-wordorder  # one copy to be moved
+        "<$1>"v "$1"v * DELETE                   # one copy to be deleted
+      )
+      TARGET ("<(.*)>"r "([^<].*)"r &syn-wordorder) - (&ADDED) - (DELETE) ;
+
+    # The DELETE cohort is the "main" one, it needs to connect to the &ADDED one
+    # with a LEFT relation. It's easier to add the relation before moving:
+    ADDRELATION (LEFT) (&syn-wordorder DELETE) TO (-1 (&ADDED));
+
+    MOVE (co&syn-wordorder &ADDED)
+         AFTER
+         (*-1 Subj LINK -1 Adv)
+         ;
+
 
 
 <a id="orge26043f"></a>

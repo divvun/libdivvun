@@ -1,0 +1,12 @@
+"<nabs>"
+	"nabs" N Abs Sg &syn-abs-wordorder &ADDED co&syn-abs-wordorder ID:4 R:DELETE1:4 SPLITCOHORT:20 MOVE-AFTER:26:syn-abs-wordorder ADDRELATION(DELETE1):32
+"<Nrel>"
+	"Nrel" N Rel
+: 
+"<mellom>"
+	"mellom" pr
+: 
+; "<nabs>"
+;	"nabs" N Abs Sg &syn-abs-wordorder ADD:11:syn-abs-wordorder SPLITCOHORT:20
+"<nabs>"
+	"nabs" N Abs Sg &syn-abs-wordorder DELETE ID:5 R:$3:4 R:LEFT:4 SPLITCOHORT:20 ADDRELATION($3):31
