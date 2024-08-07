@@ -246,7 +246,10 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 			gentags.push_back(tag);
 		}
 		else if (result[2].length() != 0) {
-			if (tag == "&ADDED" || tag == "&ADDED-AFTER-BLANK") {
+			if (tag == "&ADDED") {
+				r.added = AddedEnsureBlanks;
+			}
+			else if (tag == "&ADDED-AFTER-BLANK") {
 				r.added = AddedAfterBlank;
 			}
 			else if (tag == "&ADDED-BEFORE-BLANK") {
@@ -614,10 +617,11 @@ if(verbose)			std::cerr << "\t\033[0;35mr.suggestwf=" << tr.suggestwf << "\033[0
 if(verbose)			std::cerr << "\t\033[0;35mr.suggest=" << tr.suggest << "\033[0m" << "\t" << tr.line;
 			// Collect SUGGEST/SUGGESTWF:
 			if(!del) for(const auto& sf : tr.sforms) {
-				rep_this_trg.push_back(fromUtf8(withCasing(tr.fixedcase, casing, sf)));
+				const auto cased_sf = fromUtf8(withCasing(tr.fixedcase, casing, sf));
+				rep_this_trg.push_back(cased_sf);
 				if (tr.suggestwf) {
 					if (i == i_c) {
-						reps_suggestwf.push_back(fromUtf8(withCasing(tr.fixedcase, casing, sf)));
+						reps_suggestwf.push_back(cased_sf);
 					}
 					else {
 						std::cerr << "divvun-suggest: WARNING: Saw SUGGESTWF on non-central (co-)cohort, ignoring" << std::endl;
@@ -632,14 +636,16 @@ if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std
 		UStringVector reps_next;
 		for(auto& rep: reps) {
 			// Prepend blank unless at left edge:
-			auto pre_blank = i == i_left || added_before_blank
-					 ? ""
-					 : clean_blank(prev_added_before_blank + trg.raw_pre_blank);
+			const auto pre_blank = i == i_left || added_before_blank
+					       ? ""
+					       : clean_blank(prev_added_before_blank + trg.raw_pre_blank);
+			// For &ADDED, enclose in blanks (unneeded blanks will get cleaned later):
+			const auto post_blank = trg.added ? u" " : u"";
 			if(rep_this_trg.empty()) {
-				reps_next.push_back(rep + fromUtf8(pre_blank) + trg.form);
+				reps_next.push_back(rep + fromUtf8(pre_blank) + trg.form + post_blank);
 			}
-			else for(const auto& form : rep_this_trg) {
-				reps_next.push_back(rep + fromUtf8(pre_blank) + form);
+			else for(const auto& sform : rep_this_trg) {
+				reps_next.push_back(rep + fromUtf8(pre_blank) + sform + post_blank);
 			}
 		}
 		reps.swap(reps_next);
@@ -659,7 +665,7 @@ if(verbose)	for (const auto& sf : reps) { std::cerr << "\033[1;35mreps sf=\t'" <
 
 variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id, size_t i_c,
   const Cohort& c, const Sentence& sentence, const u16string& text) {
-	if (cohort_empty(c) || c.added) {
+	if (cohort_empty(c) || c.added != NotAdded) {
 		return Nothing();
 	}
 	else if (ignores.find(err_id) != ignores.end()) {
@@ -848,7 +854,7 @@ Sentence Suggest::run_sentence(std::istream& is, FlushOn flush_on) {
 					sentence.ids_cohorts[c.id] = sentence.cohorts.size() - 1;
 				}
 			}
-			if (!c.added) {
+			if (c.added == NotAdded) {
 				pos += c.form.size();
 				sentence.text << toUtf8(c.form);
 			}
@@ -903,7 +909,7 @@ Sentence Suggest::run_sentence(std::istream& is, FlushOn flush_on) {
 			sentence.ids_cohorts[c.id] = sentence.cohorts.size() - 1;
 		}
 	}
-	if (!c.added) {
+	if (c.added == NotAdded) {
 		pos += c.form.size();
 		sentence.text << toUtf8(c.form);
 	}

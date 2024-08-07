@@ -86,7 +86,7 @@ inline void dedupe(relations& rels) {
 	}
 }
 
-enum Added { NotAdded, AddedAfterBlank, AddedBeforeBlank };
+enum Added { NotAdded, AddedEnsureBlanks, AddedAfterBlank, AddedBeforeBlank };
 
 enum Casing { lower, Title, UPPER, mIxed };
 inline Casing getCasing(string input) {
