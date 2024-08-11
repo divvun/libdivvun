@@ -830,9 +830,10 @@ the same effect as a DELETE *relation* to itself:
 ## Moving words
 
 This `DELETE` tag mentioned above is also useful when moving a word as
-part of a suggestion – here we copy (split) the cohort, move the one
-copy (tagged `&ADDED`) and `DELETE` the other. As an example, let's
-correct the Norwegian word order from
+part of a suggestion – to do that, we *copy* the cohort, placing one
+copy (tagged `&ADDED`) in the correct position, and marking the
+original as `DELETE`. As an example, let's correct the Norwegian word
+order from
 
     I dag eg til skulen gjekk.
 
@@ -840,28 +841,25 @@ to
 
     I dag gjekk eg til skulen.
 
-We'll target the verb "gjekk", split it (making two copies), and move
-one copy back before the subject (after the adverb), and mark the
-other copy for deletion:
-
-    ADD &syn-wordorder TARGET fv IF (*-1 Adv LINK 1 Subj) ;  # etc other conditions
-
-    SPLITCOHORT (
-        "<$1>"v "$1"v * &ADDED co&syn-wordorder  # one copy to be moved
-        "<$1>"v "$1"v * DELETE                   # one copy to be deleted
-      )
-      TARGET ("<(.*)>"r "([^<].*)"r &syn-wordorder) - (&ADDED) - (DELETE) ;
-
-    # The DELETE cohort is the "main" one, it needs to connect to the &ADDED one
-    # with a LEFT relation. It's easier to add the relation before moving:
-    ADDRELATION (LEFT) (&syn-wordorder DELETE) TO (-1 (&ADDED));
-
-    MOVE (co&syn-wordorder &ADDED)
-         AFTER
-         (*-1 Subj LINK -1 Adv)
-         ;
+We'll target the verb "gjekk", copy it and place the new copy back
+before the subject (after the adverb), and mark the other copy for
+deletion:
 
 
+    WITH fv IF
+            (*-1 Adv LINK 1 @Subj) # The word found by this context condition is available as _C1_
+    {
+       ADD (DELETE &syn-wordorder) (*) ;
+
+       COPYCOHORT (&ADDED co&syn-wordorder) # These tags will be added to the new copy
+          EXCEPT (DELETE &syn-wordorder)    # We don't include the error tag or DELETE in the new copy
+          TARGET (*)                   # Copy from the main WITH target
+          TO BEFORE (jC1 (*))          # The copy ends up before the first WITH context
+          ;
+
+       # Link the words so they're treated as part of the same error squiggle:
+       ADDRELATION (LEFT) (*) TO (jC1 (*));
+    };
 
 <a id="orge26043f"></a>
 
