@@ -32,19 +32,24 @@ AX_CHECK_COMPILE_FLAG([-Wall], [], AC_MSG_ERROR([compiler doesn't accept -Wall -
 AX_CHECK_COMPILE_FLAG([-fstack-protector-strong], [CXXFLAGS="$CXXFLAGS -fstack-protector-strong"])
 
 
-dnl ====================
-dnl Checks C++11 support
-dnl ====================
-AX_CHECK_COMPILE_FLAG([-std=c++17], [CXXFLAGS="$CXXFLAGS -std=c++17"], [
- AX_CHECK_COMPILE_FLAG([-std=c++1z], [CXXFLAGS="$CXXFLAGS -std=c++1z"], [
-  AX_CHECK_COMPILE_FLAG([-std=c++14], [CXXFLAGS="$CXXFLAGS -std=c++14"], [
-   AX_CHECK_COMPILE_FLAG([-std=c++1y], [CXXFLAGS="$CXXFLAGS -std=c++1y"], [
-    AX_CHECK_COMPILE_FLAG([-std=c++11], [CXXFLAGS="$CXXFLAGS -std=c++11"], [
-     AC_MSG_ERROR([compiler doesn't accept any -std=c++11, please upgrade your compiler])])
-   ])
+AC_CHECK_HEADER(["$HOMEBREW_PREFIX/include/utf8cpp/utf8.h"], [CPPFLAGS="-I$HOMEBREW_PREFIX/include/utf8cpp/ $CPPFLAGS"], [
+  AC_CHECK_HEADER([utf8cpp/utf8.h], [CPPFLAGS="-I/usr/include/utf8cpp/ $CPPFLAGS"], [
+    AC_CHECK_HEADER([utf8.h], [], [AC_MSG_ERROR([You don't have utfcpp installed.])])
   ])
- ])
 ])
+
+
+dnl ====================
+dnl Checks C++17 support
+dnl ====================
+for version in 26 2c 23 2b 20 2a 17; do
+  version_flag="-std=c++${version}"
+  AX_CHECK_COMPILE_FLAG([${version_flag}], [break], [version_flag=none])
+done
+AS_IF([test "$version_flag" = none], [
+  AC_MSG_ERROR([Could not enable at least C++17 - upgrade your compiler])
+])
+CXXFLAGS="$CXXFLAGS ${version_flag}"
 
 
 dnl ==================

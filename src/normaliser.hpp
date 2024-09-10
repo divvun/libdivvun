@@ -32,8 +32,6 @@
 // hfst:
 #	include <hfst/implementations/optimized-lookup/pmatch.h>
 #	include <hfst/implementations/optimized-lookup/pmatch_tokenize.h>
-// variants:
-#	include "mapbox/variant.hpp"
 
 namespace divvun {
 

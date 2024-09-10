@@ -31,11 +31,11 @@
 // hfst:
 #include <ZHfstOspeller.h>
 // variants:
-#include "mapbox/variant.hpp"
+#include <variant>
 
 namespace divvun {
 
-using mapbox::util::variant;
+using std::variant;
 using std::string;
 using std::vector;
 using std::pair;

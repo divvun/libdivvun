@@ -150,8 +150,9 @@ this package.
 ## For just `divvun-suggest` and `divvun-blanktag`
 
 -   gcc >=5.0.0 with libstdc++-5-dev (or similarly recent version of
-    clang, with full C++11 support)
+    clang, with full C++17 support)
 -   libxml2-utils (just for xmllint)
+-   utfcpp (also known as utf8cpp)
 -   libhfst >=3.12.2
 -   libpugixml >=1.7.2 (optional)
 
@@ -170,8 +171,9 @@ that library. Alternatively, you can run ./configure with
 ## If you also want `divvun-checker`
 
 -   gcc >=5.0.0 with libstdc++-5-dev (or similarly recent version of
-    clang, with full C++11 support)
+    clang, with full C++17 support)
 -   libxml2-utils (just for xmllint)
+-   utfcpp (also known as utf8cpp)
 -   libhfst >=3.12.2
 -   libpugixml >=1.7.2
 -   libcg3-dev >=1.1.2.12327
@@ -1403,7 +1405,7 @@ then your C++ compiler is too old. See [Prerequisites](#org6558baf).
 
 If you get
 
-    configure: error: 'g++  -std=c++11 -Wall -I/usr/include/hfst/ @GLIB_CFLAGS@  -I/usr/include/ ' does not accept ISO C++11
+    configure: error: 'g++  -std=c++17 -Wall -I/usr/include/hfst/ @GLIB_CFLAGS@  -I/usr/include/ ' does not accept ISO C++17
 
 then you may be at the receiving end of
 <https://github.com/hfst/hfst/issues/366>. A workaround is to edit

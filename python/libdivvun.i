@@ -31,7 +31,7 @@
 %{
 #include "../src/checkertypes.hpp"
 #include "../src/checker.hpp"
-#include "../src/utf8.h"
+#include <utf8.h>
 %}
 
 #ifdef _MSC_VER
@@ -58,7 +58,6 @@ wrap_unique_ptr(CheckerUniquePtr, divvun::Checker);
 
 %include "../src/checkertypes.hpp"
 %include "../src/checker.hpp"
-%include "../src/utf8.h"
 
 %template(StringVector) std::vector<std::string>;
 %template(StringSet) std::set<std::string>;

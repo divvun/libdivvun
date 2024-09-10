@@ -164,13 +164,15 @@ std::set<string> searchPaths() {
 		"/usr/share/voikko/4",
 		"/usr/local/share/voikko/4"
 	};
-	expanduser().match(
-		[](Nothing){ },
-		[&](string home) {
-			dirs.insert(home + "/.voikko/4");
+	std::visit([&](auto&& arg){
+		using T = std::decay_t<decltype(arg)>;
+		if constexpr (std::is_same_v<T, Nothing>) {}
+		if constexpr (std::is_same_v<T, string>) {
+			dirs.insert(arg + "/.voikko/4");
 			// TODO: getenv freedesktop stuff
-			dirs.insert(home + "/.config/voikko/4");
-		});
+			dirs.insert(arg + "/.config/voikko/4");
+		}
+	}, expanduser());
 	return dirs;
 }
 

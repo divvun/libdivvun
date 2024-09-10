@@ -81,8 +81,13 @@ void print_cg_subreading(size_t indent,
 	}
 	if(indent == 1) {
 		os << " <W:" << w << ">";
-		mw_a.match([]      (Nothing) {},
-			   [&os] (Weight w_a) { os << " <WA:" << w_a << ">"; });
+		std::visit([&](auto&& arg){
+			using T = std::decay_t<decltype(arg)>;
+			if constexpr (std::is_same_v<T, Nothing>) {}
+			if constexpr (std::is_same_v<T, Weight>) {
+				os << " <WA:" << arg << ">";
+			}
+		}, mw_a);
 		os << " " << errtag;
 		os << " \"" << form << "\"S";
 	}

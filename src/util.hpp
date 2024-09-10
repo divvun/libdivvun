@@ -32,10 +32,11 @@
 #include <set>
 #include <string>
 #include <algorithm>
+#include <limits>
 
 #include <locale>
 #include <codecvt>
-#include "utf8.h"
+#include <utf8.h>
 
 namespace divvun {
 

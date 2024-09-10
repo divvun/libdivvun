@@ -30,15 +30,20 @@ using divvun::Pipeline;
 using divvun::toUtf8;
 using divvun::variant;
 
-
 variant<int, Pipeline> getPipelineXml(const std::string& path,
 				      const variant<Nothing, std::u16string>& mpipename,
 				      bool verbose,
 				      bool trace) {
 	const std::unique_ptr<divvun::PipeSpec> spec(new divvun::PipeSpec(path));
-	std::u16string pipename =
-	  mpipename.match([&](Nothing) { return spec->default_pipe; },
-	    [](std::u16string s) { return s; });
+	std::u16string pipename = std::visit([&](auto&& arg) {
+			using T = std::decay_t<decltype(arg)>;
+			if constexpr (std::is_same_v<T, Nothing>) {
+				return spec->default_pipe;
+			}
+			if constexpr (std::is_same_v<T, std::u16string>) {
+				return arg;
+			}
+		}, mpipename);
 	if (spec->pnodes.find(pipename) == spec->pnodes.end()) {
 		std::cerr << "divvun-checker: ERROR: Couldn't find pipe "
 		          << toUtf8(pipename) << " in " << path << std::endl;
@@ -52,9 +57,15 @@ variant<int, Pipeline> getPipelineAr(const std::string& path,
 				     bool verbose,
 				     bool trace) {
 	const auto& ar_spec = divvun::readArPipeSpec(path);
-	std::u16string pipename =
-	  mpipename.match([&](Nothing) { return ar_spec->spec->default_pipe; },
-	    [](std::u16string s) { return s; });
+	std::u16string pipename = std::visit([&](auto&& arg) {
+			using T = std::decay_t<decltype(arg)>;
+			if constexpr (std::is_same_v<T, Nothing>) {
+				return ar_spec->spec->default_pipe;
+			}
+			if constexpr (std::is_same_v<T, std::u16string>) {
+				return arg;
+			}
+		}, mpipename);
 	if (ar_spec->spec->pnodes.find(pipename) == ar_spec->spec->pnodes.end()) {
 		std::cerr << "divvun-checker: ERROR: Couldn't find pipe "
 		          << toUtf8(pipename) << " in " << path << std::endl;
@@ -221,18 +232,22 @@ int main(int argc, char** argv) {
 			if (options.count("variant")) {
 				pipename = fromUtf8(options["variant"].as<std::string>());
 			}
-			return getPipelineXml(specfile, pipename, verbose, trace)
-			  .match([](int r) { return r; },
-			    [&](Pipeline& p) {
-				    p.setIgnores(ignores);
-				    if (options.count("preferences")) {
-					    printPrefs(p);
-				    }
-				    else {
-					    run(p);
-				    }
-				    return EXIT_SUCCESS;
-			    });
+			return std::visit([&](auto&& arg) {
+					using T = std::decay_t<decltype(arg)>;
+					if constexpr (std::is_same_v<T, int>) {
+						return arg;
+					}
+					if constexpr (std::is_same_v<T, Pipeline>) {
+						arg.setIgnores(ignores);
+						if (options.count("preferences")) {
+							printPrefs(arg);
+						}
+						else {
+							run(arg);
+						}
+						return EXIT_SUCCESS;
+					}
+				}, getPipelineXml(specfile, pipename, verbose, trace));
 		}
 		else if (options.count("archive")) {
 			if (options.count("language")) {
@@ -250,19 +265,23 @@ int main(int argc, char** argv) {
 			if (options.count("variant")) {
 				pipename = fromUtf8(options["variant"].as<std::string>());
 			}
-			return getPipelineAr(archive, pipename, verbose, trace)
-			  .match([](int r) { return r; },
-			    [&](Pipeline& p) {
-				    p.setIgnores(ignores);
-				    p.setIncludes(includes);
-				    if (options.count("preferences")) {
-					    printPrefs(p);
-				    }
-				    else {
-					    run(p);
-				    }
-				    return EXIT_SUCCESS;
-			    });
+			return std::visit([&](auto&& arg) {
+					using T = std::decay_t<decltype(arg)>;
+					if constexpr (std::is_same_v<T, int>) {
+						return arg;
+					}
+					if constexpr (std::is_same_v<T, Pipeline>) {
+						arg.setIgnores(ignores);
+						arg.setIncludes(includes);
+						if (options.count("preferences")) {
+							printPrefs(arg);
+						}
+						else {
+							run(arg);
+						}
+						return EXIT_SUCCESS;
+					}
+				}, getPipelineAr(archive, pipename, verbose, trace));
 		}
 		else if (options.count("language")) {
 			const auto& lang = options["language"].as<std::string>();
@@ -286,19 +305,23 @@ int main(int argc, char** argv) {
 			if (options.count("variant")) {
 				pipename = fromUtf8(options["variant"].as<std::string>());
 			}
-			return getPipelineAr(archive, pipename, verbose, trace)
-			  .match([](int r) { return r; },
-			    [&](Pipeline& p) {
-				    p.setIgnores(ignores);
-				    p.setIncludes(includes);
-				    if (options.count("preferences")) {
-					    printPrefs(p);
-				    }
-				    else {
-					    run(p);
-				    }
-				    return EXIT_SUCCESS;
-			    });
+			return std::visit([&](auto&& arg) {
+					using T = std::decay_t<decltype(arg)>;
+					if constexpr (std::is_same_v<T, int>) {
+						return arg;
+					}
+					if constexpr (std::is_same_v<T, Pipeline>) {
+						arg.setIgnores(ignores);
+						arg.setIncludes(includes);
+						if (options.count("preferences")) {
+							printPrefs(arg);
+						}
+						else {
+							run(arg);
+						}
+						return EXIT_SUCCESS;
+					}
+				}, getPipelineAr(archive, pipename, verbose, trace));
 		}
 		else {
 			std::cerr << argv[0]

@@ -26,6 +26,7 @@
 #	include <string>
 #	include <unordered_map>
 #	include <vector>
+#	include <functional>
 
 // divvun-gramcheck:
 #	include "util.hpp"
@@ -40,11 +41,11 @@
 #	include <hfst/HfstInputStream.h>
 #	include <hfst/HfstTransducer.h>
 // variants:
-#	include "mapbox/variant.hpp"
+#	include <variant>
 
 namespace divvun {
 
-using mapbox::util::variant;
+using std::variant;
 using std::pair;
 using std::string;
 using std::stringstream;

@@ -28,7 +28,7 @@ libdivvun_module = Extension(
         include_dirs=['@top_srcdir@/src'],
         library_dirs=['@top_srcdir@/src/.libs'],
         libraries=['divvun'],
-        extra_compile_args=getenv_list('CPPFLAGS') + getenv_list('CXXFLAGS'),
+        extra_compile_args='@CPPFLAGS@'.split() + '@CXXFLAGS@'.split() + getenv_list('CPPFLAGS') + getenv_list('CXXFLAGS'),
         extra_link_args=getenv_list('LDFLAGS'))
 
 

@@ -738,14 +738,15 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id, size_t i_c,
 		// If there are LEFT/RIGHT added relations, add suggestions with those concatenated to our form
 		// TODO: What about our current suggestions of the same error tag? Currently just using wordform
 		const auto squiggle = squiggle_bounds(r.rels, sentence, i_c, c);
-		build_squiggle_replacement(r, err_id, i_c, c, sentence, beg, end, squiggle.first, squiggle.second, verbose)
-			    .match(
-				   [ ](Nothing) {},
-				   [&](pair<pair<size_t, size_t>, UStringVector> p) {
-				      beg = p.first.first;
-				      end = p.first.second;
-				      rep.insert(rep.end(), p.second.begin(), p.second.end());
-			      });
+		std::visit([&](auto&& arg) {
+			using T = std::decay_t<decltype(arg)>;
+			if constexpr (std::is_same_v<T, Nothing>) {}
+			if constexpr (std::is_same_v<T, pair<pair<size_t, size_t>, UStringVector>>) {
+				beg = arg.first.first;
+				end = arg.first.second;
+				rep.insert(rep.end(), arg.second.begin(), arg.second.end());
+			}
+		}, build_squiggle_replacement(r, err_id, i_c, c, sentence, beg, end, squiggle.first, squiggle.second, verbose));
 	}
 	// Avoid unchanging replacements:
 	auto form = text.substr(beg, end - beg);
@@ -1030,11 +1031,15 @@ void Suggest::mk_errs(Sentence& sentence) {
 			if (errtype.empty()) {
 				continue;
 			}
-			cohort_errs(errtype, i_c, c, sentence, text)
-			  .match([](Nothing) {}, [&](Err err) {
-				c.errs.push_back(err);
-				sentence.errs.push_back(err);
-			});
+
+			std::visit([&](auto&& arg) {
+				using T = std::decay_t<decltype(arg)>;
+				if constexpr (std::is_same_v<T, Nothing>) {}
+				if constexpr (std::is_same_v<T, Err>) {
+					c.errs.push_back(arg);
+					sentence.errs.push_back(arg);
+				}
+			}, cohort_errs(errtype, i_c, c, sentence, text));
 		}
 	}
 	// Postprocessing for overlapping errors:

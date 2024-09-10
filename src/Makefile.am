@@ -2,9 +2,6 @@ datadir = $(prefix)/share/libdivvun
 AM_CPPFLAGS = -DPREFIX="\"$(prefix)\""
 
 noinst_HEADERS=util.hpp hfst_util.hpp json.hpp \
-			   utf8.h utf8/checked.h utf8/core.h utf8/unchecked.h \
-			   mapbox/variant.hpp mapbox/recursive_wrapper.hpp \
-			   mapbox/variant_visitor.hpp \
 			   cxxopts.hpp
 # divvun-suggest binary:
 divvun_suggest_SOURCES  = main_suggest.cpp suggest.cpp suggest.hpp

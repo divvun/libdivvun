@@ -51,11 +51,8 @@
 #include <archive_entry.h>
 #endif	// HAVE_LIBARCHIVE
 
-#include "mapbox/variant.hpp"
-
 namespace divvun {
 
-//using mapbox::util::variant;
 using std::string;
 using std::stringstream;
 using std::u16string;
