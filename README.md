@@ -38,10 +38,6 @@
 11. [Troubleshooting](#orge03c2e9)
 12. [References / more documentation](#org7a81616)
 
-[![img](https://www.travis-ci.com/divvun/libdivvun.svg?branch=master "Buoöd status")](https://app.travis-ci.com/github/divvun/libdivvun)
-
-[![img](https://scan.coverity.com/projects/13737/badge.svg "Coverity static analysis")](https://scan.coverity.com/projects/divvun-divvun-gramcheck)
-
 
 <a id="org4fcc88a"></a>
 
