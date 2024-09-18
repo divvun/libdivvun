@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2016-2019, Kevin Brubeck Unhammer <unhammer@fsfe.org> -->
+<!-- Copyright (C) 2016-2024, Kevin Brubeck Unhammer <unhammer@fsfe.org> -->
 
 <!-- This program is free software: you can redistribute it and/or modify -->
 <!-- it under the terms of the GNU General Public License as published by -->
@@ -41,7 +41,7 @@
 
 <!ELEMENT header (title | references)+>
 
-<!ENTITY % Text "(#PCDATA | em)*">
+<!ENTITY % Text "(#PCDATA | em | a)*">
 
 <!ELEMENT title %Text;>
 <!ATTLIST title
@@ -70,3 +70,8 @@
 >
 
 <!ELEMENT em (#PCDATA)>
+
+<!ELEMENT a (#PCDATA)>
+<!ATTLIST a
+          href CDATA #REQUIRED
+>

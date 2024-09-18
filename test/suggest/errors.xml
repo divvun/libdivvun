@@ -28,7 +28,7 @@
         <title xml:lang="se">Čállinmeattáhus</title>
       </header>
       <body>
-        <description xml:lang="en">The word "$1" exists in the dictionary, but means something different in this context.</description>
+        <description xml:lang="en">The word "$1" exists in the dictionary, but means something <a href="https://divvun.no">different</a> in this context.</description>
         <description xml:lang="se">"$1" maŋis galggašii leat blah</description>
       </body>
     </default>
