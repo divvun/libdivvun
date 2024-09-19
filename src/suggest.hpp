@@ -42,10 +42,12 @@
 #	include <hfst/HfstTransducer.h>
 // variants:
 #	include <variant>
+#	include <optional>
 
 namespace divvun {
 
 using std::variant;
+using std::optional;
 using std::pair;
 using std::string;
 using std::stringstream;
@@ -144,10 +146,16 @@ inline std::string totitle(const string& input) {
 	std::transform(w.begin(), w.begin() + 1, w.begin(), std::towupper);
 	return wideToUtf8(w);
 }
+
+inline std::string tolower(const string& input) {
+	std::wstring w = wideFromUtf8(input);
+	setlocale(LC_ALL, "");
+	std::transform(w.begin(), w.begin() + 1, w.begin(), std::towlower);
+	return wideToUtf8(w);
+}
 // #endif
 
-inline std::string withCasing(
-  bool fixedcase, const Casing& inputCasing, const string& input) {
+inline std::string withCasing(bool fixedcase, const Casing& inputCasing, const string& input) {
 	if (fixedcase) {
 		return input;
 	}
@@ -159,7 +167,7 @@ inline std::string withCasing(
 	case mIxed:
 		return input;
 	case lower:
-		return input;
+		return tolower(input);
 	}
 	// should never get to this point
 	return input;

@@ -576,21 +576,10 @@ if(verbose)	std::cerr << "\033[1;33mright=\t" << i_right << "\033[0m" << std::en
 	UStringVector reps = {u""};
 	UStringVector reps_suggestwf = {}; // If we're doing SUGGESTWF, we ignore reps
 	string prev_added_before_blank = "";
+	std::optional<Casing> addedcasing = std::nullopt;
 	for (size_t i = i_left; i <= i_right; ++i) {
 		const auto& trg = sentence.cohorts[i];
 		Casing casing = getCasing(toUtf8(trg.form));
-
-		// std::cerr << "\033[0;35mtrg.added=\t" << trg.added << " i=" << i << "i_left" << i_left<< "\033[0m" << std::endl;
-		if(trg.added) {
-			for(size_t j = i; j <= i_right; j++) {
-				const auto& right_of_trg = sentence.cohorts[j];
-				if(!right_of_trg.added) {
-					// std::cerr << "\033[1;35mright_of_added=\t" << toUtf8(right_of_trg.form) << " j=" << j << "\033[0m" << std::endl;
-					casing = getCasing(toUtf8(right_of_trg.form));
-					break;
-				}
-			}
-		}
 
 if(verbose)		std::cerr << "\033[1;34mi=\t" << i << "\033[0m" << std::endl;
 if(verbose)		std::cerr << "\033[1;34mtrg.form=\t'" << toUtf8(trg.form) << "'\033[0m" << std::endl;
@@ -602,6 +591,23 @@ if(verbose)		std::cerr << "\033[1;35mtrg.raw_pre_blank=\t'" << trg.raw_pre_blank
 		if (del) {
 			rep_this_trg.push_back(u"");
 if(verbose)			std::cerr << "\t\t\033[1;36mdelete=\t" << toUtf8(trg.form) << "\033[0m" << std::endl;
+		}
+
+		if(trg.added) {
+			// This word was added, get casing from a non-added word to the right:
+			for(size_t j = i; j <= i_right; j++) {
+				const auto& right_of_trg = sentence.cohorts[j];
+				if(!right_of_trg.added) {
+					addedcasing = casing;
+					casing = getCasing(toUtf8(right_of_trg.form));
+					break;
+				}
+			}
+		}
+		else if(addedcasing.has_value() && !del) {
+			// This word was not &ADDED, but is preceded by an added word:
+			casing = addedcasing.value();
+			addedcasing = std::nullopt;
 		}
 
 		bool added_before_blank = false;
