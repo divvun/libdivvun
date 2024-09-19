@@ -580,6 +580,18 @@ if(verbose)	std::cerr << "\033[1;33mright=\t" << i_right << "\033[0m" << std::en
 		const auto& trg = sentence.cohorts[i];
 		Casing casing = getCasing(toUtf8(trg.form));
 
+		// std::cerr << "\033[0;35mtrg.added=\t" << trg.added << " i=" << i << "i_left" << i_left<< "\033[0m" << std::endl;
+		if(trg.added) {
+			for(size_t j = i; j <= i_right; j++) {
+				const auto& right_of_trg = sentence.cohorts[j];
+				if(!right_of_trg.added) {
+					// std::cerr << "\033[1;35mright_of_added=\t" << toUtf8(right_of_trg.form) << " j=" << j << "\033[0m" << std::endl;
+					casing = getCasing(toUtf8(right_of_trg.form));
+					break;
+				}
+			}
+		}
+
 if(verbose)		std::cerr << "\033[1;34mi=\t" << i << "\033[0m" << std::endl;
 if(verbose)		std::cerr << "\033[1;34mtrg.form=\t'" << toUtf8(trg.form) << "'\033[0m" << std::endl;
 if(verbose)		std::cerr << "\033[1;34mtrg.id=\t" << trg.id << "\033[0m" << std::endl;
@@ -593,6 +605,7 @@ if(verbose)			std::cerr << "\t\t\033[1;36mdelete=\t" << toUtf8(trg.form) << "\03
 		}
 
 		bool added_before_blank = false;
+		bool fixedcase = false;
 		bool applies_deletion = trg.id == src.id && src_applies_deletion;
 		size_t trg_beg = trg.pos;
 		size_t trg_end = trg.pos + trg.form.size();
@@ -629,7 +642,12 @@ if(verbose)			std::cerr << "\t\033[0;35mr.suggest=" << tr.suggest << "\033[0m" <
 				}
 if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std::endl;
 			}
+			fixedcase = tr.fixedcase; // for the surface form
 		} // end for readings of target
+		if(rep_this_trg.empty()) {
+			const auto cased_sf = fromUtf8(withCasing(fixedcase, casing, toUtf8(trg.form)));
+			rep_this_trg.push_back(cased_sf);
+		}
 		beg = std::min(beg, trg_beg);
 		end = std::max(end, trg_end);
 
@@ -641,10 +659,7 @@ if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std
 					       : clean_blank(prev_added_before_blank + trg.raw_pre_blank);
 			// For &ADDED, enclose in blanks (unneeded blanks will get cleaned later):
 			const auto post_blank = trg.added ? u" " : u"";
-			if(rep_this_trg.empty()) {
-				reps_next.push_back(rep + fromUtf8(pre_blank) + trg.form + post_blank);
-			}
-			else for(const auto& sform : rep_this_trg) {
+			for(const auto& sform : rep_this_trg) {
 				reps_next.push_back(rep + fromUtf8(pre_blank) + sform + post_blank);
 			}
 		}
