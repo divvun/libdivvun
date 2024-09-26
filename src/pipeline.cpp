@@ -79,8 +79,8 @@ CGCmd::CGCmd(const char* buff, const size_t size, bool verbose, bool trace)
 	if (!grammar) {
 		throw std::runtime_error("libdivvun: ERROR: Couldn't load CG grammar");
 	}
-	if(trace) {
-	  cg3_applicator_setflags(applicator.get(), CG3F_TRACE);
+	if (trace) {
+		cg3_applicator_setflags(applicator.get(), CG3F_TRACE);
 	}
 }
 CGCmd::CGCmd(const string& path, bool verbose, bool trace)
@@ -90,8 +90,8 @@ CGCmd::CGCmd(const string& path, bool verbose, bool trace)
 		throw std::runtime_error(
 		  ("libdivvun: ERROR: Couldn't load CG grammar " + path).c_str());
 	}
-	if(trace) {
-	  cg3_applicator_setflags(applicator.get(), CG3F_TRACE);
+	if (trace) {
+		cg3_applicator_setflags(applicator.get(), CG3F_TRACE);
 	}
 }
 void CGCmd::run(stringstream& input, stringstream& output) const {
@@ -186,15 +186,15 @@ Pipeline::Pipeline(LocalisedPrefs prefs_, vector<unique_ptr<PipeCmd>> cmds_,
   , trace(trace_)
   , prefs(std::move(prefs_))
   , cmds(std::move(cmds_))
-  , suggestcmd(suggestcmd_){};
+  , suggestcmd(suggestcmd_) {};
 
 Pipeline::Pipeline(const unique_ptr<PipeSpec>& spec, const u16string& pipename,
   bool verbose, bool trace)
-  : Pipeline(mkPipeline(spec, pipename, verbose, trace)){};
+  : Pipeline(mkPipeline(spec, pipename, verbose, trace)) {};
 
 Pipeline::Pipeline(const unique_ptr<ArPipeSpec>& ar_spec,
   const u16string& pipename, bool verbose, bool trace)
-  : Pipeline(mkPipeline(ar_spec, pipename, verbose, trace)){};
+  : Pipeline(mkPipeline(ar_spec, pipename, verbose, trace)) {};
 
 Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec,
   const u16string& pipename, bool verbose, bool trace) {
@@ -232,7 +232,7 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec,
 		else if (name == u"cg") {
 			ArEntryHandler<CGCmd*> f = [verbose, trace](const string& ar_path,
 			                             const void* buff, const size_t size) {
-			  return new CGCmd((char*)buff, size, verbose, trace);
+				return new CGCmd((char*)buff, size, verbose, trace);
 			};
 			CGCmd* s =
 			  readArchiveExtract(ar_spec->ar_path, args["grammar"], f);
