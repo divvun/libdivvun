@@ -245,6 +245,15 @@ private:
 	unique_ptr<Suggest> suggest;
 };
 
+class ShCmd : public PipeCmd {
+public:
+	ShCmd(const string& prog, const std::vector<string>& args, bool verbose);
+	void run(stringstream& input, stringstream& output) const override;
+	~ShCmd() override;
+
+private:
+	char** argv;
+};
 
 inline void parsePrefs(LocalisedPrefs& prefs, const pugi::xml_node& cmd) {
 	for (const pugi::xml_node& pref : cmd.children()) {

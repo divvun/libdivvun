@@ -183,8 +183,13 @@ void validatePipespecCmd(
 		}
 	}
 	else if (name == "sh") {
-		throw std::runtime_error("<sh> command not implemented yet!");
-		// const auto& prog = fromUtf8(cmd.attribute("prog").value());
+		string prog = cmd.attribute("prog").value();
+		// should also hard code list of acceptable commands for security
+		int rv = std::system((string("which ") + prog + ">/dev/null").c_str());
+		if (rv != 0) {
+			throw std::runtime_error(
+			  "OS is missing a program needed by pipe: " + prog);
+		}
 	}
 	else if (name == "prefs") {
 		// pass

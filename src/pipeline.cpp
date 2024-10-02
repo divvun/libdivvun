@@ -179,6 +179,62 @@ const MsgMap& SuggestCmd::getMsgs() {
 	return suggest->msgs;
 }
 
+ShCmd::ShCmd(
+  const string& prog, const std::vector<string>& args, bool verbose) {
+	argv = (char**)malloc(sizeof(char*) * (args.size() * 2 + 2));
+	size_t i = 0;
+	for (auto arg : args) {
+		argv[i++] = strdup(arg.c_str());
+	}
+	argv[i] = NULL;
+}
+
+
+ShCmd::~ShCmd() {
+	size_t i = 0;
+	while (argv[i] != NULL) {
+		free(argv[i++]);
+	}
+	free(argv);
+}
+
+void ShCmd::run(stringstream& input, stringstream& output) const {
+	int fds[2];
+	if (pipe(fds) == -1) {
+		throw std::runtime_error("pipe failed ");
+	}
+	pid_t pid = fork();
+	if (pid == -1) {
+		throw std::runtime_error("fork failed ");
+	}
+	else if (pid == 0) {
+		close(fds[1]);              // close write
+		dup2(fds[0], STDIN_FILENO); // redirect
+		close(fds[0]);              // close read
+		if (execvp(argv[0], argv) < 0) {
+			throw std::runtime_error("exec failed ");
+		}
+		throw std::runtime_error("child process failed ");
+	}
+	else {
+		close(fds[0]); // close read
+		char buffin[8192];
+		while (input.getline(buffin, sizeof(buffin))) {
+			size_t readn = input.gcount();
+			if (write(fds[1], buffin, readn) == -1) {
+				throw std::runtime_error("write failed");
+			}
+		}
+		close(fds[1]); // close write
+		char buffout[8192];
+		ssize_t count;
+		while ((count = read(fds[1], buffout, sizeof(buffout))) > 0) {
+			output.write(buffout, count);
+		}
+	}
+	//wait(0); // wait
+}
+
 
 Pipeline::Pipeline(LocalisedPrefs prefs_, vector<unique_ptr<PipeCmd>> cmds_,
   SuggestCmd* suggestcmd_, bool verbose_, bool trace_)
@@ -333,8 +389,14 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec,
 			suggestcmd = s;
 		}
 		else if (name == u"sh") {
-			// const auto& prog = fromUtf8(cmd.attribute("prog").value());
-			// cmds.emplace_back(new ShCmd(prog, args, verbose));
+			const auto& prog = cmd.attribute("prog").value();
+			std::vector<string> argv;
+			for (const pugi::xml_node& arg : cmd.children()) {
+				if (strcmp(arg.name(), "arg") == 0) {
+					argv.push_back(arg.text().get());
+				}
+			}
+			cmds.emplace_back(new ShCmd(prog, argv, verbose));
 		}
 		else if (name == u"prefs") {
 			parsePrefs(prefs, cmd);
@@ -383,9 +445,9 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec,
 			  cmd.attribute("max-weight").as_float(5000.0),
 			  cmd.attribute("max-unknown-rate").as_float(0.4), verbose));
 #else
-			throw std::runtime_error(
-			  "libdivvun: ERROR: Tried to run pipeline with cgspell, but was "
-			  "compiled without cgspell support!");
+			throw std::runtime_error("libdivvun: ERROR: Tried to run "
+			                         "pipeline with cgspell, but was "
+			                         "compiled without cgspell support!");
 #endif
 		}
 		else if ((name == u"normalise") || (name == u"normalize")) {
@@ -423,8 +485,15 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec,
 			suggestcmd = s;
 		}
 		else if (name == u"sh") {
-			// const auto& prog = fromUtf8(cmd.attribute("prog").value());
-			// cmds.emplace_back(new ShCmd(prog, args, verbose));
+			const auto& prog = cmd.attribute("prog").value();
+			std::vector<string> argv;
+			argv.push_back(prog);
+			for (const pugi::xml_node& arg : cmd.children()) {
+				if (strcmp(arg.name(), "arg") == 0) {
+					argv.push_back(arg.text().get());
+				}
+			}
+			cmds.emplace_back(new ShCmd(prog, argv, verbose));
 		}
 		else if (name == u"prefs") {
 			parsePrefs(prefs, cmd);
@@ -491,5 +560,4 @@ void Pipeline::setIncludes(const std::set<ErrId>& includes) {
 		                         "a SuggestCmd");
 	}
 }
-
 }
