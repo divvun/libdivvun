@@ -332,8 +332,10 @@ std::vector<std::pair<string, string>> toPipeSpecShVector(
 		}
 		else if (name == "sh") {
 			prog = cmd.attribute("prog").value();
-			for (auto& a : args) {
-				prog += argprepare(a.second);
+			for (const pugi::xml_node& arg : cmd.children()) {
+				if (strcmp(arg.name(), "arg") == 0) {
+					prog += argprepare(arg.text().get());
+				}
 			}
 		}
 		else if (name == "prefs") {
