@@ -648,7 +648,7 @@ if(verbose)			std::cerr << "\t\033[0;35mr.suggest=" << tr.suggest << "\033[0m" <
 				}
 if(verbose)				std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std::endl;
 			}
-			fixedcase = tr.fixedcase; // for the surface form
+			fixedcase |= tr.fixedcase; // for the surface form
 		} // end for readings of target
 		if(rep_this_trg.empty()) {
 			const auto cased_sf = fromUtf8(withCasing(fixedcase, casing, toUtf8(trg.form)));
