@@ -741,11 +741,21 @@ variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id, size_t i_c,
 		    r.errtypes.find(err_id) == r.errtypes.end()) {
 			continue; // there is some other error on this reading
 		}
+		// Since we can have multiple relation targets, we first collect them, then apply them:
+		std::unordered_map<string, u16string> msg_replacements;
 		rel_on_match(r.rels, MSG_TEMPLATE_REL, sentence,
 		  [&](const string& relname, size_t i_t, const Cohort& trg) {
-			  replaceAll(msg.first, fromUtf8(relname.c_str()), trg.form);
-			  replaceAll(msg.second, fromUtf8(relname.c_str()), trg.form);
+			  if(msg_replacements.find(relname) == msg_replacements.end()) {
+				  msg_replacements[relname] = trg.form;
+			  }
+			  else {
+				  msg_replacements[relname] = msg_replacements[relname] + u", " + trg.form;
+			  }
 		  });
+		for(const auto& rep : msg_replacements) {
+			  replaceAll(msg.first, fromUtf8(rep.first), rep.second);
+			  replaceAll(msg.second, fromUtf8(rep.first), rep.second);
+		}
 	}
 	// End set msg
 	// Begin set beg, end, form, rep:
