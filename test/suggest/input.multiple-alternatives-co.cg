@@ -8,5 +8,5 @@
 : 
 "<boađán>"
 	"boahtit" <mv> V <ala-V> <rasta> <badjel> <birra> <atnui> <sisa> <guossái> <veahkkin> <BE-Ill-Ani><veahkkin> <johtui> <IN-Com-Veh> <SO-luhtte-Ani> <DE-Ill-Plc> <DE-sisa-Build> <DE-lusa-Ani> <PT-Gen-Plc><DE-Ill-Any> <PT-Gen-Plc> <PT-rastá-Plc> <PT-meaddel-Plc> <PT-čađa-Plc> <PT-bokte-Plc> <SO-Loc-*Ani><DE-Ill-*Ani> <SO-Loc-*Ani> <CO-mielde-Ani> <DE-Ill-Plc><PU-Inf> <BE-Ill-Ani><PU-Ess-Any> <PU-Inf> <TH-Acc-Any><MA-Ill-áigi> <RO-Ess-Any> <Inf> IV Ind Prs Sg1 <W:0.0> @+FMAINV ID:3
-	"boahtit" V IV Inf co&syn-soahtit-vfin+inf ID:3
-	"boahtit" V IV Ind Prs Sg1 co&syn-kánske ID:3
+	"boahtit" V IV Inf &syn-soahtit-vfin+inf ID:3
+	"boahtit" V IV Ind Prs Sg1 &syn-kánske ID:3

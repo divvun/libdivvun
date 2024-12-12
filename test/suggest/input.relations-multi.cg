@@ -4,7 +4,7 @@
 : 
 "<guokta>"
 	"guokta" Num Sg Acc <W:0.0> &msyn-numphrase-sgill ID:22
-	"guokta" Num Sg Gen <W:0.0> co&msyn-numphrase-sgill SUGGEST ID:22
+	"guokta" Num Sg Gen <W:0.0> &msyn-numphrase-sgill SUGGEST ID:22
 	"guokta" Num Sg Nom <W:0.0> &msyn-numphrase-sgill ID:22
 : 
 "<ássjijda>"

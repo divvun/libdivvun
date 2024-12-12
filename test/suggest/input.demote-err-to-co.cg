@@ -1,13 +1,13 @@
 "<da>"
 	"dat" Pron <smj> <smj> Dem Pl Nom <W:0.0> &msyn-numphrase-sggen ID:7
-	"dat" Pron <smj> <smj> Dem <W:0.0> Sg Gen co&msyn-numphrase-sggen SUGGEST ID:7
+	"dat" Pron <smj> <smj> Dem <W:0.0> Sg Gen &msyn-numphrase-sggen SUGGEST ID:7
 : 
 "<guokta>"
 	"guokta" Num Sg Acc <W:0.0> &msyn-numphrase-sggen ID:8
-	"guokta" Num <W:0.0> Sg Gen co&msyn-numphrase-sggen SUGGEST ID:8
+	"guokta" Num <W:0.0> Sg Gen &msyn-numphrase-sggen SUGGEST ID:8
 	"guokta" Num Sg Nom <W:0.0> &msyn-numphrase-sggen ID:8
 : 
 "<ásadusáj>"
 	"ásadus" N <smj> <smj> Sem/Org Pl Gen <W:0.0> &msyn-numphrase-sggen ID:9 R:$3:7 R:$2:8 R:LEFT:7 R:LEFT:8
-	"ásadus" N <smj> <smj> Sem/Org <W:0.0> Sg Gen co&msyn-numphrase-sggen SUGGEST ID:9 R:$3:7 R:$2:8 R:LEFT:7 R:LEFT:8
+	"ásadus" N <smj> <smj> Sem/Org <W:0.0> Sg Gen &msyn-numphrase-sggen SUGGEST ID:9 R:$3:7 R:$2:8 R:LEFT:7 R:LEFT:8
 :

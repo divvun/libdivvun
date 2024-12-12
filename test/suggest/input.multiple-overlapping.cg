@@ -1,8 +1,8 @@
 "<we>"
 	"we" Prn &agr ID:1 R:RIGHT:2
-	"he" Prn SUGGEST co&agr-typo ID:1 R:RIGHT:2
+	"he" Prn SUGGEST &agr-typo ID:1 R:RIGHT:2
 : 
 "<was>"
 	"be" V 3Sg &agr-typo ID:2 R:LEFT:1
-	"be" V 3Pl co&agr SUGGEST ID:2 R:LEFT:1
+	"be" V 3Pl &agr SUGGEST ID:2 R:LEFT:1
 :\n

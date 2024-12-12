@@ -1,5 +1,5 @@
 "<nabs>"
-	"nabs" N Abs Sg &syn-abs-wordorder &ADDED co&syn-abs-wordorder ID:4 R:DELETE1:4 SPLITCOHORT:20 MOVE-AFTER:26:syn-abs-wordorder ADDRELATION(DELETE1):32
+	"nabs" N Abs Sg &syn-abs-wordorder &ADDED &syn-abs-wordorder ID:4 R:DELETE1:4 SPLITCOHORT:20 MOVE-AFTER:26:syn-abs-wordorder ADDRELATION(DELETE1):32
 "<Nrel>"
 	"Nrel" N Rel
 : 
