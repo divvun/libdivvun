@@ -56,21 +56,32 @@ void print_cg_subreading(size_t indent, const string& form,
   variant<Nothing, Weight> mw_a, const std::string& errtag) {
 	os << string(indent, '\t');
 	bool in_lemma = false;
+	bool in_prefixes = true;
+	vector<string> prefixes;
 	for (vector<string>::const_iterator it = beg; it != end; ++it) {
 		bool is_tag = is_cg_tag(*it);
 		if (in_lemma) {
 			if (is_tag) {
 				in_lemma = false;
 				os << "\"";
+				for (auto prefix : prefixes) {
+					os << " Prefix/" << prefix;
+				}
 			}
 		}
 		else {
 			if (!is_tag) {
 				in_lemma = true;
+				in_prefixes = false;
 				os << "\"";
 			}
 		}
-		os << (*it);
+		if ((in_prefixes) && (!in_lemma)) {
+			prefixes.push_back(*it);
+		}
+		else {
+			os << (*it);
+		}
 	}
 	if (in_lemma) {
 		os << "\"";
