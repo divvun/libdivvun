@@ -1,4 +1,4 @@
-AC_INIT([libdivvun], [0.3.11-alpha], [unhammer+apertium@mm.st], [libdivvun], [https://github.com/divvun/libdivvun])
+AC_INIT([libdivvun], [0.3.11], [unhammer+apertium@mm.st], [libdivvun], [https://github.com/divvun/libdivvun])
 AC_CONFIG_SRCDIR([src])
 AM_INIT_AUTOMAKE
 

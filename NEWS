@@ -7,6 +7,7 @@ For more details see the git log.
 * package name is now libdivvun
 * normaliser doesn't add subreadings
 * pipeline supports sh
+* fixes and updates in grammarchecker error markings and caps
 
 ## Notable changes in 0.3.10
 
