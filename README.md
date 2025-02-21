@@ -890,15 +890,16 @@ cohort. There is no way from this output to know that "dego" should
 not also be deleted from the `SUGGEST` reading.
 
 So when there are such multiple alternative interpretations for errors
-spanning multiple words, the less central parts ("dego" above) need a
-"co-error tag" (using `co&` as a prefix instead of `&`) to say which
-error tag goes with which non-central reading.
+spanning multiple words, the less central parts ("dego" above) also
+need a matching error tag to say which error tag goes with which
+non-central or suggestion reading. We often use the `co&` prefix
+instead of `&` which indicates that this is not the main reading of
+the complex error:
 
     ADD (co&syn-not-dego) ("dego") IF (1 (&syn-not-dego));
 
-Without the `co`, this would be treated as a separate error, while
-without `&syn-not-dego`, we would suggest deleting this word in
-the suggestions for `&syn-dego-nom` too.
+Without `co&syn-not-dego`, we would suggest deleting "dego" in the
+suggestions for `&syn-dego-nom` too.
 
 By using `co&error-tags`, we can have multiple alternative
 interpretations of an error, while avoiding generating bad
@@ -964,6 +965,20 @@ In this sentence in South Sámi there are two alternative suggestions:
 
 Here too, we need to ensure that there are `co&errortags` to match
 relations to readings.
+
+Often we change all `&error` tags to `co&error` tags at the end of a
+rule section:
+
+```
+SUBSTITUTE (&syn-kánske) (co&syn-kánske) TARGET (SUGGEST) ;
+MAP:LOCK_READING (SUGGEST) (SUGGEST); # avoid rules looping
+```
+
+This is so we can have a
+`LIST Errors = &syn-kánske &syn-soahtit-vfin+inf &etc; `
+that will not match the suggestions (the
+suggestions are correct, so they should not be matched by the `Errors`
+set).
 
 
 ## Avoiding mismatched words in multiple suggestions on ambiguous readings
@@ -1281,6 +1296,19 @@ but is recommended in case we can have several error types and need to
 keep replacements separate (to avoid silly combinations of
 suggestions).
 
+Another use for the `co&errtag` is to have a way to relate corrected
+`SUGGEST` readings within complex errors, without the correct reading
+being matched by sets which look for error tags. For example, say that
+you have a `LIST Errors = &missing &typo …;` and a rule which looks
+for an error-tagged pronoun to the left `(-1 Pron + Errors)`. Now
+earlier in the grammar checker rules you may have added a new
+suggestion cohort with a reading `Pron SUGGEST` – if you gave that
+reading the tag `&missing` to relate it to the central word, the
+context `(-1 Pron + Errors)` would match, which is probably not what
+you want. But if you instead give the suggestion the tag `co&missing`,
+then you can rely on tags like `&missing` being only on actual
+mistakes in the input.
+
 When we have a `DELETE` relation from a reading with an `&errtag` and
 there are be multiple source-cohort error tags, the deletion target
 needs to have a `co&errtag`, so that we only delete in the replacement
@@ -1355,11 +1383,14 @@ don't conflict with the below special tags.
     See [Including spelling errors](#org26182db).
 -   `<spelled>` is added by `divvun-cgspell` to any suggestions it
     makes. See [Including spelling errors](#org26182db).
--   `co&` is a tag prefix – `co&` marks a reading as a non-central
-    part of the underline of `&errtag`, see [Deleting words](#org4d2c8ef)
-    and related sections. (You may also see `COERROR &errtag` or `&LINK
-    &errtag` in older rules; this was the old way of writing
-    `co&errtag`.)
+-   `co&` is a tag prefix – `co&` is often used to mark a reading as a
+    non-central part of the underline of `&errtag`, see [Deleting
+    words](#org4d2c8ef) and related sections. (You may also see
+    `COERROR &errtag` or `&LINK &errtag` in older rules; this was the
+    old way of writing `co&errtag`.) We also often add `co&` error
+    tags to `SUGGEST` readings in order to relate a suggestion to a
+    complex error without that (correct) reading being matched by sets
+    which match error readings.
 -   `&ADDED` means this cohort was added (typically with `ADDCOHORT`)
     and should be a part of the suggestion for the error. It will appear
     after the blank of the preceding cohort, and will not be the central
