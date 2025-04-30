@@ -762,7 +762,8 @@ using `€1` in errors.source.xml, e.g.
 
 ---
 
-To refer to other words, you add relations named `$2` and so on:
+To refer to other words (e.g. `co&`-errors), you add relations named
+`$2` and so on:
 
     ADDRELATION ($2) Ess TO (*-1 ("dego" &syn-not-dego) BARRIER Ess);
 
@@ -1390,7 +1391,10 @@ don't conflict with the below special tags.
     old way of writing `co&errtag`.) We also often add `co&` error
     tags to `SUGGEST` readings in order to relate a suggestion to a
     complex error without that (correct) reading being matched by sets
-    which match error readings.
+    which match error readings. See 
+    [How underlines and replacements are built](#orgb25740d) for details.
+    Another reason to use `co&` is to ensure we can refer to the
+    central error with `$1` in `errors.source.xml`.
 -   `&ADDED` means this cohort was added (typically with `ADDCOHORT`)
     and should be a part of the suggestion for the error. It will appear
     after the blank of the preceding cohort, and will not be the central
