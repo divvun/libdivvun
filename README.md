@@ -1092,7 +1092,7 @@ Then you can first of all turn that blanktag tag into an error tag with
 
 Now, we could just suggest a wordform on the comma and call it a day:
 
-    COPY ("<, >" SUGGESTWF) TARGET ("," &no-space-after-punct-mark) ;
+    COPY ("<, >"S SUGGESTWF) TARGET ("," &no-space-after-punct-mark) ;
 
 but that will
 
@@ -1120,27 +1120,8 @@ word is a "link" word. In the above rules,
 -   The `RIGHT` relation says that this is one big error, not two
     separate ones.
 
-Then we can add a suggestion that puts a space between the forms:
-
-    COPY:no-space-after-punct ("<$1 $2>"v SUGGESTWF)
-        TARGET ("<(.*)>"r &no-space-after-punct-mark)
-        IF (1 ("<(.*)>"r))
-           (NOT 0 (co&no-space-after-punct-mark))
-        ;
-
-This uses vislcg3's [variable strings / varstrings](http://beta.visl.sdu.dk/cg3/chunked/tags.html#variable-strings) to create the
-wordform suggestion from two regular expression strings matching the
-wordforms of the two cohorts. Note that the `$1` and `$2` refer to the
-first and second regex groups as they appear in the rule, not as they
-appear in the sentence. If the rule referred to the preceding word
-with `(-1 ("<(.*)>"r))`, you'd probably want the suggestion to be `<$2
-$1>`.
-
-We don't put a suggestion-tag on the `co&` cohort (here the word
-`<ja>`), which would lead to some strange suggestions since it is
-already part of the suggestion-tag on the comma `<,>` cohort. See
-[How underlines and replacements are built](#orgb25740d) for more
-on the relationship between `SUGGESTWF` and replacements.
+We don't have to change the SUGGESTWF reading – `divvun-suggest` knows
+how to extend the underline.
 
 Now the output is
 
@@ -1148,9 +1129,9 @@ Now the output is
             "3" Num Arab Sg Loc Attr @HNOUN
             "3" Num Arab Sg Nom @HNOUN
             "3" Num Arab Sg Ill Attr @HNOUN
-    "<,>"
+    "<,>"	,ja	→	, ja
             "," CLB <NoSpaceAfterPunctMark> &no-space-after-punct-mark ID:3 R:RIGHT:4
-            "," CLB <NoSpaceAfterPunctMark> "<, ja>" &no-space-after-punct-mark SUGGESTWF ID:3 R:RIGHT:4
+            "," CLB <NoSpaceAfterPunctMark> "<, >" &no-space-after-punct-mark SUGGESTWF ID:3 R:RIGHT:4
     "<ja>"
             "ja" CC @CNP co&no-space-after-punct-mark ID:4
 
@@ -1209,6 +1190,16 @@ Now we get:
 which should end up as a nice error message, suggestion and
 underline in the UI.
 
+## Creating suggestions using regex capture groups
+
+Some rules have suggestions like `VSTR:"$1$2"S` along with regex
+matches like `(0 ("<(.*)>"r) LINK -1 ("<(.*)>"r))` this uses VISL
+CG3's [variable strings / varstrings](http://beta.visl.sdu.dk/cg3/chunked/tags.html#variable-strings)
+to create wordform suggestion from two regular expression strings
+matching the wordforms of the two cohorts. Note that the `$1` and `$2`
+refer to the first and second regex groups as they appear in the rule,
+not as they appear in the sentence (so the above VSTR and regex would
+suggest to swap the order of the two words).
 
 <a id="org26182db"></a>
 
@@ -1254,15 +1245,17 @@ underlines and actually show the suggestions, add a rule like
 
     ADD (&typo SUGGESTWF) (<spelled>) ;
 
-to the grammar checker CG. The reason we add `SUGGESTWF` and not
-`SUGGEST` is that we're using the wordform-tag directly as the
-suggestion, and not sending each analysis through the generator (as
-`SUGGEST` would do). See also the next section on how replacements
-are built. So if, after disambiguation and grammarchecker CG's, we had
+to the grammar checker CG (in practice we tend to only add the `&typo`
+tag if none of the other grammar rules applied). The reason we add
+`SUGGESTWF` and not `SUGGEST` is that we're using the wordform-tag
+directly as the suggestion, and not sending each analysis through the
+generator (as `SUGGEST` would do). See also the next section on how
+replacements are built. So if, after disambiguation and grammarchecker
+CG's, we had
 
     "<coffes>"
-            "coffee" N Pl <W:37.3018> <WA:17.3018> <spelled> "<coffees>" &typo SUGGESTWF
-            "coffer" N Pl <W:39.1010> <WA:17.3018> <spelled> "<coffers>" &typo SUGGESTWF
+            "coffee" N Pl <W:37.3018> <WA:17.3018> <spelled> "<coffees>"S &typo SUGGESTWF
+            "coffer" N Pl <W:39.1010> <WA:17.3018> <spelled> "<coffers>"S &typo SUGGESTWF
 
 then the final `divvun-suggest` step would simply use the contents of
 the tags
@@ -1345,16 +1338,6 @@ following CG parse:
 will give us all and only the suggestions we want ("he was" and "we
 were", but not *"he were").
 
-There is one exception to the above principles; for
-backwards-compatibility, `SUGGESTWF` is still used to mean that the
-whole underline should be replaced by what's in `SUGGESTWF`. This
-means that if you combine `SUGGESTWF` with `RIGHT/LEFT`, you will not
-automatically get the word form for the relation target(s) in your
-replacement, you have to construct the whole replacement yourself.
-This also means you cannot combine `SUGGESTWF` with `SUGGEST` on
-other words. (If we ever change how this works, we will have to first
-update many existing CG3 rules.)
-
 
 ## Summary of special tags and relations
 
@@ -1378,7 +1361,7 @@ don't conflict with the below special tags.
 -   `SUGGESTWF` on a reading means that `divvun-suggest` should use the
     reading's wordform-tag (e.g. a tag like
     
-        "<Cupertino>"
+        "<Cupertino>"S
     
     on a *reading*, not as the first line of a cohort) as a suggestion.
     See [Including spelling errors](#org26182db).
@@ -1395,6 +1378,8 @@ don't conflict with the below special tags.
     [How underlines and replacements are built](#orgb25740d) for details.
     Another reason to use `co&` is to ensure we can refer to the
     central error with `$1` in `errors.source.xml`.
+-   `DROP-PRE-BLANK` means the suggestion should trim the preceding
+    space (useful for fixing spaces before punctuation).
 -   `&ADDED` means this cohort was added (typically with `ADDCOHORT`)
     and should be a part of the suggestion for the error. It will appear
     after the blank of the preceding cohort, and will not be the central
