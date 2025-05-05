@@ -591,8 +591,6 @@ build_squiggle_replacement(const Reading& r, const ErrId& err_id,
 	if (verbose)
 		std::cerr << "\033[1;33mright=\t" << i_right << "\033[0m" << std::endl;
 	UStringVector reps = { u"" };
-	UStringVector
-	  reps_suggestwf = {}; // If we're doing SUGGESTWF, we ignore reps
 	string prev_added_before_blank = "";
 	std::optional<Casing> addedcasing = std::nullopt;
 	for (size_t i = i_left; i <= i_right; ++i) {
@@ -682,17 +680,6 @@ build_squiggle_replacement(const Reading& r, const ErrId& err_id,
 					const auto cased_sf =
 					  fromUtf8(withCasing(tr.fixedcase, casing, sf));
 					rep_this_trg.push_back(cased_sf);
-					if (tr.suggestwf) {
-						if (i == i_c) {
-							reps_suggestwf.push_back(cased_sf);
-						}
-						else {
-							std::cerr
-							  << "divvun-suggest: WARNING: Saw SUGGESTWF on "
-							     "non-central (co-)cohort, ignoring"
-							  << std::endl;
-						}
-					}
 					if (verbose)
 						std::cerr << "\t\t\033[1;36msform=\t'" << sf
 						          << "'\033[0m" << std::endl;
@@ -737,8 +724,7 @@ build_squiggle_replacement(const Reading& r, const ErrId& err_id,
 			std::cerr << "\033[1;35mreps sf=\t'" << toUtf8(sf) << "'\033[0m\t"
 			          << beg << "," << end << std::endl;
 		}
-	return std::make_pair(std::make_pair(beg, end),
-	  reps_suggestwf.empty() ? reps : reps_suggestwf);
+	return std::make_pair(std::make_pair(beg, end), reps);
 }
 
 variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id, size_t i_c,
