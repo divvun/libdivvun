@@ -108,6 +108,19 @@
     </body>
   </error>
 
+  <error id="msyn-demphrase-congruence-pline">
+    <header>
+      <title xml:lang="en">pline</title>
+      <title xml:lang="se">pline</title>
+      <references> <ref n=""/></references>
+    </header>
+    <body>
+      <description xml:lang="en">pline</description>
+      <description xml:lang="se">pline</description>
+    </body>
+  </error>
+
+
 
   <error id="msyn-valency-acc">
     <header>

@@ -238,14 +238,13 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 		if (tag == "COERROR") { // COERROR kept for backward-compatibility
 			r.coerror = true;
 		}
-		else if (tag == "&SUGGEST" ||
-		         tag ==
-		           "SUGGEST") { // &SUGGEST kept for backward-compatibility
+		else if (tag == "DROP-PRE-BLANK") {
+			r.drop_pre_blank = true;
+		}
+		else if (tag == "&SUGGEST" || tag == "SUGGEST") { // &SUGGEST kept for backward-compatibility
 			r.suggest = true;
 		}
-		else if (tag == "&SUGGESTWF" ||
-		         tag ==
-		           "SUGGESTWF") { // &SUGGESTWF kept for backward-compatibility
+		else if (tag == "&SUGGESTWF" || tag == "SUGGESTWF") { // &SUGGESTWF kept for backward-compatibility
 			r.suggestwf = true;
 		}
 		else if (result.empty()) {
@@ -261,9 +260,7 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 			else if (tag == "&ADDED-BEFORE-BLANK") {
 				r.added = AddedBeforeBlank;
 			}
-			else if (tag == "&LINK" ||
-			         tag ==
-			           "&COERROR") { // &LINK kept for backward-compatibility
+			else if (tag == "&LINK" || tag == "&COERROR") { // &LINK kept for backward-compatibility
 				r.coerror = true;
 			}
 			else {
@@ -350,6 +347,7 @@ const Reading proc_reading(const hfst::HfstTransducer& generator,
 		r.sforms.insert(r.sforms.end(), sub.sforms.begin(), sub.sforms.end());
 		r.wf = r.wf.empty() ? sub.wf : r.wf;
 		r.fixedcase |= sub.fixedcase;
+		r.drop_pre_blank |= sub.drop_pre_blank;
 	}
 	dedupe(r.rels);
 	if (r.suggest) {
@@ -577,47 +575,30 @@ build_squiggle_replacement(const Reading& r, const ErrId& err_id,
 	std::map<pair<size_t, size_t>, pair<u16string, Reading>>
 	  add; // position in text:cohort in Sentence
 	// Loop from the leftmost to the rightmost of source and target cohorts:
-	if (verbose)
-		std::cerr << "\033[1;31m=== err_id=\t" << toUtf8(err_id)
-		          << " ===\033[0m" << std::endl;
-	if (verbose)
-		std::cerr << "\033[1;33mr.id=\t" << r.id << "\033[0m" << std::endl;
-	if (verbose)
-		std::cerr << "\033[1;33msrc.id=\t" << src.id << "\033[0m" << std::endl;
-	if (verbose)
-		std::cerr << "\033[1;33mi_c=\t" << i_c << "\033[0m" << std::endl;
-	if (verbose)
-		std::cerr << "\033[1;33mleft=\t" << i_left << "\033[0m" << std::endl;
-	if (verbose)
-		std::cerr << "\033[1;33mright=\t" << i_right << "\033[0m" << std::endl;
+	if (verbose) std::cerr << "\033[1;31m=== err_id=\t" << toUtf8(err_id) << " ===\033[0m" << std::endl;
+	if (verbose) std::cerr << "\033[1;33mr.id=\t" << r.id << "\033[0m" << std::endl;
+	if (verbose) if(r.drop_pre_blank) std::cerr << "\033[1;33mr.drop_pre_blank=\t" << r.drop_pre_blank << "\033[0m" << std::endl;
+	if (verbose) std::cerr << "\033[1;33msrc.id=\t" << src.id << "\033[0m" << std::endl;
+	if (verbose) std::cerr << "\033[1;33mi_c=\t" << i_c << "\033[0m" << std::endl;
+	if (verbose) std::cerr << "\033[1;33mleft=\t" << i_left << "\033[0m" << std::endl;
+	if (verbose) std::cerr << "\033[1;33mright=\t" << i_right << "\033[0m" << std::endl;
 	UStringVector reps = { u"" };
-	UStringVector
-	  reps_suggestwf = {}; // If we're doing SUGGESTWF, we ignore reps
 	string prev_added_before_blank = "";
 	std::optional<Casing> addedcasing = std::nullopt;
 	for (size_t i = i_left; i <= i_right; ++i) {
 		const auto& trg = sentence.cohorts[i];
 		Casing casing = getCasing(toUtf8(trg.form));
 
-		if (verbose)
-			std::cerr << "\033[1;34mi=\t" << i << "\033[0m" << std::endl;
-		if (verbose)
-			std::cerr << "\033[1;34mtrg.form=\t'" << toUtf8(trg.form)
-			          << "'\033[0m" << std::endl;
-		if (verbose)
-			std::cerr << "\033[1;34mtrg.id=\t" << trg.id << "\033[0m"
-			          << std::endl;
-		if (verbose)
-			std::cerr << "\033[1;35mtrg.raw_pre_blank=\t'" << trg.raw_pre_blank
-			          << "'\033[0m" << std::endl;
+		if (verbose) std::cerr << "\033[1;34mi=\t" << i << "\033[0m" << std::endl;
+		if (verbose) std::cerr << "\033[1;34mtrg.form=\t'" << toUtf8(trg.form) << "'\033[0m" << std::endl;
+		if (verbose) std::cerr << "\033[1;34mtrg.id=\t" << trg.id << "\033[0m" << std::endl;
+		if (verbose) std::cerr << "\033[1;35mtrg.raw_pre_blank=\t'" << trg.raw_pre_blank << "'\033[0m" << std::endl;
 
 		UStringVector rep_this_trg;
 		const bool del = do_delete(trg, err_id, src.errtypes, deletions);
 		if (del) {
 			rep_this_trg.push_back(u"");
-			if (verbose)
-				std::cerr << "\t\t\033[1;36mdelete=\t" << toUtf8(trg.form)
-				          << "\033[0m" << std::endl;
+			if (verbose) std::cerr << "\t\t\033[1;36mdelete=\t" << toUtf8(trg.form) << "\033[0m" << std::endl;
 		}
 
 		if (trg.added) {
@@ -642,18 +623,12 @@ build_squiggle_replacement(const Reading& r, const ErrId& err_id,
 		bool applies_deletion = trg.id == src.id && src_applies_deletion;
 		size_t trg_beg = trg.pos;
 		size_t trg_end = trg.pos + trg.form.size();
-		for (const Reading& tr :
-		  readings_with_errtype(trg, err_id, applies_deletion)) {
-			if (verbose)
-				std::cerr << "\033[1;32mtr.line=\t" << tr.line << "\033[0m"
-				          << std::endl;
+		for (const Reading& tr : readings_with_errtype(trg, err_id, applies_deletion)) {
+			if (verbose) std::cerr << "\033[1;32mtr.line=\t" << tr.line << "\033[0m" << std::endl;
 			// Update beg/end:
 			if (tr.added == AddedBeforeBlank) {
 				if (i == 0) {
-					std::cerr
-					  << "divvun-suggest: WARNING: Saw &ADDED-BEFORE-BLANK on "
-					     "initial word, ignoring"
-					  << std::endl;
+					std::cerr << "divvun-suggest: WARNING: Saw &ADDED-BEFORE-BLANK on " "initial word, ignoring" << std::endl;
 					continue;
 				}
 				const auto& pretrg = sentence.cohorts[i - 1];
@@ -665,40 +640,21 @@ build_squiggle_replacement(const Reading& r, const ErrId& err_id,
 			  NotAdded) { // Don't replace existing form if Added/AddedBeforeBlank
 				trg_end = trg_beg;
 			}
-			if (verbose)
-				std::cerr << "\t\033[1;35mr.wf='" << tr.wf << "'\033[0m";
-			if (verbose)
-				std::cerr << "\t\033[0;35mr.coerror=" << tr.coerror
-				          << "\033[0m";
-			if (verbose)
-				std::cerr << "\t\033[0;35mr.suggestwf=" << tr.suggestwf
-				          << "\033[0m";
-			if (verbose)
-				std::cerr << "\t\033[0;35mr.suggest=" << tr.suggest
-				          << "\033[0m" << "\t" << tr.line;
+			if (verbose) std::cerr << "\t\033[1;35mr.wf='" << tr.wf << "'\033[0m";
+			if (verbose) std::cerr << "\t\033[0;35mr.coerror=" << tr.coerror << "\033[0m";
+			if (verbose) std::cerr << "\t\033[0;35mr.suggestwf=" << tr.suggestwf << "\033[0m";
+			if (verbose) std::cerr << "\t\033[0;35mr.suggest=" << tr.suggest << "\033[0m" << "\t" << tr.line;
 			// Collect SUGGEST/SUGGESTWF:
 			if (!del)
 				for (const auto& sf : tr.sforms) {
 					const auto cased_sf =
 					  fromUtf8(withCasing(tr.fixedcase, casing, sf));
 					rep_this_trg.push_back(cased_sf);
-					if (tr.suggestwf) {
-						if (i == i_c) {
-							reps_suggestwf.push_back(cased_sf);
-						}
-						else {
-							std::cerr
-							  << "divvun-suggest: WARNING: Saw SUGGESTWF on "
-							     "non-central (co-)cohort, ignoring"
-							  << std::endl;
-						}
-					}
-					if (verbose)
-						std::cerr << "\t\t\033[1;36msform=\t'" << sf
-						          << "'\033[0m" << std::endl;
+					if (verbose) std::cerr << "\t\t\033[1;36msform=\t'" << sf << "'\033[0m" << std::endl;
 				}
 			fixedcase |= tr.fixedcase; // for the surface form
 		} // end for readings of target
+
 		if (rep_this_trg.empty()) {
 			const auto cased_sf =
 			  fromUtf8(withCasing(fixedcase, casing, toUtf8(trg.form)));
@@ -710,10 +666,9 @@ build_squiggle_replacement(const Reading& r, const ErrId& err_id,
 		UStringVector reps_next;
 		for (auto& rep : reps) {
 			// Prepend blank unless at left edge:
-			const auto pre_blank =
-			  i == i_left || added_before_blank ?
-			    "" :
-			    clean_blank(prev_added_before_blank + trg.raw_pre_blank);
+			const auto pre_blank = i == i_left || added_before_blank || r.drop_pre_blank ?
+				"" :
+				clean_blank(prev_added_before_blank + trg.raw_pre_blank);
 			// For &ADDED, enclose in blanks (unneeded blanks will get cleaned later):
 			const auto post_blank = trg.added ? u" " : u"";
 			for (const auto& sform : rep_this_trg) {
@@ -732,13 +687,8 @@ build_squiggle_replacement(const Reading& r, const ErrId& err_id,
 		rep.erase(1 + rep.find_last_not_of(' '));
 		rep.erase(0, rep.find_first_not_of(' '));
 	}
-	if (verbose)
-		for (const auto& sf : reps) {
-			std::cerr << "\033[1;35mreps sf=\t'" << toUtf8(sf) << "'\033[0m\t"
-			          << beg << "," << end << std::endl;
-		}
-	return std::make_pair(std::make_pair(beg, end),
-	  reps_suggestwf.empty() ? reps : reps_suggestwf);
+	if (verbose) for (const auto& sf : reps) {std::cerr << "\033[1;35mreps sf=\t'" << toUtf8(sf) << "'\033[0m\t" << beg << "," << end << std::endl;}
+	return std::make_pair(std::make_pair(beg, end), reps);
 }
 
 variant<Nothing, Err> Suggest::cohort_errs(const ErrId& err_id, size_t i_c,
