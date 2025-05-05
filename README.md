@@ -830,7 +830,7 @@ the same effect as a DELETE *relation* to itself:
 
 This `DELETE` tag mentioned above is also useful when moving a word as
 part of a suggestion – to do that, we *copy* the cohort, placing one
-copy (tagged `&ADDED`) in the correct position, and marking the
+copy (tagged `ADDED`) in the correct position, and marking the
 original as `DELETE`. As an example, let's correct the Norwegian word
 order from
 
@@ -850,7 +850,7 @@ deletion:
     {
        ADD (DELETE &syn-wordorder) (*) ;
 
-       COPYCOHORT (&ADDED co&syn-wordorder) # These tags will be added to the new copy
+       COPYCOHORT (ADDED co&syn-wordorder) # These tags will be added to the new copy
           EXCEPT (DELETE &syn-wordorder)    # We don't include the error tag or DELETE in the new copy
           TARGET (*)                   # Copy from the main WITH target
           TO BEFORE (jC1 (*))          # The copy ends up before the first WITH context
@@ -1040,27 +1040,27 @@ applied. We can do this right after the SUBSTITUTE rule:
 
 To add a word as a suggestion, use `ADDCOHORT`, adding both reading
 tags (lemma, part-of-speech etc.), a wordform tag (including a space)
-and `&ADDED` to mark it as something that didn't appear in the input;
+and `ADDED` to mark it as something that didn't appear in the input;
 and then a `LEFT` or `RIGHT` relation from the central cohort of the
 error to the added word:
 
     ADD (&msyn-valency-go-not-fs) IF (…);
-    ADDCOHORT ("<go >" "go" CS &ADDED &msyn-valency-go-not-fs) BEFORE &msyn-valency-go-not-fs;
-    ADDRELATION (LEFT) (&msyn-valency-go-not-fs) TO (-1 (&ADDED)) ;
+    ADDCOHORT ("<go >" "go" CS ADDED &msyn-valency-go-not-fs) BEFORE &msyn-valency-go-not-fs;
+    ADDRELATION (LEFT) (&msyn-valency-go-not-fs) TO (-1 (ADDED)) ;
 
-Because of `&ADDED`, `divvun-suggest` will treat this as a non-central
+Because of `ADDED`, `divvun-suggest` will treat this as a non-central
 word of the error (just like with `co&` tags).
 
 Note that we include the space in the wordform, and we put it at the
 *end* of the wordform. This is because vislcg3 always adds new cohorts
 *after* the blank of the preceding cohort. In some cases, e.g. with
 punctuation, we want the new cohort to come before the blank of the
-preceding cohort; then we use the tag `&ADDED-BEFORE-BLANK`, and
+preceding cohort; then we use the tag `ADDED-BEFORE-BLANK`, and
 `divvun-suggest` will ensure it ends up in the right place, e.g.:
 
     ADD:punct-rihkku (&punct-rihkku) TARGET (Inf) IF (-1 Inf LINK -1 COMMA LINK -1 Inf …);
-    ADDCOHORT:punct-rihkku ("<,>" "," CLB &ADDED-BEFORE-BLANK &punct-rihkku) BEFORE (V &punct-rihkku) IF …;
-    ADDRELATION (LEFT) (&punct-rihkku) TO (-1 (&ADDED-BEFORE-BLANK)) ;
+    ADDCOHORT:punct-rihkku ("<,>" "," CLB ADDED-BEFORE-BLANK &punct-rihkku) BEFORE (V &punct-rihkku) IF …;
+    ADDRELATION (LEFT) (&punct-rihkku) TO (-1 (ADDED-BEFORE-BLANK)) ;
 
 will give a suggestion that covers the space before the infinitive.
 
@@ -1370,7 +1370,7 @@ don't conflict with the below special tags.
 -   `co&` is a tag prefix – `co&` is often used to mark a reading as a
     non-central part of the underline of `&errtag`, see [Deleting
     words](#org4d2c8ef) and related sections. (You may also see
-    `COERROR &errtag` or `&LINK &errtag` in older rules; this was the
+    `COERROR &errtag` in older rules; this was the
     old way of writing `co&errtag`.) We also often add `co&` error
     tags to `SUGGEST` readings in order to relate a suggestion to a
     complex error without that (correct) reading being matched by sets
@@ -1380,11 +1380,11 @@ don't conflict with the below special tags.
     central error with `$1` in `errors.source.xml`.
 -   `DROP-PRE-BLANK` means the suggestion should trim the preceding
     space (useful for fixing spaces before punctuation).
--   `&ADDED` means this cohort was added (typically with `ADDCOHORT`)
+-   `ADDED` means this cohort was added (typically with `ADDCOHORT`)
     and should be a part of the suggestion for the error. It will appear
     after the blank of the preceding cohort, and will not be the central
     cohort of the error. See [Adding words](#orgb76a5c9).
--   `&ADDED-BEFORE-BLANK` is like `&ADDED`, except that it appears
+-   `ADDED-BEFORE-BLANK` is like `ADDED`, except that it appears
     before the blank of the preceding cohort.
 -   Any other tag starting with `&` is an error type tag,
     e.g. `&real-hallan` or `&punct-rihkku`, defined by the CG rule

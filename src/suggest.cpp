@@ -235,7 +235,7 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 	for (auto& tag : allmatches(tags, CG_TAGS_RE)) { // proc_tags
 		std::match_results<const char*> result;
 		std::regex_match(tag.c_str(), result, CG_TAG_TYPE);
-		if (tag == "COERROR") { // COERROR kept for backward-compatibility
+		if (tag == "&LINK" || tag == "&COERROR" || tag == "COERROR") { // &LINK and COERROR kept for backward-compatibility
 			r.coerror = true;
 		}
 		else if (tag == "DROP-PRE-BLANK") {
@@ -247,29 +247,22 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 		else if (tag == "&SUGGESTWF" || tag == "SUGGESTWF") { // &SUGGESTWF kept for backward-compatibility
 			r.suggestwf = true;
 		}
+		else if (tag == "&ADDED" || tag == "ADDED-AFTER-BLANK") {
+			r.added = AddedEnsureBlanks;
+		}
+		else if (tag == "&ADDED-AFTER-BLANK" || tag == "ADDED-AFTER-BLANK") {
+			r.added = AddedAfterBlank;
+		}
+		else if (tag == "&ADDED-BEFORE-BLANK" || tag == "ADDED-BEFORE-BLANK") {
+			r.added = AddedBeforeBlank;
+		}
 		else if (result.empty()) {
 			gentags.push_back(tag);
 		}
 		else if (result[2].length() != 0) {
-			if (tag == "&ADDED") {
-				r.added = AddedEnsureBlanks;
-			}
-			else if (tag == "&ADDED-AFTER-BLANK") {
-				r.added = AddedAfterBlank;
-			}
-			else if (tag == "&ADDED-BEFORE-BLANK") {
-				r.added = AddedBeforeBlank;
-			}
-			else if (tag == "&LINK" || tag == "&COERROR") { // &LINK kept for backward-compatibility
-				r.coerror = true;
-			}
-			else {
-				r.errtypes.insert(fromUtf8(result[2]));
-			}
+			r.errtypes.insert(fromUtf8(result[2]));
 		}
-		else if (
-		  tag ==
-		  "DELETE") { // Shorthand: the tag DELETE means R:DELETE:id_of_this_cohort
+		else if (tag == "DELETE") { // Shorthand: the tag DELETE means R:DELETE:id_of_this_cohort
 			delete_self = true;
 		}
 		else if (result[3].length() != 0 && result[4].length() != 0) {
