@@ -1,0 +1,13 @@
+"<ja>"
+	"ja" CC <smj> <smj> <W:0.0> @CVP
+: 
+"<(>"
+	"(" PUNCT LEFT <W:0.0> <spaceAfterParenBeg> &space-after-paren-beg ID:2 R:RIGHT:3
+	"(" PUNCT LEFT <W:0.0> <spaceAfterParenBeg> &space-after-paren-beg "("S SUGGESTWF ID:2 R:RIGHT:3
+: 
+"<ja>"
+	"ja" CC <smj> <smj> <W:0.0> @CNP co&space-after-paren-beg DROP-PRE-BLANK ID:3
+"<)>"
+	")" PUNCT RIGHT <W:0.0>
+:\n
+

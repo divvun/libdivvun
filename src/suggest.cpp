@@ -628,9 +628,8 @@ build_squiggle_replacement(const Reading& r, const ErrId& err_id,
 				trg_beg = pretrg.pos + pretrg.form.size();
 				added_before_blank = true;
 			}
-			if (
-			  tr.added !=
-			  NotAdded) { // Don't replace existing form if Added/AddedBeforeBlank
+			added_before_blank |= tr.drop_pre_blank;
+			if (tr.added != NotAdded) { // Don't replace existing form if Added/AddedBeforeBlank
 				trg_end = trg_beg;
 			}
 			if (verbose) std::cerr << "\t\033[1;35mr.wf='" << tr.wf << "'\033[0m";
