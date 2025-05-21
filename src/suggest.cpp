@@ -247,7 +247,7 @@ const Reading proc_subreading(const string& line, bool generate_all_readings) {
 		else if (tag == "&SUGGESTWF" || tag == "SUGGESTWF") { // &SUGGESTWF kept for backward-compatibility
 			r.suggestwf = true;
 		}
-		else if (tag == "&ADDED" || tag == "ADDED-AFTER-BLANK") {
+		else if (tag == "&ADDED" || tag == "ADDED") {
 			r.added = AddedEnsureBlanks;
 		}
 		else if (tag == "&ADDED-AFTER-BLANK" || tag == "ADDED-AFTER-BLANK") {
