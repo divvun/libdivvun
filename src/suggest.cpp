@@ -1097,8 +1097,9 @@ void Suggest::mk_errs(Sentence& sentence) {
 }
 
 vector<Err> Suggest::run_errs(std::istream& is) {
+	std::locale old_locale = std::locale();
 	try {
-		auto _old = std::locale::global(std::locale(""));
+		old_locale = std::locale::global(std::locale("")); // Would prefer C.UTF-8, but that doesn't always exist
 	}
 	catch (const std::runtime_error& e) {
 		std::cerr
@@ -1106,7 +1107,9 @@ vector<Err> Suggest::run_errs(std::istream& is) {
 		     "(locale-specific native environment): "
 		  << e.what() << std::endl;
 	}
-	return run_sentence(is, FlushOn::Nul).errs;
+	auto result = run_sentence(is, FlushOn::Nul).errs;
+	std::locale::global(old_locale);
+	return result;
 }
 
 
@@ -1221,8 +1224,9 @@ RunState Suggest::run_cg(std::istream& is, std::ostream& os) {
 }
 
 void Suggest::run(std::istream& is, std::ostream& os, RunMode mode) {
+	std::locale old_locale = std::locale();
 	try {
-		auto _old = std::locale::global(std::locale(""));
+		old_locale = std::locale::global(std::locale("")); // Would prefer C.UTF-8, but that doesn't always exist
 	}
 	catch (const std::runtime_error& e) {
 		std::cerr
@@ -1244,6 +1248,7 @@ void Suggest::run(std::istream& is, std::ostream& os, RunMode mode) {
 			;
 		break;
 	}
+	std::locale::global(old_locale);
 }
 
 SortedMsgLangs sortMessageLangs(const MsgMap& msgs, const string& prefer) {
