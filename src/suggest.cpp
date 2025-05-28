@@ -16,6 +16,7 @@
 */
 
 #include "suggest.hpp"
+#include <locale>
 
 namespace divvun {
 
@@ -1099,7 +1100,10 @@ void Suggest::mk_errs(Sentence& sentence) {
 vector<Err> Suggest::run_errs(std::istream& is) {
 	std::locale old_locale = std::locale();
 	try {
-		old_locale = std::locale::global(std::locale("")); // Would prefer C.UTF-8, but that doesn't always exist
+		// Use environment locale (we expect some UTF-8 locale) for toUpper/toLower etc.
+		// but C for numbers (to avoid any comma-as-decimal-separator nonsense)
+		std::locale mixed(std::locale(""), std::locale::classic(), std::locale::numeric);
+		old_locale = std::locale::global(mixed);
 	}
 	catch (const std::runtime_error& e) {
 		std::cerr
@@ -1226,7 +1230,10 @@ RunState Suggest::run_cg(std::istream& is, std::ostream& os) {
 void Suggest::run(std::istream& is, std::ostream& os, RunMode mode) {
 	std::locale old_locale = std::locale();
 	try {
-		old_locale = std::locale::global(std::locale("")); // Would prefer C.UTF-8, but that doesn't always exist
+		// Use environment locale (we expect some UTF-8 locale) for toUpper/toLower etc.
+		// but C for numbers (to avoid any comma-as-decimal-separator nonsense)
+		std::locale mixed(std::locale(""), std::locale::classic(), std::locale::numeric);
+		old_locale = std::locale::global(mixed);
 	}
 	catch (const std::runtime_error& e) {
 		std::cerr
