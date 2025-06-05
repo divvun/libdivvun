@@ -294,7 +294,7 @@ std::vector<std::pair<string, string>> toPipeSpecShVector(
 		else if ((name == "normalise") || (name == "normalize")) {
 			prog = "divvun-normaliser";
 			if (trace) {
-				prog += " -T -v";
+				prog += " -T";
 			}
 			prog += " -a " + argprepare(args["analyser"]);
 			prog += " -g " + argprepare(args["generator"]);
@@ -310,7 +310,7 @@ std::vector<std::pair<string, string>> toPipeSpecShVector(
 		else if (name == "phon") {
 			prog = "divvun-phon";
 			if (trace) {
-				prog += " -t -v";
+				prog += " -t";
 			}
 			prog += " -p" + argprepare(args["text2ipa"]);
 			const auto& tags = cmd.children("alttext2ipa");
