@@ -21,97 +21,98 @@
 
 #pragma once
 #ifndef a309fa88d5af43e9_UTIL_H
-#define a309fa88d5af43e9_UTIL_H
+#	define a309fa88d5af43e9_UTIL_H
 
 
-#include <sstream>
-#include <iterator>
-#include <regex>
+#	include <sstream>
+#	include <iterator>
+#	include <regex>
 
-#include <vector>
-#include <set>
-#include <string>
-#include <algorithm>
-#include <limits>
+#	include <vector>
+#	include <set>
+#	include <string>
+#	include <algorithm>
+#	include <limits>
 
-#include <locale>
-#include <codecvt>
-#include <utf8.h>
+#	include <locale>
+#	include <codecvt>
+#	include <utf8.h>
 
 namespace divvun {
 
-const std::basic_regex<char> CG_LINE ("^"
-				      "(\"<(.*)>\".*" // wordform, group 2
-				      "|(\t+)(\"[^\"]*\"\\S*)((?:\\s+\\S+)*)\\s*" // reading, group 3, 4, 5
-				      "|:(.*)" // blank, group 6
-				      "|(<STREAMCMD:FLUSH>)" // flush, group 7
-				      "|(;\t+.*)" // traced reading, group 8
-				      ")");
+const std::basic_regex<char> CG_LINE(
+  "^"
+  "(\"<(.*)>\".*"                             // wordform, group 2
+  "|(\t+)(\"[^\"]*\"\\S*)((?:\\s+\\S+)*)\\s*" // reading, group 3, 4, 5
+  "|:(.*)"                                    // blank, group 6
+  "|(<STREAMCMD:FLUSH>)"                      // flush, group 7
+  "|(;\t+.*)"                                 // traced reading, group 8
+  ")");
 
 using StringVec = std::vector<std::string>;
 
 inline const std::string toUtf8(const std::u16string& from) {
 	std::string to;
-        utf8::utf16to8(from.begin(), from.end(), std::back_inserter(to));
+	utf8::utf16to8(from.begin(), from.end(), std::back_inserter(to));
 	return to;
 }
 
 inline const std::u16string fromUtf8(const std::string& from) {
 	std::u16string to;
-        utf8::utf8to16(from.begin(), from.end(), std::back_inserter(to));
+	utf8::utf8to16(from.begin(), from.end(), std::back_inserter(to));
 	return to;
 }
 
-inline const std::wstring wideFromUtf8 (const std::string& str)
-{
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-    return myconv.from_bytes(str);
+inline const std::wstring wideFromUtf8(const std::string& str) {
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+	return myconv.from_bytes(str);
 }
 
-inline const std::string wideToUtf8 (const std::wstring& str)
-{
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-    return myconv.to_bytes(str);
+inline const std::string wideToUtf8(const std::wstring& str) {
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+	return myconv.to_bytes(str);
 }
 
 template<typename Container>
-inline const std::string join_quoted(const Container& ss, const std::string& delim=" ") {
+inline const std::string join_quoted(
+  const Container& ss, const std::string& delim = " ") {
 	std::ostringstream os;
-	std::for_each(ss.begin(), ss.end(), [&](const std::string& s){ os << "\"" << s << "\","; });
+	std::for_each(ss.begin(), ss.end(),
+	  [&](const std::string& s) { os << "\"" << s << "\","; });
 	const auto& str = os.str();
-	return str.substr(0,
-			  str.size() - delim.size());
+	return str.substr(0, str.size() - delim.size());
 }
 
 /* Join a container of bytestrings by delim */
 template<typename Container>
-inline const std::string join(const Container& ss, const std::string& delim=" ") {
+inline const std::string join(
+  const Container& ss, const std::string& delim = " ") {
 	std::ostringstream os;
-	std::copy(ss.begin(), ss.end(), std::ostream_iterator<std::string>(os, delim.c_str()));
+	std::copy(ss.begin(), ss.end(),
+	  std::ostream_iterator<std::string>(os, delim.c_str()));
 	const std::string& str = os.str();
-	return str.substr(0,
-			  str.size() - delim.size());
+	return str.substr(0, str.size() - delim.size());
 }
 
 /* Join a container of u16strings by delim */
 template<typename Container>
-inline const std::string u16join(const Container& ss, const std::string& delim=" ") {
+inline const std::string u16join(
+  const Container& ss, const std::string& delim = " ") {
 	std::ostringstream os;
-	for(const std::u16string& s : ss) {
+	for (const std::u16string& s : ss) {
 		os << toUtf8(s) << delim;
 	}
 	const std::string& str = os.str();
-	return str.substr(0,
-			  str.size() - delim.size());
+	return str.substr(0, str.size() - delim.size());
 }
 
-inline const StringVec allmatches(const std::string& str, const std::basic_regex<char>& re)
-{
-	std::string s = str;	// copy!
+inline const StringVec allmatches(
+  const std::string& str, const std::basic_regex<char>& re) {
+	std::string s = str; // copy!
 	std::smatch m;
 	StringVec tokens;
-	while (std::regex_search (s, m, re)) {
-		if(m[0].length() != 0) {
+	while (std::regex_search(s, m, re)) {
+		if (m[0].length() != 0) {
 			tokens.push_back(m[0]);
 		}
 		s = m.suffix().str();
@@ -119,13 +120,12 @@ inline const StringVec allmatches(const std::string& str, const std::basic_regex
 	return tokens;
 }
 
-inline const StringVec split(const std::string& str, const char& delim=' ')
-{
+inline const StringVec split(const std::string& str, const char& delim = ' ') {
 	std::string buf;
 	std::stringstream ss(str);
 	StringVec tokens;
 	while (std::getline(ss, buf, delim)) {
-		if(!buf.empty()) {
+		if (!buf.empty()) {
 			tokens.push_back(buf);
 		}
 	}
@@ -150,36 +150,38 @@ inline const StringVec split(const std::string& str, const char& delim=' ')
 // 	return tokens;
 // }
 
-inline int startswith(std::string big, std::string start)
-{
+inline int startswith(std::string big, std::string start) {
 	return big.compare(0, start.size(), start) == 0;
 }
 
-inline void replaceAll(std::u16string& str, const std::u16string& from, const std::u16string& to) {
-    if(from.empty()){
-        return;
-    }
-    size_t start_pos = 0;
-    while((start_pos = str.find(from, start_pos)) != std::u16string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
-    }
+inline void replaceAll(
+  std::u16string& str, const std::u16string& from, const std::u16string& to) {
+	if (from.empty()) {
+		return;
+	}
+	size_t start_pos = 0;
+	while ((start_pos = str.find(from, start_pos)) != std::u16string::npos) {
+		str.replace(start_pos, from.length(), to);
+		start_pos +=
+		  to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+	}
 }
 
-inline void replaceAll(std::string& str, const std::string& from, const std::string& to) {
-    if(from.empty()){
-        return;
-    }
-    size_t start_pos = 0;
-    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
-    }
+inline void replaceAll(
+  std::string& str, const std::string& from, const std::string& to) {
+	if (from.empty()) {
+		return;
+	}
+	size_t start_pos = 0;
+	while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+		str.replace(start_pos, from.length(), to);
+		start_pos +=
+		  to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+	}
 }
 
 template<typename string_t>
-string_t dirname(const string_t& path)
-{
+string_t dirname(const string_t& path) {
 	string_t s = string_t(path);
 	if (s.size() <= 1) {
 		return s;
@@ -192,10 +194,7 @@ string_t dirname(const string_t& path)
 }
 
 // for variants
-struct Nothing
-{
-};
-
+struct Nothing {};
 
 
 }
