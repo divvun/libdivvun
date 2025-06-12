@@ -66,20 +66,15 @@ void Phon::run(std::istream& is, std::ostream& os) {
 	for (string line; std::getline(is, line);) {
 		std::match_results<const char*> result;
 		std::regex_match(line.c_str(), result, CG_LINE);
-		// 0, 1 all
-		// 2: surf
-		// 4: lemma
-		// 5: syntag
-		//
-		//
-		if ((!result.empty()) && (result[2].length() != 0)) {
+		if ((!result.empty()) && (result[CG_GROUP_SURF].length() != 0)) {
 			if (verbose) {
-				std::cout << "New surface form: " << result[2] << std::endl;
+				std::cout << "New surface form: " << result[CG_GROUP_SURF]
+				          << std::endl;
 			}
-			surf = result[2];
+			surf = result[CG_GROUP_SURF];
 			os << result[0] << std::endl;
 		}
-		else if ((!result.empty()) && (result[4].length() != 0)) {
+		else if ((!result.empty()) && (result[CG_GROUP_LEMMA].length() != 0)) {
 			string traces;
 			auto phon = surf;
 			string outstring = string(result[0]);

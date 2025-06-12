@@ -49,6 +49,15 @@ const std::basic_regex<char> CG_LINE(
   "|(;\t+.*)"                                 // traced reading, group 8
   ")");
 
+const int CG_GROUP_ALL = 1;
+const int CG_GROUP_SURF = 2;
+const int CG_GROUP_SUBS = 3;
+const int CG_GROUP_LEMMA = 4;
+const int CG_GROUP_READINGS = 5;
+const int CG_GROUP_BLANK = 6;
+const int CG_GROUP_STREAMCMD = 7;
+const int CG_GROUP_TRACE = 8;
+
 using StringVec = std::vector<std::string>;
 
 inline const std::string toUtf8(const std::u16string& from) {
