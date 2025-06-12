@@ -17,89 +17,91 @@
 
 #pragma once
 #ifndef c9249b1422edf6fe_HFST_UTIL_H
-#define c9249b1422edf6fe_HFST_UTIL_H
+#	define c9249b1422edf6fe_HFST_UTIL_H
 
 // hfst:
-#include <hfst/HfstInputStream.h>
-#include <hfst/HfstTransducer.h>
+#	include <hfst/HfstInputStream.h>
+#	include <hfst/HfstTransducer.h>
 
 namespace divvun {
 
 typedef std::unique_ptr<hfst::HfstOneLevelPaths> HfstPaths1L;
 
 inline const hfst::HfstTransducer* readTransducer(std::istream& is) {
-	hfst::HfstInputStream *in = nullptr;
-	try
-	{
+	hfst::HfstInputStream* in = nullptr;
+	try {
 		in = new hfst::HfstInputStream(is);
 	}
-	catch (StreamNotReadableException& e)
-	{
+	catch (StreamNotReadableException& e) {
 		std::cerr << "libdivvun: ERROR: Stream not readable." << std::endl;
 		return nullptr;
 	}
 	catch (HfstException& e) {
-		std::cerr << "libdivvun: ERROR: HfstException: " << e.what() << std::endl;
+		std::cerr << "libdivvun: ERROR: HfstException: " << e.what()
+		          << std::endl;
 		return nullptr;
 	}
 
 	hfst::HfstTransducer* t = nullptr;
-	while (not in->is_eof())
-	{
-		if (in->is_bad())
-		{
-			std::cerr << "libdivvun: ERROR: Stream cannot be read." << std::endl;
+	while (not in->is_eof()) {
+		if (in->is_bad()) {
+			std::cerr << "libdivvun: ERROR: Stream cannot be read."
+			          << std::endl;
 			return nullptr;
 		}
 		t = new hfst::HfstTransducer(*in);
-		if(not in->is_eof()) {
-			std::cerr << "libdivvun: WARNING: >1 transducers in stream! Only using the first." << std::endl;
+		if (not in->is_eof()) {
+			std::cerr << "libdivvun: WARNING: >1 transducers in stream! Only "
+			             "using the first."
+			          << std::endl;
 		}
 		break;
 	}
 	in->close();
 	delete in;
-	if(t == nullptr) {
-		std::cerr << "libdivvun: WARNING: Could not read any transducers!" << std::endl;
+	if (t == nullptr) {
+		std::cerr << "libdivvun: WARNING: Could not read any transducers!"
+		          << std::endl;
 	}
 	return t;
 }
 
 
 inline const hfst::HfstTransducer* readTransducer(const string& file) {
-	hfst::HfstInputStream *in = nullptr;
-	try
-	{
+	hfst::HfstInputStream* in = nullptr;
+	try {
 		in = new hfst::HfstInputStream(file);
 	}
-	catch (StreamNotReadableException& e)
-	{
+	catch (StreamNotReadableException& e) {
 		std::cerr << "libdivvun: ERROR: File does not exist." << std::endl;
 		return nullptr;
 	}
 	catch (HfstException& e) {
-		std::cerr << "libdivvun: ERROR: HfstException: " << e.what() << std::endl;
+		std::cerr << "libdivvun: ERROR: HfstException: " << e.what()
+		          << std::endl;
 		return nullptr;
 	}
 
 	hfst::HfstTransducer* t = nullptr;
-	while (not in->is_eof())
-	{
-		if (in->is_bad())
-		{
-			std::cerr << "libdivvun: ERROR: Stream cannot be read." << std::endl;
+	while (not in->is_eof()) {
+		if (in->is_bad()) {
+			std::cerr << "libdivvun: ERROR: Stream cannot be read."
+			          << std::endl;
 			return nullptr;
 		}
 		t = new hfst::HfstTransducer(*in);
-		if(not in->is_eof()) {
-			std::cerr << "libdivvun: WARNING: >1 transducers in stream! Only using the first." << std::endl;
+		if (not in->is_eof()) {
+			std::cerr << "libdivvun: WARNING: >1 transducers in stream! Only "
+			             "using the first."
+			          << std::endl;
 		}
 		break;
 	}
 	in->close();
 	delete in;
-	if(t == nullptr) {
-		std::cerr << "libdivvun: WARNING: Could not read any transducers!" << std::endl;
+	if (t == nullptr) {
+		std::cerr << "libdivvun: WARNING: Could not read any transducers!"
+		          << std::endl;
 	}
 	return t;
 }
