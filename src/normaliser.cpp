@@ -232,7 +232,8 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 							auto t = current_token.str();
 							if ((t.find("SELECT:") != string::npos) ||
 							    (t.find("MAP:") != string::npos) ||
-							    (t.find("SETPARENT:") != string::npos)) {
+							    (t.find("SETPARENT:") != string::npos) ||
+							    (t.find("Cmp") != string::npos)) {
 								current_token.str("");
 								break;
 							}
@@ -346,7 +347,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 								os << std::endl;
 							}
 						} // for each reanalysis
-					}     // for each regeneration
+					} // for each regeneration
 					if (!regenerated) {
 						if (debug) {
 							std::cout << "3. Couldn't regenerate, "
