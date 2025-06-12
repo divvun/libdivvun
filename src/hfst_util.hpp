@@ -73,12 +73,14 @@ inline const hfst::HfstTransducer* readTransducer(const string& file) {
 		in = new hfst::HfstInputStream(file);
 	}
 	catch (StreamNotReadableException& e) {
-		std::cerr << "libdivvun: ERROR: File does not exist." << std::endl;
+		std::cerr << "libdivvun: ERROR: File does not exist." << std::endl
+		          << "reading " << file << std::endl;
 		return nullptr;
 	}
 	catch (HfstException& e) {
 		std::cerr << "libdivvun: ERROR: HfstException: " << e.what()
-		          << std::endl;
+		          << std::endl
+		          << "reading: " << file << std::endl;
 		return nullptr;
 	}
 

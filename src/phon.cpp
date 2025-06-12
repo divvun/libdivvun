@@ -126,6 +126,10 @@ void Phon::run(std::istream& is, std::ostream& os) {
 			for (const auto& tag2fsa : altText2ipas) {
 				if (outstring.find(tag2fsa.first) != std::string::npos) {
 					alttag = tag2fsa.first;
+					if (verbose) {
+						std::cout << "Using alt " << tag2fsa.first
+						          << std::endl;
+					}
 				}
 			}
 			// apply text2ipa
