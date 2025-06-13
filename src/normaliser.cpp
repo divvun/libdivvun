@@ -96,14 +96,15 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 		// 4: lemma
 		// 5: syntag
 		//
-		if ((!result.empty()) && (result[2].length() != 0)) {
+		if ((!result.empty()) && (result[CG_GROUP_SURF].length() != 0)) {
 			if (debug) {
-				std::cout << "New surface form: " << result[2] << std::endl;
+				std::cout << "New surface form: " << result[CG_GROUP_SURF]
+				          << std::endl;
 			}
 			surf = result[2];
 			os << result[0] << std::endl;
 		}
-		else if ((!result.empty()) && (result[4].length() != 0)) {
+		else if ((!result.empty()) && (result[CG_GROUP_LEMMA].length() != 0)) {
 			string outstring = string(result[0]);
 			auto tabstart = outstring.find("\t");
 			auto tabend = outstring.find("\"");
@@ -186,7 +187,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 					}
 					std::string phon = form.str();
 					std::string newlemma = form.str();
-					std::string reanal = result[5].str();
+					std::string reanal = result[CG_GROUP_READINGS].str();
 					// 2. generate specific form with new lemma
 					std::string regen = form.str();
 					std::string regentags = "";
