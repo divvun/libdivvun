@@ -101,7 +101,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 				std::cout << "New surface form: " << result[CG_GROUP_SURF]
 				          << std::endl;
 			}
-			surf = result[2];
+			surf = result[CG_GROUP_SURF];
 			os << result[0] << std::endl;
 		}
 		else if ((!result.empty()) && (result[CG_GROUP_LEMMA].length() != 0)) {
@@ -109,7 +109,7 @@ void Normaliser::run(std::istream& is, std::ostream& os) {
 			auto tabstart = outstring.find("\t");
 			auto tabend = outstring.find("\"");
 			auto tabs = outstring.substr(tabstart, tabend);
-			string lemma = result[4];
+			string lemma = result[CG_GROUP_LEMMA];
 			bool everythinghasfailed = true;
 			if (tags.empty()) {
 				everythinghasfailed = false;
