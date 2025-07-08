@@ -40,6 +40,17 @@
 
 namespace divvun {
 
+struct CGReading {
+	std::string lemma;
+	std::string reading;
+	CGReading* subreading = nullptr; // subreadings nest...
+};
+
+struct CGCohort {
+	std::string surf;
+	std::vector<CGReading*> readings;
+};
+
 const std::basic_regex<char> CG_LINE(
   "^"
   "(\"<(.*)>\".*"                             // wordform, group 2

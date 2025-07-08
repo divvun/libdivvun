@@ -52,6 +52,10 @@ public:
 	/*const*/ void run(std::istream& is, std::ostream& os);
 
 private:
+	void process_cohort(CGCohort& cohort, std::ostream& os);
+	void process_reading(CGReading& reading, std::ostream& os);
+	std::string process_subreading(CGReading& subreading, std::ostream& os);
+	void mangle_reading(CGReading& reading, std::ostream& os);
 	unique_ptr<const hfst::HfstTransducer> normaliser;
 	unique_ptr<const hfst::HfstTransducer> generator;
 	unique_ptr<const hfst::HfstTransducer> sanalyser;
