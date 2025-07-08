@@ -57,8 +57,6 @@ endif # HAVE_CGSPELL
 CLEANFILES=sme.zcheck tokeniser.pmhfst generator.hfstol errors.xml \
 		   blanktagger.hfst analyser.hfst generator.hfstol \
 		   acceptor.hfstol errmodel.hfst \
-		   grammarchecker.cg3 valency.cg3 mwe-dis.cg3 disambiguator.cg3 \
-		   pipespec.xml \
 		   output.spell.json output.archive.json output.xml.json \
 		   output.workingdir.json
 clean-local:
