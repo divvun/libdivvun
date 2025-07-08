@@ -2,6 +2,11 @@
 
 For more details see the git log.
 
+## Notable changes in 0.3.12
+
+* normaliser processes input one cohort at a time and merges normalised forms
+  from subreadings to main
+
 ## Notable changes in 0.3.11
 
 * package name is now libdivvun
