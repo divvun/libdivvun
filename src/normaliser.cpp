@@ -19,39 +19,30 @@
 
 namespace divvun {
 
-Normaliser::Normaliser(const hfst::HfstTransducer* normaliser_,
-  const hfst::HfstTransducer* generator_,
+Normaliser::Normaliser(const hfst::HfstTransducer* generator_,
   const hfst::HfstTransducer* sanalyser_,
-  const hfst::HfstTransducer* danalyser_, const vector<string>& tags_,
-  bool verbose_, bool trace_, bool debug_)
-  : normaliser(normaliser_)
-  , generator(generator_)
+  const hfst::HfstTransducer* danalyser_, bool verbose_, bool trace_,
+  bool debug_)
+  : generator(generator_)
   , sanalyser(sanalyser_)
   , danalyser(danalyser_)
-  , tags(tags_)
   , verbose(verbose_)
   , trace(trace_)
   , debug(debug_) {}
 
-Normaliser::Normaliser(const string& normaliser_, const string& generator_,
-  const string& sanalyser_, const string& danalyser_,
-  const vector<string>& tags_, bool verbose_, bool trace_, bool debug_) {
+Normaliser::Normaliser(const string& generator_, const string& sanalyser_,
+  const string& danalyser_, bool verbose_, bool trace_, bool debug_) {
 	debug = debug_;
 	verbose = verbose_;
 	trace = trace_;
 	if (verbose_) {
 		std::cout << "Reading files: " << std::endl;
-		std::cout << "* " << normaliser_ << std::endl;
 		if (trace_) {
 			std::cout << "Printing traces" << std::endl;
 		}
 		if (debug_) {
 			std::cout << "Printing debugs" << std::endl;
 		}
-	}
-	if (normaliser_ != "") {
-		normaliser = std::unique_ptr<const hfst::HfstTransducer>(
-		  (readTransducer(normaliser_)));
 	}
 	if (verbose_) {
 		std::cout << "* " << generator_ << std::endl;
@@ -74,15 +65,26 @@ Normaliser::Normaliser(const string& normaliser_, const string& generator_,
 		danalyser = std::unique_ptr<const hfst::HfstTransducer>(
 		  (readTransducer(danalyser_)));
 	}
-	if (verbose_) {
-		std::cout << "expanding tags: ";
-		for (auto tag : tags_) {
-			std::cout << tag << " ";
-		}
-		std::cout << std::endl;
-	}
-	tags = tags_;
 	verbose = verbose_;
+}
+
+void Normaliser::addNormaliser(
+  const std::string& tag, const hfst::HfstTransducer* nromaliser_) {
+	if (verbose) {
+		std::cout << "adding HFST transducer for tag " << tag << std::endl;
+	}
+	normalisers[tag] =
+	  std::unique_ptr<const hfst::HfstTransducer>(nromaliser_);
+}
+
+void Normaliser::addNormaliser(
+  const std::string& tag, const std::string& normaliser_) {
+	if (verbose) {
+		std::cout << "REading " << normaliser_ << " for tag " << tag
+		          << std::endl;
+	}
+	normalisers[tag] =
+	  std::unique_ptr<const hfst::HfstTransducer>(readTransducer(normaliser_));
 }
 
 void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
@@ -94,18 +96,15 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 	auto tabend = outstring.find("\"");
 	auto tabs = outstring.substr(tabstart, tabend);
 	bool everythinghasfailed = true;
-	if (tags.empty()) {
-		everythinghasfailed = false;
-		//os << outstring << std::endl;
-	}
-	bool expand = false;
+	std::string expandtag;
 	bool expandmain = false;
-	for (auto tag : tags) {
-		if (outstring.find(tag) != std::string::npos) {
+	for (auto& normaliser : normalisers) {
+		if (outstring.find(normaliser.first) != std::string::npos) {
 			if (debug) {
-				std::cout << "Expanding because of " << tag << std::endl;
+				std::cout << "Expanding because of " << normaliser.first
+				          << std::endl;
 			}
-			expand = true;
+			expandtag = normaliser.first;
 		}
 	}
 	if (reading.subreading != nullptr) {
@@ -153,12 +152,14 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 			std::cout << "Using lemma: " << surf << std::endl;
 		}
 	}
-	if (expand) {
+	if (!expandtag.empty()) {
 		// 1. apply expansions from normaliser
 		if (debug) {
-			std::cout << "1. looking up normaliser for " << surf << std::endl;
+			std::cout << "1. looking up " << expandtag << " normaliser for "
+			          << surf << std::endl;
 		}
-		const HfstPaths1L expansions(normaliser->lookup_fd(surf, -1, 2.0));
+		const HfstPaths1L expansions(
+		  normalisers[expandtag]->lookup_fd(surf, -1, 2.0));
 		if (expansions->empty()) {
 			if (debug) {
 				std::cout << "Normaliser results empty." << std::endl;
@@ -258,11 +259,11 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 					p = s.find(r);
 				}
 			}
-			for (auto tag : tags) {
-				p = s.find("+" + tag);
+			for (auto& normaliser : normalisers) {
+				p = s.find("+" + normaliser.first);
 				while (p != std::string::npos) {
-					s.replace(p, tag.length() + 1, "");
-					p = s.find(tag);
+					s.replace(p, normaliser.first.length() + 1, "");
+					p = s.find(normaliser.first);
 				}
 			}
 			regentags = s;
@@ -490,11 +491,11 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 				p = s.find(r);
 			}
 		}
-		for (auto tag : tags) {
-			p = s.find("+" + tag);
+		for (auto& normaliser : normalisers) {
+			p = s.find("+" + normaliser.first);
 			while (p != std::string::npos) {
-				s.replace(p, tag.length() + 1, "");
-				p = s.find(tag);
+				s.replace(p, normaliser.first.length() + 1, "");
+				p = s.find(normaliser.first);
 			}
 		}
 		regentags = s;

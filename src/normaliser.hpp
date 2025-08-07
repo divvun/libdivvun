@@ -41,14 +41,15 @@ using std::vector;
 
 class Normaliser {
 public:
-	Normaliser(const hfst::HfstTransducer* normaliser,
-	  const hfst::HfstTransducer* generator,
+	Normaliser(const hfst::HfstTransducer* generator,
 	  const hfst::HfstTransducer* sanalyser,
-	  const hfst::HfstTransducer* danalyser, const vector<string>& tags,
-	  bool verbose, bool trace, bool debug);
-	Normaliser(const string& normaliser, const string& generator,
-	  const string& sanalyser, const string& danalyser,
-	  const vector<string>& tags, bool verbose, bool trace, bool debug);
+	  const hfst::HfstTransducer* danalyser, bool verbose, bool trace,
+	  bool debug);
+	Normaliser(const string& generator, const string& sanalyser,
+	  const string& danalyser, bool verbose, bool trace, bool debug);
+	void addNormaliser(
+	  const std::string& tag, const hfst::HfstTransducer* normaliser);
+	void addNormaliser(const std::string& tag, const std::string& normaliser);
 	/*const*/ void run(std::istream& is, std::ostream& os);
 
 private:
@@ -56,11 +57,11 @@ private:
 	void process_reading(CGReading& reading, std::ostream& os);
 	std::string process_subreading(CGReading& subreading, std::ostream& os);
 	void mangle_reading(CGReading& reading, std::ostream& os);
-	unique_ptr<const hfst::HfstTransducer> normaliser;
+	std::map<std::string, std::unique_ptr<const hfst::HfstTransducer>>
+	  normalisers;
 	unique_ptr<const hfst::HfstTransducer> generator;
 	unique_ptr<const hfst::HfstTransducer> sanalyser;
 	unique_ptr<const hfst::HfstTransducer> danalyser;
-	vector<string> tags;
 	bool verbose;
 	bool trace;
 	bool debug;

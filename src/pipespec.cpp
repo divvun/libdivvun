@@ -142,15 +142,14 @@ void validatePipespecCmd(
 		}
 	}
 	else if ((name == "normalise") || (name == "normalize")) {
-		if (args.size() != 4) {
+		if (args.size() != 3) {
 			throw std::runtime_error("Wrong arguments to <normalise> command "
-			                         "(expected 4), at byte offset " +
+			                         "(expected 3), at byte offset " +
 			                         std::to_string(cmd.offset_debug()));
 		}
 		if (args.find("normaliser") == args.end() ||
 		    args.find("analyser") == args.end() ||
-		    args.find("generator") == args.end() ||
-		    args.find("tags") == args.end()) {
+		    args.find("generator") == args.end()) {
 			throw std::runtime_error(
 			  "Wrong arguments to <normalise> command "
 			  "(expected <normaliser>, <analyser>, "
@@ -298,10 +297,10 @@ std::vector<std::pair<string, string>> toPipeSpecShVector(
 			}
 			prog += " -a " + argprepare(args["analyser"]);
 			prog += " -g " + argprepare(args["generator"]);
-			prog += " -n " + argprepare(args["normaliser"]);
-			const pugi::xml_node& tags = cmd.child("tags");
-			for (const pugi::xml_node& tag : tags.children()) {
-				prog += string(" -t ") + string(tag.attribute("n").value());
+			const auto& tags = cmd.children("normaliser");
+			for (const auto& tag : tags) {
+				prog += string(" -n ") + string(tag.attribute("s").value()) +
+				        "=" + string(tag.attribute("n").value());
 			}
 		}
 		else if (name == "blanktag") {

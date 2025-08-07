@@ -29,8 +29,9 @@ int main(int argc, char** argv) {
 		  argv[0], "BIN - use FSTs to normalise and expand text for TTS");
 
 		options.add_options()("a,surface-analyser", "FST for surface analysis",
-		  cxxopts::value<std::string>(), "BIN")("n,normaliser",
-		  "FST for normalisation", cxxopts::value<std::string>(),
+		  cxxopts::value<std::string>(),
+		  "BIN")("n,normalisers", "FSTs for normalisation per tag: TAG=ABIN",
+		  cxxopts::value<std::vector<std::string>>(),
 		  "BIN")("d,deep-analyser", "FST for deep analysis (UNIMPLEMENTED)",
 		  cxxopts::value<std::string>(),
 		  "BIN")("i,input", "Input file (UNIMPLEMENTED, stdin for now)",
@@ -38,12 +39,11 @@ int main(int argc, char** argv) {
 		  "FILE")("o,output", "Output file (UNIMPLEMENTED, stdout for now)",
 		  cxxopts::value<std::string>(), "FILE")("g,generator",
 		  "FST for generations", cxxopts::value<std::string>(),
-		  "BIN")("t,tags", "limit tags to expand",
-		  cxxopts::value<std::vector<std::string>>(), "TAGS")("v,verbose",
-		  "Be verbose")("D,debug", "Be debugsy")("T,trace", "Be tracy")(
-		  "V,version", "Version information")("h,help", "Print help");
+		  "BIN")("v,verbose", "Be verbose")("D,debug", "Be debugsy")(
+		  "T,trace", "Be tracy")("V,version", "Version information")(
+		  "h,help", "Print help");
 
-		std::vector<std::string> pos = { "normaliser", "input", "output" };
+		std::vector<std::string> pos = { "normalisers", "input", "output" };
 		options.parse_positional(pos);
 		options.parse(argc, argv);
 
@@ -65,9 +65,10 @@ int main(int argc, char** argv) {
 			return (EXIT_SUCCESS);
 		}
 
-		if (!options.count("normaliser")) {
+		if (!options.count("normalisers")) {
 			std::cout << options.help({ "" }) << std::endl;
-			std::cerr << argv[0] << " ERROR: expected --normaliser option"
+			std::cerr << argv[0]
+			          << " ERROR: expected one or more --normalisers option"
 			          << std::endl;
 			return (EXIT_FAILURE);
 		}
@@ -83,11 +84,6 @@ int main(int argc, char** argv) {
 			          << " ERROR: expected --surface-analyser option."
 			          << std::endl;
 			return (EXIT_FAILURE);
-		}
-		if (!options.count("tags")) {
-			std::cerr << argv[0]
-			          << " WARNING: expected at least one --tags option."
-			          << std::endl;
 		}
 		const auto& verbose = options.count("verbose");
 		const auto& debug = options.count("debug");
@@ -105,10 +101,6 @@ int main(int argc, char** argv) {
 		if (verbose) {
 			std::cout << "Surface analyser set to: " << sanalyser << std::endl;
 		}
-		const auto& normaliserfile = options["normaliser"].as<std::string>();
-		if (verbose) {
-			std::cout << "Normaliser set to: " << normaliserfile << std::endl;
-		}
 		const auto& generator = options["generator"].as<std::string>();
 		if (verbose) {
 			std::cout << "Generator set to: " << generator << std::endl;
@@ -117,16 +109,23 @@ int main(int argc, char** argv) {
 		if (verbose) {
 			std::cout << "Deep analyser set to: " << danalyser << std::endl;
 		}
-		const auto& tags = options["tags"].as<std::vector<std::string>>();
-		if (verbose) {
-			std::cout << "Tags set to: ";
-			for (auto tag : tags) {
-				std::cout << tag << " ";
+		auto normaliser = divvun::Normaliser(
+		  generator, sanalyser, danalyser, verbose, trace, debug);
+		for (const auto& tag2fsa :
+		  options["normalisers"].as<std::vector<std::string>>()) {
+			auto eqpos = tag2fsa.find("=");
+			if (eqpos == string::npos) {
+				std::cerr << "missing = in  " << tag2fsa << std::endl;
+				return EXIT_FAILURE;
 			}
-			std::cout << std::endl;
+			auto tag = tag2fsa.substr(0, eqpos);
+			auto fsa = tag2fsa.substr(eqpos + 1);
+			if (verbose) {
+				std::cout << "Nrormaliser for tag ’" << tag << "’ set to "
+				          << fsa << std::endl;
+			}
+			normaliser.addNormaliser(tag, fsa);
 		}
-		auto normaliser = divvun::Normaliser(normaliserfile, generator,
-		  sanalyser, danalyser, tags, verbose, trace, debug);
 		normaliser.run(std::cin, std::cout);
 	}
 	catch (const cxxopts::OptionException& e) {

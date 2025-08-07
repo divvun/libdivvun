@@ -58,15 +58,24 @@ void MweSplitCmd::run(stringstream& input, stringstream& output) const {
 	  applicator.get(), (std_istream*)&input, (std_ostream*)&output);
 }
 
-NormaliseCmd::NormaliseCmd(const hfst::HfstTransducer* normaliser_,
-  const hfst::HfstTransducer* generator, const hfst::HfstTransducer* analyser,
-  const vector<string>& tags, bool verbose)
+NormaliseCmd::NormaliseCmd(const hfst::HfstTransducer* generator,
+  const hfst::HfstTransducer* analyser,
+  const std::map<string, const hfst::HfstTransducer*>& normalisers,
+  bool verbose)
   : normaliser(new divvun::Normaliser(
-      normaliser_, generator, analyser, NULL, tags, verbose, false, false)) {}
-NormaliseCmd::NormaliseCmd(const string& normaliser_, const string& generator,
-  const string& analyser, const vector<string>& tags, bool verbose)
-  : normaliser(new divvun::Normaliser(
-      normaliser_, generator, analyser, "", tags, verbose, false, false)) {}
+      generator, analyser, NULL, verbose, false, false)) {
+	for (const auto& normaliserfsa : normalisers) {
+		normaliser->addNormaliser(normaliserfsa.first, normaliserfsa.second);
+	}
+}
+NormaliseCmd::NormaliseCmd(const string& generator, const string& analyser,
+  const std::map<string, string>& normalisers, bool verbose)
+  : normaliser(
+      new divvun::Normaliser(generator, analyser, "", verbose, false, false)) {
+	for (const auto& normaliserpath : normalisers) {
+		normaliser->addNormaliser(normaliserpath.first, normaliserpath.second);
+	}
+}
 
 void NormaliseCmd::run(stringstream& input, stringstream& output) const {
 	normaliser->run(input, output);
@@ -343,16 +352,17 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<ArPipeSpec>& ar_spec,
 				  std::istream is(&osrb);
 				  return readTransducer(is);
 			  };
-			auto tags = std::vector<std::string>();
-			const pugi::xml_node& tags_element = cmd.child("tags");
-			for (const pugi::xml_node& tag : tags_element.children()) {
-				tags.push_back(tag.attribute("n").value());
+			map<string, const hfst::HfstTransducer*> normalisers;
+			auto normalisertags = cmd.children("normaliser");
+			for (const auto& normalisertag : normalisertags) {
+				normalisers[normalisertag.attribute("s").as_string()] =
+				  readArchiveExtract(ar_spec->ar_path,
+				    normalisertag.attribute("n").as_string(), f);
 			}
 			auto* s = new NormaliseCmd(
-			  readArchiveExtract(ar_spec->ar_path, args["normaliser"], f),
 			  readArchiveExtract(ar_spec->ar_path, args["generator"], f),
-			  readArchiveExtract(ar_spec->ar_path, args["analyser"], f), tags,
-			  verbose);
+			  readArchiveExtract(ar_spec->ar_path, args["analyser"], f),
+			  normalisers, verbose);
 			cmds.emplace_back(s);
 		}
 		else if (name == u"blanktag") {
@@ -451,20 +461,21 @@ Pipeline Pipeline::mkPipeline(const unique_ptr<PipeSpec>& spec,
 #endif
 		}
 		else if ((name == u"normalise") || (name == u"normalize")) {
-			auto tags = std::vector<std::string>();
-			const pugi::xml_node& tags_element = cmd.child("tags");
-			for (const pugi::xml_node& tag : tags_element.children()) {
-				tags.push_back(tag.attribute("n").value());
+			map<string, string> normalisers;
+			auto normalisertags = cmd.children("normaliser");
+			for (const auto& normalisertag : normalisertags) {
+				normalisers[normalisertag.attribute("s").as_string()] =
+				  normalisertag.attribute("n").as_string();
 			}
-			cmds.emplace_back(new NormaliseCmd(args["normaliser"],
-			  args["generator"], args["analyser"], tags, verbose));
+			cmds.emplace_back(new NormaliseCmd(
+			  args["generator"], args["analyser"], normalisers, verbose));
 		}
 		else if (name == u"phon") {
 			map<string, string> altfsas;
 			auto alttags = cmd.children("alttext2ipa");
 			for (const auto& alttag : alttags) {
-				altfsas[alttag.attribute("n").as_string()] =
-				  alttag.attribute("s").as_string();
+				altfsas[alttag.attribute("s").as_string()] =
+				  alttag.attribute("n").as_string();
 			}
 			cmds.emplace_back(
 			  new PhonCmd(args["text2ipa"], altfsas, verbose, trace));
