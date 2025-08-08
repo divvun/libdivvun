@@ -28,77 +28,61 @@ const std::u16string from_bytes(const string& s) {
 
 // CheckerSpec
 CheckerSpec::CheckerSpec(const string& file)
-	: pImpl( new PipeSpec(file) )
-{
-}
-CheckerSpec::~CheckerSpec()
-{
-}
-const std::set<string> CheckerSpec::pipeNames() const
-{
+  : pImpl(new PipeSpec(file)) {}
+CheckerSpec::~CheckerSpec() {}
+const std::set<string> CheckerSpec::pipeNames() const {
 	std::set<string> keys;
-	for(const auto& it : pImpl->pnodes) {
+	for (const auto& it : pImpl->pnodes) {
 		keys.insert(toUtf8(it.first));
 	}
 	return keys;
 }
-bool CheckerSpec::hasPipe(const string& pipename) const
-{
+bool CheckerSpec::hasPipe(const string& pipename) const {
 	return pImpl->pnodes.find(from_bytes(pipename)) != pImpl->pnodes.end();
 }
-std::unique_ptr<Checker> CheckerSpec::getChecker(const string& pipename, bool verbose) {
+std::unique_ptr<Checker> CheckerSpec::getChecker(
+  const string& pipename, bool verbose) {
 	return std::unique_ptr<Checker>(new Checker(pImpl, pipename, verbose));
 }
-const string CheckerSpec::defaultPipe() const
-{
+const string CheckerSpec::defaultPipe() const {
 	return toUtf8(pImpl->default_pipe);
 }
 
 
-
 // ArCheckerSpec
 ArCheckerSpec::ArCheckerSpec(const string& file)
-	: pImpl( readArPipeSpec(file) )
-{
-}
-ArCheckerSpec::~ArCheckerSpec()
-{
-}
-const std::set<string> ArCheckerSpec::pipeNames() const
-{
+  : pImpl(readArPipeSpec(file)) {}
+ArCheckerSpec::~ArCheckerSpec() {}
+const std::set<string> ArCheckerSpec::pipeNames() const {
 	std::set<string> keys;
-	for(const auto& it : pImpl->spec->pnodes) {
+	for (const auto& it : pImpl->spec->pnodes) {
 		keys.insert(toUtf8(it.first));
 	}
 	return keys;
 }
-bool ArCheckerSpec::hasPipe(const string& pipename) const
-{
-	return pImpl->spec->pnodes.find(from_bytes(pipename)) != pImpl->spec->pnodes.end();
+bool ArCheckerSpec::hasPipe(const string& pipename) const {
+	return pImpl->spec->pnodes.find(from_bytes(pipename)) !=
+	       pImpl->spec->pnodes.end();
 }
-std::unique_ptr<Checker> ArCheckerSpec::getChecker(const string& pipename, bool verbose) {
+std::unique_ptr<Checker> ArCheckerSpec::getChecker(
+  const string& pipename, bool verbose) {
 	return std::unique_ptr<Checker>(new Checker(pImpl, pipename, verbose));
 }
-const string ArCheckerSpec::defaultPipe() const
-{
+const string ArCheckerSpec::defaultPipe() const {
 	return toUtf8(pImpl->spec->default_pipe);
 }
 
 
 // Checker
-Checker::Checker(const std::unique_ptr<PipeSpec>& spec, const string& pipename, bool verbose)
-	: pImpl(new Pipeline(spec, from_bytes(pipename), verbose))
-{
-};
+Checker::Checker(
+  const std::unique_ptr<PipeSpec>& spec, const string& pipename, bool verbose)
+  : pImpl(new Pipeline(spec, from_bytes(pipename), verbose)) {};
 
-Checker::Checker(const std::unique_ptr<ArPipeSpec>& spec, const string& pipename, bool verbose)
-	: pImpl(new Pipeline(spec, from_bytes(pipename), verbose))
-{
-};
+Checker::Checker(const std::unique_ptr<ArPipeSpec>& spec,
+  const string& pipename, bool verbose)
+  : pImpl(new Pipeline(spec, from_bytes(pipename), verbose)) {};
 
-Checker::~Checker()
-{
-};
+Checker::~Checker() {};
 
 void Checker::proc(stringstream& input, stringstream& output) {
 	pImpl->proc(input, output);
@@ -125,14 +109,15 @@ vector<string> zcheckFilesInDir(const string& path) {
 	const string suffix = ".zcheck";
 	const size_t suflen = suffix.length();
 	vector<string> files;
-	DIR *dir;
+	DIR* dir;
 	if ((dir = opendir(path.c_str())) == NULL) {
 		return files;
 	}
-	struct dirent *ent;
+	struct dirent* ent;
 	while ((ent = readdir(dir)) != NULL) {
 		string name = string(ent->d_name);
-		if(name.length() > suflen && name.substr(name.length()-suflen, suflen) == suffix) {
+		if (name.length() > suflen &&
+		    name.substr(name.length() - suflen, suflen) == suffix) {
 			// TODO: \\ on Windows
 			files.push_back(path + "/" + name);
 		}
@@ -143,13 +128,11 @@ vector<string> zcheckFilesInDir(const string& path) {
 
 variant<Nothing, string> expanduser() {
 	const struct passwd* pwd = getpwuid(getuid());
-	if (pwd)
-	{
+	if (pwd) {
 		return pwd->pw_dir;
 	}
 	const string HOME = std::getenv("HOME");
-	if(!HOME.empty())
-	{
+	if (!HOME.empty()) {
 		return HOME;
 	}
 	return Nothing();
@@ -160,31 +143,33 @@ std::set<string> searchPaths() {
 	// it's seen already?
 	std::set<string> dirs = {
 		// -DPREFIX is set in Makefile.am; doesn't include DESTDIR
-		string(PREFIX) + "/share/voikko/4",
-		"/usr/share/voikko/4",
+		string(PREFIX) + "/share/voikko/4", "/usr/share/voikko/4",
 		"/usr/local/share/voikko/4"
 	};
-	std::visit([&](auto&& arg){
-		using T = std::decay_t<decltype(arg)>;
-		if constexpr (std::is_same_v<T, Nothing>) {}
-		if constexpr (std::is_same_v<T, string>) {
-			dirs.insert(arg + "/.voikko/4");
-			// TODO: getenv freedesktop stuff
-			dirs.insert(arg + "/.config/voikko/4");
-		}
-	}, expanduser());
+	std::visit(
+	  [&](auto&& arg) {
+		  using T = std::decay_t<decltype(arg)>;
+		  if constexpr (std::is_same_v<T, Nothing>) {
+		  }
+		  if constexpr (std::is_same_v<T, string>) {
+			  dirs.insert(arg + "/.voikko/4");
+			  // TODO: getenv freedesktop stuff
+			  dirs.insert(arg + "/.config/voikko/4");
+		  }
+	  },
+	  expanduser());
 	return dirs;
 }
 
 std::map<Lang, vector<string>> listLangs(const std::string& extraPath) {
 	std::map<Lang, vector<string>> pipes;
 	std::set<string> paths = searchPaths();
-	if(!extraPath.empty()) {
+	if (!extraPath.empty()) {
 		paths.insert(extraPath);
 	}
-	for(const auto& d : paths) {
+	for (const auto& d : paths) {
 		const auto& zpaths = zcheckFilesInDir(d);
-		for(const auto& zpath : zpaths) {
+		for (const auto& zpath : zpaths) {
 			const auto& ar_spec = readArPipeSpec(zpath);
 			pipes[ar_spec->spec->language].push_back(zpath);
 		}
