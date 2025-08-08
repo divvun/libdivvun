@@ -165,6 +165,13 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 				std::cout << "Normaliser results empty." << std::endl;
 			}
 			//os << result[0] << std::endl;
+			// XXX: this is a temprora hack:
+			const HfstPaths1L expansionsdot(
+			  normalisers[expandtag]->lookup_fd(surf + ".", -1, 2.0));
+			if (debug && !expansionsdot->empty()) {
+				std::cout << "Normalised with extra full stop!" << std::endl;
+			}
+			expansions.swap(expansionsdot);
 		}
 		for (auto& e : *expansions) {
 			std::stringstream form;
