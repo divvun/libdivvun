@@ -171,7 +171,6 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 			if (debug && !expansionsdot->empty()) {
 				std::cout << "Normalised with extra full stop!" << std::endl;
 			}
-			expansions.swap(expansionsdot);
 		}
 		for (auto& e : *expansions) {
 			std::stringstream form;
