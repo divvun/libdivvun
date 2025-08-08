@@ -725,11 +725,12 @@ build_squiggle_replacement(const Reading& r, const ErrId& err_id,
 		rep.erase(1 + rep.find_last_not_of(' '));
 		rep.erase(0, rep.find_first_not_of(' '));
 	}
-	if (verbose)
+	if (verbose) {
 		for (const auto& sf : reps) {
 			std::cerr << "\033[1;35mreps sf=\t'" << toUtf8(sf) << "'\033[0m\t"
 			          << beg << "," << end << std::endl;
 		}
+	}
 	return std::make_pair(std::make_pair(beg, end), reps);
 }
 
