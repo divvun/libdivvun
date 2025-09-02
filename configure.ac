@@ -42,7 +42,7 @@ AC_CHECK_HEADER(["$HOMEBREW_PREFIX/include/utf8cpp/utf8.h"], [CPPFLAGS="-I$HOMEB
 dnl ====================
 dnl Checks C++17 support
 dnl ====================
-for version in 26 2c 23 2b 20 2a 17; do
+for version in 23 2b 20 2a 17; do
   version_flag="-std=c++${version}"
   AX_CHECK_COMPILE_FLAG([${version_flag}], [break], [version_flag=none])
 done
