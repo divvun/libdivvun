@@ -62,11 +62,10 @@ AC_ARG_ENABLE([xml],
               [enable_xml=check])
 AS_IF([test "x$enable_xml" != xno],
       [PKG_CHECK_MODULES([PUGIXML], [pugixml >= 1],
-                         [enable_xml=yes],
+                         [AC_CHECK_LIB([pugixml], [main])],
                          [AC_MSG_ERROR([cannot find pugixml library (use --disable-xml if you don't want to parse error.xml messages and don't need --enable-checker)]
                          enable_xml=no)])])
-
-AM_CONDITIONAL([HAVE_LIBPUGIXML], [test x"$enable_xml" != xno])
+AM_CONDITIONAL([HAVE_LIBPUGIXML], [test x$ac_cv_lib_pugixml_main = xno])
 
 
 dnl ==================
