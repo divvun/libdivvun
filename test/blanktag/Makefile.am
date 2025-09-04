@@ -1,4 +1,6 @@
-%.hfst: %.xfst
+SUFFIXES=.hfst .xfst
+
+.xfst.hfst:
 	hfst-regexp2fst --disjunct -i $< -o $@.tmp
 	hfst-fst2fst -O -i $@.tmp -o $@
 	rm $@.tmp

@@ -1,6 +1,8 @@
 AC_INIT([libdivvun],[0.3.12-alpha],[unhammer+apertium@mm.st],[libdivvun],[https://github.com/divvun/libdivvun])
 AC_CONFIG_SRCDIR([src])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([-Wall foreign])
+
+AM_PROG_AR
 
 dnl TODO: tests require zip
 

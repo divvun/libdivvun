@@ -1,3 +1,6 @@
+# process this with automake to produce Makefile.in
+ACLOCAL_AMFLAGS=-I m4
+
 SUBDIRS = src test/suggest test/blanktag
 
 if HAVE_CGSPELL

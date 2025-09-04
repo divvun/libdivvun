@@ -1,3 +1,7 @@
+# process this with automake to produce Makefile.in
+
+SUFFIXES=.dtd .rnc
+
 datadir = $(prefix)/share/libdivvun
 AM_CPPFLAGS = -DPREFIX="\"$(prefix)\""
 
@@ -85,11 +89,11 @@ dist_man_MANS           += divvun-phon.1
 
 # Only needed for development; we keep rnc's in version control:
 if HAVE_TRANG
-%.rnc: %.dtd
+.dtd.rnc:
 	test -f $(TRANG) && java -jar $(TRANG) -I dtd -O rnc $< /dev/stdout >$@.tmp
 	@awk 'BEGIN{print "# THIS IS A GENERATED FILE, DO NOT EDIT!"}{print}/^attlist/{print ""}' <$@.tmp >$@
 	@rm -f $@.tmp
 else
-%.rnc: %.dtd
+.dtd.rnc:
 	@echo Could not find TRANG=$(TRANG), not updating $@
 endif
