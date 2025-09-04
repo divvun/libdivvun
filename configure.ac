@@ -1,10 +1,10 @@
-AC_INIT([libdivvun], [0.3.12-alpha], [unhammer+apertium@mm.st], [libdivvun], [https://github.com/divvun/libdivvun])
+AC_INIT([libdivvun],[0.3.12-alpha],[unhammer+apertium@mm.st],[libdivvun],[https://github.com/divvun/libdivvun])
 AC_CONFIG_SRCDIR([src])
 AM_INIT_AUTOMAKE
 
 dnl TODO: tests require zip
 
-# AC_PROG_LIBTOOL deprecated in favour of LT_INIT
+# LT_INIT deprecated in favour of LT_INIT
 LT_INIT
 
 AC_SUBST([GLIB_CFLAGS])
@@ -234,7 +234,7 @@ AC_CONFIG_FILES([src/divvun-validate-pipespec], [chmod +x src/divvun-validate-pi
 AC_CONFIG_FILES([test/suggest/run-flushing], [chmod +x test/suggest/run-flushing])
 AC_CONFIG_FILES([test/checker/run-python-bindings], [chmod +x test/checker/run-python-bindings])
 
-AC_OUTPUT([Makefile
+AC_CONFIG_FILES([Makefile
            src/Makefile
            src/version.hpp
            python/Makefile
@@ -243,6 +243,7 @@ AC_OUTPUT([Makefile
            test/checker/Makefile
            test/blanktag/Makefile
            test/cgspell/Makefile])
+AC_OUTPUT
 
 cat <<EOF
 -- Building $PACKAGE_STRING
