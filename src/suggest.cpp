@@ -1248,6 +1248,8 @@ RunState Suggest::run_cg(std::istream& is, std::ostream& os) {
 			for (const auto& rep : err.rep) {
 				os << "\t→  \033[0;32m\033[3m" << toUtf8(rep) << "\033[0m";
 			}
+			os << " (msg: " << toUtf8(err.msg.first) << " --- "
+			   << toUtf8(err.msg.second) << ")";
 		}
 		os << std::endl;
 		for (const Reading& reading : cohort.readings) {
