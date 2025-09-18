@@ -49,6 +49,7 @@ class Blanktag {
 		const void run(std::istream& is, std::ostream& os);
 	private:
 		unique_ptr<const hfst::HfstTransducer> analyser;
+		bool verbose;
 		const string proc(const vector<string>& preblank, const string& wf, const vector<string>& postblank, const vector<string>& readings);
 		const string BOSMARK = "__DIVVUN_BOS__";
 		const string EOSMARK = "__DIVVUN_EOS__";
