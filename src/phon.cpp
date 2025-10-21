@@ -97,9 +97,11 @@ void Phon::mangle_reading(
 			std::cout << "Using MIDTAPE: " << phon << std::endl;
 		}
 	}
-	else if (verbose) {
+	else {
 		phon = surf;
-		std::cout << "Using surf: " << phon << std::endl;
+		if (verbose) {
+			std::cout << "Using surf: " << phon << std::endl;
+		}
 	}
 	std::string alttag = "";
 	// check if specific alt tag
