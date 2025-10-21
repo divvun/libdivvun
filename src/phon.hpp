@@ -17,42 +17,49 @@
 
 #pragma once
 #ifndef a0d6827329788a87_PHON_HPP
-#define a0d6827329788a87_PHON_HPP
+#	define a0d6827329788a87_PHON_HPP
 
-#include <locale>
-#include <vector>
-#include <string>
-#include <regex>
-#include <unordered_map>
-#include <map>
-#include <exception>
+#	include <locale>
+#	include <vector>
+#	include <string>
+#	include <regex>
+#	include <unordered_map>
+#	include <map>
+#	include <exception>
 
 // divvun-gramcheck:
-#include "util.hpp"
-#include "hfst_util.hpp"
+#	include "util.hpp"
+#	include "hfst_util.hpp"
 // hfst:
-#include <hfst/implementations/optimized-lookup/pmatch.h>
-#include <hfst/implementations/optimized-lookup/pmatch_tokenize.h>
+#	include <hfst/implementations/optimized-lookup/pmatch.h>
+#	include <hfst/implementations/optimized-lookup/pmatch_tokenize.h>
 
 namespace divvun {
 
 
 class Phon {
-    public:
-        Phon(const hfst::HfstTransducer* text2ipa, bool verbose,
-             bool trace);
-        Phon(const std::string& text2ipa, bool verbose, bool trace);
-        void addAlternateText2ipa(const std::string& tag,
-                                  const hfst::HfstTransducer* text2ipa);
-        void addAlternateText2ipa(const std::string& tag,
-                                  const std::string& text2ipa);
-        /*const*/ void run(std::istream& is, std::ostream& os);
-    private:
-        std::unique_ptr<const hfst::HfstTransducer> text2ipa;
-        std::map<std::string, std::unique_ptr<const hfst::HfstTransducer>>
-          altText2ipas;
-        bool verbose;
-        bool trace;
+public:
+	Phon(const hfst::HfstTransducer* text2ipa, bool verbose, bool trace);
+	Phon(const std::string& text2ipa, bool verbose, bool trace);
+	void addAlternateText2ipa(
+	  const std::string& tag, const hfst::HfstTransducer* text2ipa);
+	void addAlternateText2ipa(
+	  const std::string& tag, const std::string& text2ipa);
+	/*const*/ void run(std::istream& is, std::ostream& os);
+
+private:
+	void process_cohort(CGCohort& cohort, std::ostream& os);
+	void process_reading(
+	  CGReading& reading, const CGCohort& cohort, std::ostream& os);
+	std::string process_subreading(
+	  CGReading& subreading, const CGCohort& cohort, std::ostream& os);
+	void mangle_reading(
+	  CGReading& reading, const CGCohort& cohort, std::ostream& os);
+	std::unique_ptr<const hfst::HfstTransducer> text2ipa;
+	std::map<std::string, std::unique_ptr<const hfst::HfstTransducer>>
+	  altText2ipas;
+	bool verbose;
+	bool trace;
 };
 
 }
