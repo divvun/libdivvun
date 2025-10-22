@@ -204,9 +204,25 @@ void Phon::process_reading(
 			std::cout << "Using prefix " << prefix << std::endl;
 		}
 		std::string phon = "";
-		phon = reading.lemma.substr(1, reading.lemma.length() - 2);
-		if (verbose) {
-			std::cout << "Using lemma as suffix " << phon << std::endl;
+		auto olend = reading.reading.find("\"oldlemma");
+		auto olstart = reading.reading.rfind("\"", olend - 1);
+		if (olend != std::string::npos) {
+			phon = reading.reading.substr(olstart + 1, olend - olstart - 1);
+			if (verbose) {
+				std::cout << "Using oldlemma as suffix " << phon << std::endl;
+			}
+		}
+		else {
+			phon = reading.lemma.substr(1, reading.lemma.length() - 2);
+			if (verbose) {
+				std::cout << "Using lemma as suffix " << phon << std::endl;
+			}
+		}
+		auto phonend = reading.reading.find("\"phon");
+		auto phonstart = reading.reading.rfind("\"", phonend - 1);
+		if (phonend != std::string::npos) {
+			reading.reading.erase(
+			  phonstart, phonend - phonstart + strlen("\"phon"));
 		}
 		phon = prefix + phon;
 		reading.reading.replace(reading.reading.end() - 1,
