@@ -98,9 +98,9 @@ void Phon::mangle_reading(
 		}
 	}
 	else {
-		phon = surf;
+		phon = reading.lemma.substr(1, reading.lemma.length() - 2);
 		if (verbose) {
-			std::cout << "Using surf: " << phon << std::endl;
+			std::cout << "Using lemma: " << phon << std::endl;
 		}
 	}
 	std::string alttag = "";
@@ -203,23 +203,10 @@ void Phon::process_reading(
 		if (verbose) {
 			std::cout << "Using prefix " << prefix << std::endl;
 		}
-		auto phonend = reading.reading.find("\"phon");
-		auto phonstart = reading.reading.rfind("\"", phonend - 1);
 		std::string phon = "";
-		if (phonend != std::string::npos) {
-			phon =
-			  reading.reading.substr(phonstart + 1, phonend - phonstart - 1);
-			reading.reading.erase(
-			  phonstart, phonend - phonstart + strlen("\"phon"));
-			if (verbose) {
-				std::cout << "Found suffix " << phon << std::endl;
-			}
-		}
-		else {
-			phon = reading.lemma.substr(1, reading.lemma.length() - 2);
-			if (verbose) {
-				std::cout << "Using lemma as suffix " << phon << std::endl;
-			}
+		phon = reading.lemma.substr(1, reading.lemma.length() - 2);
+		if (verbose) {
+			std::cout << "Using lemma as suffix " << phon << std::endl;
 		}
 		phon = prefix + phon;
 		reading.reading.replace(reading.reading.end() - 1,
