@@ -34,11 +34,20 @@ AX_CHECK_COMPILE_FLAG([-Wall], [], AC_MSG_ERROR([compiler doesn't accept -Wall -
 AX_CHECK_COMPILE_FLAG([-fstack-protector-strong], [CXXFLAGS="$CXXFLAGS -fstack-protector-strong"])
 
 
-AC_CHECK_HEADER(["$HOMEBREW_PREFIX/include/utf8cpp/utf8.h"], [CPPFLAGS="-I$HOMEBREW_PREFIX/include/utf8cpp/ $CPPFLAGS"], [
-  AC_CHECK_HEADER([utf8cpp/utf8.h], [CPPFLAGS="-I/usr/include/utf8cpp/ $CPPFLAGS"], [
-    AC_CHECK_HEADER([utf8.h], [], [AC_MSG_ERROR([You don't have utfcpp installed.])])
+_found_utf8=no
+for ipath in /usr /usr/local /opt /opt/local; do
+  for upath in utf8cpp utfcpp utf8; do
+    AC_CHECK_FILE("$ipath/include/$upath/utf8.h", [CPPFLAGS="-I$ipath/include/$upath $CPPFLAGS"; _found_utf8=yes])
+  done
+done
+if test $_found_utf8 = no
+then
+  AC_CHECK_HEADER(["$HOMEBREW_PREFIX/include/utf8cpp/utf8.h"], [CPPFLAGS="-I$HOMEBREW_PREFIX/include/utf8cpp/ $CPPFLAGS"], [
+    AC_CHECK_HEADER([utf8cpp/utf8.h], [CPPFLAGS="-I/usr/include/utf8cpp/ $CPPFLAGS"], [
+      AC_CHECK_HEADER([utf8.h], [], [AC_MSG_ERROR([You don't have utfcpp installed.])])
+    ])
   ])
-])
+fi
 
 
 dnl ====================
