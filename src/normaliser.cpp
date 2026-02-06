@@ -358,7 +358,7 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 					if (debug) {
 						std::cout << "3.a got: " << reform.str() << std::endl;
 					}
-					if (reform.str().find("+Cmp") == std::string::npos) {
+					/*if (reform.str().find("+Cmp") == std::string::npos) {
 						reanal = reform.str();
 						p = reanal.find("+");
 						reanal = reanal.substr(p, reanal.length());
@@ -367,7 +367,7 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 							reanal.replace(p, 1, " ");
 							p = reanal.find("+", p);
 						}
-					}
+					}*/
 					if (reanal.find(regentags) == std::string::npos) {
 						if (debug) {
 							std::cout << "couldn't match " << reanal << " and "
@@ -460,14 +460,14 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 				auto t = current_token.str();
 				if ((t.find("SELECT:") != string::npos) ||
 				    (t.find("MAP:") != string::npos) ||
-				    (t.find("SETPARENT:") != string::npos) ||
-				    (t.find("Cmp") != string::npos)) {
+				    (t.find("SETPARENT:") != string::npos) /*||
+				    (t.find("Cmp") != string::npos)*/) {
 					current_token.str("");
 					break;
 				}
-				if (t.find("/") == string::npos) {
+				/*if (t.find("/") == string::npos) {
 					regentags += current_token.str();
-				}
+				}*/
 				current_token.str("");
 				current_token << "+";
 				in_at = false;
@@ -536,7 +536,7 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 						reform << res;
 					}
 				}
-				if (reform.str().find("+Cmp") == std::string::npos) {
+				/*if (reform.str().find("+Cmp") == std::string::npos) {
 					reanal = reform.str();
 					p = reanal.find("+");
 					reanal = reanal.substr(p, reanal.length());
@@ -545,7 +545,7 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 						reanal.replace(p, 1, " ");
 						p = reanal.find("+", p);
 					}
-				}
+				}*/
 				if (reanal.find(regentags) == std::string::npos) {
 					if (debug) {
 						std::cout << "couldn't match " << reanal << " and "
@@ -585,7 +585,7 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 				if (debug) {
 					std::cout << "E. got: " << reform.str() << std::endl;
 				}
-				if (reform.str().find("+Cmp") == std::string::npos) {
+				/*if (reform.str().find("+Cmp") == std::string::npos) {
 					reanal = reform.str();
 					p = reanal.find("+");
 					reanal = reanal.substr(p, reanal.length());
@@ -594,7 +594,7 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 						reanal.replace(p, 1, " ");
 						p = reanal.find("+", p);
 					}
-				}
+				}*/
 				if (reanal.find(regentags) == std::string::npos) {
 					if (debug) {
 						std::cout << "couldn't match " << reanal << " and "
