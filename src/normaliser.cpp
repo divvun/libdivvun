@@ -113,6 +113,12 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 		}
 		expandmain = true;
 	}
+	else if (tabs.length() > 1) {
+		if (debug) {
+			std::cout << "Expanding subreadings just becausee " << std::endl;
+		}
+		expandmain = true;
+	}
 	// try find existing ",,,"phon tag or a alt surf. "<>"
 	auto phonend = outstring.find("\"phon");
 	auto phonstart = phonend;
@@ -465,9 +471,7 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 					current_token.str("");
 					break;
 				}
-				/*if (t.find("/") == string::npos) {
-					regentags += current_token.str();
-				}*/
+				regentags += current_token.str();
 				current_token.str("");
 				current_token << "+";
 				in_at = false;
@@ -525,6 +529,7 @@ void Normaliser::mangle_reading(CGReading& reading, std::ostream& os) {
 			}
 			phon = regen.str();
 			regenerated = true;
+			// Check if regenerated forms are close enough...
 			if (debug) {
 				std::cout << "C. reanalysing: " << phon << std::endl;
 			}
