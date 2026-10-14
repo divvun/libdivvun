@@ -68,6 +68,7 @@ const std::basic_regex<char> CG_TAG_TYPE(
   "|REMCOHORT:"
   "|UNMAP:"
   "|COPY:"
+  "|COPYCOHORT:"
   "|ADDCOHORT:"
   "|ADDCOHORT-AFTER:"
   "|ADDCOHORT-BEFORE:"
