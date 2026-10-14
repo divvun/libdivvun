@@ -841,24 +841,31 @@ to
     I dag gjekk eg til skulen.
 
 We'll target the verb "gjekk", copy it and place the new copy back
-before the subject (after the adverb), and mark the other copy for
+before the subject (after the adverb), and mark the original verb for
 deletion:
 
 
-    WITH fv IF
-            (*-1 Adv LINK 1 @Subj) # The word found by this context condition is available as _C1_
+    ADD (&syn-wordorder) @Subj IF (-1 Adv) (*1 fv) ;
+    WITH fv
+      IF (*-1 Adv LINK 1 @Subj + &syn-wordorder) # The subject found by this context condition is available as _C1_
     {
-       ADD (DELETE &syn-wordorder) (*) ;
+       # Error tag the verb:
+       ADD (co&syn-wordorder) fv ;
+
+       # Mark the original verb for deletion – the relation goes from the subject:
+       ADDRELATION (DELETE1) TARGET fv FROM (jC1 @Subj));
 
        COPYCOHORT (ADDED co&syn-wordorder) # These tags will be added to the new copy
-          EXCEPT (DELETE &syn-wordorder)    # We don't include the error tag or DELETE in the new copy
-          TARGET (*)                   # Copy from the main WITH target
-          TO BEFORE (jC1 (*))          # The copy ends up before the first WITH context
+          EXCEPT (tagsYouDontWantIncluded) # (Optional, maybe you also want to change form?)
+          TARGET fv                        # Copy from the main WITH target (the verb)
+          TO BEFORE (jC1 @Subj)            # The copy ends up before the first WITH context (the subject)
           ;
 
-       # Link the words so they're treated as part of the same error squiggle:
-       ADDRELATION (LEFT) (*) TO (jC1 (*));
+       # Link from subject to original verb so they're treated as part of the same error squiggle:
+       ADDRELATION (LEFT) fv FROM (jC1 @Subj);
     };
+    # Link from subject to the added verb:
+    ADDRELATION (RIGHT) @Subj + &syn-wordorder TO (*1 (ADDED co&syn-wordorder);
 
 <a id="orge26043f"></a>
 
