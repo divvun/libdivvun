@@ -703,11 +703,12 @@ build_squiggle_replacement(const Reading& r, const ErrId& err_id,
 
 		UStringVector reps_next;
 		for (auto& rep : reps) {
+			bool ensure_pre_blank = trg.added == AddedEnsureBlanks;
 			// Prepend blank unless at left edge:
 			const auto pre_blank =
-			  i == i_left || added_before_blank || r.drop_pre_blank ?
-			    "" :
-			    clean_blank(prev_added_before_blank + trg.raw_pre_blank);
+			          i == i_left || added_before_blank || r.drop_pre_blank ? ""
+				: ensure_pre_blank && trg.raw_pre_blank.empty() ? " "
+				: clean_blank(prev_added_before_blank + trg.raw_pre_blank);
 			// For &ADDED, enclose in blanks (unneeded blanks will get cleaned later):
 			const auto post_blank = trg.added ? u" " : u"";
 			for (const auto& sform : rep_this_trg) {
